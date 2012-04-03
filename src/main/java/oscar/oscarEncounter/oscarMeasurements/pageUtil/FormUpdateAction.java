@@ -168,7 +168,11 @@ public class FormUpdateAction extends Action {
     	measurement.setComments(comments);
     	measurement.setDateObserved(dateObs);
     	measurement.setType(inputType);
-    	measurement.setAppointmentNo(Integer.parseInt(apptNo));
+    	if (apptNo!=null) {
+    		measurement.setAppointmentNo(Integer.parseInt(apptNo));
+    	} else {
+    		measurement.setAppointmentNo(0);
+    	}
     	measurement.setProviderNo(providerNo);
     	
     	measurementDao.persist(measurement);
@@ -286,7 +290,11 @@ public class FormUpdateAction extends Action {
                 	measurement.setComments(comments);
                 	measurement.setDateObserved(dateObs);
                 	measurement.setType(inputType);
-                	measurement.setAppointmentNo(Integer.parseInt(apptNo));
+                	if (apptNo!=null) {
+                		measurement.setAppointmentNo(Integer.parseInt(apptNo));
+                	} else {
+                		measurement.setAppointmentNo(0);
+                	}
                 	measurement.setProviderNo(providerNo);
                 	
                     //Find if the same data has already been entered into the system
