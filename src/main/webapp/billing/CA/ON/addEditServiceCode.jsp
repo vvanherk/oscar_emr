@@ -75,6 +75,10 @@
                         	styleId = tmp[0];
                         	sql += ", displaystyle=" + styleId + " ";
                         }
+                        else {
+                        	sql += ", displaystyle=null ";
+                        }
+                        
                         if( billingservice_no == null ) {
                             sql += " where service_code = '" + serviceCode + "'";
                         }
