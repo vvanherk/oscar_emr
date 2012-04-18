@@ -152,13 +152,13 @@
             // fileType could contain whatever text but filter checks *.{extension} if present
 
             // handlers
-            wrap.onerror = function(){
-                noswfupload.text(this.dom.info, "WARNING: Unable to upload " + this.file.fileName);
+            wrap.onerror = function(msg){
+                noswfupload.text(this.dom.info, "WARNING: Unable to upload " + this.file.fileName + "(" + msg + ")");
             };
 
             // instantly vefore files are sent
             wrap.onloadstart = function(){
-                
+
                 // we need to show progress bars and disable input file (no choice during upload)
                 this.show(0);
 
@@ -204,14 +204,14 @@
             };
 
             // generated if there is something wrong during upload
-            wrap.onerror = function(){
-                // just inform the user something was wrong
-                noswfupload.text(this.dom.info, "WARNING: Unable to upload " + this.file.fileName);
+            wrap.onerror = function(msg){
+            	// just inform the user something was wrong
+                noswfupload.text(this.dom.info, "WARNING: Unable to upload " + this.file.fileName + "(" + msg + ")");
             };
 
             // generated when every file has been sent (one or more, it does not matter)
             wrap.onload = function(rpe, xhr){
-                var self = this;
+            	var self = this;
                 // just show everything is fine ...
                 noswfupload.text(this.dom.info, "Upload complete");
 
