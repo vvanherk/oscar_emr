@@ -216,7 +216,7 @@
         td.fillLine{
         border-bottom: 1pt solid #444444;
         font-size:10pt;
-        font-family: courier,Courier New,arial, verdana, tahoma, helvetica, sans serif;
+        font-family: courier, "Courier New", monospace;
         }
 
         pre.text{
