@@ -108,6 +108,7 @@ public final class Factory {
 					Class classRef = Class.forName(msgHandler);
 					MessageHandler mh = (MessageHandler) classRef.newInstance();
 					logger.info("Message handler '" + msgHandler + "' created successfully");
+					logger.info("Message: " + hl7Body);
 					mh.init(hl7Body);
 					return (mh);
 				} catch (ClassNotFoundException e) {
