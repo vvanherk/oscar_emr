@@ -15,8 +15,8 @@ import javax.persistence.Table;
 public class MeasurementsDeleted extends AbstractModel<Integer> implements Serializable {
 
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Integer id = null;
+	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Integer id;
 
 	@Column(nullable = false)
 	private Integer demographicNo = null;
