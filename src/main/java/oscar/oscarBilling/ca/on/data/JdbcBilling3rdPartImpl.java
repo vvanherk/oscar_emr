@@ -21,12 +21,30 @@ public class JdbcBilling3rdPartImpl {
 			.getLogger(JdbcBilling3rdPartImpl.class);
 	private ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
 
+	public static final String ACTIVE = "1";
+	public static final String INACTIVE = "0";
 
 	BillingONDataHelp dbObj = new BillingONDataHelp();
 
 	public Properties get3rdPartBillProp(String invNo) {
 		Properties retval = new Properties();
-		String sql = "select * from billing_on_ext where billing_no=" + invNo;
+		String sql = "select * from billing_on_ext where billing_no=" + invNo + " and status = '" + ACTIVE + "'";
+		ResultSet rs = dbObj.searchDBRecord(sql);
+
+		try {
+			while (rs.next()) {
+				retval.setProperty(rs.getString("key_val"), rs
+						.getString("value"));
+			}
+		} catch (SQLException e) {
+			_logger.error("get3rdPartBillProp(sql = " + sql + ")");
+		}
+		return retval;
+	}
+	
+	public Properties get3rdPartBillPropInactive(String invNo) {
+		Properties retval = new Properties();
+		String sql = "select * from billing_on_ext where billing_no=" + invNo + " and status = '" + INACTIVE + "'";
 		ResultSet rs = dbObj.searchDBRecord(sql);
 
 		try {
@@ -133,7 +151,7 @@ public class JdbcBilling3rdPartImpl {
 		String dateTime = UtilDateUtilities.getToday("yyyy-MM-dd HH:mm:ss");
 
 		String sql = "insert into billing_on_ext values(\\N, " + billingNo + "," + demoNo + ", '" + key + "', '"
-					+ value + "', '" + dateTime + "', '1' )";
+					+ value + "', '" + dateTime + "', '" + ACTIVE + "' )";
                 retval = dbObj.updateDBRecord(sql);
                 if (!retval) {
                         _logger.error("add3rdBillExt(sql = " + sql + ")");
@@ -161,10 +179,25 @@ public class JdbcBilling3rdPartImpl {
 
             return ret;
         }
+        
+    public boolean updateKeyStatus(String billingNo, String key, String status) {
+		String sql = "update billing_on_ext set status = '" + status + "' where billing_no="
+				+ billingNo + " and key_val='"
+				+ StringEscapeUtils.escapeSql(key) + "'";
+		boolean retval = dbObj.updateDBRecord(sql);
 
+		if (!retval) {
+			_logger.error("updateKeyValue(sql = " + sql + ")");
+		}
+		return retval;
+	}
+
+    /*
+     * We're updating a key--make sure it is active as well
+     */
 	public boolean updateKeyValue(String billingNo, String key, String value) {
 		String sql = "update billing_on_ext set value='"
-				+ StringEscapeUtils.escapeSql(value) + "' where billing_no="
+				+ StringEscapeUtils.escapeSql(value) + "', status = '" + ACTIVE + "' where billing_no="
 				+ billingNo + " and key_val='"
 				+ StringEscapeUtils.escapeSql(key) + "'";
 		boolean retval = dbObj.updateDBRecord(sql);
