@@ -1071,22 +1071,27 @@ public class EyeformAction extends DispatchAction {
 
 		public ActionForward printConRequest(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 			log.debug("printConreport");
+			ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
 			DynaValidatorForm crForm = (DynaValidatorForm) form;
 			EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
 			Demographic demographic = demographicDao.getClientByDemographicNo(cp.getDemographicNo());
 			request.setAttribute("demographic",demographic);
 			Appointment appointment = this.appointmentDao.find(cp.getAppointmentNo());
+                        EyeformConsultationReport consultReport = null;
 			String id = request.getParameter("cp.id");
 			if(id != null && id.length()>0) {
-				cp.setId(Integer.parseInt(id));
-			}
+                                consultReport = dao.find(Integer.parseInt(id));
+                        } else {
+                                consultReport = new EyeformConsultationReport();
+                        }
+                        BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
+
 			@SuppressWarnings("unchecked")
 			List<Billingreferral> brs = brDao.getBillingreferral(cp.getReferralNo());
 			cp.setReferralId(brs.get(0).getBillingreferralNo());
 			if(cp.getDate()==null){
 				cp.setDate(new Date());
 			}
-			ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
 			if(cp.getId() != null && cp.getId()>0) {
 				dao.merge(cp);
 			} else {

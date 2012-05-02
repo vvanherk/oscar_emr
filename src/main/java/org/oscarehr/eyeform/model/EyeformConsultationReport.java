@@ -63,12 +63,6 @@ public class EyeformConsultationReport extends AbstractModel<Integer> {
 	public EyeformConsultationReport() {
 		date = new Date();
 	}
-	
-	
-	public void setId(Integer id) {
-		this.id = id;
-	}
-
 
 	public Date getDate() {
 		return date;

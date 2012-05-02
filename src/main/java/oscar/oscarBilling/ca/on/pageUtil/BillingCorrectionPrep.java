@@ -99,14 +99,23 @@ public class BillingCorrectionPrep {
 			ch1Obj.setLocation((String)requestData.getParameter("xml_slicode"));
 			ret = dbObj.updateBillingClaimHeader(ch1Obj);
 		}
+		
+		//set inactive 3rd party payment record if user switched from 3rd party to some other pay program
+		String payProgram = requestData.getParameter("payProgram");				
+		if( requestData.getParameter("oldStatus").equals("thirdParty") && ("HCP".equals(payProgram) || "RMB".equals(payProgram) || "WCB".equals(payProgram)) ) {
+			setInactive("payment", requestData);
+			setInactive("refund", requestData);
+			setInactive("payDate", requestData);
+			setInactive("billTo", requestData);
+		}
 
 		// 3rd party elements
-		if (requestData.getParameter("payment") != null && !requestData.getParameter("payment").equals(requestData.getParameter("oldPayment"))) {
+		if (requestData.getParameter("payment") != null) {
 			ret = update3rdPartyItem("payment", requestData);
-                        ret = update3rdPartyItem("refund", requestData);
-                        ret = update3rdPartyItem("payDate", requestData);
-                        ch1Obj.setPaid(requestData.getParameter("payment"));
-                        ret = dbObj.updateBillingClaimHeader(ch1Obj);
+            ret = update3rdPartyItem("refund", requestData);
+            ret = update3rdPartyItem("payDate", requestData);
+            ch1Obj.setPaid(requestData.getParameter("payment"));
+            ret = dbObj.updateBillingClaimHeader(ch1Obj);
 		}
 
 		if (requestData.getParameter("billTo") != null) {
@@ -115,6 +124,12 @@ public class BillingCorrectionPrep {
 
 		return ret;
 	}
+	
+		public void setInactive(String key, HttpServletRequest request) {
+			JdbcBilling3rdPartImpl tobj = new JdbcBilling3rdPartImpl();
+			String billingNo = request.getParameter("xml_billing_no");
+			tobj.updateKeyStatus(billingNo, key, JdbcBilling3rdPartImpl.INACTIVE);
+		}
 
         /*
          * Need to use billing extension table to capture data for invoices in

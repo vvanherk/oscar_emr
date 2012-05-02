@@ -15,6 +15,13 @@ public class Billing3rdPartPrep {
 		ret = dbObj.get3rdPartBillProp(invNo);
 		return ret;
 	}
+	
+	public Properties get3rdPartBillPropInactive(String invNo) {
+		Properties ret = new Properties();
+		ret = dbObj.get3rdPartBillPropInactive(invNo);
+		return ret;
+	}
+
 
 	public Properties getLocalClinicAddr() {
 		Properties ret = new Properties();
