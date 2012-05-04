@@ -232,4 +232,38 @@ public class OscarProperties extends Properties {
 		return faxEnabled() || isRxFaxEnabled() || isConsultationFaxEnabled() || isRichEFormFaxEnabled();
 	}
 	
+	public String getHL7A04BuildDirectory() {
+		return getProperty("hl7_a04_build_dir");
+	}
+	
+	public String getHL7A04SentDirectory() {
+		return getProperty("hl7_a04_sent_dir");
+	}
+	
+	public String getHL7A04FailDirectory() {
+		return getProperty("hl7_a04_fail_dir");
+	}
+	
+	public boolean isHL7A04GenerationEnabled() {
+		return isPropertyActive("HL7_A04_GENERATION");
+	}
+	
+	public boolean isHL7A04TransportTaskEnabled() {
+		return isPropertyActive("HL7_A04_TRANSPORT_TASK");
+	}
+	
+	public int getHL7A04TransportFrequency() {
+		String prop = getProperty("HL7_A04_TRANSPORT_FREQUENCY", "300000"); // default to 5 minutes (300000 ms)
+		return Integer.parseInt(prop);
+	}
+	
+	public String getHL7A04TransportAddr() {
+		return getProperty("HL7_A04_TRANSPORT_ADDR");
+	}
+	
+	public int getHL7A04TransportPort() {
+		String prop = getProperty("HL7_A04_TRANSPORT_PORT", "3987"); // default to port 3987
+		return Integer.parseInt(prop);
+	}
+	
 }
