@@ -50,8 +50,8 @@ if (request.getAttribute("submitted") != null) {
    if (curform.get("roleType") == null) curform.put("roleType", "");
    
    if (request.getParameter("formHtml") != null){
-       //load html from hidden form from eformGenerator.jsp,the html is then injected into edit-eform
-      curform.put("formHtml",request.getParameter("formHtml"));
+       //load html from hidden form from eformGenerator.jsp,the unescaped html is then injected into edit-eform
+      curform.put("formHtml",org.apache.commons.lang.StringEscapeUtils.unescapeHtml(request.getParameter("formHtml")));
    }
    if (curform.get("formDate") == null) curform.put("formDate", "--");
    if (curform.get("formTime") == null) curform.put("formTime", "--");
@@ -63,8 +63,8 @@ if (request.getAttribute("submitted") != null) {
    if (request.getAttribute("formHtml") != null) {
        formHtml = (String) request.getAttribute("formHtml");
    }
-   formHtml = UtilMisc.rhtmlEscape(formHtmlRaw);
-   formHtml = UtilMisc.htmlEscape(formHtml);
+   //formHtml = UtilMisc.rhtmlEscape(formHtmlRaw); replaced with the unenscape above
+   formHtml =org.apache.commons.lang.StringEscapeUtils.escapeHtml(formHtmlRaw);
 %>
 <html:html locale="true">
 <head>
