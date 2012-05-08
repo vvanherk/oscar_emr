@@ -1222,7 +1222,23 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                           } // end for if (PFHT)
                           
                               } //end for j=0; j<obrCount;
-                        
+                          
+							if (handler.getMsgType().equals("Spire")) {
+								int numZDS = handler.getNumZDSSegments();
+								for (int l=0; l < numZDS; l++) { %>
+									<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+										<td valign="top" align="left"> <%=handler.getZDSName(l)%> </td>
+										<td align="right"><%= handler.getZDSResult(l) %></td>
+										
+										<td align="center"></td>
+										<td align="left"></td>
+										<td align="left"></td>
+										<td align="center"><%= handler.getZDSTimeStamp(l) %></td>
+										<td align="center"><%= handler.getZDSResultStatus(l) %></td>
+										<td align="center" valign="top"></td>
+									</tr> 
+								}
+							}
                           } // // end for headersfor i=0... (headers) line 625
                            %>
                        </table>

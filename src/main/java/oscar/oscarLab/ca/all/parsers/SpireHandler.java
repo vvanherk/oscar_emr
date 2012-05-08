@@ -21,11 +21,16 @@ import oscar.util.UtilDateUtilities;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Segment;
 import ca.uhn.hl7v2.model.v23.datatype.XCN;
-import ca.uhn.hl7v2.model.v23.message.ORU_R01;
-import ca.uhn.hl7v2.parser.Parser;
+//import ca.uhn.hl7v2.model.v23.message.ORU_R01;
+//import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.parser.PipeParser;
+import ca.uhn.hl7v2.parser.CustomModelClassFactory;
+import ca.uhn.hl7v2.parser.ModelClassFactory;
 import ca.uhn.hl7v2.util.Terser;
 import ca.uhn.hl7v2.validation.impl.NoValidation;
+
+import oscar.oscarLab.ca.all.spireHapiExt.v23.message.ORU_R01;
+//import oscar.oscarLab.ca.all.spireHapiExt.v23.segment.ZDS;
 
 /**
  *
@@ -41,9 +46,12 @@ public class SpireHandler implements MessageHandler {
     }
     
     public void init(String hl7Body) throws HL7Exception {
-        Parser p = new PipeParser();
-        p.setValidationContext(new NoValidation());
         hl7Body = fixMessage(hl7Body);
+        
+        ModelClassFactory cmf = new CustomModelClassFactory("oscar.oscarLab.ca.all.spireHapiExt");
+		PipeParser p = new PipeParser(cmf);
+        p.setValidationContext(new NoValidation());
+        
         msg = (ORU_R01) p.parse(hl7Body.replaceAll( "\n", "\r\n" ));
     }
     
@@ -68,7 +76,8 @@ public class SpireHandler implements MessageHandler {
 		message = message.replaceAll("\\|DOC\\|","|FT|");
 		
 		// fix message type
-		message = message.replaceAll("\\|MDM^R01\\|","|ORU^R01|");
+		message = message.replaceAll("\\|MDM\\^R01\\|","|ORU^R01|");
+		//message = message.replaceAll("\\|MDM^R01\\|","|ORU^R01|");
 		
 		return message;
 	}
@@ -237,6 +246,50 @@ public class SpireHandler implements MessageHandler {
         return count;
     }
     
+    public int getNumZDSSegments() {
+		try {
+			return msg.getNumZDSSegments();
+		} catch (HL7Exception e) {
+			logger.error("Could not get number of ZDS Segments", e);
+		}
+		
+		return 0;
+	}
+    
+    public String getZDSName(int i) {
+		try {
+			return msg.getZDS(i).getActionCode().encode();
+		} catch (HL7Exception e) {
+			logger.error("Could not get ZDS name", e);
+		}
+		
+		return "";
+	}
+	
+	public String getZDSResult(int i) {
+		return "";
+	}
+	
+	public String getZDSResultStatus(int i) {
+		try {
+			return msg.getZDS(i).getActionStatus().encode();
+		} catch (HL7Exception e) {
+			logger.error("Could not get ZDS Result Status", e);
+		}
+		
+		return "";
+	}
+	
+	public String getZDSTimeStamp(int i) {
+		try {
+			return formatDateTime(msg.getZDS(i).getDateAndTime().encode());
+		} catch (HL7Exception e) {
+			logger.error("Could not get ZDS Timestamp", e);
+		}
+		
+		return "";
+	}
+    
     /**
      *  Retrieve the possible segment headers from the OBX fields
      */
@@ -263,6 +316,7 @@ public class SpireHandler implements MessageHandler {
                 }
                 
             }
+            
             return(headers);
         }catch(Exception e){
             logger.error("Could not create header list", e);
