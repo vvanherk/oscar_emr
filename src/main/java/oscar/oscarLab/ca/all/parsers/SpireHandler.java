@@ -21,6 +21,7 @@ import oscar.util.UtilDateUtilities;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Segment;
 import ca.uhn.hl7v2.model.v23.datatype.XCN;
+import ca.uhn.hl7v2.model.v23.datatype.CN;
 //import ca.uhn.hl7v2.model.v23.message.ORU_R01;
 //import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.parser.PipeParser;
@@ -267,6 +268,21 @@ public class SpireHandler implements MessageHandler {
 	}
 	
 	public String getZDSResult(int i) {
+		return "";
+	}
+	
+	public String getZDSProvider(int i) {
+		try {
+			CN info = msg.getZDS(i).getProvider();
+			String retVal = "";
+			retVal += info.getGivenName().getValue() + " " + info.getMiddleInitialOrName().getValue() + " " + info.getFamilyName().getValue();
+			retVal += " " + info.getAssigningAuthority().getUniversalIDType().getValue();
+			retVal += " " + info.getSourceTable().getValue();
+			return retVal;
+		} catch (HL7Exception e) {
+			logger.error("Could not get ZDS name", e);
+		}
+		
 		return "";
 	}
 	

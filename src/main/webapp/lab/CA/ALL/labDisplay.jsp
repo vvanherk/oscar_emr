@@ -1222,24 +1222,42 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                           } // end for if (PFHT)
                           
                               } //end for j=0; j<obrCount;
+                          } // // end for headersfor i=0... (headers) line 625
                           
+                          MiscUtils.getLogger().info("checking for spire");
 							if (handler.getMsgType().equals("Spire")) {
-								int numZDS = handler.getNumZDSSegments();
-								for (int l=0; l < numZDS; l++) { %>
-									<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
-										<td valign="top" align="left"> <%=handler.getZDSName(l)%> </td>
-										<td align="right"><%= handler.getZDSResult(l) %></td>
-										
-										<td align="center"></td>
-										<td align="left"></td>
-										<td align="left"></td>
-										<td align="center"><%= handler.getZDSTimeStamp(l) %></td>
-										<td align="center"><%= handler.getZDSResultStatus(l) %></td>
-										<td align="center" valign="top"></td>
+								
+								int numZDS = ((SpireHandler)handler).getNumZDSSegments();
+								String lineClass = "NormalRes";
+								int lineNumber = 0;
+								MiscUtils.getLogger().info("HERE: " + numZDS);
+								
+								if (numZDS > 0) { %>
+									<tr class="Field2">
+		                               <td width="25%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formTestName"/></td>
+		                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formResult"/></td>
+		                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formProvider"/></td>
+		                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formDateTimeCompleted"/></td>
+		                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formNew"/></td>
+		                            </tr>
+								<% 
+								}
+								
+								for (int m=0; m < numZDS; m++) { 
+									MiscUtils.getLogger().info("iteration: " + m);
+									%>
+									<tr bgcolor="<%=(lineNumber % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+										<td valign="top" align="left"> <%=((SpireHandler)handler).getZDSName(m)%> </td>
+										<td align="right"><%= ((SpireHandler)handler).getZDSResult(m) %></td>
+										<td align="center"><%= ((SpireHandler)handler).getZDSProvider(m) %></td>
+										<td align="center"><%= ((SpireHandler)handler).getZDSTimeStamp(m) %></td>
+										<td align="center"><%= ((SpireHandler)handler).getZDSResultStatus(m) %></td>
 									</tr> 
+									<%
+									lineNumber++;
 								}
 							}
-                          } // // end for headersfor i=0... (headers) line 625
+                          
                            %>
                        </table>
                        <%
