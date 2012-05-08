@@ -112,7 +112,7 @@ public class HL7A04Data
 		this.demoData[0] = demograph.getDemographicNo().toString();
         this.demoData[1] = demograph.getLastName();
         this.demoData[2] = demograph.getFirstName();
-        this.demoData[3] = demograph.getBirthDayAsString();
+        this.demoData[3] = demograph.getBirthDayAsString().replaceAll("-", "");
         this.demoData[4] = demograph.getSex();
         this.demoData[5] = demograph.getChartNo();
 	}
