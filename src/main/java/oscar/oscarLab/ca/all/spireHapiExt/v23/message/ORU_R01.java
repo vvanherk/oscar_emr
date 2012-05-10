@@ -7,7 +7,6 @@ import oscar.oscarLab.ca.all.spireHapiExt.v23.segment.ZDS;
 import ca.uhn.hl7v2.model.Structure;
 import ca.uhn.hl7v2.parser.ModelClassFactory;
 
-
 public class ORU_R01 extends ca.uhn.hl7v2.model.v23.message.ORU_R01 {
 
  	/**

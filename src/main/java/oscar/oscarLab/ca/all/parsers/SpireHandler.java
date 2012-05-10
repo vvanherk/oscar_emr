@@ -14,6 +14,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.regex.Pattern;
 
 import org.apache.log4j.Logger;
 
@@ -32,6 +33,202 @@ import ca.uhn.hl7v2.validation.impl.NoValidation;
 
 import oscar.oscarLab.ca.all.spireHapiExt.v23.message.ORU_R01;
 //import oscar.oscarLab.ca.all.spireHapiExt.v23.segment.ZDS;
+
+class Lines {
+	private String message = "";
+	private String delimiter = "|";
+	private int numLines = 0;
+	private boolean update = false;
+	
+	public Lines(String message) {
+		this.setMessage(message);
+	}
+	
+	public Lines(String message, String delimiter) {
+		this.setMessage(message);
+		this.setDelimiter(delimiter);
+	}
+	
+	public void setDelimiter(String delimiter) {
+		this.delimiter = delimiter;
+		this.update = true;
+		if (this.delimiter == null)
+			this.delimiter = "";
+	}
+	
+	public void setMessage(String message) {
+		this.message = message;
+		this.update = true;
+		if (this.message == null)
+			this.message = "";
+	}
+	
+	public String getMessage() {
+		return this.message;
+	}
+	
+	public String getDelimiter() {
+		return this.delimiter;
+	}
+	
+	private boolean invalidLine(int i) {
+		return (i < 0 || i > numLines());
+	}
+	
+	public boolean remove(int i) {			
+		if (invalidLine(i))
+			return false;
+			
+		this.update = true;
+			
+		int[] indices = findIndices(i);
+		
+		if (indices[1] == this.message.length())
+			indices[1] = indices[1]-1;
+		
+		String removePattern = Pattern.quote( message.substring(indices[0], indices[1]+1) );
+		
+		String left = message.substring(0, indices[0]);
+		String right = message.substring(indices[0]);
+		right = right.replaceFirst(removePattern, "");
+		
+		this.setMessage(left + right);
+		
+		return true;
+	}
+	
+	public boolean insert(String text, int i) {
+		if (invalidLine(i) || text == null)
+			return false;
+			
+		this.update = true;
+			
+		int[] indices = findIndices(i);
+		
+		String left = message.substring(0, indices[0]);
+		String right = message.substring(indices[0]);
+		
+		this.setMessage(left + text + this.delimiter + right);
+		
+		return true;
+		
+	}
+	
+	public String cut(int i) {
+		if (invalidLine(i))
+			return null;
+		
+		String value = copy(i);
+		remove(i);
+		return value;
+	}
+	
+	public String copy(int i) {
+		if (invalidLine(i))
+			return null;
+			
+		int[] indices = findIndices(i);
+		
+		return message.substring(indices[0], indices[1]);
+	}
+	
+	private int[] findIndices(int i) {
+		if (invalidLine(i))
+			return null;
+		
+		int num = 0;
+		int indexStart = 0;
+		int indexEnd = message.indexOf(this.delimiter);
+		if (indexEnd == -1)
+			indexEnd = this.message.length();
+		
+		while (num != i) {
+			num++;
+			indexStart = indexEnd + this.delimiter.length();
+			indexEnd = message.indexOf(this.delimiter, indexStart);
+		}
+		
+		if (indexEnd == -1)
+			indexEnd = this.message.length();
+		
+		return new int[] {indexStart, indexEnd};
+	}
+	
+	public boolean contains(String text, int i) {
+		if (text == null || invalidLine(i))
+			return false;
+			
+		return copy(i).toLowerCase().contains(text.toLowerCase());
+	}
+	
+	public int numOccurances(String text) {
+		if (text == null)
+			return 0;
+		
+		int num = 0;
+		
+		for (int i=0; i < numLines(); i++)
+			if (contains(text, i))
+				num++;
+				
+		return num;
+	}
+	
+	public int findFirstOccurance(String text) {
+		if (text == null)
+			return -1;
+			
+		for (int i=0; i < numLines(); i++)
+			if (contains(text, i))
+				return i;
+				
+		return -1;
+	}
+	
+	public int findFirstOccurance(String text, int start) {
+		if (text == null || invalidLine(start))
+			return -1;
+			
+		for (int i=start; i < numLines(); i++)
+			if (contains(text, i))
+				return i;
+				
+		return -1;
+	}
+	
+	public int findLastOccurance(String text, int end) {
+		if (text == null || invalidLine(end))
+			return -1;
+			
+		for (int i=end; i >= 0; i--)
+			if (contains(text, i))
+				return i;
+				
+		return -1;
+	}
+	
+	public int numLines() {
+		if (!this.update)
+			return this.numLines;
+		
+		if (this.message.equals(""))
+			return 0;
+		
+		this.numLines = 1;
+		int index = message.indexOf(this.delimiter);
+		boolean found = index != -1;
+		
+		while (found) {
+			this.numLines++;
+			index = message.indexOf(this.delimiter, index+this.delimiter.length());
+			found = index != -1;
+		}
+		
+		this.update = false;
+		
+		return this.numLines;		
+	}
+}
 
 /**
  *
@@ -80,7 +277,53 @@ public class SpireHandler implements MessageHandler {
 		message = message.replaceAll("\\|MDM\\^R01\\|","|ORU^R01|");
 		//message = message.replaceAll("\\|MDM^R01\\|","|ORU^R01|");
 		
-		return message;
+		return reorderSegments(message);
+	}
+	
+	private String reorderSegments(String message) {
+		if (!message.contains("ZDS"))
+			return message;		
+		
+		// put ZDS segments at end of OBR 'group'
+		Lines lines = new Lines(message, "\n");
+		int obrIndex = lines.findFirstOccurance("OBR");
+		int obrNextIndex = lines.findFirstOccurance("OBR", obrIndex+1);
+		int zdsIndex = 0;
+		boolean finished = false;
+		
+		while (!finished) {
+			
+			if (obrNextIndex == -1) {
+				obrNextIndex = lines.numLines()-1;
+				finished = true; // does one more iteration of inner while loop
+			}
+			
+			zdsIndex = lines.findLastOccurance("ZDS", obrNextIndex);
+			
+			String[] zdsText = new String[ lines.numOccurances("ZDS") ];
+			int i = 0;
+			while (zdsIndex != -1 && zdsIndex > obrIndex) {
+				zdsText[i] = lines.cut(zdsIndex);
+				i++;
+				
+				obrNextIndex = lines.findFirstOccurance("OBR", obrIndex+1);
+				if (obrNextIndex == -1)
+					obrNextIndex = lines.numLines()-1;
+				zdsIndex = lines.findLastOccurance("ZDS", obrNextIndex);
+			}
+
+			for (int j=0; j < zdsText.length; j++) {
+				if (zdsText[j] != null)
+					lines.insert(zdsText[j], obrNextIndex);
+			}
+			
+			obrIndex = lines.findFirstOccurance("OBR", obrIndex+1);
+			if (obrIndex == -1)
+				break;
+			obrNextIndex = lines.findFirstOccurance("OBR", obrIndex+1);
+		}
+		
+		return lines.getMessage();
 	}
     
     public String getMsgType(){
