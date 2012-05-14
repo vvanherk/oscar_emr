@@ -65,12 +65,13 @@ public class NoteDisplayNonNote implements NoteDisplay {
 				cal1.set(Calendar.MINUTE, cal2.get(Calendar.MINUTE));
 				cal1.set(Calendar.SECOND, cal2.get(Calendar.SECOND));
 			}
+			
 			date = cal1.getTime();
-		}		
+		}
 
 		StringBuilder tmpNote = new StringBuilder();
 
-		List<BillingItem>items = h1.getBillingItems();
+		List<BillingItem>items = h1.getNonDeletedInvoices();
 		BillingItem item;
 		int size = items.size();
 		for(int idx = 0; idx < size; ++idx) {
@@ -80,6 +81,7 @@ public class NoteDisplayNonNote implements NoteDisplay {
 				tmpNote.append("; ");
 			}
 		}
+		
 		String pname, creator;
 		if( h1.getProvider_no() != null && h1.getProvider_no().length() > 0 ) {
 			provider = providerDao.getProvider(h1.getProvider_no());
@@ -98,7 +100,7 @@ public class NoteDisplayNonNote implements NoteDisplay {
 		}
 		
 		if( pname.equalsIgnoreCase(creator) ) {
-			tmpNote.append(" billed by " + pname);
+			tmpNote.append(" billed by " + creator);
 		}
 		else {
 			tmpNote.append(" billed by " + creator + " for " + pname);
