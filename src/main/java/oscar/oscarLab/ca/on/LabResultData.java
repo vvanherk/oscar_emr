@@ -56,6 +56,7 @@ public class LabResultData implements Comparable{
     public static String EXCELLERIS = "BCP"; //EXCELLERIS
     public static String DOCUMENT = "DOC"; //INTERNAL DOCUMENT
     public static String HRM = "HRM";
+    public static String Spire = "Spire";
     
     //HL7TEXT handles all messages types recieved as a hl7 formatted string
     public static String HL7TEXT = "HL7";
@@ -106,7 +107,6 @@ public class LabResultData implements Comparable{
         }else if (HRM.equals(labT)) {
         		labType = HRM;
         }
-
         
     }
     

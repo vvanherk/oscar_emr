@@ -34,9 +34,14 @@ import java.util.Collections;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 import org.oscarehr.util.MiscUtils;
+
+import oscar.oscarLab.ca.all.download.SpireClient;
 
 /**
  * This ContextListener is used to Initialize classes at startup - Initialize the DBConnection Pool.
@@ -46,6 +51,8 @@ import org.oscarehr.util.MiscUtils;
 public class Startup implements ServletContextListener {
 	private static Logger logger = MiscUtils.getLogger();
 	private oscar.OscarProperties p = oscar.OscarProperties.getInstance();
+	
+	private ScheduledExecutorService scheduler;
 
 	public void contextInitialized(ServletContextEvent sc) {
 		try {
@@ -157,6 +164,12 @@ public class Startup implements ServletContextListener {
 				
 
 			}
+			
+			if (p.isSpireClientEnabled()) {
+				scheduler = Executors.newSingleThreadScheduledExecutor();
+				logger.info("SpireClient time interval (in ms) : " + p.getSpireClientRunFrequency());
+				scheduler.scheduleAtFixedRate(new SpireClient(), 60000, p.getSpireClientRunFrequency(), TimeUnit.MILLISECONDS);
+			}
 
 			logger.debug("LAST LINE IN contextInitialized");
 		} catch (Exception e) {
@@ -186,6 +199,9 @@ public class Startup implements ServletContextListener {
 	}
 
 	public void contextDestroyed(ServletContextEvent arg0) {
+		if (p.isSpireClientEnabled() && scheduler != null) {
+			scheduler.shutdown();
+		}
 	}
 
 }

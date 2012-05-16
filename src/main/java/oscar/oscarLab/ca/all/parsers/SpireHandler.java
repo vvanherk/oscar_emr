@@ -75,7 +75,7 @@ class Lines {
 		return (i < 0 || i > numLines());
 	}
 	
-	public boolean remove(int i) {			
+	public boolean remove(int i) {
 		if (invalidLine(i))
 			return false;
 			
@@ -277,12 +277,14 @@ public class SpireHandler implements MessageHandler {
 		message = message.replaceAll("\\|MDM\\^R01\\|","|ORU^R01|");
 		//message = message.replaceAll("\\|MDM^R01\\|","|ORU^R01|");
 		
+		message = message.replaceAll("\\\\.br\\\\", "<br>");
+		
 		return reorderSegments(message);
 	}
 	
 	private String reorderSegments(String message) {
 		if (!message.contains("ZDS"))
-			return message;		
+			return message;	
 		
 		// put ZDS segments at end of OBR 'group'
 		Lines lines = new Lines(message, "\n");
@@ -377,7 +379,9 @@ public class SpireHandler implements MessageHandler {
     
     public boolean isOBXAbnormal(int i, int j){
         try{
-            if(getOBXAbnormalFlag(i, j).equals("A")){
+			String abnormalFlag = getOBXAbnormalFlag(i, j);
+			
+            if(abnormalFlag.equals("ABN") || abnormalFlag.equals("HI") || abnormalFlag.equals("LOW") || abnormalFlag.equals("CRIT") || abnormalFlag.equals("NA") || abnormalFlag.equals("Unknown")){
                 return(true);
             }else{
                 return(false);
@@ -518,9 +522,28 @@ public class SpireHandler implements MessageHandler {
 		try {
 			CN info = msg.getZDS(i).getProvider();
 			String retVal = "";
-			retVal += info.getGivenName().getValue() + " " + info.getMiddleInitialOrName().getValue() + " " + info.getFamilyName().getValue();
-			retVal += " " + info.getAssigningAuthority().getUniversalIDType().getValue();
-			retVal += " " + info.getSourceTable().getValue();
+			if (info.getGivenName().getValue() != null)
+				retVal += info.getGivenName().getValue() + " ";
+			if (info.getMiddleInitialOrName().getValue() != null)
+				retVal += info.getMiddleInitialOrName().getValue() + " ";
+			if (info.getFamilyName().getValue() != null)
+				retVal += info.getFamilyName().getValue() + " ";
+			
+			if (info.getAssigningAuthority().getUniversalIDType().getValue() != null)
+				retVal += info.getAssigningAuthority().getUniversalIDType().getValue() + " ";
+			if (info.getSourceTable().getValue() != null)
+				retVal += info.getSourceTable().getValue() + " ";
+				
+			if (info.getDegreeEgMD().getValue() != null)
+				retVal += info.getDegreeEgMD().getValue() + " ";
+			if (info.getPrefixEgDR().getValue() != null)
+				retVal += info.getPrefixEgDR().getValue() + " ";
+			if (info.getSuffixEgJRorIII().getValue() != null)
+				retVal += info.getSuffixEgJRorIII().getValue() + " ";
+					
+			//retVal += info.getGivenName().getValue() + " " + info.getMiddleInitialOrName().getValue() + " " + info.getFamilyName().getValue();
+			//retVal += " " + info.getAssigningAuthority().getUniversalIDType().getValue();
+			//retVal += " " + info.getSourceTable().getValue();
 			return retVal;
 		} catch (HL7Exception e) {
 			logger.error("Could not get ZDS name", e);
@@ -781,10 +804,14 @@ public class SpireHandler implements MessageHandler {
     public String getAccessionNum(){
         String accessionNum = "";
         try{
+			accessionNum = msg.getMSH().getMessageControlID().getValue();
+			
+			/*
             accessionNum = getString(msg.getRESPONSE().getORDER_OBSERVATION(0).getORC().getPlacerOrderNumber(0).getEntityIdentifier().getValue());
             if(msg.getRESPONSE().getORDER_OBSERVATION(0).getORC().getFillerOrderNumber().getEntityIdentifier().getValue() != null){
                 accessionNum = accessionNum+", "+getString(msg.getRESPONSE().getORDER_OBSERVATION(0).getORC().getFillerOrderNumber().getEntityIdentifier().getValue());
             }
+            */
             return(accessionNum);
         }catch(Exception e){
             logger.error("Could not return accession number", e);
