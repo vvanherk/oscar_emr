@@ -16,6 +16,7 @@ import org.apache.log4j.Logger;
 //import org.oscarehr.common.model.Demographic;
 
 import oscar.oscarClinic.ClinicData;
+import org.oscarehr.PMmodule.model.Program;
 import oscar.appt.ApptData;
 
 import org.oscarehr.util.MiscUtils;
@@ -40,6 +41,7 @@ public class HL7A04Data
 	
 	private ApptData appData;
 	private ClinicData clinicData;
+	private Program program;
 	private String[] demoData;
 	private String message;
 	private String fileName;
@@ -66,6 +68,16 @@ public class HL7A04Data
 		this.setDemographicData(demograph);
 	}
 	*/
+    
+    /**
+     * Constructor
+     */
+	public HL7A04Data( org.oscarehr.common.model.Demographic demograph, ApptData appData, ClinicData clinicData, Program program) throws HL7Exception {
+        this.setDemographicData(demograph);
+        this.setAppData(appData);
+        this.setClinicData(clinicData);
+        this.setProgram(program);
+    }
     
     /**
      * Constructor
@@ -129,6 +141,13 @@ public class HL7A04Data
 	 */
     public void setClinicData(ClinicData clinicData) {
 		this.clinicData = clinicData;
+	}
+	
+	/**
+	 * 
+	 */
+    public void setProgram(Program program) {
+		this.program = program;
 	}
     
     /**
@@ -291,10 +310,20 @@ public class HL7A04Data
 			pv1.getSetIDPatientVisit().setValue("1");
 			pv1.getPatientClass().setValue("R");
 			
+			/*
 			if (clinicData != null) {
 				pv1.getAssignedPatientLocation().getPointOfCare().setValue(clinicData.getClinicNo());	// clinic number
 				pv1.getAssignedPatientLocation().getRoom().setValue(clinicData.getClinicName());		// clinic name
 			}
+			*/
+			
+			if (program != null) {
+				Integer programId = program.getId();
+				if (programId != null)
+					pv1.getAssignedPatientLocation().getPointOfCare().setValue( programId.toString() );	// program number
+				pv1.getAssignedPatientLocation().getRoom().setValue( program.getName() );				// program name
+			}
+			
 			pv1.getAssignedPatientLocation().getBed().setValue(demoData[5]);	// demographic chart number
 			
 			pv1.getAttendingDoctor(0).getIDNumber().setValue(appData.getProviderNo());		// provider number

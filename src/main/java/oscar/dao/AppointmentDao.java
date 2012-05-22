@@ -18,6 +18,9 @@ import org.oscarehr.common.model.Demographic;
 
 import oscar.oscarDemographic.data.DemographicData;
 
+import org.oscarehr.PMmodule.model.Program;
+import org.oscarehr.PMmodule.dao.ProgramDao;
+
 /**
  * Oscar Appointment DAO implementation created to extract database access code
  * from appointment related JSP files. This class contains only actual sql
@@ -91,8 +94,14 @@ public class AppointmentDao extends OscarSuperDao {
 			// get clinic name/id
 			ClinicData clinicData = new ClinicData();
 			
+			Program program = null;
+			if ( apptInfo.get(0).get("id").toString() != null ) {
+				Integer programId = new Integer( apptInfo.get(0).get("id").toString() );
+				program = (new ProgramDao()).getProgram( programId );
+			}
+			
 			// generate A04 HL7
-			HL7A04Data A04Obj = new HL7A04Data(demo, appData, clinicData);
+			HL7A04Data A04Obj = new HL7A04Data(demo, appData, clinicData, program);
 			A04Obj.save();
 		} catch (Exception e) {
 			logger.info("Unable to generate HL7 A04 file: " + e.toString());
