@@ -38,6 +38,7 @@ import org.oscarehr.util.MiscUtils;
 import oscar.oscarDB.DBHandler;
 import oscar.oscarLab.ca.bc.PathNet.PathnetResultsData;
 import oscar.oscarLab.ca.on.CML.CMLLabTest;
+import oscar.oscarLab.ca.on.Spire.SpireLabTest;
 import oscar.util.StringUtils;
 import oscar.util.UtilDateUtilities;
 
@@ -106,6 +107,8 @@ public class LabResultData implements Comparable{
                 labType = EPSILON;
         }else if (HRM.equals(labT)) {
         		labType = HRM;
+        }else if (Spire.equals(labT)) {
+        		labType = Spire;
         }
         
     }
@@ -216,6 +219,9 @@ public class LabResultData implements Comparable{
         }else if (EXCELLERIS.equals(this.labType)){
             PathnetResultsData prd = new PathnetResultsData();
             this.discipline = prd.findPathnetDisipline(this.segmentID);
+        }else if (Spire.equals(this.labType)){
+            SpireLabTest spire = new SpireLabTest();
+            this.discipline = spire.getDiscipline(this.segmentID);
         }
         
         return this.discipline;

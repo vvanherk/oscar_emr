@@ -283,13 +283,13 @@ public class SpireHandler implements MessageHandler {
 	}
 	
 	private String reorderSegments(String message) {
-		if (!message.contains("ZDS"))
+		if (!message.contains("ZDS|"))
 			return message;	
 		
 		// put ZDS segments at end of OBR 'group'
 		Lines lines = new Lines(message, "\r");
-		int obrIndex = lines.findFirstOccurance("OBR");
-		int obrNextIndex = lines.findFirstOccurance("OBR", obrIndex+1);
+		int obrIndex = lines.findFirstOccurance("OBR|");
+		int obrNextIndex = lines.findFirstOccurance("OBR|", obrIndex+1);
 		int zdsIndex = 0;
 		boolean finished = false;
 		
@@ -300,18 +300,18 @@ public class SpireHandler implements MessageHandler {
 				finished = true; // does one more iteration of inner while loop
 			}
 			
-			zdsIndex = lines.findLastOccurance("ZDS", obrNextIndex);
+			zdsIndex = lines.findLastOccurance("ZDS|", obrNextIndex);
 			
-			String[] zdsText = new String[ lines.numOccurances("ZDS") ];
+			String[] zdsText = new String[ lines.numOccurances("ZDS|") ];
 			int i = 0;
 			while (zdsIndex != -1 && zdsIndex > obrIndex) {
 				zdsText[i] = lines.cut(zdsIndex);
 				i++;
 				
-				obrNextIndex = lines.findFirstOccurance("OBR", obrIndex+1);
+				obrNextIndex = lines.findFirstOccurance("OBR|", obrIndex+1);
 				if (obrNextIndex == -1)
 					obrNextIndex = lines.numLines()-1;
-				zdsIndex = lines.findLastOccurance("ZDS", obrNextIndex);
+				zdsIndex = lines.findLastOccurance("ZDS|", obrNextIndex);
 			}
 
 			for (int j=0; j < zdsText.length; j++) {
@@ -319,10 +319,10 @@ public class SpireHandler implements MessageHandler {
 					lines.insert(zdsText[j], obrNextIndex);
 			}
 			
-			obrIndex = lines.findFirstOccurance("OBR", obrIndex+1);
+			obrIndex = lines.findFirstOccurance("OBR|", obrIndex+1);
 			if (obrIndex == -1)
 				break;
-			obrNextIndex = lines.findFirstOccurance("OBR", obrIndex+1);
+			obrNextIndex = lines.findFirstOccurance("OBR|", obrIndex+1);
 		}
 		
 		return lines.getMessage();
