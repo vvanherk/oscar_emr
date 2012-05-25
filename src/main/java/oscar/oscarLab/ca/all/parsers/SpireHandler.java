@@ -287,7 +287,7 @@ public class SpireHandler implements MessageHandler {
 			return message;	
 		
 		// put ZDS segments at end of OBR 'group'
-		Lines lines = new Lines(message, "\n");
+		Lines lines = new Lines(message, "\r");
 		int obrIndex = lines.findFirstOccurance("OBR");
 		int obrNextIndex = lines.findFirstOccurance("OBR", obrIndex+1);
 		int zdsIndex = 0;
