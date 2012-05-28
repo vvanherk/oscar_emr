@@ -213,6 +213,7 @@ public class LabResultData implements Comparable{
     
     
     public String getDiscipline(){
+		logger.info("type: " + this.labType);
         if (CML.equals(this.labType)){
             CMLLabTest cml = new CMLLabTest();
             this.discipline = cml.getDiscipline(this.segmentID);
@@ -223,7 +224,7 @@ public class LabResultData implements Comparable{
             SpireLabTest spire = new SpireLabTest();
             this.discipline = spire.getDiscipline(this.segmentID);
         }
-        
+        logger.info("discipline: " + this.discipline);
         return this.discipline;
     }
     
@@ -297,7 +298,7 @@ public class LabResultData implements Comparable{
     public Date getDateObj(){
         if (EXCELLERIS.equals(this.labType)){
             this.dateTimeObr = UtilDateUtilities.getDateFromString(this.getDateTime(), "yyyy-MM-dd HH:mm:ss");
-        }else if(HL7TEXT.equals(this.labType)){
+        }else if(HL7TEXT.equals(this.labType) || Spire.equals(this.labType)){
             this.dateTimeObr = UtilDateUtilities.getDateFromString(this.getDateTime(), "yyyy-MM-dd HH:mm:ss");
         }else if(CML.equals(this.labType)){
             String date="";

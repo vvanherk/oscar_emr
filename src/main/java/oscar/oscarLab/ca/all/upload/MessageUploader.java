@@ -231,7 +231,11 @@ public final class MessageUploader {
 				}
 			}
 		}
-
+		
+		//if (!labType.equals("Spire"))
+		//	labType = "HL7";
+		
+		
 		ProviderLabRouting routing = new ProviderLabRouting();
 		if (providerNums.size() > 0) {
 			for (int i = 0; i < providerNums.size(); i++) {

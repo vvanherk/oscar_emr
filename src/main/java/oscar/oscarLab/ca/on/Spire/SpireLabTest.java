@@ -198,14 +198,15 @@ public class SpireLabTest {
         
         try{
             
-            ResultSet rs = DBHandler.GetSQL("select distinct title from labTestResults where title != '' and labPatientPhysicianInfo_id = '"+labid+"'");
+            //ResultSet rs = DBHandler.GetSQL("select distinct title from labTestResults where title != '' and labPatientPhysicianInfo_id = '"+labid+"'");
+            ResultSet rs = DBHandler.GetSQL("select distinct discipline from hl7TextInfo where discipline != '' and lab_no = '"+labid+"'");
             ArrayList alist = new ArrayList();
             int count = 0;
             while (rs.next()){
-                String title = oscar.Misc.getString(rs, "title");
-                count += title.length();
-                alist.add(title);
-                log.debug("line "+title);
+                String discipline = oscar.Misc.getString(rs, "discipline");
+                count += discipline.length();
+                alist.add(discipline);
+                log.debug("line "+discipline);
             }
             
             if(alist.size() == 1 ){

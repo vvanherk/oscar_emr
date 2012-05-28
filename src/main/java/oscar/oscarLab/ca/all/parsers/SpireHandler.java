@@ -401,6 +401,12 @@ public class SpireHandler implements MessageHandler {
     }
     
     public String getObservationHeader(int i, int j){
+		try {
+			return (getString(msg.getRESPONSE().getORDER_OBSERVATION(i).getOBR().getUniversalServiceIdentifier().getCe1_Identifier().getValue()));
+		} catch(Exception e){
+            return("");
+        }
+        /*
         try{
             Terser terser = new Terser(msg);
             return (getString(terser.get(msg.getRESPONSE().getORDER_OBSERVATION(i).getOBSERVATION(j).getOBX(),4,0,1,1))+" "+
@@ -409,6 +415,7 @@ public class SpireHandler implements MessageHandler {
         }catch(Exception e){
             return("");
         }
+        */
     }
     
     public String getOBXIdentifier(int i, int j){

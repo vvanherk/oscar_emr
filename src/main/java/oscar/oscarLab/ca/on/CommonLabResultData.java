@@ -56,6 +56,7 @@ import oscar.oscarDB.ArchiveDeletedRecords;
 import oscar.oscarDB.DBHandler;
 import oscar.oscarDB.DBPreparedHandler;
 import oscar.oscarLab.ca.all.Hl7textResultsData;
+import oscar.oscarLab.ca.all.SpireResultsData;
 import oscar.oscarLab.ca.all.upload.ProviderLabRouting;
 import oscar.oscarLab.ca.bc.PathNet.PathnetResultsData;
 import oscar.oscarMDS.data.MDSResultsData;
@@ -251,6 +252,7 @@ public class CommonLabResultData {
 		String pathnet = op.getProperty("PATHNET_LABS");
 		String hl7text = op.getProperty("HL7TEXT_LABS");
 		String epsilon = op.getProperty("Epsilon_LABS");
+		String spire = op.getProperty("Spire_LABS");
 
 		if (scannedDocStatus != null && (scannedDocStatus.equals("N") || scannedDocStatus.equals("I") || scannedDocStatus.equals(""))) {
 
@@ -276,6 +278,12 @@ public class CommonLabResultData {
 
 				ArrayList<LabResultData> hl7Labs = Hl7textResultsData.populateHl7ResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
 				labs.addAll(hl7Labs);
+			}
+			
+			if (spire != null && spire.trim().equals("yes")) {
+				//SpireResultsData spireData = new SpireResultsData();
+				//ArrayList<LabResultData> spireLabs = spireData.populateSpireResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+				//labs.addAll(spireLabs);
 			}
 		}
 		return labs;
