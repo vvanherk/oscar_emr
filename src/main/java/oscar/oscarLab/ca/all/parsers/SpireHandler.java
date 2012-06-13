@@ -12,6 +12,7 @@ package oscar.oscarLab.ca.all.parsers;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.regex.Pattern;
@@ -825,6 +826,35 @@ public class SpireHandler implements MessageHandler {
             return("");
         }
     }
+    
+    public List<String> getDocNames() {
+		List<String> docNames = new ArrayList<String>();
+		
+		docNames.add( getDocName() );
+		
+        try{
+            XCN[] attendingDocs = msg.getRESPONSE().getPATIENT().getVISIT().getPV1().getAttendingDoctor();
+			XCN[] consultingDocs = msg.getRESPONSE().getPATIENT().getVISIT().getPV1().getConsultingDoctor();
+			XCN[] admittingDocs = msg.getRESPONSE().getPATIENT().getVISIT().getPV1().getAdmittingDoctor();
+			
+			for (int i=0; i < attendingDocs.length; i++) {
+				docNames.add( attendingDocs[i].getGivenName() + " " + attendingDocs[i].getFamilyName() );				
+			}
+			
+			for (int i=0; i < consultingDocs.length; i++) {
+				docNames.add( consultingDocs[i].getGivenName() + " " + consultingDocs[i].getFamilyName() );
+			}
+			
+			for (int i=0; i < admittingDocs.length; i++) {
+				docNames.add( admittingDocs[i].getGivenName() + " " + admittingDocs[i].getFamilyName() );
+			}
+        }catch(Exception e){
+            logger.error("Could not return doctor names", e);
+            return(null);
+        }
+        
+        return docNames;
+	}
     
     public String getDocName(){
         String docName = "";

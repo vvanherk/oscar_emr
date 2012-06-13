@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+import org.oscarehr.PMmodule.dao.ProviderDao;
 import org.oscarehr.common.OtherIdManager;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.Hl7TextInfoDao;
@@ -26,6 +27,7 @@ import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.Hl7TextInfo;
 import org.oscarehr.common.model.Hl7TextMessage;
 import org.oscarehr.common.model.OtherId;
+import org.oscarehr.common.model.Provider;
 import org.oscarehr.olis.dao.OLISSystemPreferencesDao;
 import org.oscarehr.olis.model.OLISSystemPreferences;
 import org.oscarehr.util.DbConnectionFilter;
@@ -36,6 +38,7 @@ import oscar.OscarProperties;
 import oscar.oscarLab.ca.all.Hl7textResultsData;
 import oscar.oscarLab.ca.all.parsers.Factory;
 import oscar.oscarLab.ca.all.parsers.HHSEmrDownloadHandler;
+import oscar.oscarLab.ca.all.parsers.SpireHandler;
 import oscar.oscarLab.ca.all.parsers.MessageHandler;
 import oscar.util.UtilDateUtilities;
 
@@ -91,6 +94,46 @@ public final class MessageUploader {
             		}
             	}
             }
+            
+            // get actual ohip numbers based on doctor first and last name
+            if(h instanceof SpireHandler) {
+				List<String> docNames = ((SpireHandler)h).getDocNames();
+				logger.info("docNames:");
+	            for (int i=0; i < docNames.size(); i++) {
+					logger.info(i + " " + docNames.get(i));
+				}
+            	if (docNames != null) {
+					docNums = new ArrayList<String>();
+					ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+					
+					for (int i=0; i < docNames.size(); i++) {
+						String[] firstLastName = docNames.get(i).split("\\s");
+						if (firstLastName != null && firstLastName.length >= 2) {
+							logger.info("firstLastName: " + firstLastName[0] + " " + firstLastName[firstLastName.length-1]);
+							List<Provider> provList = providerDao.getProviderLikeFirstLastName("%"+firstLastName[0]+"%", firstLastName[firstLastName.length-1]);
+							if (provList != null) {
+								if (provList.size() >= 1 && !provList.get(0).getOhipNo().equals("000000")) {
+									docNums.add( provList.get(0).getOhipNo() );
+									logger.info("ADDED1: " + provList.get(0).getOhipNo());
+								} else {
+									// prepend 'dr ' to first name and try again
+									provList = providerDao.getProviderLikeFirstLastName("dr " + firstLastName[0], firstLastName[1]);
+									if (provList != null) {
+										if (provList.size() == 1 && !provList.get(0).getOhipNo().equals("000000")) {
+											logger.info("ADDED2: " + provList.get(0).getOhipNo());
+											docNums.add( provList.get(0).getOhipNo() );
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+            }
+            logger.info("docNums:");
+            for (int i=0; i < docNums.size(); i++) {
+				logger.info(i + " " + docNums.get(i));
+			}
 
 			try {
 				// reformat date
@@ -184,7 +227,13 @@ public final class MessageUploader {
 			    	providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type);
 			    }
 			} else {
-				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type);
+				Integer limit = null;
+				boolean orderByLength = false;
+				if (type.equals("Spire")) {
+					limit = new Integer(1);
+					orderByLength = true;
+				}
+				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, limit, orderByLength);
 			}
 			retVal = h.audit();
 			if(results != null) {
@@ -198,20 +247,30 @@ public final class MessageUploader {
 		return (retVal);
 
 	}
-
+	
 	/**
 	 * Attempt to match the doctors from the lab to a provider
-	 */
-	private static void providerRouteReport(String labId, ArrayList docNums, Connection conn, String altProviderNo, String labType) throws Exception {
-
+	 */ 
+	private static void providerRouteReport(String labId, ArrayList docNums, Connection conn, String altProviderNo, String labType, Integer limit, boolean orderByLength) throws Exception {
 		ArrayList providerNums = new ArrayList();
 		PreparedStatement pstmt;
 		String sql = "";
+		String sqlLimit = "";
+		String sqlOrderByLength = "";
+		
+		if (limit != null && limit.intValue() > 0) {
+			sqlLimit = " limit " + limit.toString();
+		}	
+		
+		if (orderByLength) {
+			sqlOrderByLength = " order by length(first_name)";
+		}		
+		
 		if (docNums != null) {
 			for (int i = 0; i < docNums.size(); i++) {
 
 				if (docNums.get(i) != null && !((String) docNums.get(i)).trim().equals("")) {
-					sql = "select provider_no from provider where ohip_no = '" + ((String) docNums.get(i)) + "'";
+					sql = "select provider_no from provider where ohip_no = '" + ((String) docNums.get(i)) + "'" + sqlOrderByLength + sqlLimit;
 					pstmt = conn.prepareStatement(sql);
 					ResultSet rs = pstmt.executeQuery();
 					while (rs.next()) {
@@ -246,7 +305,13 @@ public final class MessageUploader {
 			routing.route(labId, "0", conn, "HL7");
 			routing.route(labId, altProviderNo, conn, "HL7");
 		}
+	}
 
+	/**
+	 * Attempt to match the doctors from the lab to a provider
+	 */
+	private static void providerRouteReport(String labId, ArrayList docNums, Connection conn, String altProviderNo, String labType) throws Exception {
+		providerRouteReport(labId, docNums, conn, altProviderNo, labType, null, false);
 	}
 
 	/**
