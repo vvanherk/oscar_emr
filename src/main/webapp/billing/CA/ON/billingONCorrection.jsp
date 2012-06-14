@@ -305,7 +305,7 @@ function checkSettle(status) {
     	document.getElementById("refund").disabled = false;
     	document.getElementById("billTo").disabled = false;
     }
-    else {
+    else if( status != 'S' ){
     	document.getElementById("thirdParty").style.display = "none";
     	document.getElementById("thirdPartyPymnt").style.display = "none";
     	
