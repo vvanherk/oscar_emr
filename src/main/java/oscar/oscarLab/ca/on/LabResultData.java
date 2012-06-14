@@ -213,7 +213,6 @@ public class LabResultData implements Comparable{
     
     
     public String getDiscipline(){
-		logger.info("type: " + this.labType);
         if (CML.equals(this.labType)){
             CMLLabTest cml = new CMLLabTest();
             this.discipline = cml.getDiscipline(this.segmentID);
@@ -224,7 +223,6 @@ public class LabResultData implements Comparable{
             SpireLabTest spire = new SpireLabTest();
             this.discipline = spire.getDiscipline(this.segmentID);
         }
-        logger.info("discipline: " + this.discipline);
         return this.discipline;
     }
     

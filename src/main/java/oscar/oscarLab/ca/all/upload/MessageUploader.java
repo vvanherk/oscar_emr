@@ -95,44 +95,20 @@ public final class MessageUploader {
             	}
             }
             
-            // get actual ohip numbers based on doctor first and last name
+            // get actual ohip numbers based on doctor first and last name for spire lab
             if(h instanceof SpireHandler) {
 				List<String> docNames = ((SpireHandler)h).getDocNames();
-				logger.info("docNames:");
+				//logger.debug("docNames:");
 	            for (int i=0; i < docNames.size(); i++) {
 					logger.info(i + " " + docNames.get(i));
 				}
             	if (docNames != null) {
-					docNums = new ArrayList<String>();
-					ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
-					
-					for (int i=0; i < docNames.size(); i++) {
-						String[] firstLastName = docNames.get(i).split("\\s");
-						if (firstLastName != null && firstLastName.length >= 2) {
-							logger.info("firstLastName: " + firstLastName[0] + " " + firstLastName[firstLastName.length-1]);
-							List<Provider> provList = providerDao.getProviderLikeFirstLastName("%"+firstLastName[0]+"%", firstLastName[firstLastName.length-1]);
-							if (provList != null) {
-								if (provList.size() >= 1 && !provList.get(0).getOhipNo().equals("000000")) {
-									docNums.add( provList.get(0).getOhipNo() );
-									logger.info("ADDED1: " + provList.get(0).getOhipNo());
-								} else {
-									// prepend 'dr ' to first name and try again
-									provList = providerDao.getProviderLikeFirstLastName("dr " + firstLastName[0], firstLastName[1]);
-									if (provList != null) {
-										if (provList.size() == 1 && !provList.get(0).getOhipNo().equals("000000")) {
-											logger.info("ADDED2: " + provList.get(0).getOhipNo());
-											docNums.add( provList.get(0).getOhipNo() );
-										}
-									}
-								}
-							}
-						}
-					}
+					docNums = findProvidersForSpireLab(docNames);
 				}
             }
-            logger.info("docNums:");
+            //logger.debug("docNums:");
             for (int i=0; i < docNums.size(); i++) {
-				logger.info(i + " " + docNums.get(i));
+				logger.debug(i + " " + docNums.get(i));
 			}
 
 			try {
@@ -233,7 +209,7 @@ public final class MessageUploader {
 					limit = new Integer(1);
 					orderByLength = true;
 				}
-				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, limit, orderByLength);
+				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, "provider_no", limit, orderByLength);
 			}
 			retVal = h.audit();
 			if(results != null) {
@@ -249,14 +225,77 @@ public final class MessageUploader {
 	}
 	
 	/**
+	 * Method findProvidersForSpireLab
+	 * Finds the providers that are associated with a spire lab.  (need to do this using doctor names, as
+	 * spire labs don't have a valid ohip number associated with them).
+	 */ 
+	private static ArrayList<String> findProvidersForSpireLab(List<String> docNames) {
+		List<String> docNums = new ArrayList<String>();
+		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+		
+		for (int i=0; i < docNames.size(); i++) {
+			String[] firstLastName = docNames.get(i).split("\\s");
+			if (firstLastName != null && firstLastName.length >= 2) {
+				//logger.debug("Searching for provider with first and last name: " + firstLastName[0] + " " + firstLastName[firstLastName.length-1]);
+				List<Provider> provList = providerDao.getProviderLikeFirstLastName("%"+firstLastName[0]+"%", firstLastName[firstLastName.length-1]);
+				if (provList != null) {
+					int provIndex = findProviderWithShortestFirstName(provList);
+					if (provIndex != -1 && provList.size() >= 1 && !provList.get(provIndex).getProviderNo().equals("0")) {
+						docNums.add( provList.get(provIndex).getProviderNo() );
+						//logger.debug("ADDED1: " + provList.get(provIndex).getProviderNo());
+					} else {
+						// prepend 'dr ' to first name and try again
+						provList = providerDao.getProviderLikeFirstLastName("dr " + firstLastName[0], firstLastName[1]);
+						if (provList != null) {
+							provIndex = findProviderWithShortestFirstName(provList);
+							if (provIndex != -1 && provList.size() == 1 && !provList.get(provIndex).getProviderNo().equals("0")) {
+								//logger.debug("ADDED2: " + provList.get(provIndex).getProviderNo());
+								docNums.add( provList.get(provIndex).getProviderNo() );
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return (ArrayList<String>)docNums;
+	}
+	
+	/**
+	 * Method findProviderWithShortestFirstName
+	 * Finds the provider with the shortest first name in a list of providers.
+	 */ 
+	private static int findProviderWithShortestFirstName(List<Provider> provList) {
+		if (provList == null || provList.isEmpty())
+			return -1;
+			
+		int index = 0;
+		int shortestLength = provList.get(0).getFirstName().length();
+		for (int i=1; i < provList.size(); i++) {
+			int curLength = provList.get(i).getFirstName().length();
+			if (curLength < shortestLength) {
+				index = i;
+				shortestLength = curLength;
+			}
+		}
+		
+		return index;
+	}
+	
+	/**
 	 * Attempt to match the doctors from the lab to a provider
 	 */ 
-	private static void providerRouteReport(String labId, ArrayList docNums, Connection conn, String altProviderNo, String labType, Integer limit, boolean orderByLength) throws Exception {
+	private static void providerRouteReport(String labId, ArrayList docNums, Connection conn, String altProviderNo, String labType, String search_on, Integer limit, boolean orderByLength) throws Exception {
 		ArrayList providerNums = new ArrayList();
 		PreparedStatement pstmt;
 		String sql = "";
 		String sqlLimit = "";
 		String sqlOrderByLength = "";
+		String sqlSearchOn = "ohip_no";
+		
+		if (search_on != null && search_on.length() > 0) {
+			sqlSearchOn = search_on;
+		}
 		
 		if (limit != null && limit.intValue() > 0) {
 			sqlLimit = " limit " + limit.toString();
@@ -270,7 +309,7 @@ public final class MessageUploader {
 			for (int i = 0; i < docNums.size(); i++) {
 
 				if (docNums.get(i) != null && !((String) docNums.get(i)).trim().equals("")) {
-					sql = "select provider_no from provider where ohip_no = '" + ((String) docNums.get(i)) + "'" + sqlOrderByLength + sqlLimit;
+					sql = "select provider_no from provider where "+ sqlSearchOn +" = '" + ((String) docNums.get(i)) + "'" + sqlOrderByLength + sqlLimit;
 					pstmt = conn.prepareStatement(sql);
 					ResultSet rs = pstmt.executeQuery();
 					while (rs.next()) {
@@ -311,7 +350,7 @@ public final class MessageUploader {
 	 * Attempt to match the doctors from the lab to a provider
 	 */
 	private static void providerRouteReport(String labId, ArrayList docNums, Connection conn, String altProviderNo, String labType) throws Exception {
-		providerRouteReport(labId, docNums, conn, altProviderNo, labType, null, false);
+		providerRouteReport(labId, docNums, conn, altProviderNo, labType, null, null, false);
 	}
 
 	/**

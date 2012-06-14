@@ -115,6 +115,7 @@ public class ProviderDao extends HibernateDaoSupport {
     	firstname=firstname.trim();
     	lastname=lastname.trim();
     	String s="From Provider p where p.FirstName like ? and p.LastName like ?";
+    	log.info(firstname + " " + lastname + " : " + s);
     	ArrayList paramList=new ArrayList();
     	paramList.add(firstname);
     	paramList.add(lastname);

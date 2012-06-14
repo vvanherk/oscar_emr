@@ -598,7 +598,7 @@ public class SpireHandler implements MessageHandler {
                         currentHeader = getObservationHeader(i, j);
                         
                         if (!headers.contains(currentHeader)){
-                            logger.info("Adding header: '"+currentHeader+"' to list");
+                            logger.debug("Adding header: '"+currentHeader+"' to list");
                             headers.add(currentHeader);
                         }
                     }
