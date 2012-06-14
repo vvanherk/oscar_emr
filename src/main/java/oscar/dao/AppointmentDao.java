@@ -21,6 +21,8 @@ import oscar.oscarDemographic.data.DemographicData;
 import org.oscarehr.PMmodule.model.Program;
 import org.oscarehr.PMmodule.dao.ProgramDao;
 
+import org.oscarehr.util.SpringUtils;
+
 /**
  * Oscar Appointment DAO implementation created to extract database access code
  * from appointment related JSP files. This class contains only actual sql
@@ -95,16 +97,17 @@ public class AppointmentDao extends OscarSuperDao {
 			ClinicData clinicData = new ClinicData();
 			
 			Program program = null;
-			if ( apptInfo.get(0).get("id").toString() != null ) {
-				Integer programId = new Integer( apptInfo.get(0).get("id").toString() );
-				program = (new ProgramDao()).getProgram( programId );
+			if ( apptInfo.get(0).get("adm_program_id").toString() != null ) {
+				Integer programId = new Integer( apptInfo.get(0).get("adm_program_id").toString() );
+				ProgramDao programDao = (ProgramDao)SpringUtils.getBean("programDao");
+				program = programDao.getProgram( programId );
 			}
 			
 			// generate A04 HL7
 			HL7A04Data A04Obj = new HL7A04Data(demo, appData, clinicData, program);
 			A04Obj.save();
 		} catch (Exception e) {
-			logger.info("Unable to generate HL7 A04 file: " + e.toString());
+			logger.error("Unable to generate HL7 A04 file.", e);
 		}
 	}
 
@@ -117,7 +120,7 @@ public class AppointmentDao extends OscarSuperDao {
             {"search_appt_past", "select appt.appointment_date, appt.start_time, appt.status, p.last_name, p.first_name from appointment appt, provider p where appt.provider_no = p.provider_no and appt.demographic_no = ? and appt.appointment_date < ? and appt.appointment_date > ? order by appointment_date desc, start_time desc"},
             {"search_appt_no", "select appointment_no from appointment where provider_no=? and appointment_date=? and start_time=? and end_time=? and createdatetime=? and creator=? and demographic_no=? order by appointment_no desc limit 1"},
             
-            {"search_appt_data", "select app.*, prov.first_name, prov.last_name, prov.ohip_no from appointment app, provider prov where app.provider_no = prov.provider_no and app.provider_no=? and app.appointment_date=? and app.start_time=? and app.end_time=? and app.createdatetime=? and app.creator=? and app.demographic_no=? order by app.appointment_no desc limit 1"},
+            {"search_appt_data", "select app.*, prov.first_name, prov.last_name, prov.ohip_no, adm.program_id as adm_program_id from provider prov, appointment app left join admission adm on app.demographic_no = adm.client_id where app.provider_no = prov.provider_no and app.provider_no=? and app.appointment_date=? and app.start_time=? and app.end_time=? and app.createdatetime=? and app.creator=? and app.demographic_no=? order by app.appointment_no desc limit 1"},
 
             {"add_apptrecord", "insert into appointment (provider_no,appointment_date,start_time,end_time,name, notes,reason,location,resources,type, style,billing,status,createdatetime,creator, remarks, demographic_no, program_id,urgency) values(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?)" },
             {"search_waitinglist", "select wl.listID, wln.name from waitingList wl, waitingListName wln where wl.demographic_no=? and wln.ID=wl.listID and wl.is_history ='N' order by wl.listID"},

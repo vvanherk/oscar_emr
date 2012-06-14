@@ -130,10 +130,10 @@ public class ProgramDao extends HibernateDaoSupport {
     }
 
     public Program getProgram(Integer programId) {
-        if (programId == null || programId <= 0) {
+        if (programId == null || programId.intValue() <= 0) {
             return null;
         }
-
+		
         Program program = (Program) getHibernateTemplate().get(Program.class, programId);
 
         return program;
