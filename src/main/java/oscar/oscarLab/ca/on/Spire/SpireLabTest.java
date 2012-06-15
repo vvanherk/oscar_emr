@@ -32,6 +32,7 @@ import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -200,7 +201,7 @@ public class SpireLabTest {
             
             //ResultSet rs = DBHandler.GetSQL("select distinct title from labTestResults where title != '' and labPatientPhysicianInfo_id = '"+labid+"'");
             ResultSet rs = DBHandler.GetSQL("select distinct discipline from hl7TextInfo where discipline != '' and lab_no = '"+labid+"'");
-            ArrayList alist = new ArrayList();
+            List<String> alist = new ArrayList<String>();
             int count = 0;
             while (rs.next()){
                 String discipline = oscar.Misc.getString(rs, "discipline");
@@ -394,7 +395,7 @@ public class SpireLabTest {
     }
     
     public ArrayList getGroupResults(ArrayList list){
-        ArrayList groups = new ArrayList();
+        List<String> groups = new ArrayList<String>();
         String currentGroup = "";
         GroupResults gResults = null;
         log.debug("start getGroupResults ... list size: "+list.size());
