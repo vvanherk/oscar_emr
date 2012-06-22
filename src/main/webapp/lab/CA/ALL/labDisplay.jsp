@@ -1291,7 +1291,6 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 								int numZDS = ((SpireHandler)handler).getNumZDSSegments();
 								String lineClass = "NormalRes";
 								int lineNumber = 0;
-								MiscUtils.getLogger().info("HERE: " + numZDS);
 								
 								if (numZDS > 0) { %>
 									<tr class="Field2">
