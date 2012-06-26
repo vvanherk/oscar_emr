@@ -16,13 +16,14 @@ import org.apache.log4j.Logger;
 //import org.oscarehr.common.model.Demographic;
 
 import oscar.oscarClinic.ClinicData;
-import org.oscarehr.PMmodule.model.Program;
+//import org.oscarehr.PMmodule.model.Program;
 import oscar.appt.ApptData;
 
 import org.oscarehr.util.MiscUtils;
 import oscar.OscarProperties;
 
 import java.util.Date;
+import java.util.List;
 import java.text.SimpleDateFormat;
 
 import java.io.FileWriter;
@@ -41,7 +42,7 @@ public class HL7A04Data
 	
 	private ApptData appData;
 	private ClinicData clinicData;
-	private Program program;
+	private List programs;
 	private String[] demoData;
 	private String message;
 	private String fileName;
@@ -72,11 +73,11 @@ public class HL7A04Data
     /**
      * Constructor
      */
-	public HL7A04Data( org.oscarehr.common.model.Demographic demograph, ApptData appData, ClinicData clinicData, Program program) throws HL7Exception {
+	public HL7A04Data( org.oscarehr.common.model.Demographic demograph, ApptData appData, ClinicData clinicData, List programs) throws HL7Exception {
         this.setDemographicData(demograph);
         this.setAppData(appData);
         this.setClinicData(clinicData);
-        this.setProgram(program);
+        this.setPrograms(programs);
     }
     
     /**
@@ -146,8 +147,8 @@ public class HL7A04Data
 	/**
 	 * 
 	 */
-    public void setProgram(Program program) {
-		this.program = program;
+    public void setPrograms(List programs) {
+		this.programs = programs;
 	}
     
     /**
@@ -317,11 +318,18 @@ public class HL7A04Data
 			}
 			*/
 			
-			if (program != null) {
-				Integer programId = program.getId();
-				if (programId != null)
-					pv1.getAssignedPatientLocation().getPointOfCare().setValue( programId.toString() );	// program number
-				pv1.getAssignedPatientLocation().getRoom().setValue( program.getName() );				// program name
+			if (this.programs != null) {
+				String programIds = "";
+				for (int i=0; i < this.programs.size(); i++) {
+					Integer programId = (Integer)this.programs.get(i);
+					if (programId != null) {
+						if (programIds.length() != 0)
+							programIds += "-";
+						programIds += programId.toString();
+					}
+					//pv1.getAssignedPatientLocation().getPointOfCare().setValue( p.getName() ); // program name (not used anymore)
+				}
+				pv1.getAssignedPatientLocation().getRoom().setValue( programIds );	// program numbers
 			}
 			
 			pv1.getAssignedPatientLocation().getBed().setValue(demoData[5]);	// demographic chart number

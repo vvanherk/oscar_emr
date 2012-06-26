@@ -214,6 +214,12 @@ public class DemographicDao extends HibernateDaoSupport {
         List rs = getHibernateTemplate().find(q, new Object[] { demoNo });
         return rs;
     }
+    
+    public List getDemoProgramCurrent(Integer demoNo) {
+        String q = "Select a.ProgramId From Admission a Where a.ClientId=? and a.AdmissionStatus='current'";
+        List rs = getHibernateTemplate().find(q, new Object[] { demoNo });
+        return rs;
+    }
 
     public static List<Integer> getDemographicIdsAdmittedIntoFacility(int facilityId) {
         Connection c = null;
