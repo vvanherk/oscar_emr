@@ -57,10 +57,9 @@ public class SpireClient extends TimerTask {
 			connect();
 			
 			logger.info("Copying files from Spire...");
-			Vector files = spireSFTPChannel.ls("/");
+			List files = spireSFTPChannel.ls("/");
 			
-			//String saveDir = p.getSpireDownloadDir();
-			String saveDir = "/home/jarrett/prylynx/oscar_mcmaster/hl7_file_management/HL7Data/temp/";
+			String saveDir = p.getSpireDownloadDir();
 			
 			if (files.size() == 0) {
 				logger.info("No files found.");
@@ -76,9 +75,9 @@ public class SpireClient extends TimerTask {
 					File f = new File(saveDir + file.getFilename() + ".HL7");
 					spireSFTPChannel.get(file.getFilename(), new FileOutputStream(f));
 					
-					spireSFTPChannel.rename(file.getFilename(), "downloaded/" + file.getFilename());
+					//spireSFTPChannel.rename(file.getFilename(), "downloaded/" + file.getFilename());
 					
-					//spireSFTPChannel.rm(file.getFilename());
+					spireSFTPChannel.rm(file.getFilename());
 				}
 			}		
 			
@@ -126,16 +125,12 @@ public class SpireClient extends TimerTask {
 			disconnect();
 		
 		JSch jsch = new JSch();
-
-		// we can set the known hosts if we want
-		//String knownHostsFilename = "/home/username/.ssh/known_hosts";
-		//jsch.setKnownHosts( knownHostsFilename );
 		
 		spireSession = jsch.getSession( p.getSpireServerUser(), p.getSpireServerHostname() );
-		//spireSession.setConfig("StrictHostKeyChecking", "no"); // comment out if we set known hosts
-		Hashtable props = new Hashtable();
-		props.put("StrictHostKeyChecking", "no");
-		spireSession.setConfig(props);
+		
+		java.util.Properties confProp = new java.util.Properties();
+		confProp.put("StrictHostKeyChecking", "no");
+		spireSession.setConfig(confProp);
 		
 		spireSession.setPassword( p.getSpireServerPassword() );
 					

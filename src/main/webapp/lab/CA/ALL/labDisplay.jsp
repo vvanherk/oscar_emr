@@ -1195,16 +1195,12 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                       			
                                       
                                     } else if ((!handler.getOBXResultStatus(j, k).equals("TDIS") && !handler.getMsgType().equals("EPSILON")) )  { %>
-										<% 	String colSpan = "1";
-											if (handler.getMsgType().equals("Spire"))
-												colSpan = "5";
-										%>
                                       		<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
                                            <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>                                         
                                            &nbsp;<%if(loincCode != null){ %>
                                                 	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
                                                 	<%} %> </td>
-                                           <td align="right" colspan="<%=colSpan %>"><%= handler.getOBXResult( j, k) %></td>
+                                           <td align="right"><%= handler.getOBXResult( j, k) %></td>
                                           
                                            <td align="center">
                                                    <%= handler.getOBXAbnormalFlag(j, k)%>

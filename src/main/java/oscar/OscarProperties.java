@@ -237,23 +237,23 @@ public class OscarProperties extends Properties {
 	}
 	
 	public int getSpireClientRunFrequency() {
-		String prop = getProperty("spire_client_run_frequency", "300000"); // default to 5 minutes (300000 ms)
+		String prop = getProperty("spire_client_run_frequency");
 		return Integer.parseInt(prop);
 	}
 	
 	public String getSpireServerUser() {
-		return getProperty("spire_server_user", "Kincardine");
+		return getProperty("spire_server_user");
 	}
 	
 	public String getSpireServerPassword() {
-		return getProperty("spire_server_password", "ki_xenos");
+		return getProperty("spire_server_password");
 	}
 	
 	public String getSpireServerHostname() {
-		return getProperty("spire_server_hostname", "ag.gbin.ca");
+		return getProperty("spire_server_hostname");
 	}
 	
 	public String getSpireDownloadDir() {
-		return getProperty("spire_download_dir", "/var/lib/spirelabs/");
+		return getProperty("spire_download_dir");
 	}
 }

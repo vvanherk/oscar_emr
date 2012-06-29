@@ -12,5 +12,5 @@
 	 -->
 	 
 	 <!-- <suppress checks="org.oscarehr.utils.checkstyle.TrackingRegexpCheck" files="SpireClient.java" lines="59" /> -->
-	 <suppress checks="org.oscarehr.utils.checkstyle.TrackingRegexpCheck" files="SpireClient.java" />
+	 
 </suppressions>
