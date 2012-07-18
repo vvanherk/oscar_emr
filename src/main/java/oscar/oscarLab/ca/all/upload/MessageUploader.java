@@ -97,18 +97,18 @@ public final class MessageUploader {
             
             // get actual ohip numbers based on doctor first and last name for spire lab
             if(h instanceof SpireHandler) {
-				List<String> docNames = ((SpireHandler)h).getDocNames();
+				List<String> docSpireNums = ((SpireHandler)h).getAllDocNums();
 				//logger.debug("docNames:");
-	            for (int i=0; i < docNames.size(); i++) {
-					logger.info(i + " " + docNames.get(i));
+	            for (int i=0; i < docSpireNums.size(); i++) {
+					logger.info(i + " " + docSpireNums.get(i));
 				}
-            	if (docNames != null) {
-					docNums = findProvidersForSpireLab(docNames);
+            	if (docSpireNums != null) {
+					docNums = findProvidersForSpireLab(docSpireNums);
 				}
             }
-            //logger.debug("docNums:");
+            logger.info("docNums:");
             for (int i=0; i < docNums.size(); i++) {
-				//logger.debug(i + " " + docNums.get(i));
+				logger.info(i + " " + docNums.get(i));
 			}
 
 			try {
@@ -226,9 +226,38 @@ public final class MessageUploader {
 	
 	/**
 	 * Method findProvidersForSpireLab
+	 * Finds the providers that are associated with a spire lab.
+	 */ 
+	private static ArrayList<String> findProvidersForSpireLab(List<String> docSpireNums) {
+		List<String> docNums = new ArrayList<String>();
+		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+		
+		for (int i=0; i < docSpireNums.size(); i++) {
+			String spireNumber = docSpireNums.get(i);
+			if (spireNumber == null) {
+				//logger.warn("Doctor does not have a spire number");
+				continue;
+			}
+			List<Provider> provList = providerDao.getAllProvidersWithSpireId( spireNumber );
+			
+			if (provList != null) {
+				int provIndex = findProviderWithShortestFirstName(provList);
+				if (provIndex != -1 && provList.size() >= 1 && !provList.get(provIndex).getProviderNo().equals("0")) {
+					docNums.add( provList.get(provIndex).getProviderNo() );
+					logger.debug("ADDED1: " + provList.get(provIndex).getProviderNo());
+				}
+			}
+		}
+		
+		return (ArrayList<String>)docNums;
+	}
+	
+	/**
+	 * Method findProvidersForSpireLab
 	 * Finds the providers that are associated with a spire lab.  (need to do this using doctor names, as
 	 * spire labs don't have a valid ohip number associated with them).
 	 */ 
+	/*
 	private static ArrayList<String> findProvidersForSpireLab(List<String> docNames) {
 		List<String> docNums = new ArrayList<String>();
 		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
@@ -260,6 +289,7 @@ public final class MessageUploader {
 		
 		return (ArrayList<String>)docNums;
 	}
+	*/
 	
 	/**
 	 * Method findProviderWithShortestFirstName

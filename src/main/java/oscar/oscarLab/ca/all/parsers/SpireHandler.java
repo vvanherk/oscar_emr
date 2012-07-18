@@ -901,7 +901,13 @@ public class SpireHandler implements MessageHandler {
         
         try{
             String providerId = msg.getRESPONSE().getORDER_OBSERVATION(0).getOBR().getOrderingProvider(0).getIDNumber().getValue();
-            docNums.add(providerId);
+			if (providerId == null) {
+				XCN orderingDoc = msg.getRESPONSE().getORDER_OBSERVATION(0).getOBR().getOrderingProvider(0);
+				String docName = orderingDoc.getGivenName() + " " + orderingDoc.getFamilyName();
+				logger.warn("Doctor '"+ docName +"' in Spire lab does not have spire id number!");
+			} else {
+				docNums.add(providerId);
+			}
             
             i=0;
             while((id = msg.getRESPONSE().getORDER_OBSERVATION(0).getOBR().getResultCopiesTo(i).getIDNumber().getValue()) != null){
@@ -916,6 +922,60 @@ public class SpireHandler implements MessageHandler {
         
         return(docNums);
     }
+    
+    public List<String> getAllDocNums() {
+		List<String> docNums = new ArrayList<String>();
+		
+		List<String> orderingProvDocNums = getDocNums();
+		
+		for (int i=0; i < orderingProvDocNums.size(); i++) {
+			docNums.add( orderingProvDocNums.get(i) );
+		}
+		
+        try{
+            XCN[] attendingDocs = msg.getRESPONSE().getPATIENT().getVISIT().getPV1().getAttendingDoctor();
+			XCN[] consultingDocs = msg.getRESPONSE().getPATIENT().getVISIT().getPV1().getConsultingDoctor();
+			XCN[] admittingDocs = msg.getRESPONSE().getPATIENT().getVISIT().getPV1().getAdmittingDoctor();
+			
+			for (int i=0; i < attendingDocs.length; i++) {
+				String id = attendingDocs[i].getIDNumber().getValue();
+				if (id == null) {
+					String docName = attendingDocs[i].getGivenName() + " " + attendingDocs[i].getFamilyName();
+					logger.warn("Doctor '"+ docName +"' in Spire lab does not have spire id number!");
+					continue;
+				}
+				
+				docNums.add( id );				
+			}
+			
+			for (int i=0; i < consultingDocs.length; i++) {
+				String id = consultingDocs[i].getIDNumber().getValue();
+				if (id == null) {
+					String docName = consultingDocs[i].getGivenName() + " " + consultingDocs[i].getFamilyName();
+					logger.warn("Doctor '"+ docName +"' in Spire lab does not have spire id number!");
+					continue;
+				}
+				
+				docNums.add( id );
+			}
+			
+			for (int i=0; i < admittingDocs.length; i++) {
+				String id = admittingDocs[i].getIDNumber().getValue();
+				if (id == null) {
+					String docName = admittingDocs[i].getGivenName() + " " + admittingDocs[i].getFamilyName();
+					logger.warn("Doctor '"+ docName +"' in Spire lab does not have spire id number!");
+					continue;
+				}
+				
+				docNums.add( id );
+			}
+        }catch(Exception e){
+            logger.error("Could not return doctor numbers", e);
+            return(null);
+        }
+        
+        return docNums;
+	}
     
     public String audit(){
         return "";

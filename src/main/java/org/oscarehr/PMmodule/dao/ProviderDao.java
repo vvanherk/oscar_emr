@@ -40,6 +40,11 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import oscar.OscarProperties;
 import oscar.util.SqlUtils;
 
+import org.oscarehr.util.SpringUtils;
+
+import org.oscarehr.common.model.ProviderSpireIdMap;
+import org.oscarehr.common.dao.ProviderSpireIdMapDao;
+
 public class ProviderDao extends HibernateDaoSupport {
 	private static Logger log = MiscUtils.getLogger();
 
@@ -337,6 +342,57 @@ public class ProviderDao extends HibernateDaoSupport {
 			return providerList.get(0);
 
 		return null;
+	}
+	
+	public Provider getProviderBySpireId(String spireId) {
+		if (spireId == null || spireId.length() <= 0) {
+			throw new IllegalArgumentException();
+		}
+
+		List<Provider> providerList = getAllProvidersWithSpireId(spireId);
+	
+		if(providerList.size()>1) {
+			logger.warn("Found more than 1 provider with spire_id="+spireId);
+		}
+		if(providerList.size()>0)
+			return providerList.get(0);
+
+		return null;
+	}
+	
+	public List<Provider> getAllProvidersWithSpireId(String spireId) {
+		if (spireId == null || spireId.length() <= 0) {
+			throw new IllegalArgumentException();
+		}
+		
+		// convert spireId from String to an Integer
+		Integer id = null;
+		try {
+			id = Integer.parseInt(spireId);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("spireId '" + spireId +"' is not a valid integer!");
+		}
+		
+		ProviderSpireIdMapDao mapDao = (ProviderSpireIdMapDao)SpringUtils.getBean("providerSpireIdMapDao");
+		ProviderSpireIdMap map = mapDao.getProviderSpireIdMap(id);
+		
+		if (map == null) {
+			logger.warn("Found 0 provider mappings with spire_id="+spireId);
+			return null;
+		}
+		
+		String ohipNumber = map.getOhipNo();
+		
+		if (ohipNumber == null) {
+			logger.warn("No OHIP Number associated with spire_id="+spireId);
+			return null;
+		}
+		
+		logger.info("OHIP NUMBER: " + ohipNumber);
+
+		List<Provider> providerList = getHibernateTemplate().find("From Provider p where OhipNo=?",new Object[]{ohipNumber});
+		
+		return providerList;
 	}
 	
 	public List<String> getUniqueTeams() {
