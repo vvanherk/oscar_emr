@@ -8,6 +8,8 @@ import java.util.TreeMap;
 
 import org.springframework.jdbc.core.RowMapper;
 
+import oscar.OscarProperties;
+
 import oscar.appt.ApptData;
 
 import oscar.oscarClinic.ClinicData;
@@ -52,7 +54,8 @@ public class AppointmentDao extends OscarSuperDao {
 		
 		// Generate our HL7 A04 file when we add an appointment
 		// Should we also generate an HL7 A04 when we import an appointment?
-		if (queryName.equalsIgnoreCase("add_apptrecord") && result == 1) {
+		if (OscarProperties.getInstance().isHL7A04GenerationEnabled() && 
+			queryName.equalsIgnoreCase("add_apptrecord") && result == 1) {
 			generateHL7A04(params);
 		}
 		
