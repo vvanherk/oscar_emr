@@ -34,7 +34,7 @@ import org.oscarehr.util.MiscUtils;
 /**
  * Class HL7A04TransportTask
  */ 
-public class HL7A04TransportTask extends TimerTask {
+public class EmeraldHL7A04TransportTask extends TimerTask {
 
 	private static final Logger logger = MiscUtils.getLogger();
 	private OscarProperties oscarProperties = OscarProperties.getInstance();
@@ -61,7 +61,7 @@ public class HL7A04TransportTask extends TimerTask {
 	/**
 	 * Constructor.
 	 */
-	public HL7A04TransportTask() {
+	public EmeraldHL7A04TransportTask() {
 		this.dirName = oscarProperties.getHL7A04BuildDirectory();
 		this.sentDir = oscarProperties.getHL7A04SentDirectory();
 		this.failDir = oscarProperties.getHL7A04FailDirectory();
@@ -87,8 +87,8 @@ public class HL7A04TransportTask extends TimerTask {
         		return;
 			}
 			
-			String sendAddr = oscarProperties.getHL7A04TransportAddr();
-			int sendPort = oscarProperties.getHL7A04TransportPort();
+			String sendAddr = oscarProperties.getEmeraldHL7A04TransportAddr();
+			int sendPort = oscarProperties.getEmeraldHL7A04TransportPort();
 			
 			Socket client = new Socket(sendAddr, sendPort);
 			//getting the o/p stream of that connection

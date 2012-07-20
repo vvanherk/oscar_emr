@@ -31,17 +31,12 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.Executors;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
 
 import org.apache.log4j.Logger;
 import org.oscarehr.util.MiscUtils;
-
-import org.oscarehr.common.hl7.v2.HL7A04TransportTask;
 
 /**
  * This ContextListener is used to Initialize classes at startup - Initialize the DBConnection Pool.
@@ -51,8 +46,6 @@ import org.oscarehr.common.hl7.v2.HL7A04TransportTask;
 public class Startup implements ServletContextListener {
 	private static Logger logger = MiscUtils.getLogger();
 	private oscar.OscarProperties p = oscar.OscarProperties.getInstance();
-	
-	private ScheduledExecutorService scheduler;
 
 	public void contextInitialized(ServletContextEvent sc) {
 		try {
@@ -164,12 +157,6 @@ public class Startup implements ServletContextListener {
 				
 
 			}
-			
-			if (p.isHL7A04TransportTaskEnabled()) {
-				scheduler = Executors.newSingleThreadScheduledExecutor();
-				logger.info("HL7A04TransportTask time interval (in ms) : " + p.getHL7A04TransportFrequency());
-				scheduler.scheduleAtFixedRate(new HL7A04TransportTask(), 0, p.getHL7A04TransportFrequency(), TimeUnit.MILLISECONDS);
-			}
 
 			logger.debug("LAST LINE IN contextInitialized");
 		} catch (Exception e) {
@@ -199,9 +186,6 @@ public class Startup implements ServletContextListener {
 	}
 
 	public void contextDestroyed(ServletContextEvent arg0) {
-		if (p.isHL7A04TransportTaskEnabled() && scheduler != null) {
-			scheduler.shutdown();
-		}
 	}
 
 }

@@ -64,10 +64,11 @@ import org.oscarehr.util.DbConnectionFilter;
 import org.oscarehr.util.MiscUtils;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+import oscar.OscarProperties;
 import oscar.MyDateFormat;
 import oscar.util.SqlUtils;
 
-import org.oscarehr.common.hl7.v2.HL7A04Data;
+import org.oscarehr.integration.hl7.generators.HL7A04Generator;
 
 /**
  */
@@ -298,25 +299,9 @@ public class DemographicDao extends HibernateDaoSupport {
 
  		this.getHibernateTemplate().saveOrUpdate(demographic);
  		
- 		if (isDemographicNew(objExists, demographic))
-			generateHL7A04(demographic);
+ 		if (OscarProperties.getInstance().isHL7A04GenerationEnabled() && isDemographicNew(objExists, demographic))
+			(new HL7A04Generator()).generateHL7A04(demographic);
      }
-     
-     /**
-      * Helper method.
-      * 
-      * Probably not the best place for this - maybe create some sort of HL7 framework for
-      * generating HL7 files?
-      */ 
-     private void generateHL7A04(Demographic demo) {
-		try {
-			// generate A04 HL7
-			HL7A04Data A04Obj = new HL7A04Data(demo);
-			A04Obj.save();
-		} catch (Exception e) {
-			log.info("Unable to generate HL7 A04 file: " + e.toString());
-		}
-	 }
 	 
 	 /**
 	  * Helper method.
@@ -731,8 +716,8 @@ public class DemographicDao extends HibernateDaoSupport {
 
  		this.getHibernateTemplate().saveOrUpdate(client);
  		
- 		if (isDemographicNew(objExists, client))
-			generateHL7A04(client);
+ 		if (OscarProperties.getInstance().isHL7A04GenerationEnabled() && isDemographicNew(objExists, client))
+			(new HL7A04Generator()).generateHL7A04(client);
 
  		if (log.isDebugEnabled()) {
  			log.debug("saveClient: id=" + client.getDemographicNo());

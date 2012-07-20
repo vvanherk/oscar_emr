@@ -6,17 +6,12 @@ import ca.uhn.hl7v2.model.v23.segment.MSH;
 import ca.uhn.hl7v2.model.v23.segment.EVN;
 import ca.uhn.hl7v2.model.v23.segment.PID;
 import ca.uhn.hl7v2.model.v23.segment.PV1;
-//import ca.uhn.hl7v2.model.v23.segment.PV2;
 import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.parser.PipeParser;
 
 import org.apache.log4j.Logger;
 
-//import oscar.oscarDemographic.data.DemographicData;
-//import org.oscarehr.common.model.Demographic;
-
 import oscar.oscarClinic.ClinicData;
-//import org.oscarehr.PMmodule.model.Program;
 import oscar.appt.ApptData;
 
 import org.oscarehr.util.MiscUtils;
@@ -208,10 +203,16 @@ public class HL7A04Data
         for (int i=0; i < demoData.length; i++)
 			demoData[i] = (demoData[i] == null || demoData[i].trim().length() == 0? " " : demoData[i]);
 			
-		// generate file name
+		// get current timestamp
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMddkkmmss.SSSZ");
         String currentTimestamp = formatter.format(new Date());
+        
+        // generate file name
         this.fileName = currentTimestamp.toString() + ".txt";
+        
+        // get current date/time
+        formatter = new SimpleDateFormat("yyyyMMddkkmmss");
+        String currentDateTime = formatter.format(new Date());
         
         // Begin generating HL7 A04
 		ADT_A04 adt = new ADT_A04();
@@ -220,11 +221,11 @@ public class HL7A04Data
         MSH mshSegment = adt.getMSH();
         mshSegment.getFieldSeparator().setValue("|");
         mshSegment.getEncodingCharacters().setValue("^~\\&");
-        mshSegment.getSendingApplication().getNamespaceID().setValue("OSCAR");
-        mshSegment.getSendingFacility().getNamespaceID().setValue("SJHC");
-        mshSegment.getReceivingApplication().getNamespaceID().setValue("EMERALD");
-        mshSegment.getReceivingFacility().getNamespaceID().setValue("GUELPH");
-        mshSegment.getDateTimeOfMessage().getTimeOfAnEvent().setValue("20060101070000");
+        mshSegment.getSendingApplication().getNamespaceID().setValue( oscarProperties.getHL7SendingApplication() );
+        mshSegment.getSendingFacility().getNamespaceID().setValue( oscarProperties.getHL7SendingFacility() );
+        mshSegment.getReceivingApplication().getNamespaceID().setValue( oscarProperties.getHL7ReceivingApplication() );
+        mshSegment.getReceivingFacility().getNamespaceID().setValue( oscarProperties.getHL7ReceivingFacility() );
+        mshSegment.getDateTimeOfMessage().getTimeOfAnEvent().setValue(currentDateTime);
         mshSegment.getMessageControlID().setValue(currentTimestamp.toString());
         mshSegment.getProcessingID().getProcessingID().setValue("T");
         mshSegment.getMessageType().getMessageType().setValue("ADT");
@@ -234,7 +235,7 @@ public class HL7A04Data
         // EVN Segment
         EVN evn = adt.getEVN();
         evn.getEventTypeCode().setValue("A04");
-        evn.getRecordedDateTime().getTimeOfAnEvent().setValue("20060101070000");
+        evn.getRecordedDateTime().getTimeOfAnEvent().setValue(currentDateTime);
         
         // PID Segment
         PID pid = adt.getPID(); 
@@ -319,7 +320,15 @@ public class HL7A04Data
 			*/
 			
 			if (this.programs != null) {
-				String programIds = "";
+				String programId = "";
+				if (this.programs.size() > 0) {
+					Integer pId = (Integer)this.programs.get(0);
+					if (pId != null) {
+						programId = pId.toString();
+					}
+				}
+				
+				/*
 				for (int i=0; i < this.programs.size(); i++) {
 					Integer programId = (Integer)this.programs.get(i);
 					if (programId != null) {
@@ -327,9 +336,10 @@ public class HL7A04Data
 							programIds += "-";
 						programIds += programId.toString();
 					}
-					//pv1.getAssignedPatientLocation().getPointOfCare().setValue( p.getName() ); // program name (not used anymore)
+					//pv1.getAssignedPatientLocation().getRoom().setValue( p.getName() ); // program name (not used anymore)
 				}
-				pv1.getAssignedPatientLocation().getRoom().setValue( programIds );	// program numbers
+				*/
+				pv1.getAssignedPatientLocation().getPointOfCare().setValue( programId );	// program number
 			}
 			
 			pv1.getAssignedPatientLocation().getBed().setValue(demoData[5]);	// demographic chart number
