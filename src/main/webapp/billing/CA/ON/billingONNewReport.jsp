@@ -17,6 +17,11 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 --%>
+<%@page import="java.util.List, java.util.Collections, java.util.Comparator, java.util.Date, java.text.SimpleDateFormat" %>
+<%@page import="org.oscarehr.util.SpringUtils, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment" %>
+
+<% OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao"); %>
+
 <%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
@@ -73,35 +78,69 @@ String sql = null;
 
 String action = request.getParameter("reportAction") == null ? "" : request.getParameter("reportAction");
 if("unbilled".equals(action)) {
-    vecHeader.add("SERVICE DATE");
-    vecHeader.add("TIME");
-    vecHeader.add("PATIENT");
-    vecHeader.add("DESCRIPTION");
+    vecHeader.add("Service Date");
+    vecHeader.add("Time");
+    vecHeader.add("Patient Name");
+    vecHeader.add("Remarks");
+    vecHeader.add("Notes");
+    vecHeader.add("Service Description");
     vecHeader.add("COMMENTS");
     
+	Comparator<Appointment> appointmentComparator = new Comparator<Appointment>() {
+		// This is where the sorting happens.
+		public int compare(Appointment a1, Appointment a2) {
+			int result = a1.getAppointmentDate().compareTo(a2.getAppointmentDate());
+			
+			if (result == 0) {
+				result = a1.getStartTime().compareTo(a2.getStartTime());
+			}
+			return result;
+		}
+	};
+	
+    
+    /*
     sql = "select * from appointment where provider_no='" + providerview + "' and appointment_date >='" + xml_vdate   
             + "' and appointment_date<='" + xml_appointment_date + "' and (status='P' or status='H' or status='HS' or status='PV' or status='PS' or status='E' or status='ES' or status='EV')" 
             + " and demographic_no != 0 order by appointment_date , start_time ";
     rs = dbObj.searchDBRecord(sql);
-    while (rs.next()) {
+    */
+    
+	SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
+    
+    Date startTime = (Date)formatter.parse(xml_vdate);
+    Date endTime = (Date)formatter.parse(xml_appointment_date);
+    List<Appointment> appointments = appointmentDao.findByDateRangeAndProvider(startTime, endTime, providerview);
+    
+    // sort appointments
+    Collections.sort(appointments, appointmentComparator);
+    
+    for (Appointment apt : appointments) {
+		String status = apt.getStatus();
+		if (apt.getDemographicNo() == 0 || status.equals("P") || status.equals("H") || status.equals("HS") || status.equals("PV") || status.equals("PS") || status.equals("E") || status.equals("ES") || status.equals("EV"))
+			continue;
+		
     	if (bMultisites) {
     		// skip record if location does not match the selected site, blank location always gets displayed for backward-compatibility
-    		String location = rs.getString("location");
+    		String location = apt.getLocation();
     		if (StringUtils.isNotBlank(location) && !location.equals(request.getParameter("site"))) 
     			continue; 
     	}
 
     	prop = new Properties();
-        prop.setProperty("SERVICE DATE", rs.getString("appointment_date"));
-        prop.setProperty("TIME", rs.getString("start_time").substring(0,5));
-        prop.setProperty("PATIENT", rs.getString("name"));
-        prop.setProperty("DESCRIPTION", rs.getString("reason"));
+        prop.setProperty( "Service Date", apt.getAppointmentDate().toString() );
+        prop.setProperty( "Time", apt.getStartTime().toString() );
+        prop.setProperty( "Patient Name", apt.getName() );
+        prop.setProperty( "Service Description", apt.getReason() );
+		prop.setProperty( "Remarks",  apt.getRemarks() );
+		prop.setProperty( "Notes", apt.getNotes() );
+        
         String tempStr = "<a href=# onClick='popupPage(700,1000, \"billingOB.jsp?billForm=" 
                 + URLEncoder.encode(oscarVariables.getProperty("default_view")) + "&hotclick=&appointment_no="
-                + rs.getString("appointment_no") + "&demographic_name=" + URLEncoder.encode(rs.getString("name"))
-				+ "&demographic_no=" + rs.getString("demographic_no") + "&user_no=" + rs.getString("provider_no") 
-				+ "&apptProvider_no=" + providerview + "&appointment_date=" + rs.getString("appointment_date") 
-				+ "&start_time=" + rs.getString("start_time") + "&bNewForm=1\"); return false;'>Bill ";
+                + apt.getId() + "&demographic_name=" + URLEncoder.encode(apt.getName())
+				+ "&demographic_no=" + apt.getDemographicNo() + "&user_no=" + apt.getProviderNo() 
+				+ "&apptProvider_no=" + providerview + "&appointment_date=" + apt.getAppointmentDate().toString() 
+				+ "&start_time=" + apt.getStartTime().toString() + "&bNewForm=1\"); return false;'>Bill ";
         prop.setProperty("COMMENTS", tempStr);
         vecValue.add(prop);
     }
@@ -340,6 +379,7 @@ if("unpaid".equals(action)) {
 <title>ON Billing Report</title>
 <link rel="stylesheet" href="../../web.css">
 <link rel="stylesheet" type="text/css" media="all" href="../share/css/extractedFromPages.css"  />
+<link rel="stylesheet" type="text/css" media="all" href="billingONNewReport.css"  />
 <!-- calendar stylesheet -->
 <link rel="stylesheet" type="text/css" media="all"
 	href="../../../share/calendar/calendar.css" title="win2k-cold-1" />
@@ -498,31 +538,63 @@ while(rslocal.next()){
 		</form>
 </table>
 
-<table border="1" cellspacing="0" cellpadding="0" width="100%"
-	bordercolorlight="#99A005" bordercolordark="#FFFFFF" bgcolor="#FFFFFF">
-	<tr bgcolor=<%="#ccffcc" %>>
-		<% for (int i=0; i<vecHeader.size(); i++) {%>
-		<th><%=vecHeader.get(i) %></th>
+<table id="bill-list">
+<thead>
+	<tr>
+		<% for (int i=0; i<vecHeader.size(); i++) { %>
+			<th><%=vecHeader.get(i) %></th>
 		<% } %>
-		<% for (int i=0; i<vecValue.size(); i++) {%>
+	</tr>
+</thead>
+
+<tbody>
+	<% for (int i=0; i < vecValue.size(); i++) { %>
+		<tr id="bill<%=i%>" onclick="javascript:showBillDetails(<%=i%>)">
+			<% for (int j=0; j < vecHeader.size(); j++) {
+				prop = (Properties)vecValue.get(i);
+				%>
+				<td><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
+			<% } %>
+		</tr>
+		<tr id="bill">
+			<td id="bill_details<%=i%>" style="display:none;" colspan=7> 
+				<a href="#" onclick="addBillingItem(<%=i%>)">HERE</a> testtesttesttesttesttesttesttesttesttesttest
+				<table>
+					<thead>
+						<tr>
+							<td>Billing Code</td>
+							<td>Amount</td>
+							<td>Billing Code</td>
+							<td>Billing Code</td>
+							<td>Billing Code</td>
+							<td>Billing Code</td>
+							<td>Billing Code</td>
+						</tr>
+					<thead>
+					<tbody id="billing_items<%=i%>">
+						<tr>
+							<td>1</td>
+							<td>1</td>
+							<td>1</td>
+							<td>1</td>
+							<td>1</td>
+							<td>1</td>
+							<td>1</td>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+	<% } %>
 	
-	<tr bgcolor="<%=i%2==0? "ivory" : "#EEEEFF" %>">
-		<% for (int j=0; j<vecHeader.size(); j++) {
-	    prop = (Properties)vecValue.get(i);
-	%>
-		<td align="center"><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
-		<% } %>
-	</tr>
-	<% } %>
-
 	<% if(vecTotal.size() > 0) { %>
-	<tr bgcolor="silver">
+		<tr bgcolor="silver">
 		<% for (int i=0; i < vecTotal.size(); i++) {%>
-		<th><%=vecTotal.get(i) %>&nbsp;</th>
+			<th><%=vecTotal.get(i) %>&nbsp;</th>
 		<% } %>
-	</tr>
+		</tr>
 	<% } %>
-
+</tbody>
 </table>
 
 <br>
@@ -544,6 +616,40 @@ while(rslocal.next()){
 Calendar.setup( { inputField : "xml_vdate", ifFormat : "%Y/%m/%d", showsTime :false, button : "xml_vdate_cal", singleClick : true, step : 1 } );
 Calendar.setup( { inputField : "xml_appointment_date", ifFormat : "%Y/%m/%d", showsTime :false, button : "xml_appointment_date_cal", singleClick : true, step : 1 } );
 </script>
+
+<script type="text/javascript">
+
+function showBillDetails(id) {
+	document.getElementById("bill_details"+id).style.display = "";
+	document.getElementById("bill"+id).onclick = function() { javascript:hideBillDetails(id); }
+}
+
+function hideBillDetails(id) {
+	document.getElementById("bill_details"+id).style.display = "none";
+	document.getElementById("bill"+id).onclick = function() { javascript:showBillDetails(id); }
+}
+
+function addBillingItem(id) {
+	//Create an input type dynamically.
+	var element = document.createElement("tr");	
+	
+	var htmlString = "<td>2</td>";
+	htmlString += "<td>2</td>";
+	htmlString += "<td>2</td>";
+	htmlString += "<td>2</td>";
+	htmlString += "<td>2</td>";
+	htmlString += "<td>2</td>";
+	htmlString += "<td>2</td>";
+	element.innerHTML = htmlString;
+	
+	var billingItems = document.getElementById("billing_items"+id);
+	
+	//Append the element in page (in span).
+	billingItems.appendChild(element);
+}
+
+</script>
+
 </html>
 <%! 
 String getFormatDateStr(String str) {
