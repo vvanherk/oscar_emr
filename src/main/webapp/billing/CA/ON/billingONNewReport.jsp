@@ -563,7 +563,8 @@ while(rslocal.next()){
 </thead>
 
 <tbody>
-	<% for (int i=0; i < vecValue.size(); i++) { 
+	<%	int uniqueId = 0;
+		for (int i=0; i < vecValue.size(); i++) { 
 		boolean hasBills = true;
 		String style = "";
 		if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
@@ -587,6 +588,7 @@ while(rslocal.next()){
 				<table>
 					<thead>
 						<tr>
+							<td></td>
 							<td>Billing Code</td>
 							<td>Amount</td>
 							<td>Units</td>
@@ -597,26 +599,34 @@ while(rslocal.next()){
 						</tr>
 					<thead>
 					<tbody id="billing_items<%=i%>">
-						<%
+						<%						
 						if (!hasBills) {
 							%>
-							<tr>
-								<td> <input type="text" name="bill_code<%=i%>_BLAH" /> </td>
-								<td> <input type="text" name="amount<%=i%>_BLAH" /> </td>
-								<td> <input type="text" name="units<%=i%>_BLAH" /> </td>
-								<td> <input type="text" name="dx_code<%=i%>_BLAH" /> </td>
-								<td> <input type="text" name="dx_desc<%=i%>_BLAH" /> </td>
-								<td> <input type="text" name="total<%=i%>_BLAH" /> </td>
-								<td> <input type="text" name="sli_code<%=i%>_BLAH" /> </td>
+							<tr id="billing_item<%=i%>_<%=uniqueId%>">
+								<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
+								<td> <input type="text" size="6" name="bill_code<%=i%>[]" /> </td>
+								<td> <input type="text" size="6" name="amount<%=i%>[]" /> </td>
+								<td> <input type="text" size="3" name="units<%=i%>[]" /> </td>
+								<td> <input type="text" size="6" name="dx_code<%=i%>[]" /> </td>
+								<td> <input type="text" size="12" name="dx_desc<%=i%>[]" /> </td>
+								<td> <input type="text" size="6" name="total<%=i%>[]" /> </td>
+								<td> <input type="text" size="6" name="sli_code<%=i%>[]" /> </td>
 							</tr>
 							<%
+							uniqueId++;
 						} else {
 							for (BillingClaimHeader1 bill : vecBills.get(i)) {
 								List<BillingItem> billingItems = bill.getBillingItems();
 								for (BillingItem item : billingItems) {
-									List<BillingService> billingServices = billingServiceDao.findBillingCodesByCode(item.getService_code(), "ON");
-									BillingService billingService = billingServices.get(0);
 									String serviceDesc = "";
+									
+									List<BillingService> billingServices = billingServiceDao.findBillingCodesByCode(item.getService_code(), "ON");
+									if (billingServices.size() > 0) {
+										BillingService billingService = billingServices.get(0);
+										if (billingService != null) {
+											serviceDesc = billingService.getDescription();
+										}
+									}
 									
 									Double feeAsDouble = new Double(0.0);
 									Integer unitsAsInteger = new Integer(0);
@@ -626,19 +636,19 @@ while(rslocal.next()){
 										unitsAsInteger = Integer.valueOf( item.getSer_num() );
 									double tempTotal = feeAsDouble.doubleValue() * (double)unitsAsInteger.intValue();
 									String total = (new Double(tempTotal)).toString();
-									if (billingService != null)
-										serviceDesc = billingService.getDescription();
 									%>
-									<tr>
-										<td> <input type="text" name="bill_code<%=i%>_BLAH" value="<%=item.getService_code()%>" /> </td>
-										<td> <input type="text" name="amount<%=i%>_BLAH" value="<%=item.getFee()%>" /> </td>
-										<td> <input type="text" name="units<%=i%>_BLAH" value="<%=item.getSer_num()%>" /> </td>
-										<td> <input type="text" name="dx_code<%=i%>_BLAH" value="<%=item.getDx()%>" /> </td>
-										<td> <input type="text" name="dx_desc<%=i%>_BLAH" value="<%=serviceDesc%>" /> </td>
-										<td> <input type="text" name="total<%=i%>_BLAH" value="<%=total%>" /> </td>
-										<td> <input type="text" name="sli_code<%=i%>_BLAH" value="" disabled="disabled" /> </td>
+									<tr id="billing_item<%=i%>_<%=uniqueId%>">
+										<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
+										<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" /> </td>
+										<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=item.getFee()%>" /> </td>
+										<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=item.getSer_num()%>" /> </td>
+										<td> <input type="text" size="6" name="dx_code<%=i%>[]" value="<%=item.getDx()%>" /> </td>
+										<td> <input type="text" size="12" name="dx_desc<%=i%>[]" value="<%=serviceDesc%>" /> </td>
+										<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" /> </td>
+										<td> <input type="text" size="6" name="sli_code<%=i%>[]" value="" disabled="disabled" /> </td>
 									</tr>
 									<%
+									uniqueId++;
 								}
 							}
 						}
@@ -694,14 +704,17 @@ function hideBillDetails(id) {
 function addBillingItem(id) {
 	//Create an input type dynamically.
 	var element = document.createElement("tr");	
+	var billingItemId = getId();
+	element.setAttribute("id", "billing_item"+id+"_"+billingItemId);
 	
-	var htmlString = "<td></td>";
-	htmlString += "<td></td>";
-	htmlString += "<td></td>";
-	htmlString += "<td></td>";
-	htmlString += "<td></td>";
-	htmlString += "<td></td>";
-	htmlString += "<td></td>";
+	var htmlString = "<td onclick=\"deleteBillingItem("+id+", "+billingItemId+")\" style=\"color:blue;\">X</td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"[]\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"[]\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"[]\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"[]\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"[]\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"[]\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"[]\" disabled=\"disabled\" /> </td>";
 	element.innerHTML = htmlString;
 	
 	var billingItems = document.getElementById("billing_items"+id);
@@ -709,6 +722,19 @@ function addBillingItem(id) {
 	//Append the element in page (in span).
 	billingItems.appendChild(element);
 }
+
+function deleteBillingItem(id, billingItemId) {	
+	var billingItem = document.getElementById("billing_item"+id+"_"+billingItemId);
+	billingItem.parentNode.removeChild(billingItem);
+}
+
+var getId = (function () {
+  var incrementingId = <%=uniqueId%>;
+  return function() {
+    return incrementingId++;
+  };
+}());
+
 
 </script>
 
