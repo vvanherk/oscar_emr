@@ -59,3 +59,7 @@
 {
 	background: white;
 }
+#bill-list #no-bills .no-bills td
+{
+	background: red;
+}
