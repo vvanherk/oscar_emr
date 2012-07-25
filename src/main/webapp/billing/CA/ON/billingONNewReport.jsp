@@ -20,7 +20,17 @@
 <%@page import="java.util.List, java.util.Collections, java.util.Comparator, java.util.Date, java.text.SimpleDateFormat" %>
 <%@page import="org.oscarehr.util.SpringUtils, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment" %>
 
+<%@page import="org.oscarehr.billing.CA.ON.dao.BillingClaimDAO" %>
+<%@page import="org.oscarehr.common.dao.BillingServiceDao" %>
+
+<%@page import="org.oscarehr.billing.CA.ON.model.BillingClaimHeader1" %>
+<%@page import="org.oscarehr.billing.CA.ON.model.BillingItem" %>
+<%@page import="org.oscarehr.common.model.BillingService" %>
+
+
 <% OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao"); %>
+<% BillingClaimDAO billingClaimDAO = (BillingClaimDAO)SpringUtils.getBean("billingClaimDAO"); %>
+<% BillingServiceDao billingServiceDao = (BillingServiceDao)SpringUtils.getBean("billingServiceDao"); %>
 
 <%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 
@@ -70,7 +80,9 @@ String xml_appointment_date = request.getParameter("xml_appointment_date") == nu
 // action
 Vector vecHeader = new Vector();
 Vector vecValue = new Vector();
+List< List<BillingClaimHeader1> > vecBills = new ArrayList< List<BillingClaimHeader1> >();
 Vector vecTotal = new Vector();
+
 Properties prop = null;
 DBHelp dbObj = new DBHelp();
 ResultSet rs = null;
@@ -143,6 +155,9 @@ if("unbilled".equals(action)) {
 				+ "&start_time=" + apt.getStartTime().toString() + "&bNewForm=1\"); return false;'>Bill ";
         prop.setProperty("COMMENTS", tempStr);
         vecValue.add(prop);
+        
+        List<BillingClaimHeader1> bills = billingClaimDAO.getInvoices(new Integer(apt.getDemographicNo()).toString(), apt.getId().toString());
+        vecBills.add(bills);
     }
 
 }
@@ -548,39 +563,86 @@ while(rslocal.next()){
 </thead>
 
 <tbody>
-	<% for (int i=0; i < vecValue.size(); i++) { %>
+	<% for (int i=0; i < vecValue.size(); i++) { 
+		boolean hasBills = true;
+		String style = "";
+		if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
+			hasBills = false;
+			style = "style=\"background:#FFCC99;\"";
+			//style = "id=\"no-bills\" class=\"no-bills\"";
+		}
+		%>
 		<tr id="bill<%=i%>" onclick="javascript:showBillDetails(<%=i%>)">
 			<% for (int j=0; j < vecHeader.size(); j++) {
 				prop = (Properties)vecValue.get(i);
 				%>
-				<td><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
+				<td <%=style%>><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
 			<% } %>
 		</tr>
 		<tr id="bill">
 			<td id="bill_details<%=i%>" style="display:none;" colspan=7> 
-				<a href="#" onclick="addBillingItem(<%=i%>)">HERE</a> testtesttesttesttesttesttesttesttesttesttest
+				<span onclick="addBillingItem(<%=i%>)" style="color:blue;">Add Item</span>
+				&nbsp;&nbsp;&nbsp;
+				<span onclick="return confirm('Are you sure you want to submit this bill?');" style="color:blue;">Submit Bill</span>
 				<table>
 					<thead>
 						<tr>
 							<td>Billing Code</td>
 							<td>Amount</td>
-							<td>Billing Code</td>
-							<td>Billing Code</td>
-							<td>Billing Code</td>
-							<td>Billing Code</td>
-							<td>Billing Code</td>
+							<td>Units</td>
+							<td>Dx Code</td>
+							<td>Dx Description</td>
+							<td>Total</td>
+							<td>SLI Code</td>
 						</tr>
 					<thead>
 					<tbody id="billing_items<%=i%>">
-						<tr>
-							<td>1</td>
-							<td>1</td>
-							<td>1</td>
-							<td>1</td>
-							<td>1</td>
-							<td>1</td>
-							<td>1</td>
-						</tr>
+						<%
+						if (!hasBills) {
+							%>
+							<tr>
+								<td> <input type="text" name="bill_code<%=i%>_BLAH" /> </td>
+								<td> <input type="text" name="amount<%=i%>_BLAH" /> </td>
+								<td> <input type="text" name="units<%=i%>_BLAH" /> </td>
+								<td> <input type="text" name="dx_code<%=i%>_BLAH" /> </td>
+								<td> <input type="text" name="dx_desc<%=i%>_BLAH" /> </td>
+								<td> <input type="text" name="total<%=i%>_BLAH" /> </td>
+								<td> <input type="text" name="sli_code<%=i%>_BLAH" /> </td>
+							</tr>
+							<%
+						} else {
+							for (BillingClaimHeader1 bill : vecBills.get(i)) {
+								List<BillingItem> billingItems = bill.getBillingItems();
+								for (BillingItem item : billingItems) {
+									List<BillingService> billingServices = billingServiceDao.findBillingCodesByCode(item.getService_code(), "ON");
+									BillingService billingService = billingServices.get(0);
+									String serviceDesc = "";
+									
+									Double feeAsDouble = new Double(0.0);
+									Integer unitsAsInteger = new Integer(0);
+									if (item.getFee() != null)
+										feeAsDouble = Double.valueOf( item.getFee() );
+									if (item.getSer_num() != null)
+										unitsAsInteger = Integer.valueOf( item.getSer_num() );
+									double tempTotal = feeAsDouble.doubleValue() * (double)unitsAsInteger.intValue();
+									String total = (new Double(tempTotal)).toString();
+									if (billingService != null)
+										serviceDesc = billingService.getDescription();
+									%>
+									<tr>
+										<td> <input type="text" name="bill_code<%=i%>_BLAH" value="<%=item.getService_code()%>" /> </td>
+										<td> <input type="text" name="amount<%=i%>_BLAH" value="<%=item.getFee()%>" /> </td>
+										<td> <input type="text" name="units<%=i%>_BLAH" value="<%=item.getSer_num()%>" /> </td>
+										<td> <input type="text" name="dx_code<%=i%>_BLAH" value="<%=item.getDx()%>" /> </td>
+										<td> <input type="text" name="dx_desc<%=i%>_BLAH" value="<%=serviceDesc%>" /> </td>
+										<td> <input type="text" name="total<%=i%>_BLAH" value="<%=total%>" /> </td>
+										<td> <input type="text" name="sli_code<%=i%>_BLAH" value="" disabled="disabled" /> </td>
+									</tr>
+									<%
+								}
+							}
+						}
+						%>
 					</tbody>
 				</table>
 			</td>
@@ -633,13 +695,13 @@ function addBillingItem(id) {
 	//Create an input type dynamically.
 	var element = document.createElement("tr");	
 	
-	var htmlString = "<td>2</td>";
-	htmlString += "<td>2</td>";
-	htmlString += "<td>2</td>";
-	htmlString += "<td>2</td>";
-	htmlString += "<td>2</td>";
-	htmlString += "<td>2</td>";
-	htmlString += "<td>2</td>";
+	var htmlString = "<td></td>";
+	htmlString += "<td></td>";
+	htmlString += "<td></td>";
+	htmlString += "<td></td>";
+	htmlString += "<td></td>";
+	htmlString += "<td></td>";
+	htmlString += "<td></td>";
 	element.innerHTML = htmlString;
 	
 	var billingItems = document.getElementById("billing_items"+id);
