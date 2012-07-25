@@ -553,6 +553,32 @@ while(rslocal.next()){
 		</form>
 </table>
 
+<table class="search_details">
+	<thead></thead>
+	<tbody>
+		<tr>
+			<td>Visit Type &nbsp;
+				<select name="visit_type">
+					<option value="Clinic">Clinic</option>
+				</select>
+			</td>
+			
+			<td>Location &nbsp;
+				<select name="location">
+					<option value="Kitchener">Kitchener</option>
+				</select>
+			</td>
+			
+			<td>Bill Type &nbsp;
+				<select name="bill_type">
+					<option value="OHIP">OHIP</option>
+				</select>
+			</td>
+			<td onclick="setAsProviderDefault()" style="color:blue;">Set as Provider Default</td>
+		</tr>
+	</tbody>
+</table>
+
 <table id="bill-list">
 <thead>
 	<tr>
@@ -569,11 +595,10 @@ while(rslocal.next()){
 		String style = "";
 		if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
 			hasBills = false;
-			style = "style=\"background:#FFCC99;\"";
-			//style = "id=\"no-bills\" class=\"no-bills\"";
+			style = "class=\"no-bills\"";
 		}
 		%>
-		<tr id="bill<%=i%>" onclick="javascript:showBillDetails(<%=i%>)">
+		<tr id="bill<%=i%>" class="no-bills" onclick="javascript:showBillDetails(<%=i%>)">
 			<% for (int j=0; j < vecHeader.size(); j++) {
 				prop = (Properties)vecValue.get(i);
 				%>
