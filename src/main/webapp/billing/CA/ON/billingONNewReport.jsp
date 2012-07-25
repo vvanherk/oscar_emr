@@ -634,7 +634,7 @@ while(rslocal.next()){
 								<td> <input type="text" size="3" name="units<%=i%>[]" /> </td>
 								<td> <input type="text" size="6" name="dx_code<%=i%>[]" /> </td>
 								<td> <input type="text" size="12" name="dx_desc<%=i%>[]" /> </td>
-								<td> <input type="text" size="6" name="total<%=i%>[]" /> </td>
+								<td> <input type="text" size="6" name="total<%=i%>[]" onkeydown="if (checkIfTabKey(event) && checkIfLastRow(<%=i%>, <%=uniqueId%>)) { addBillingItem(<%=i%>); } return true;"/> </td>
 								<td> <input type="text" size="6" name="sli_code<%=i%>[]" /> </td>
 							</tr>
 							<%
@@ -669,7 +669,7 @@ while(rslocal.next()){
 										<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=item.getSer_num()%>" /> </td>
 										<td> <input type="text" size="6" name="dx_code<%=i%>[]" value="<%=item.getDx()%>" /> </td>
 										<td> <input type="text" size="12" name="dx_desc<%=i%>[]" value="<%=serviceDesc%>" /> </td>
-										<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" /> </td>
+										<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" onkeydown="if (checkIfTabKey(event) && checkIfLastRow(<%=i%>, <%=uniqueId%>)) { addBillingItem(<%=i%>); } return true;" /> </td>
 										<td> <input type="text" size="6" name="sli_code<%=i%>[]" value="" disabled="disabled" /> </td>
 									</tr>
 									<%
@@ -726,6 +726,28 @@ function hideBillDetails(id) {
 	document.getElementById("bill"+id).onclick = function() { javascript:showBillDetails(id); }
 }
 
+function checkIfTabKey(evt) {
+	var charCode = evt.keyCode;
+
+	if(charCode == 9) {
+		return true;
+	}
+	
+	return false;
+}
+
+function checkIfLastRow(id, billingItemId) {
+	var billingItem = document.getElementById("billing_item"+id+"_"+billingItemId);
+	var lastBillingItem = billingItem.parentNode.lastChild;
+	
+	// We want the last element, so we may have to find it
+	while (lastBillingItem.nodeType!=1) {
+		lastBillingItem = lastBillingItem.previousSibling;
+	}
+	
+	return (billingItem === lastBillingItem);
+}
+
 function addBillingItem(id) {
 	//Create an input type dynamically.
 	var element = document.createElement("tr");	
@@ -738,7 +760,7 @@ function addBillingItem(id) {
 	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"[]\" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"[]\" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"[]\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"[]\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"[]\"  onkeydown=\"if (checkIfTabKey(event) && checkIfLastRow("+id+", "+billingItemId+")) { addBillingItem("+id+"); } return true;\"/> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"[]\" disabled=\"disabled\" /> </td>";
 	element.innerHTML = htmlString;
 	
@@ -746,6 +768,8 @@ function addBillingItem(id) {
 	
 	//Append the element in page (in span).
 	billingItems.appendChild(element);
+	
+	element.focus();
 }
 
 function deleteBillingItem(id, billingItemId) {	
