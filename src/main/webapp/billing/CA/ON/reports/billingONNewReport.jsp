@@ -60,11 +60,11 @@ String providerview = request.getParameter("providerview")==null?"all":request.g
 <%@ page
 	import="java.util.*, java.sql.*, oscar.login.*, oscar.*, java.net.*"
 	errorPage="errorpage.jsp"%>
-<%@ include file="../../../admin/dbconnection.jsp"%>
+<%@ include file="../../../../admin/dbconnection.jsp"%>
 <jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
 	scope="session" />
 <jsp:useBean id="SxmlMisc" class="oscar.SxmlMisc" scope="session" />
-<%@ include file="dbBilling.jspf"%>
+<%@ include file="../dbBilling.jspf"%>
 
 <%
 GregorianCalendar now=new GregorianCalendar(); 
@@ -590,7 +590,7 @@ while(rslocal.next()){
 
 <tbody>
 	<%	int uniqueId = 0;
-		for (int i=0; i < vecValue.size(); i++) { 
+		for (int i=0; i < vecValue.size(); i++) {
 		boolean hasBills = true;
 		String style = "";
 		if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
@@ -598,7 +598,7 @@ while(rslocal.next()){
 			style = "class=\"no-bills\"";
 		}
 		%>
-		<tr id="bill<%=i%>" class="no-bills" onclick="javascript:showBillDetails(<%=i%>)">
+		<tr id="bill<%=i%>" class="no-bills" onclick="showBillDetails(<%=i%>); setFocusOnFirstInputField(<%=i%>);">
 			<% for (int j=0; j < vecHeader.size(); j++) {
 				prop = (Properties)vecValue.get(i);
 				%>
@@ -608,8 +608,6 @@ while(rslocal.next()){
 		<tr id="bill">
 			<td id="bill_details<%=i%>" style="display:none;" colspan=7> 
 				<span onclick="addBillingItem(<%=i%>)" style="color:blue;">Add Item</span>
-				&nbsp;&nbsp;&nbsp;
-				<span onclick="return submitBill(<%=i%>);" style="color:blue;">Submit Bill</span>
 				<table>
 					<thead>
 						<tr>
@@ -624,17 +622,28 @@ while(rslocal.next()){
 						</tr>
 					<thead>
 					<tbody id="billing_items<%=i%>">
-						<%						
+						<%	
+						String onkeydown = "onkeydown=\"";
+						onkeydown+= "if (isMoveBetweenBills(event)) {";
+						onkeydown+= "	moveBetweenBills(event, "+i+"); ";
+						onkeydown+= "}\"";
 						if (!hasBills) {
+							String totalOnkeydown = "onkeydown=\"";
+							totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
+							totalOnkeydown+= "	addBillingItem("+i+"); ";
+							totalOnkeydown+= "} else if (isEnterKey(event)) {";
+							totalOnkeydown+= "	submitBill("+i+"); ";
+							totalOnkeydown+= "} ";
+							totalOnkeydown+= "return true;\"";
 							%>
 							<tr id="billing_item<%=i%>_<%=uniqueId%>">
 								<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
-								<td> <input type="text" size="6" name="bill_code<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-								<td> <input type="text" size="6" name="amount<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-								<td> <input type="text" size="3" name="units<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-								<td> <input type="text" size="6" name="dx_code<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-								<td> <input type="text" size="12" name="dx_desc<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-								<td> <input type="text" size="6" name="total<%=i%>[]" onkeydown="if (checkIfTabKey(event) && checkIfLastRow(<%=i%>, <%=uniqueId%>)) { addBillingItem(<%=i%>); } else if (checkIfEnterKey(event)){ submitBill(<%=i%>); } return true;"/> </td>
+								<td> <input type="text" size="6" name="bill_code<%=i%>[]" <%=onkeydown%> /> </td>
+								<td> <input type="text" size="6" name="amount<%=i%>[]" <%=onkeydown%> /> </td>
+								<td> <input type="text" size="3" name="units<%=i%>[]" <%=onkeydown%> /> </td>
+								<td> <input type="text" size="6" name="dx_code<%=i%>[]" <%=onkeydown%> /> </td>
+								<td> <input type="text" size="12" name="dx_desc<%=i%>[]" <%=onkeydown%> /> </td>
+								<td> <input type="text" size="6" name="total<%=i%>[]" <%=totalOnkeydown%> /> </td>
 								<td> <input type="text" size="6" name="sli_code<%=i%>[]" /> </td>
 							</tr>
 							<%
@@ -653,23 +662,35 @@ while(rslocal.next()){
 										}
 									}
 									
+									String fee = item.getFee();
+									String units = item.getSer_num();
 									Double feeAsDouble = new Double(0.0);
 									Integer unitsAsInteger = new Integer(0);
-									if (item.getFee() != null)
-										feeAsDouble = Double.valueOf( item.getFee() );
-									if (item.getSer_num() != null)
-										unitsAsInteger = Integer.valueOf( item.getSer_num() );
+									if (fee != null) {
+										feeAsDouble = Double.valueOf( fee.replaceAll("[^\\d]", "") );
+									}
+									if (units != null) {
+										unitsAsInteger = Integer.valueOf( units.replaceAll("[^\\d]", "") );
+									}
 									double tempTotal = feeAsDouble.doubleValue() * (double)unitsAsInteger.intValue();
 									String total = (new Double(tempTotal)).toString();
+									
+									String totalOnkeydown = "onkeydown=\"";
+									totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
+									totalOnkeydown+= "	addBillingItem("+i+"); ";
+									totalOnkeydown+= "} else if (isMoveBetweenBills(event)) {";
+									totalOnkeydown+= "	moveBetweenBills(event, "+i+"); ";
+									totalOnkeydown+= "} ";
+									totalOnkeydown+= "return true;\"";
 									%>
 									<tr id="billing_item<%=i%>_<%=uniqueId%>">
 										<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
-										<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-										<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=item.getFee()%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-										<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=item.getSer_num()%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-										<td> <input type="text" size="6" name="dx_code<%=i%>[]" value="<%=item.getDx()%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-										<td> <input type="text" size="12" name="dx_desc<%=i%>[]" value="<%=serviceDesc%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
-										<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" onkeydown="if (checkIfTabKey(event) && checkIfLastRow(<%=i%>, <%=uniqueId%>)) { addBillingItem(<%=i%>); } else if (checkIfEnterKey(event)){ submitBill(<%=i%>); } return true;" /> </td>
+										<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" <%=onkeydown%> /> </td>
+										<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=fee%>" <%=onkeydown%> /> </td>
+										<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=units%>" <%=onkeydown%> /> </td>
+										<td> <input type="text" size="6" name="dx_code<%=i%>[]" value="<%=item.getDx()%>" <%=onkeydown%> /> </td>
+										<td> <input type="text" size="12" name="dx_desc<%=i%>[]" value="<%=serviceDesc%>" <%=onkeydown%> /> </td>
+										<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" <%=totalOnkeydown%> /> </td>
 										<td> <input type="text" size="6" name="sli_code<%=i%>[]" value="" disabled="disabled" /> </td>
 									</tr>
 									<%
@@ -719,27 +740,38 @@ var totalNumberOfBills = <%=vecValue.size()%>;
 
 function showBillDetails(id) {
 	document.getElementById("bill_details"+id).style.display = "";
-	document.getElementById("bill"+id).onclick = function() { javascript:hideBillDetails(id); }
+	document.getElementById("bill"+id).onclick = function() { hideBillDetails(id); }
+	setFocusOnFirstInputField(id);
 }
 
 function hideBillDetails(id) {
 	document.getElementById("bill_details"+id).style.display = "none";
-	document.getElementById("bill"+id).onclick = function() { javascript:showBillDetails(id); }
+	document.getElementById("bill"+id).onclick = function() { showBillDetails(id); }
 }
 
-function checkIfEnterKey(evt) {
+function isShiftKey(evt) {
+	return (evt.shiftKey);
+}
+
+function isEnterKey(evt) {
 	var charCode = evt.keyCode;
 
 	return (charCode == 13);
 }
 
-function checkIfTabKey(evt) {
+function isTabKey(evt) {
 	var charCode = evt.keyCode;
 
 	return (charCode == 9 && !evt.shiftKey);
 }
 
-function checkIfLastRow(id, billingItemId) {
+/**
+ * function checkIfLastBillingItem
+ * 
+ * Returns true if the billing item with id 'billingItemId' is the last billing item
+ * in the bill with bill id 'id'; false otherwise.
+ */ 
+function checkIfLastBillingItem(id, billingItemId) {
 	var billingItem = document.getElementById("billing_item"+id+"_"+billingItemId);
 	var lastBillingItem = billingItem.parentNode.lastChild;
 	
@@ -751,19 +783,66 @@ function checkIfLastRow(id, billingItemId) {
 	return (billingItem === lastBillingItem);
 }
 
+/**
+ * function isMoveBetweenBills
+ * 
+ * Returns true if the event 'evt' represents a 'move between bills' event; false otherwise
+ */ 
+function isMoveBetweenBills(evt) {
+	return isEnterKey(evt);
+}
+
+/**
+ * function moveBetweenBills
+ * 
+ * Will move the cursor focus from one bill to either the previous or next bill
+ * (depending on user input) relative to the bill with id 'id'.  
+ * Focus will go to the first text field of the previous/next bill.  
+ * If there is no previous or next bill, nothing will happen.
+ */ 
+function moveBetweenBills(evt, id) {
+	var nextBillId = -1;
+	
+	if (!isShiftKey(evt)) {
+		nextBillId = getNextBillId(id);
+	} else {
+		nextBillId = getPreviousBillId(id);
+	}
+	
+	if (nextBillId != -1) {
+		hideBillDetails(id);
+		showBillDetails(nextBillId);
+		setFocusOnFirstInputField(nextBillId);
+	}
+}
+
 function addBillingItem(id) {
 	//Create an input type dynamically.
 	var element = document.createElement("tr");	
 	var billingItemId = getId();
 	element.setAttribute("id", "billing_item"+id+"_"+billingItemId);
 	
+	
+	var onkeydown = "onkeydown=\"";
+	onkeydown+= "if (isMoveBetweenBills(event)) {";
+	onkeydown+= "	moveBetweenBills(event, "+id+"); ";
+	onkeydown+= "}\"";
+	
+	var totalOnkeydown = "onkeydown=\"";
+	totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+id+", "+billingItemId+")) { ";
+	totalOnkeydown+= "	addBillingItem("+id+"); ";
+	totalOnkeydown+= "} else if (isMoveBetweenBills(event)) {";
+	totalOnkeydown+= "	moveBetweenBills(event, "+id+"); ";
+	totalOnkeydown+= "} ";
+	totalOnkeydown+= "return true;\"";
+	
 	var htmlString = "<td onclick=\"deleteBillingItem("+id+", "+billingItemId+")\" style=\"color:blue;\">X</td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"[]\"  onkeydown=\"if (checkIfTabKey(event) && checkIfLastRow("+id+", "+billingItemId+")) { addBillingItem("+id+"); } else if (checkIfEnterKey(event)) { submitBill("+id+"); } return true;\"/> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"[]\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"[]\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"[]\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"[]\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"[]\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"[]\" "+totalOnkeydown+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"[]\" disabled=\"disabled\" /> </td>";
 	element.innerHTML = htmlString;
 	
@@ -786,18 +865,104 @@ function submitBill(id) {
 	return result;
 }
 
+function setFocusOnFirstInputField(id) {
+	var firstBillingItem = getFirstBillingItem(id);
+	
+	var firstInputField = firstBillingItem;
+	
+	// get first <td> element
+	firstInputField = firstInputField.firstChild;
+	while (firstInputField.nodeType != 1) {
+		firstInputField = firstInputField.nextSibling;
+	}
+	
+	// get second <td> element
+	firstInputField = firstInputField.nextSibling;
+	while (firstInputField.nodeType != 1) {
+		firstInputField = firstInputField.nextSibling;
+	}
+	
+	// get <input> element within second <td> element
+	firstInputField = firstInputField.firstChild;
+	while (firstInputField.nodeType != 1) {
+		firstInputField = firstInputField.nextSibling;
+	}
+	
+	firstInputField.focus();	
+}
+
+function getFirstBillingItem(id) {
+	var bill = document.getElementById("billing_items"+id);
+	var firstBillingItem = bill.firstChild;
+	
+	// We want the first billing item (<tr> tag), so we may have to find it
+	while (firstBillingItem.nodeType != 1) {
+		firstBillingItem = firstBillingItem.nextSibling;
+	}
+	
+	return firstBillingItem
+}
+
+/**
+ * function getNextBillId
+ * 
+ * Returns the id of the bill after the bill with id 'id'.
+ * If there is no bill, or if there is no bill with id 'id',
+ * -1 is returned.
+ */ 
 function getNextBillId(id) {
 	var nextBillId = id+1;
 	
+	if (nextBillId > totalNumberOfBills)
+		return -1;
+	
 	var bill = document.getElementById("bill"+nextBillId);
-	//totalNumberOfBills
+	while (bill == null && nextBillId <= totalNumberOfBills) {
+		nextBillId++;
+		bill = document.getElementById("bill"+nextBillId);
+	}
+	
+	// if there is no next bill, return -1
+	if (bill == null || nextBillId > totalNumberOfBills) {
+		return -1;
+	}
+	
+	return nextBillId;
 }
 
-function openBill(id) {
+/**
+ * function getPreviousBillId
+ * 
+ * Returns the id of the bill before the bill with id 'id'.
+ * If there is no bill, or if there is no bill with id 'id',
+ * -1 is returned.
+ */ 
+function getPreviousBillId(id) {
+	var previousBillId = id-1;
+	
+	if (previousBillId < 0)
+		return -1;
+	
+	var bill = document.getElementById("bill"+previousBillId);
+	while (bill == null && nextBillId > 0) {
+		previousBillId--;
+		bill = document.getElementById("bill"+previousBillId);
+	}
+	
+	// if there is no previous bill, return -1
+	if (bill == null || previousBillId < 0) {
+		return -1;
+	}
+	
+	return previousBillId;
 	
 }
 
-
+/**
+ * function getId
+ * 
+ * Keeps track of and returns the next available id for a billing item.
+ */ 
 var getId = (function () {
   var incrementingId = <%=uniqueId%>;
   return function() {
