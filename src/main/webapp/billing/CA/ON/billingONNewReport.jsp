@@ -609,7 +609,7 @@ while(rslocal.next()){
 			<td id="bill_details<%=i%>" style="display:none;" colspan=7> 
 				<span onclick="addBillingItem(<%=i%>)" style="color:blue;">Add Item</span>
 				&nbsp;&nbsp;&nbsp;
-				<span onclick="return confirm('Are you sure you want to submit this bill?');" style="color:blue;">Submit Bill</span>
+				<span onclick="return submitBill(<%=i%>);" style="color:blue;">Submit Bill</span>
 				<table>
 					<thead>
 						<tr>
@@ -629,12 +629,12 @@ while(rslocal.next()){
 							%>
 							<tr id="billing_item<%=i%>_<%=uniqueId%>">
 								<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
-								<td> <input type="text" size="6" name="bill_code<%=i%>[]" /> </td>
-								<td> <input type="text" size="6" name="amount<%=i%>[]" /> </td>
-								<td> <input type="text" size="3" name="units<%=i%>[]" /> </td>
-								<td> <input type="text" size="6" name="dx_code<%=i%>[]" /> </td>
-								<td> <input type="text" size="12" name="dx_desc<%=i%>[]" /> </td>
-								<td> <input type="text" size="6" name="total<%=i%>[]" onkeydown="if (checkIfTabKey(event) && checkIfLastRow(<%=i%>, <%=uniqueId%>)) { addBillingItem(<%=i%>); } return true;"/> </td>
+								<td> <input type="text" size="6" name="bill_code<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+								<td> <input type="text" size="6" name="amount<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+								<td> <input type="text" size="3" name="units<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+								<td> <input type="text" size="6" name="dx_code<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+								<td> <input type="text" size="12" name="dx_desc<%=i%>[]" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+								<td> <input type="text" size="6" name="total<%=i%>[]" onkeydown="if (checkIfTabKey(event) && checkIfLastRow(<%=i%>, <%=uniqueId%>)) { addBillingItem(<%=i%>); } else if (checkIfEnterKey(event)){ submitBill(<%=i%>); } return true;"/> </td>
 								<td> <input type="text" size="6" name="sli_code<%=i%>[]" /> </td>
 							</tr>
 							<%
@@ -664,12 +664,12 @@ while(rslocal.next()){
 									%>
 									<tr id="billing_item<%=i%>_<%=uniqueId%>">
 										<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
-										<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" /> </td>
-										<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=item.getFee()%>" /> </td>
-										<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=item.getSer_num()%>" /> </td>
-										<td> <input type="text" size="6" name="dx_code<%=i%>[]" value="<%=item.getDx()%>" /> </td>
-										<td> <input type="text" size="12" name="dx_desc<%=i%>[]" value="<%=serviceDesc%>" /> </td>
-										<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" onkeydown="if (checkIfTabKey(event) && checkIfLastRow(<%=i%>, <%=uniqueId%>)) { addBillingItem(<%=i%>); } return true;" /> </td>
+										<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+										<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=item.getFee()%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+										<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=item.getSer_num()%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+										<td> <input type="text" size="6" name="dx_code<%=i%>[]" value="<%=item.getDx()%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+										<td> <input type="text" size="12" name="dx_desc<%=i%>[]" value="<%=serviceDesc%>" onkeydown="if (checkIfEnterKey(event)){ return submitBill(<%=i%>); }" /> </td>
+										<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" onkeydown="if (checkIfTabKey(event) && checkIfLastRow(<%=i%>, <%=uniqueId%>)) { addBillingItem(<%=i%>); } else if (checkIfEnterKey(event)){ submitBill(<%=i%>); } return true;" /> </td>
 										<td> <input type="text" size="6" name="sli_code<%=i%>[]" value="" disabled="disabled" /> </td>
 									</tr>
 									<%
@@ -715,6 +715,7 @@ Calendar.setup( { inputField : "xml_appointment_date", ifFormat : "%Y/%m/%d", sh
 </script>
 
 <script type="text/javascript">
+var totalNumberOfBills = <%=vecValue.size()%>;
 
 function showBillDetails(id) {
 	document.getElementById("bill_details"+id).style.display = "";
@@ -726,14 +727,16 @@ function hideBillDetails(id) {
 	document.getElementById("bill"+id).onclick = function() { javascript:showBillDetails(id); }
 }
 
+function checkIfEnterKey(evt) {
+	var charCode = evt.keyCode;
+
+	return (charCode == 13);
+}
+
 function checkIfTabKey(evt) {
 	var charCode = evt.keyCode;
 
-	if(charCode == 9) {
-		return true;
-	}
-	
-	return false;
+	return (charCode == 9 && !evt.shiftKey);
 }
 
 function checkIfLastRow(id, billingItemId) {
@@ -755,12 +758,12 @@ function addBillingItem(id) {
 	element.setAttribute("id", "billing_item"+id+"_"+billingItemId);
 	
 	var htmlString = "<td onclick=\"deleteBillingItem("+id+", "+billingItemId+")\" style=\"color:blue;\">X</td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"[]\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"[]\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"[]\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"[]\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"[]\" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"[]\"  onkeydown=\"if (checkIfTabKey(event) && checkIfLastRow("+id+", "+billingItemId+")) { addBillingItem("+id+"); } return true;\"/> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"[]\" onkeydown=\"if (checkIfEnterKey(event)) { return submitBill("+id+"); }\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"[]\"  onkeydown=\"if (checkIfTabKey(event) && checkIfLastRow("+id+", "+billingItemId+")) { addBillingItem("+id+"); } else if (checkIfEnterKey(event)) { submitBill("+id+"); } return true;\"/> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"[]\" disabled=\"disabled\" /> </td>";
 	element.innerHTML = htmlString;
 	
@@ -776,6 +779,24 @@ function deleteBillingItem(id, billingItemId) {
 	var billingItem = document.getElementById("billing_item"+id+"_"+billingItemId);
 	billingItem.parentNode.removeChild(billingItem);
 }
+
+function submitBill(id) {
+	var result = confirm('Are you sure you want to submit this bill?');
+	
+	return result;
+}
+
+function getNextBillId(id) {
+	var nextBillId = id+1;
+	
+	var bill = document.getElementById("bill"+nextBillId);
+	//totalNumberOfBills
+}
+
+function openBill(id) {
+	
+}
+
 
 var getId = (function () {
   var incrementingId = <%=uniqueId%>;
