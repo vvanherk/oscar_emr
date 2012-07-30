@@ -78,13 +78,13 @@ String xml_appointment_date = request.getParameter("xml_appointment_date") == nu
 
 <%
 // action
-Vector vecHeader = new Vector();
-Vector vecValue = new Vector();
+ArrayList<String> vecHeader = new ArrayList<String>();
+ArrayList<Properties> vecValue = new ArrayList<Properties>();
 List< List<BillingClaimHeader1> > vecBills = new ArrayList< List<BillingClaimHeader1> >();
-Vector vecTotal = new Vector();
+ArrayList<String> vecDemographicNo = new ArrayList<String>();
+ArrayList<String> vecTotal = new ArrayList<String>();
 
 Properties prop = null;
-DBHelp dbObj = new DBHelp();
 ResultSet rs = null;
 String sql = null;
 
@@ -158,6 +158,8 @@ if("unbilled".equals(action)) {
         
         List<BillingClaimHeader1> bills = billingClaimDAO.getInvoices(new Integer(apt.getDemographicNo()).toString(), apt.getId().toString());
         vecBills.add(bills);
+        
+        vecDemographicNo.add( "" + apt.getDemographicNo() );
     }
 
 }
@@ -168,10 +170,10 @@ if("billed".equals(action)) {
     vecHeader.add("PATIENT");
     vecHeader.add("DESCRIPTION");
     vecHeader.add("ACCOUNT");
-    sql = "select * from billing_on_cheader1 where provider_no='" + providerview + "' and billing_date >='" + xml_vdate 
-            + "' and billing_date<='" + xml_appointment_date + "' and (status<>'D' and status<>'S' and status<>'B')" 
-            + " order by billing_date , billing_time ";
-    rs = dbObj.searchDBRecord(sql);
+    //sql = "select * from billing_on_cheader1 where provider_no='" + providerview + "' and billing_date >='" + xml_vdate 
+    //        + "' and billing_date<='" + xml_appointment_date + "' and (status<>'D' and status<>'S' and status<>'B')" 
+    //        + " order by billing_date , billing_time ";
+    //rs = dbObj.searchDBRecord(sql);
     while (rs.next()) {
     	if (bMultisites) {
     		// skip record if clinic is not match the selected site, blank clinic always gets displayed for backward compatible
@@ -227,7 +229,7 @@ if("paid".equals(action)) {
     float fTotalPaid = 0.00f;
         
     // get billing no in the date range
-    Vector vecBillingNo = new Vector();
+    ArrayList<String> vecBillingNo = new ArrayList<String>();
     Properties propTotal = new Properties();
     sql = "select billing_no,total from billing where provider_no='" + providerview 
     + "' and billing_date>='" + xml_vdate + "' and billing_date<='" + xml_appointment_date 
@@ -235,7 +237,7 @@ if("paid".equals(action)) {
     
     // change 'S' to 'O' for testing
     
-    rs = dbObj.searchDBRecord(sql);
+    //rs = dbObj.searchDBRecord(sql);
     while (rs.next()) {
         vecBillingNo.add("" + rs.getInt("billing_no"));
         propTotal.setProperty(""+rs.getInt("billing_no"), rs.getString("total"));
@@ -254,7 +256,7 @@ if("paid".equals(action)) {
     
     sql = "select billing_no, amountclaim, amountpay, hin, service_date from radetail where billing_no in ("
             + tempStr + ") and raheader_no !=0 order by billing_no, radetail_no";
-    rs = dbObj.searchDBRecord(sql);
+    //rs = dbObj.searchDBRecord(sql);
     String sAmountclaim = "", sAmountpay = "", hin = "";
     int nNo = 0;
     while (rs.next()) {
@@ -331,7 +333,7 @@ if("unpaid".equals(action)) {
     + "' and billing_date<='" + xml_appointment_date + "' and (status<>'D' and status<>'S')" 
     + " order by billing_date , billing_time ";
     int nNo = 0;
-	rs = dbObj.searchDBRecord(sql);
+	//rs = dbObj.searchDBRecord(sql);
 	while (rs.next()) {
 		prop = new Properties();
 		nNo++;
@@ -394,7 +396,7 @@ if("unpaid".equals(action)) {
 <title>ON Billing Report</title>
 <link rel="stylesheet" href="../../web.css">
 <link rel="stylesheet" type="text/css" media="all" href="../share/css/extractedFromPages.css"  />
-<link rel="stylesheet" type="text/css" media="all" href="billingONNewReport.css"  />
+<link rel="stylesheet" type="text/css" media="all" href="reports/billingONNewReport.css"  />
 <!-- calendar stylesheet -->
 <link rel="stylesheet" type="text/css" media="all"
 	href="../../../share/calendar/calendar.css" title="win2k-cold-1" />
@@ -591,119 +593,135 @@ while(rslocal.next()){
 <tbody>
 	<%	int uniqueId = 0;
 		for (int i=0; i < vecValue.size(); i++) {
-		boolean hasBills = true;
-		String style = "";
-		if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
-			hasBills = false;
-			style = "class=\"no-bills\"";
-		}
-		%>
-		<tr id="bill<%=i%>" class="no-bills" onclick="showBillDetails(<%=i%>); setFocusOnFirstInputField(<%=i%>);">
-			<% for (int j=0; j < vecHeader.size(); j++) {
-				prop = (Properties)vecValue.get(i);
-				%>
-				<td <%=style%>><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
-			<% } %>
-		</tr>
-		<tr id="bill">
-			<td id="bill_details<%=i%>" style="display:none;" colspan=7> 
-				<span onclick="addBillingItem(<%=i%>)" style="color:blue;">Add Item</span>
-				<table>
-					<thead>
-						<tr>
-							<td></td>
-							<td>Billing Code</td>
-							<td>Amount</td>
-							<td>Units</td>
-							<td>Dx Code</td>
-							<td>Dx Description</td>
-							<td>Total</td>
-							<td>SLI Code</td>
-						</tr>
-					<thead>
-					<tbody id="billing_items<%=i%>">
-						<%	
-						String onkeydown = "onkeydown=\"";
-						onkeydown+= "if (isMoveBetweenBills(event)) {";
-						onkeydown+= "	moveBetweenBills(event, "+i+"); ";
-						onkeydown+= "}\"";
-						if (!hasBills) {
-							String totalOnkeydown = "onkeydown=\"";
-							totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
-							totalOnkeydown+= "	addBillingItem("+i+"); ";
-							totalOnkeydown+= "} else if (isEnterKey(event)) {";
-							totalOnkeydown+= "	submitBill("+i+"); ";
-							totalOnkeydown+= "} ";
-							totalOnkeydown+= "return true;\"";
-							%>
-							<tr id="billing_item<%=i%>_<%=uniqueId%>">
-								<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
-								<td> <input type="text" size="6" name="bill_code<%=i%>[]" <%=onkeydown%> /> </td>
-								<td> <input type="text" size="6" name="amount<%=i%>[]" <%=onkeydown%> /> </td>
-								<td> <input type="text" size="3" name="units<%=i%>[]" <%=onkeydown%> /> </td>
-								<td> <input type="text" size="6" name="dx_code<%=i%>[]" <%=onkeydown%> /> </td>
-								<td> <input type="text" size="12" name="dx_desc<%=i%>[]" <%=onkeydown%> /> </td>
-								<td> <input type="text" size="6" name="total<%=i%>[]" <%=totalOnkeydown%> /> </td>
-								<td> <input type="text" size="6" name="sli_code<%=i%>[]" /> </td>
+			boolean hasBills = true;
+			String style = "";
+			if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
+				hasBills = false;
+				style = "class=\"no-bills\"";
+			}
+			String appointmentNo = "-1";		
+			%>
+			<tr id="bill<%=i%>" class="no-bills" onclick="showBillDetails(<%=i%>); setFocusOnFirstInputField(<%=i%>);">
+				<% for (int j=0; j < vecHeader.size(); j++) {
+					prop = (Properties)vecValue.get(i);
+					%>
+					<td <%=style%>><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
+				<% } %>
+			</tr>
+			<tr id="bill">
+				<td id="bill_details<%=i%>" style="display:none;" colspan=7> 
+					<span onclick="addBillingItem(<%=i%>)" style="color:blue;">Add Item</span>
+									
+					<table>
+						<thead>
+							<tr>
+								<td></td>
+								<td>Billing Code</td>
+								<td>Amount</td>
+								<td>Units</td>
+								<td>Dx Code</td>
+								<td>Dx Description</td>
+								<td>Total</td>
+								<td>SLI Code</td>
 							</tr>
-							<%
-							uniqueId++;
-						} else {
-							for (BillingClaimHeader1 bill : vecBills.get(i)) {
-								List<BillingItem> billingItems = bill.getBillingItems();
-								for (BillingItem item : billingItems) {
-									String serviceDesc = "";
-									
-									List<BillingService> billingServices = billingServiceDao.findBillingCodesByCode(item.getService_code(), "ON");
-									if (billingServices.size() > 0) {
-										BillingService billingService = billingServices.get(0);
-										if (billingService != null) {
-											serviceDesc = billingService.getDescription();
+						<thead>
+						<tbody id="billing_items<%=i%>">
+							<%	
+							String onkeydown = "onkeydown=\"";
+							onkeydown+= "if (isMoveBetweenBills(event)) {";
+							onkeydown+= "	moveBetweenBills(event, "+i+"); ";
+							onkeydown+= "}\"";
+							if (!hasBills) {
+								String totalOnkeydown = "onkeydown=\"";
+								totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
+								totalOnkeydown+= "	addBillingItem("+i+"); ";
+								totalOnkeydown+= "} else if (isEnterKey(event)) {";
+								totalOnkeydown+= "	submitBill("+i+"); ";
+								totalOnkeydown+= "} ";
+								totalOnkeydown+= "return true;\"";
+								%>
+								<tr id="billing_item<%=i%>_<%=uniqueId%>">
+									<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
+									<td> <input type="text" size="6" name="bill_code<%=i%>[]" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="6" name="amount<%=i%>[]" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="3" name="units<%=i%>[]" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="6" name="dx_code<%=i%>[]" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="12" name="dx_desc<%=i%>[]" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="6" name="total<%=i%>[]" <%=totalOnkeydown%> /> </td>
+									<td> <input type="text" size="6" name="sli_code<%=i%>[]" /> </td>
+								</tr>
+								<%
+								uniqueId++;
+							} else {
+								for (BillingClaimHeader1 bill : vecBills.get(i)) {
+									appointmentNo = bill.getAppointment_no();
+									List<BillingItem> billingItems = bill.getBillingItems();
+									for (BillingItem item : billingItems) {
+										String serviceDesc = "";
+										
+										List<BillingService> billingServices = billingServiceDao.findBillingCodesByCode(item.getService_code(), "ON");
+										if (billingServices.size() > 0) {
+											BillingService billingService = billingServices.get(0);
+											if (billingService != null) {
+												serviceDesc = billingService.getDescription();
+											}
 										}
+										
+										String fee = item.getFee();
+										String units = item.getSer_num();
+										Double feeAsDouble = new Double(0.0);
+										Integer unitsAsInteger = new Integer(0);
+										if (fee != null) {
+											feeAsDouble = Double.valueOf( fee.replaceAll("[^\\d]", "") );
+										}
+										if (units != null) {
+											unitsAsInteger = Integer.valueOf( units.replaceAll("[^\\d]", "") );
+										}
+										double tempTotal = feeAsDouble.doubleValue() * (double)unitsAsInteger.intValue();
+										String total = (new Double(tempTotal)).toString();
+										
+										String totalOnkeydown = "onkeydown=\"";
+										totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
+										totalOnkeydown+= "	addBillingItem("+i+"); ";
+										totalOnkeydown+= "} else if (isMoveBetweenBills(event)) {";
+										totalOnkeydown+= "	moveBetweenBills(event, "+i+"); ";
+										totalOnkeydown+= "} ";
+										totalOnkeydown+= "return true;\"";
+										%>
+										<tr id="billing_item<%=i%>_<%=uniqueId%>">
+											<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
+											<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=fee%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=units%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="6" name="dx_code<%=i%>[]" value="<%=item.getDx()%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="12" name="dx_desc<%=i%>[]" value="<%=serviceDesc%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" <%=totalOnkeydown%> /> </td>
+											<td> <input type="text" size="6" name="sli_code<%=i%>[]" value="" disabled="disabled" /> </td>
+										</tr>
+										<%
+										uniqueId++;
 									}
-									
-									String fee = item.getFee();
-									String units = item.getSer_num();
-									Double feeAsDouble = new Double(0.0);
-									Integer unitsAsInteger = new Integer(0);
-									if (fee != null) {
-										feeAsDouble = Double.valueOf( fee.replaceAll("[^\\d]", "") );
-									}
-									if (units != null) {
-										unitsAsInteger = Integer.valueOf( units.replaceAll("[^\\d]", "") );
-									}
-									double tempTotal = feeAsDouble.doubleValue() * (double)unitsAsInteger.intValue();
-									String total = (new Double(tempTotal)).toString();
-									
-									String totalOnkeydown = "onkeydown=\"";
-									totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
-									totalOnkeydown+= "	addBillingItem("+i+"); ";
-									totalOnkeydown+= "} else if (isMoveBetweenBills(event)) {";
-									totalOnkeydown+= "	moveBetweenBills(event, "+i+"); ";
-									totalOnkeydown+= "} ";
-									totalOnkeydown+= "return true;\"";
-									%>
-									<tr id="billing_item<%=i%>_<%=uniqueId%>">
-										<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
-										<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" <%=onkeydown%> /> </td>
-										<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=fee%>" <%=onkeydown%> /> </td>
-										<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=units%>" <%=onkeydown%> /> </td>
-										<td> <input type="text" size="6" name="dx_code<%=i%>[]" value="<%=item.getDx()%>" <%=onkeydown%> /> </td>
-										<td> <input type="text" size="12" name="dx_desc<%=i%>[]" value="<%=serviceDesc%>" <%=onkeydown%> /> </td>
-										<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" <%=totalOnkeydown%> /> </td>
-										<td> <input type="text" size="6" name="sli_code<%=i%>[]" value="" disabled="disabled" /> </td>
-									</tr>
-									<%
-									uniqueId++;
 								}
 							}
-						}
-						%>
-					</tbody>
-				</table>
-			</td>
-		</tr>
-	<% } %>
+							%>
+						</tbody>
+					</table>
+					<span id="more_details_button<%=i%>" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=appointmentNo%>); " style="color:blue;">more</span>
+					<table class="more_details">
+						<tr>
+							<td> 
+								<table class="billing_history" id="billing_history<%=i%>" >
+								</table>
+							</td>
+							<td> 
+								<table class="appointment_notes" id="appointment_notes<%=i%>" >
+								</table>
+							</td>
+						</tr>	
+					</table>
+				</td>
+			</tr>
+		<%}%>
 	
 	<% if(vecTotal.size() > 0) { %>
 		<tr bgcolor="silver">
@@ -711,7 +729,7 @@ while(rslocal.next()){
 			<th><%=vecTotal.get(i) %>&nbsp;</th>
 		<% } %>
 		</tr>
-	<% } %>
+	<%}%>
 </tbody>
 </table>
 
@@ -958,6 +976,42 @@ function getPreviousBillId(id) {
 	
 }
 
+function showMoreDetails(billId, demographicNo, appointmentNo) {
+	// load details if not already loaded
+	var element = document.getElementById("billing_history"+billId);
+	var billDetailsElement = element;
+	
+	element = document.getElementById("appointment_notes"+billId);
+	var appointmentNotesElement = element;
+	
+	var contents = (billDetailsElement.innerHTML.trim) ? billDetailsElement.innerHTML.trim() : billDetailsElement.innerHTML.replace(/^\s+/,'');
+	if (contents == "") {
+		//billDetailsElement.innerHTML = formatBills( getBillsForDemographic(billId, demographicNo) );
+		billDetailsElement.innerHTML = getBillsForDemographic(billId, demographicNo);
+	}
+	
+	contents = (appointmentNotesElement.innerHTML.trim) ? appointmentNotesElement.innerHTML.trim() : appointmentNotesElement.innerHTML.replace(/^\s+/,'');
+	if (contents == "") {
+		//appointmentNotesElement.innerHTML = formatAppointmentNotes( getAppointmentNotes(billId, appointmentNo) );
+		appointmentNotesElement.innerHTML = getAppointmentNotes(billId, appointmentNo);
+	}
+	
+	// show the details
+	
+	billDetailsElement.style.display = "";	
+	appointmentNotesElement.style.display = "";
+	document.getElementById("more_details_button"+billId).onclick = function() { hideMoreDetails(billId, demographicNo, appointmentNo); }
+	document.getElementById("more_details_button"+billId).innerHTML = "less";
+}
+
+function hideMoreDetails(billId, demographicNo, appointmentNo) {
+	// hide the details
+	document.getElementById("billing_history"+billId).style.display = "none";	
+	document.getElementById("appointment_notes"+billId).style.display = "none";
+	document.getElementById("more_details_button"+billId).onclick = function() { showMoreDetails(billId, demographicNo, appointmentNo); }	
+	document.getElementById("more_details_button"+billId).innerHTML = "more";
+}
+
 /**
  * function getId
  * 
@@ -969,6 +1023,128 @@ var getId = (function () {
     return incrementingId++;
   };
 }());
+
+
+function createXMLHttpRequest() {
+	// See http://en.wikipedia.org/wiki/XMLHttpRequest
+	// Provide the XMLHttpRequest class for IE 5.x-6.x:
+	if( typeof XMLHttpRequest == "undefined" ) XMLHttpRequest = function() {
+		try { return new ActiveXObject("Msxml2.XMLHTTP.6.0") } catch(e) {}
+		try { return new ActiveXObject("Msxml2.XMLHTTP.3.0") } catch(e) {}
+		try { return new ActiveXObject("Msxml2.XMLHTTP") } catch(e) {}
+		try { return new ActiveXObject("Microsoft.XMLHTTP") } catch(e) {}
+	throw new Error( "This browser does not support XMLHttpRequest." )
+	};
+	return new XMLHttpRequest();
+}
+
+function getBillsHandler(billId) {
+	return function parseResponse() {
+		if(this.readyState == 4 && this.status == 200) {
+			var json = this.responseText;
+			var json = eval('(' + this.responseText +')');
+			
+			var billString = "";
+			if (json.length == 0) {
+				billString+= "<tr><td>No billing history</td></tr>";
+			} else {
+				for (var i = 0; i < json.length; i++) { 
+				    //alert(json[i]);
+				    
+				    billString+= "<tr>";
+				    billString+= wrapTD(json[i]['id']);
+				    billString+= wrapTD(json[i]['billing_date']);
+				    billString+= wrapTD(json[i]['billing_time']);
+				    billString+= wrapTD(json[i]['total']);
+				    billString+= wrapTD(json[i]['paid']);
+				    billString+= wrapTD(json[i]['status']);
+				    billString+= "</tr>";
+				    
+				    var billingItemString = "";	
+				    if (json[i]['bill'].length) {
+					    for (var j = 0; j < json[i]['bill'].length; j++) { 
+							//alert(billingItem);
+							billingItemString+= "<tr>";
+						    billingItemString+= wrapTD(json[i]['bill'][j]['item']);
+						    billingItemString+= wrapTD(json[i]['bill'][j]['fee']);
+						    billingItemString+= wrapTD(json[i]['bill'][j]['units']);
+						    billingItemString+= wrapTD(json[i]['bill'][j]['dx']);
+						    billingItemString+= wrapTD(json[i]['bill'][j]['description']);
+						    billingItemString+= wrapTD(json[i]['bill'][j]['total']);		    
+						    billingItemString+= "</tr>";
+						}
+					} else {
+						var billingItem = json[i]['bill'];
+					    billingItemString+= "<tr>";
+					    billingItemString+= wrapTD(billingItem['item']);
+					    billingItemString+= wrapTD(billingItem['fee']);
+					    billingItemString+= wrapTD(billingItem['units']);
+					    billingItemString+= wrapTD(billingItem['dx']);
+					    billingItemString+= wrapTD(billingItem['description']);
+					    billingItemString+= wrapTD(billingItem['total']);		    
+					    billingItemString+= "</tr>";
+					}
+					
+					billString+= billingItemString;
+				}
+			}
+			
+			var element = document.getElementById("billing_history"+billId);
+			element.innerHTML = billString;
+	
+			
+			//alert('Success. Result: ' + json);
+		}else if (this.readyState == 4 && this.status != 200) {
+			alert('Something went wrong...');
+		}
+	};
+}
+
+function wrapTD(text) {
+	return "<td>" + text + "</td>";
+}
+
+function getAppointmentNotesHandler(billId) {
+	return function parseResponse() {
+		if(this.readyState == 4 && this.status == 200) {
+			var json = this.responseText;
+			var json = eval('(' + this.responseText +')');	
+			
+			var notesString = "";
+			if (json.length == 0) {
+				notesString+= "<tr><td>No appointment notes</td></tr>";
+			} else {			
+				for (var i = 0; i < json.length; i++) { 			    
+				    notesString+= "<tr>";
+				    notesString+= wrapTD(json[i]['observation_date']);
+				    notesString+= wrapTD(json[i]['note']);
+				    notesString+= "</tr>";
+				}
+			}
+			
+			var element = document.getElementById("appointment_notes"+billId);
+			element.innerHTML = notesString.replace(/\n/g, '<br>');
+			
+			//alert('Success. Result: ' + notesString);
+		} else if (this.readyState == 4 && this.status != 200) {
+			alert('Something went wrong...');
+		}
+	};
+}
+
+function getBillsForDemographic(billId, demographicNo) {
+	var AJAX = createXMLHttpRequest();
+	AJAX.onreadystatechange = getBillsHandler(billId);
+	AJAX.open("GET", "reports/getBills.jsp?demographicNo="+demographicNo);
+	AJAX.send("");
+}
+
+function getAppointmentNotes(billId, appointmentNo) {
+	var AJAX = createXMLHttpRequest();
+	AJAX.onreadystatechange = getAppointmentNotesHandler(billId);
+	AJAX.open("GET", "reports/getAppointmentNotes.jsp?appointmentNo="+appointmentNo);
+	AJAX.send("");
+}
 
 
 </script>
