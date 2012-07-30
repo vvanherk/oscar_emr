@@ -55,7 +55,7 @@
 #bill-list td
 {
 	padding: 8px;
-	background: #e8edff; 
+	background: #e8edff;
 	border-bottom: 1px solid #fff;
 	color: #669;
 	font-weight: normal;
@@ -85,4 +85,43 @@
 	background: #d0dafd;
 	color: red;
 	font-weight: bold;
+}
+
+/* 'more details' style (i.e. billing history and appointment notes) */
+#bill-list #bill .more_details tr td
+{
+	background: white;
+	border: none;
+}
+
+#bill-list #bill .billing_history tr td
+{
+	background: #e8edff;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #fff;
+	
+	font-size: 11px;
+	padding: 1px;
+}
+#bill-list #bill table .billing_history
+{
+	background: white;
+	border: none;
+	border-collapse: collapse;
+}
+
+#bill-list #bill .appointment_notes tr td
+{
+	background: #e8edff;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #fff;
+	
+	font-size: 11px;
+	padding: 8px;
+}
+#bill-list #bill table .appointment_notes
+{
+	background: white;
+	border: none;
+	border-collapse: collapse;
 }
