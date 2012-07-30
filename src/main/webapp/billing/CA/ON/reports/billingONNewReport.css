@@ -87,11 +87,53 @@
 	font-weight: bold;
 }
 
+#bill-list #bill .show_bill
+{
+	display: ;
+}
+
+#bill-list #bill .hide_bill
+{
+	display: none;
+}
+
+#bill-list #bill td.completed
+{
+	display: table-cell;
+}
+#bill-list tr.completed td
+{
+	color: green;
+	font-weight: bold;
+}
+#bill-list tr.completed:hover td
+{
+	color: green;
+	font-weight: bold;
+}
+
+#bill-list #bill a.button
+{
+	text-decoration: none;
+	color: blue;
+}
+
+#bill-list #bill a.button.hide_button
+{
+	display: none;
+}
+
+
 /* 'more details' style (i.e. billing history and appointment notes) */
 #bill-list #bill .more_details tr td
 {
 	background: white;
 	border: none;
+	vertical-align:text-top;
+}
+#bill-list #bill div.more_details {
+	max-height: 300px;
+	overflow:scroll;
 }
 
 #bill-list #bill .billing_history tr td
@@ -102,6 +144,24 @@
 	
 	font-size: 11px;
 	padding: 1px;
+	
+	text-align: left;
+}
+#bill-list #bill .billing_history tr td.space
+{
+	background: white;
+	padding: 10px;
+}
+#bill-list #bill .billing_history th
+{
+	background: #b9c9fe;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #fff;
+	
+	font-size: 11px;
+	padding: 3px;
+	
+	text-align: left;
 }
 #bill-list #bill table .billing_history
 {
@@ -118,6 +178,17 @@
 	
 	font-size: 11px;
 	padding: 8px;
+}
+#bill-list #bill .appointment_notes th
+{
+	background: #b9c9fe;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #fff;
+	
+	font-size: 11px;
+	padding: 3px;
+	
+	text-align: left;
 }
 #bill-list #bill table .appointment_notes
 {
