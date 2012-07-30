@@ -79,15 +79,15 @@ for (BillingClaimHeader1 bill : bills) {
 		String fee = item.getFee();
 		String units = item.getSer_num();
 		Double feeAsDouble = new Double(0.0);
-		Integer unitsAsInteger = new Integer(0);
+		Double unitsAsDouble = new Double(0.0);
 		if (fee != null) {
-			feeAsDouble = Double.valueOf( fee.replaceAll("[^\\d]", "") );
+			feeAsDouble = Double.valueOf( fee );
 		}
 		if (units != null) {
-			unitsAsInteger = Integer.valueOf( units.replaceAll("[^\\d]", "") );
+			unitsAsDouble = Double.valueOf( units );
 		}
-		double tempTotal = feeAsDouble.doubleValue() * (double)unitsAsInteger.intValue();
-		String total = (new Double(tempTotal)).toString();
+		double tempTotal = feeAsDouble.doubleValue() * unitsAsDouble.doubleValue();
+		String total = String.format("%1$,.2f", (new Double(tempTotal)).doubleValue());
 		
 		JSONObject jsonBillingItem = new JSONObject();
 		jsonBillingItem.put( "item", item.getService_code() );

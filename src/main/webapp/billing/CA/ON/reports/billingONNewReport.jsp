@@ -599,9 +599,9 @@ while(rslocal.next()){
 				hasBills = false;
 				style = "class=\"no-bills\"";
 			}
-			String appointmentNo = "-1";		
+			String appointmentNo = "-1";	
 			%>
-			<tr id="bill<%=i%>" class="no-bills" onclick="showBillDetails(<%=i%>); setFocusOnFirstInputField(<%=i%>);">
+			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>); setFocusOnFirstInputField(<%=i%>);">
 				<% for (int j=0; j < vecHeader.size(); j++) {
 					prop = (Properties)vecValue.get(i);
 					%>
@@ -609,8 +609,8 @@ while(rslocal.next()){
 				<% } %>
 			</tr>
 			<tr id="bill">
-				<td id="bill_details<%=i%>" style="display:none;" colspan=7> 
-					<span onclick="addBillingItem(<%=i%>)" style="color:blue;">Add Item</span>
+				<td id="bill_details<%=i%>" class="hide_bill" colspan=7> 
+					<a class="button" href="" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
 									
 					<table>
 						<thead>
@@ -628,6 +628,9 @@ while(rslocal.next()){
 						<tbody id="billing_items<%=i%>">
 							<%	
 							String onkeydown = "onkeydown=\"";
+							onkeydown+= "if (isSaveBill(event)) {";
+							onkeydown+= "	saveBill(event, "+i+"); ";
+							onkeydown+= "}";
 							onkeydown+= "if (isMoveBetweenBills(event)) {";
 							onkeydown+= "	moveBetweenBills(event, "+i+"); ";
 							onkeydown+= "}\"";
@@ -635,13 +638,17 @@ while(rslocal.next()){
 								String totalOnkeydown = "onkeydown=\"";
 								totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
 								totalOnkeydown+= "	addBillingItem("+i+"); ";
-								totalOnkeydown+= "} else if (isEnterKey(event)) {";
+								totalOnkeydown+= "} ";
+								totalOnkeydown+= "if (isSaveBill(event)) {";
+								totalOnkeydown+= "	saveBill(event, "+i+"); ";
+								totalOnkeydown+= "}";
+								totalOnkeydown+= "if (isEnterKey(event)) {";
 								totalOnkeydown+= "	submitBill("+i+"); ";
 								totalOnkeydown+= "} ";
 								totalOnkeydown+= "return true;\"";
 								%>
 								<tr id="billing_item<%=i%>_<%=uniqueId%>">
-									<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
+									<td> <a class="button" href="" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;" >X</a></td>
 									<td> <input type="text" size="6" name="bill_code<%=i%>[]" <%=onkeydown%> /> </td>
 									<td> <input type="text" size="6" name="amount<%=i%>[]" <%=onkeydown%> /> </td>
 									<td> <input type="text" size="3" name="units<%=i%>[]" <%=onkeydown%> /> </td>
@@ -670,15 +677,15 @@ while(rslocal.next()){
 										String fee = item.getFee();
 										String units = item.getSer_num();
 										Double feeAsDouble = new Double(0.0);
-										Integer unitsAsInteger = new Integer(0);
+										Double unitsAsDouble = new Double(0.0);
 										if (fee != null) {
-											feeAsDouble = Double.valueOf( fee.replaceAll("[^\\d]", "") );
+											feeAsDouble = Double.valueOf( fee );
 										}
 										if (units != null) {
-											unitsAsInteger = Integer.valueOf( units.replaceAll("[^\\d]", "") );
+											unitsAsDouble = Double.valueOf( units );
 										}
-										double tempTotal = feeAsDouble.doubleValue() * (double)unitsAsInteger.intValue();
-										String total = (new Double(tempTotal)).toString();
+										double tempTotal = feeAsDouble.doubleValue() * unitsAsDouble.doubleValue();
+										String total = String.format("%1$,.2f", (new Double(tempTotal)).doubleValue());
 										
 										String totalOnkeydown = "onkeydown=\"";
 										totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
@@ -689,7 +696,7 @@ while(rslocal.next()){
 										totalOnkeydown+= "return true;\"";
 										%>
 										<tr id="billing_item<%=i%>_<%=uniqueId%>">
-											<td onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>)" style="color:blue;">X</td>
+											<td> <a class="button" href=""  onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;">X</a></td>
 											<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" <%=onkeydown%> /> </td>
 											<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=fee%>" <%=onkeydown%> /> </td>
 											<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=units%>" <%=onkeydown%> /> </td>
@@ -706,12 +713,14 @@ while(rslocal.next()){
 							%>
 						</tbody>
 					</table>
-					<span id="more_details_button<%=i%>" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=appointmentNo%>); " style="color:blue;">more</span>
-					<table class="more_details">
+					<a class="button" href="" id="more_details_button<%=i%>" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=appointmentNo%>); return false;" style="color:blue;">more</a>
+					<table id="more_details<%=i%>" style="display:none;" class="more_details">
 						<tr>
-							<td> 
-								<table class="billing_history" id="billing_history<%=i%>" >
-								</table>
+							<td>
+								<div class="more_details">
+									<table class="billing_history" id="billing_history<%=i%>" >
+									</table>
+								</div>
 							</td>
 							<td> 
 								<table class="appointment_notes" id="appointment_notes<%=i%>" >
@@ -756,14 +765,46 @@ Calendar.setup( { inputField : "xml_appointment_date", ifFormat : "%Y/%m/%d", sh
 <script type="text/javascript">
 var totalNumberOfBills = <%=vecValue.size()%>;
 
+function hasClass( classname, element) {
+	if( cn.indexOf( classname ) != -1 ) {
+        return true;
+    }
+    
+    return false;
+}
+
+function addClass( classname, element ) {
+    var cn = element.className;
+    //test for existance
+    if( cn.indexOf( classname ) != -1 ) {
+        return;
+    }
+    //add a space if the element already has class
+    if( cn != '' ) {
+        classname = ' '+classname;
+    }
+    element.className = cn+classname;
+}
+
+function removeClass( classname, element ) {
+    var cn = element.className;
+    var rxp = new RegExp( "\\s?\\b"+classname+"\\b", "g" );
+    cn = cn.replace( rxp, '' );
+    element.className = cn;
+}
+
 function showBillDetails(id) {
-	document.getElementById("bill_details"+id).style.display = "";
+	var elem = document.getElementById("bill_details"+id);
+	removeClass('hide_bill', elem);
+	addClass('show_bill', elem);
 	document.getElementById("bill"+id).onclick = function() { hideBillDetails(id); }
 	setFocusOnFirstInputField(id);
 }
 
 function hideBillDetails(id) {
-	document.getElementById("bill_details"+id).style.display = "none";
+	var elem = document.getElementById("bill_details"+id);
+	removeClass('show_bill', elem);
+	addClass('hide_bill', elem);
 	document.getElementById("bill"+id).onclick = function() { showBillDetails(id); }
 }
 
@@ -810,6 +851,10 @@ function isMoveBetweenBills(evt) {
 	return isEnterKey(evt);
 }
 
+function isSaveBill(evt) {
+	return isEnterKey(evt) && !isShiftKey(evt);
+}
+
 /**
  * function moveBetweenBills
  * 
@@ -834,6 +879,46 @@ function moveBetweenBills(evt, id) {
 	}
 }
 
+function saveBill(evt, id) {
+	var elem = document.getElementById("bill_details"+id);
+	removeClass('incompleted', elem);
+	addClass('completed', elem);
+	
+	// convert input elements to span elements (i.e. uneditable text)
+	var rows = elem.getElementsByTagName("tr");
+	for (var i=0; i < rows.length; i++) {
+		var cells = rows[i].getElementsByTagName("td");
+		for (var j=0; j < cells.length; j++) {
+			var replacementElement = document.createElement("span");
+			
+			if (cells[j] == undefined)
+				continue;
+			
+			var inputElement = cells[j].getElementsByTagName("input")[0];
+			if (inputElement == null)
+				continue;
+				
+			replacementElement.innerHTML = inputElement.value;
+			cells[j].removeChild(inputElement);
+			cells[j].appendChild(replacementElement);
+		}
+	}
+	
+	// hide all 'buttons'
+	var rows = elem.getElementsByTagName("a");
+	for (var i=0; i < rows.length; i++) {
+		addClass('hide_button', rows[i]);
+	}
+	
+	
+	
+	elem = document.getElementById("bill"+id);
+	removeClass('no-bills', elem);
+	addClass('completed', elem);
+	
+	
+}
+
 function addBillingItem(id) {
 	//Create an input type dynamically.
 	var element = document.createElement("tr");	
@@ -842,6 +927,9 @@ function addBillingItem(id) {
 	
 	
 	var onkeydown = "onkeydown=\"";
+	onkeydown+= "if (isSaveBill(event)) {";
+	onkeydown+= "	saveBill(event, "+id+"); ";
+	onkeydown+= "}";
 	onkeydown+= "if (isMoveBetweenBills(event)) {";
 	onkeydown+= "	moveBetweenBills(event, "+id+"); ";
 	onkeydown+= "}\"";
@@ -849,12 +937,16 @@ function addBillingItem(id) {
 	var totalOnkeydown = "onkeydown=\"";
 	totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+id+", "+billingItemId+")) { ";
 	totalOnkeydown+= "	addBillingItem("+id+"); ";
-	totalOnkeydown+= "} else if (isMoveBetweenBills(event)) {";
+	totalOnkeydown+= "} ";
+	totalOnkeydown+= "if (isSaveBill(event)) {";
+	totalOnkeydown+= "	saveBill(event, "+id+"); ";
+	totalOnkeydown+= "}";
+	totalOnkeydown+= "if (isMoveBetweenBills(event)) {";
 	totalOnkeydown+= "	moveBetweenBills(event, "+id+"); ";
 	totalOnkeydown+= "} ";
 	totalOnkeydown+= "return true;\"";
 	
-	var htmlString = "<td onclick=\"deleteBillingItem("+id+", "+billingItemId+")\" style=\"color:blue;\">X</td>";
+	var htmlString = "<td> <a class=\"button\" href=\"\"  onclick=\"deleteBillingItem("+id+", "+billingItemId+"); return false;\">X</a></td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"[]\" "+onkeydown+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"[]\" "+onkeydown+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"[]\" "+onkeydown+" /> </td>";
@@ -997,18 +1089,16 @@ function showMoreDetails(billId, demographicNo, appointmentNo) {
 	}
 	
 	// show the details
-	
-	billDetailsElement.style.display = "";	
-	appointmentNotesElement.style.display = "";
-	document.getElementById("more_details_button"+billId).onclick = function() { hideMoreDetails(billId, demographicNo, appointmentNo); }
+	var moreDetailsElement = document.getElementById("more_details"+billId);
+	moreDetailsElement.style.display = "";
+	document.getElementById("more_details_button"+billId).onclick = function() { hideMoreDetails(billId, demographicNo, appointmentNo); return false; }
 	document.getElementById("more_details_button"+billId).innerHTML = "less";
 }
 
 function hideMoreDetails(billId, demographicNo, appointmentNo) {
 	// hide the details
-	document.getElementById("billing_history"+billId).style.display = "none";	
-	document.getElementById("appointment_notes"+billId).style.display = "none";
-	document.getElementById("more_details_button"+billId).onclick = function() { showMoreDetails(billId, demographicNo, appointmentNo); }	
+	document.getElementById("more_details"+billId).style.display = "none";
+	document.getElementById("more_details_button"+billId).onclick = function() { showMoreDetails(billId, demographicNo, appointmentNo); return false; }	
 	document.getElementById("more_details_button"+billId).innerHTML = "more";
 }
 
@@ -1044,12 +1134,36 @@ function getBillsHandler(billId) {
 			var json = this.responseText;
 			var json = eval('(' + this.responseText +')');
 			
+			// remove the current bill(s) from the array
+			if (json.length != 0) {
+				for (var i = 0; i < json.length;) { 
+					if (json[i]['status'] == "O") {
+						json.splice(i, 1);
+					}
+					i++;
+				}
+			}
+			
 			var billString = "";
 			if (json.length == 0) {
 				billString+= "<tr><td>No billing history</td></tr>";
 			} else {
+				billString+= "<tbody>";
+				
 				for (var i = 0; i < json.length; i++) { 
 				    //alert(json[i]);
+				    
+				    if (i != 0)
+						billString+= "<tr><td class=\"space\"></td></tr>";
+				    
+				    billString+= "<tr>";
+					billString+= "	<th>Id</th>";
+					billString+= "	<th>Date</th>";
+					billString+= "	<th>Time</th>";
+					billString+= "	<th>Total</th>";
+					billString+= "	<th>Paid</th>";
+					billString+= "	<th>Status</th>";
+					billString+= "</tr>";
 				    
 				    billString+= "<tr>";
 				    billString+= wrapTD(json[i]['id']);
@@ -1059,6 +1173,16 @@ function getBillsHandler(billId) {
 				    billString+= wrapTD(json[i]['paid']);
 				    billString+= wrapTD(json[i]['status']);
 				    billString+= "</tr>";
+				    
+					billString+= "<tr>";
+					billString+= "	<th>Billing Code</th>";
+					billString+= "	<th>Amount</th>";
+					billString+= "	<th>Units</th>";
+					billString+= "	<th>Dx Code</th>";
+					billString+= "	<th>Dx Description</th>";
+					billString+= "	<th>Total</th>";
+					//billString+= "	<th>SLI Code</th>";
+					billString+= "</tr>";
 				    
 				    var billingItemString = "";	
 				    if (json[i]['bill'].length) {
@@ -1087,6 +1211,8 @@ function getBillsHandler(billId) {
 					
 					billString+= billingItemString;
 				}
+				
+				billString+= "</tbody>";
 			}
 			
 			var element = document.getElementById("billing_history"+billId);
@@ -1113,13 +1239,21 @@ function getAppointmentNotesHandler(billId) {
 			var notesString = "";
 			if (json.length == 0) {
 				notesString+= "<tr><td>No appointment notes</td></tr>";
-			} else {			
+			} else {
+				notesString+= "<tbody>";
+				
+				notesString+= "<tr>";
+				notesString+= "	<th>Date &amp; Time</th>";
+				notesString+= "	<th>Note</th>";
+				notesString+= "</tr>";		
 				for (var i = 0; i < json.length; i++) { 			    
 				    notesString+= "<tr>";
 				    notesString+= wrapTD(json[i]['observation_date']);
 				    notesString+= wrapTD(json[i]['note']);
 				    notesString+= "</tr>";
 				}
+				
+				notesString+= "</tbody>";
 			}
 			
 			var element = document.getElementById("appointment_notes"+billId);
