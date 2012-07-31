@@ -722,9 +722,11 @@ while(rslocal.next()){
 									</table>
 								</div>
 							</td>
-							<td> 
-								<table class="appointment_notes" id="appointment_notes<%=i%>" >
-								</table>
+							<td>
+								<div class="more_details">
+									<table class="appointment_notes" id="appointment_notes<%=i%>" >
+									</table>
+								</div>
 							</td>
 						</tr>	
 					</table>
