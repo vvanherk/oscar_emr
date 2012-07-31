@@ -132,8 +132,8 @@
 	vertical-align:text-top;
 }
 #bill-list #bill div.more_details {
-	max-height: 300px;
-	overflow:scroll;
+	max-height: 325px;
+	overflow:auto
 }
 
 #bill-list #bill .billing_history tr td
