@@ -610,7 +610,7 @@ while(rslocal.next()){
 			</tr>
 			<tr id="bill">
 				<td id="bill_details<%=i%>" class="hide_bill" colspan=7> 
-					<a class="button" href="" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
+					<a class="button" href="" tabindex="-1" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
 									
 					<table>
 						<thead>
@@ -648,7 +648,7 @@ while(rslocal.next()){
 								totalOnkeydown+= "return true;\"";
 								%>
 								<tr id="billing_item<%=i%>_<%=uniqueId%>">
-									<td> <a class="button" href="" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;" >X</a></td>
+									<td> <a class="button" href="" tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;" >X</a></td>
 									<td> <input type="text" size="6" name="bill_code<%=i%>[]" <%=onkeydown%> /> </td>
 									<td> <input type="text" size="6" name="amount<%=i%>[]" <%=onkeydown%> /> </td>
 									<td> <input type="text" size="3" name="units<%=i%>[]" <%=onkeydown%> /> </td>
@@ -696,7 +696,7 @@ while(rslocal.next()){
 										totalOnkeydown+= "return true;\"";
 										%>
 										<tr id="billing_item<%=i%>_<%=uniqueId%>">
-											<td> <a class="button" href=""  onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;">X</a></td>
+											<td> <a class="button" href=""  tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;">X</a></td>
 											<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" <%=onkeydown%> /> </td>
 											<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=fee%>" <%=onkeydown%> /> </td>
 											<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=units%>" <%=onkeydown%> /> </td>
@@ -713,18 +713,20 @@ while(rslocal.next()){
 							%>
 						</tbody>
 					</table>
-					<a class="button" href="" id="more_details_button<%=i%>" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=appointmentNo%>); return false;" style="color:blue;">more</a>
+					<a class="button" href="" id="more_details_button<%=i%>" tabindex="-1" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=appointmentNo%>); return false;" style="color:blue;">more</a>
 					<table id="more_details<%=i%>" style="display:none;" class="more_details">
 						<tr>
 							<td>
 								<div class="more_details">
 									<table class="billing_history" id="billing_history<%=i%>" >
+										<tbody><tr><td>Loading...Please wait.</td></tr></tbody>
 									</table>
 								</div>
 							</td>
 							<td>
 								<div class="more_details">
 									<table class="appointment_notes" id="appointment_notes<%=i%>" >
+										<tbody><tr><td>Loading...Please wait.</td></tr></tbody>
 									</table>
 								</div>
 							</td>
@@ -948,7 +950,7 @@ function addBillingItem(id) {
 	totalOnkeydown+= "} ";
 	totalOnkeydown+= "return true;\"";
 	
-	var htmlString = "<td> <a class=\"button\" href=\"\"  onclick=\"deleteBillingItem("+id+", "+billingItemId+"); return false;\">X</a></td>";
+	var htmlString = "<td> <a class=\"button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); return false;\">X</a></td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"[]\" "+onkeydown+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"[]\" "+onkeydown+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"[]\" "+onkeydown+" /> </td>";
@@ -980,25 +982,7 @@ function submitBill(id) {
 function setFocusOnFirstInputField(id) {
 	var firstBillingItem = getFirstBillingItem(id);
 	
-	var firstInputField = firstBillingItem;
-	
-	// get first <td> element
-	firstInputField = firstInputField.firstChild;
-	while (firstInputField.nodeType != 1) {
-		firstInputField = firstInputField.nextSibling;
-	}
-	
-	// get second <td> element
-	firstInputField = firstInputField.nextSibling;
-	while (firstInputField.nodeType != 1) {
-		firstInputField = firstInputField.nextSibling;
-	}
-	
-	// get <input> element within second <td> element
-	firstInputField = firstInputField.firstChild;
-	while (firstInputField.nodeType != 1) {
-		firstInputField = firstInputField.nextSibling;
-	}
+	var firstInputField = firstBillingItem.getElementsByTagName("input")[0];
 	
 	firstInputField.focus();	
 }
@@ -1079,15 +1063,15 @@ function showMoreDetails(billId, demographicNo, appointmentNo) {
 	var appointmentNotesElement = element;
 	
 	var contents = (billDetailsElement.innerHTML.trim) ? billDetailsElement.innerHTML.trim() : billDetailsElement.innerHTML.replace(/^\s+/,'');
-	if (contents == "") {
+	if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
 		//billDetailsElement.innerHTML = formatBills( getBillsForDemographic(billId, demographicNo) );
-		billDetailsElement.innerHTML = getBillsForDemographic(billId, demographicNo);
+		getBillsForDemographic(billId, demographicNo);
 	}
 	
 	contents = (appointmentNotesElement.innerHTML.trim) ? appointmentNotesElement.innerHTML.trim() : appointmentNotesElement.innerHTML.replace(/^\s+/,'');
-	if (contents == "") {
+	if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
 		//appointmentNotesElement.innerHTML = formatAppointmentNotes( getAppointmentNotes(billId, appointmentNo) );
-		appointmentNotesElement.innerHTML = getAppointmentNotes(billId, appointmentNo);
+		getAppointmentNotes(billId, appointmentNo);
 	}
 	
 	// show the details
@@ -1148,7 +1132,7 @@ function getBillsHandler(billId) {
 			
 			var billString = "";
 			if (json.length == 0) {
-				billString+= "<tr><td>No billing history</td></tr>";
+				billString+= "<tbody><tr><td>No billing history</td></tr></tbody>";
 			} else {
 				billString+= "<tbody>";
 				
@@ -1223,7 +1207,9 @@ function getBillsHandler(billId) {
 			
 			//alert('Success. Result: ' + json);
 		}else if (this.readyState == 4 && this.status != 200) {
-			alert('Something went wrong...');
+			//alert('Something went wrong...');
+			var element = document.getElementById("billing_history"+billId);
+			element.innerHTML = "<tbody><tr><td>An error occured.</td></tr></tbody>";
 		}
 	};
 }
@@ -1240,14 +1226,14 @@ function getAppointmentNotesHandler(billId) {
 			
 			var notesString = "";
 			if (json.length == 0) {
-				notesString+= "<tr><td>No appointment notes</td></tr>";
+				notesString+= "<tbody><tr><td>No appointment notes</td></tr></tbody>";
 			} else {
 				notesString+= "<tbody>";
 				
 				notesString+= "<tr>";
 				notesString+= "	<th>Date &amp; Time</th>";
 				notesString+= "	<th>Note</th>";
-				notesString+= "</tr>";		
+				notesString+= "</tr>";
 				for (var i = 0; i < json.length; i++) { 			    
 				    notesString+= "<tr>";
 				    notesString+= wrapTD(json[i]['observation_date']);
@@ -1263,7 +1249,9 @@ function getAppointmentNotesHandler(billId) {
 			
 			//alert('Success. Result: ' + notesString);
 		} else if (this.readyState == 4 && this.status != 200) {
-			alert('Something went wrong...');
+			//alert('Something went wrong...');
+			var element = document.getElementById("appointment_notes"+billId);
+			element.innerHTML = "<tbody><tr><td>An error occured.</td></tr></tbody>";
 		}
 	};
 }
