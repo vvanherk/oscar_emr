@@ -628,34 +628,56 @@ while(rslocal.next()){
 						<tbody id="billing_items<%=i%>">
 							<%	
 							String onkeydown = "onkeydown=\"";
+							onkeydown+= "if (isTabKey(event)) {";
+							onkeydown+= "	hideAllServiceCodeLookups("+i+"); ";
+							onkeydown+= "	return true; ";
+							onkeydown+= "}";
 							onkeydown+= "if (isSaveBill(event)) {";
 							onkeydown+= "	saveBill(event, "+i+"); ";
+							onkeydown+= "	moveToNextBill("+i+"); ";
 							onkeydown+= "}";
 							onkeydown+= "if (isMoveBetweenBills(event)) {";
 							onkeydown+= "	moveBetweenBills(event, "+i+"); ";
+							onkeydown+= "}";
+							onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
+							onkeydown+= "	moveBetweenBillingItems(event, "+i+");";
 							onkeydown+= "}\"";
+							
 							if (!hasBills) {
 								String totalOnkeydown = "onkeydown=\"";
-								totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
-								totalOnkeydown+= "	addBillingItem("+i+"); ";
+								totalOnkeydown+= "if (isTabKey(event)) {";
+								totalOnkeydown+= "	hideAllServiceCodeLookups("+i+"); ";
+								totalOnkeydown+= "	if (checkIfLastBillingItem("+i+", "+uniqueId+")) {";
+								totalOnkeydown+= "		addBillingItem("+i+"); ";
+								totalOnkeydown+= "	} ";
 								totalOnkeydown+= "} ";
 								totalOnkeydown+= "if (isSaveBill(event)) {";
 								totalOnkeydown+= "	saveBill(event, "+i+"); ";
+								totalOnkeydown+= "	moveToNextBill("+i+"); ";
 								totalOnkeydown+= "}";
-								totalOnkeydown+= "if (isEnterKey(event)) {";
-								totalOnkeydown+= "	submitBill("+i+"); ";
-								totalOnkeydown+= "} ";
+								totalOnkeydown+= "if (isMoveBetweenBillingItems(event)) {";
+								totalOnkeydown+= "	moveBetweenBillingItems(event, "+i+");";
+								totalOnkeydown+= "}\"";
 								totalOnkeydown+= "return true;\"";
+								
+								String onkeyup = "onkeyup=\"";
+								onkeyup+= "if (this.value.length == 0) {";
+								onkeyup+= "	hideServiceCodeLookup("+i+", "+uniqueId+");";
+								onkeyup+= "} else if (isAlphaNumericKey(event) || (isBackspaceKey(event)) || (isDeleteKey(event))) {";
+								onkeyup+= "	showAvailableServiceCodes("+i+", "+uniqueId+", this.value);";
+								onkeyup+= "}";
+								onkeyup+= "return true; \"";
+								
 								%>
 								<tr id="billing_item<%=i%>_<%=uniqueId%>">
 									<td> <a class="button" href="" tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;" >X</a></td>
-									<td> <input type="text" size="6" name="bill_code<%=i%>[]" <%=onkeydown%> /> </td>
-									<td> <input type="text" size="6" name="amount<%=i%>[]" <%=onkeydown%> /> </td>
-									<td> <input type="text" size="3" name="units<%=i%>[]" <%=onkeydown%> /> </td>
-									<td> <input type="text" size="6" name="dx_code<%=i%>[]" <%=onkeydown%> /> </td>
-									<td> <input type="text" size="12" name="dx_desc<%=i%>[]" <%=onkeydown%> /> </td>
-									<td> <input type="text" size="6" name="total<%=i%>[]" <%=totalOnkeydown%> /> </td>
-									<td> <input type="text" size="6" name="sli_code<%=i%>[]" /> </td>
+									<td> <input type="text" size="6" name="bill_code<%=i%>" <%=onkeydown%> <%=onkeyup%> /> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="service_code_lookup" style="display:none;"></div> </td>
+									<td> <input type="text" size="6" name="amount<%=i%>" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="3" name="units<%=i%>" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="6" name="dx_code<%=i%>" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="12" name="dx_desc<%=i%>" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="6" name="total<%=i%>" <%=totalOnkeydown%> /> </td>
+									<td> <input type="text" size="6" name="sli_code<%=i%>" /> </td>
 								</tr>
 								<%
 								uniqueId++;
@@ -688,22 +710,36 @@ while(rslocal.next()){
 										String total = String.format("%1$,.2f", (new Double(tempTotal)).doubleValue());
 										
 										String totalOnkeydown = "onkeydown=\"";
-										totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+i+", "+uniqueId+")) {";
-										totalOnkeydown+= "	addBillingItem("+i+"); ";
+										totalOnkeydown+= "if (isTabKey(event)) {";
+										totalOnkeydown+= "	hideAllServiceCodeLookups("+i+"); ";
+										totalOnkeydown+= "	if (checkIfLastBillingItem("+i+", "+uniqueId+")) {";
+										totalOnkeydown+= "		addBillingItem("+i+"); ";
+										totalOnkeydown+= "	} ";
 										totalOnkeydown+= "} else if (isMoveBetweenBills(event)) {";
 										totalOnkeydown+= "	moveBetweenBills(event, "+i+"); ";
 										totalOnkeydown+= "} ";
+										totalOnkeydown+= "if (isMoveBetweenBillingItems(event)) {";
+										totalOnkeydown+= "	moveBetweenBillingItems(event, "+i+");";
+										totalOnkeydown+= "}\"";
 										totalOnkeydown+= "return true;\"";
+										
+										String onkeyup = "onkeyup=\"";
+										onkeyup+= "if (this.value.length == 0) {";
+										onkeyup+= "	hideServiceCodeLookup("+i+", "+uniqueId+");";
+										onkeyup+= "} else if (isAlphaNumericKey(event) || (isBackspaceKey(event)) || (isDeleteKey(event))) {";
+										onkeyup+= "	showAvailableServiceCodes("+i+", "+uniqueId+", this.value);";
+										onkeyup+= "}";
+										onkeyup+= "return true; \"";
 										%>
 										<tr id="billing_item<%=i%>_<%=uniqueId%>">
 											<td> <a class="button" href=""  tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;">X</a></td>
-											<td> <input type="text" size="6" name="bill_code<%=i%>[]" value="<%=item.getService_code()%>" <%=onkeydown%> /> </td>
-											<td> <input type="text" size="6" name="amount<%=i%>[]" value="<%=fee%>" <%=onkeydown%> /> </td>
-											<td> <input type="text" size="3" name="units<%=i%>[]" value="<%=units%>" <%=onkeydown%> /> </td>
-											<td> <input type="text" size="6" name="dx_code<%=i%>[]" value="<%=item.getDx()%>" <%=onkeydown%> /> </td>
-											<td> <input type="text" size="12" name="dx_desc<%=i%>[]" value="<%=serviceDesc%>" <%=onkeydown%> /> </td>
-											<td> <input type="text" size="6" name="total<%=i%>[]" value="<%=total%>" <%=totalOnkeydown%> /> </td>
-											<td> <input type="text" size="6" name="sli_code<%=i%>[]" value="" disabled="disabled" /> </td>
+											<td> <input type="text" size="6" name="bill_code<%=i%>" value="<%=item.getService_code()%>" <%=onkeydown%> <%=onkeyup%>/> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="service_code_lookup" style="display:none;"></div> </td>
+											<td> <input type="text" size="6" name="amount<%=i%>" value="<%=fee%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="3" name="units<%=i%>" value="<%=units%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="6" name="dx_code<%=i%>" value="<%=item.getDx()%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="12" name="dx_desc<%=i%>" value="<%=serviceDesc%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="6" name="total<%=i%>" value="<%=total%>" <%=totalOnkeydown%> /> </td>
+											<td> <input type="text" size="6" name="sli_code<%=i%>" value="" disabled="disabled" /> </td>
 										</tr>
 										<%
 										uniqueId++;
@@ -769,7 +805,12 @@ Calendar.setup( { inputField : "xml_appointment_date", ifFormat : "%Y/%m/%d", sh
 <script type="text/javascript">
 var totalNumberOfBills = <%=vecValue.size()%>;
 
+/**
+ * 
+ */ 
 function hasClass( classname, element) {
+	var cn = element.className;
+	
 	if( cn.indexOf( classname ) != -1 ) {
         return true;
     }
@@ -777,6 +818,9 @@ function hasClass( classname, element) {
     return false;
 }
 
+/**
+ * 
+ */ 
 function addClass( classname, element ) {
     var cn = element.className;
     //test for existance
@@ -790,6 +834,9 @@ function addClass( classname, element ) {
     element.className = cn+classname;
 }
 
+/**
+ * 
+ */ 
 function removeClass( classname, element ) {
     var cn = element.className;
     var rxp = new RegExp( "\\s?\\b"+classname+"\\b", "g" );
@@ -797,6 +844,9 @@ function removeClass( classname, element ) {
     element.className = cn;
 }
 
+/**
+ * 
+ */ 
 function showBillDetails(id) {
 	var elem = document.getElementById("bill_details"+id);
 	removeClass('hide_bill', elem);
@@ -805,27 +855,81 @@ function showBillDetails(id) {
 	setFocusOnFirstInputField(id);
 }
 
+/**
+ * 
+ */ 
 function hideBillDetails(id) {
 	var elem = document.getElementById("bill_details"+id);
 	removeClass('show_bill', elem);
 	addClass('hide_bill', elem);
 	document.getElementById("bill"+id).onclick = function() { showBillDetails(id); }
+	
+	hideAllServiceCodeLookups(id);
 }
 
+function isAlphaNumericKey(evt) {
+	var keynum;
+	var keychar;
+	var charcheck;
+	
+	keynum = evt.keyCode;
+		
+	keychar = String.fromCharCode(keynum);
+	charcheck = /[a-zA-Z0-9]/;
+	
+	return charcheck.test(keychar);
+}
+
+function isBackspaceKey(evt) {
+	return (evt.keyCode == 8);
+}
+
+function isDeleteKey(evt) {
+	return (evt.keyCode == 46);
+}
+
+/**
+ * 
+ */ 
 function isShiftKey(evt) {
 	return (evt.shiftKey);
 }
 
+/**
+ * 
+ */ 
 function isEnterKey(evt) {
-	var charCode = evt.keyCode;
-
-	return (charCode == 13);
+	return (evt.keyCode == 13);
 }
 
-function isTabKey(evt) {
-	var charCode = evt.keyCode;
+/**
+ * 
+ */ 
+function isUpArrowKey(evt) {
+	return (evt.keyCode == 38);
+}
 
-	return (charCode == 9 && !evt.shiftKey);
+/**
+ * 
+ */ 
+function isDownArrowKey(evt) {
+	return (evt.keyCode == 40);
+}
+
+/**
+ * 
+ */ 
+function isTabKey(evt) {
+	return (evt.keyCode == 9 && !evt.shiftKey);
+}
+
+function setServiceCode(billId, billingItemId, serviceCode) {
+	var billingItem = document.getElementById("billing_item"+billId+"_"+billingItemId);
+	var inputElements = billingItem.getElementsByTagName("input");
+	
+	if (inputElements != null && inputElements.length > 0) {
+		inputElements[0].value = serviceCode;
+	}
 }
 
 /**
@@ -852,11 +956,18 @@ function checkIfLastBillingItem(id, billingItemId) {
  * Returns true if the event 'evt' represents a 'move between bills' event; false otherwise
  */ 
 function isMoveBetweenBills(evt) {
-	return isEnterKey(evt);
+	return (isUpArrowKey(evt) || isDownArrowKey(evt)) && !isShiftKey(evt);
 }
 
+function isMoveBetweenBillingItems(evt) {
+	return (isUpArrowKey(evt) || isDownArrowKey(evt)) && isShiftKey(evt);
+}
+
+/**
+ * 
+ */ 
 function isSaveBill(evt) {
-	return isEnterKey(evt) && !isShiftKey(evt);
+	return isEnterKey(evt);
 }
 
 /**
@@ -867,22 +978,138 @@ function isSaveBill(evt) {
  * Focus will go to the first text field of the previous/next bill.  
  * If there is no previous or next bill, nothing will happen.
  */ 
-function moveBetweenBills(evt, id) {
-	var nextBillId = -1;
-	
-	if (!isShiftKey(evt)) {
-		nextBillId = getNextBillId(id);
-	} else {
-		nextBillId = getPreviousBillId(id);
-	}
-	
-	if (nextBillId != -1) {
-		hideBillDetails(id);
-		showBillDetails(nextBillId);
-		setFocusOnFirstInputField(nextBillId);
+function moveBetweenBills(evt, id) {	
+	if (isUpArrowKey(evt)) {
+		moveToPreviousBill(id);
+	} else if(isDownArrowKey(evt)) {
+		moveToNextBill(id);
 	}
 }
 
+/**
+ * 
+ */ 
+function moveToNextBill(currentBillId) {
+	var nextBillId = getNextBillId(currentBillId);
+	
+	// skip bills that are already saved
+	while (isValidBillId(nextBillId) && isSaved(nextBillId))
+		nextBillId = getNextBillId(nextBillId);
+	
+	if (isValidBillId(nextBillId)) {
+		moveFromBillToBill(currentBillId, nextBillId);
+	}
+}
+
+/**
+ * 
+ */ 
+function moveToPreviousBill(currentBillId) {
+	var previousBillId = getPreviousBillId(currentBillId);
+	
+	// skip bills that are already saved
+	while (isValidBillId(previousBillId) && isSaved(previousBillId))
+		previousBillId = getPreviousBillId(previousBillId);
+	
+	if (isValidBillId(previousBillId)) {
+		moveFromBillToBill(currentBillId, previousBillId);
+	}
+}
+
+/**
+ * 
+ */ 
+function moveFromBillToBill(moveFromId, moveToId) {
+	hideBillDetails(moveFromId);
+	showBillDetails(moveToId);
+	setFocusOnFirstInputField(moveToId);
+}
+
+/**
+ * 
+ */ 
+function moveBetweenBillingItems(evt, billId) {	
+	if (isUpArrowKey(evt)) {
+		moveToPreviousBillingItem(billId);
+	} else if(isDownArrowKey(evt)) {
+		moveToNextBillingItem(billId);
+	}
+}
+
+/**
+ * 
+ */
+function moveToNextBillingItem(billId, billingItemIndex) {
+	billingItemIndex = billingItemIndex || -1;
+	
+	// if billingItemId is less than 0, set focus to first input field of the next billing item 
+	// (relative to the billing item that has the active input field as defined by document.activeElement)
+	if (billingItemIndex < 0) {	
+		var billingItems = document.getElementById("billing_items"+billId);
+		var rowElements = billingItems.getElementsByTagName("tr");
+		
+		for (var i=0; i < rowElements.length; i++) {
+			var inputElements = rowElements[i].getElementsByTagName("input");
+			for (var j=0; j < inputElements.length; j++) {
+				if (inputElements[j] == document.activeElement) {
+					// set focus to first input element of the next billing item
+					if (rowElements[i+1] != null && rowElements[i+1] != undefined) {
+						setFocusOnFirstInputFieldByIndex(billId, i+1);
+						return;
+					}
+				}
+			}
+		}
+	} else {
+		setFocusOnFirstInputFieldByIndex(billId, billingItemIndex+1);
+	}
+}
+
+/**
+ * 
+ */
+function moveToPreviousBillingItem(billId, billingItemIndex) {
+	billingItemIndex = billingItemIndex || -1;
+	
+	// if billingItemId is less than 0, set focus to first input field of the next billing item 
+	// (relative to the billing item that has the active input field as defined by document.activeElement)
+	if (billingItemIndex < 0) {	
+		var billingItems = document.getElementById("billing_items"+billId);
+		var rowElements = billingItems.getElementsByTagName("tr");
+		
+		for (var i=0; i < rowElements.length; i++) {
+			var inputElements = rowElements[i].getElementsByTagName("input");
+			for (var j=0; j < inputElements.length; j++) {
+				//alert(inputElements[j] + " " + document.activeElement);
+				if (inputElements[j] == document.activeElement) {
+					// set focus to first input element of the next billing item
+					if (rowElements[i-1] != null && rowElements[i-1] != undefined) {
+						setFocusOnFirstInputFieldByIndex(billId, i-1);
+						return;
+					}
+				}
+			}
+		}
+	} else {
+		setFocusOnFirstInputFieldByIndex(billId, billingItemIndex-1);
+	}
+}
+
+/**
+ * 
+ */ 
+function isValidBillId(billId) {
+	if (billId < 0 || billId > totalNumberOfBills)
+		return false;
+	
+	return true;
+}
+
+
+
+/**
+ * 
+ */ 
 function saveBill(evt, id) {
 	var elem = document.getElementById("bill_details"+id);
 	removeClass('incompleted', elem);
@@ -923,6 +1150,15 @@ function saveBill(evt, id) {
 	
 }
 
+function isSaved(billId) {
+	var elem = document.getElementById("bill"+billId);
+	
+	return hasClass("completed", elem);
+}
+
+/**
+ * 
+ */ 
 function addBillingItem(id) {
 	//Create an input type dynamically.
 	var element = document.createElement("tr");	
@@ -931,33 +1167,56 @@ function addBillingItem(id) {
 	
 	
 	var onkeydown = "onkeydown=\"";
+	onkeydown+= "if (isTabKey(event)) {";
+	onkeydown+= "	hideAllServiceCodeLookups("+id+"); ";
+	onkeydown+= "	return true; ";
+	onkeydown+= "}";
 	onkeydown+= "if (isSaveBill(event)) {";
 	onkeydown+= "	saveBill(event, "+id+"); ";
+	onkeydown+= "	moveToNextBill("+id+"); ";
 	onkeydown+= "}";
 	onkeydown+= "if (isMoveBetweenBills(event)) {";
 	onkeydown+= "	moveBetweenBills(event, "+id+"); ";
+	onkeydown+= "}";
+	onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
+	onkeydown+= "	moveBetweenBillingItems(event, "+id+");";
 	onkeydown+= "}\"";
 	
 	var totalOnkeydown = "onkeydown=\"";
-	totalOnkeydown+= "if (isTabKey(event) && checkIfLastBillingItem("+id+", "+billingItemId+")) { ";
-	totalOnkeydown+= "	addBillingItem("+id+"); ";
+	totalOnkeydown+= "if (isTabKey(event)) {";
+	totalOnkeydown+= "	hideAllServiceCodeLookups("+id+"); ";
+	totalOnkeydown+= "	if (checkIfLastBillingItem("+id+", "+billingItemId+")) {";
+	totalOnkeydown+= "		addBillingItem("+id+"); ";
+	totalOnkeydown+= "	} ";
 	totalOnkeydown+= "} ";
 	totalOnkeydown+= "if (isSaveBill(event)) {";
 	totalOnkeydown+= "	saveBill(event, "+id+"); ";
+	totalOnkeydown+= "	moveToNextBill("+id+"); ";
 	totalOnkeydown+= "}";
 	totalOnkeydown+= "if (isMoveBetweenBills(event)) {";
 	totalOnkeydown+= "	moveBetweenBills(event, "+id+"); ";
 	totalOnkeydown+= "} ";
+	totalOnkeydown+= "if (isMoveBetweenBillingItems(event)) {";
+	totalOnkeydown+= "	moveBetweenBillingItems(event, "+id+");";
+	totalOnkeydown+= "}";
 	totalOnkeydown+= "return true;\"";
 	
+	var onkeyup = "onkeyup=\"";
+	onkeyup+= "if (this.value.length == 0) {";
+	onkeyup+= "	hideServiceCodeLookup("+id+", "+billingItemId+");";
+	onkeyup+= "} else if (isAlphaNumericKey(event) || (isBackspaceKey(event)) || (isDeleteKey(event))) {";
+	onkeyup+= "	showAvailableServiceCodes("+id+", "+billingItemId+", this.value);";
+	onkeyup+= "}";
+	onkeyup+= "return true; \"";
+	
 	var htmlString = "<td> <a class=\"button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); return false;\">X</a></td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"[]\" "+onkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"[]\" "+onkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"[]\" "+onkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"[]\" "+onkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"[]\" "+onkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"[]\" "+totalOnkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"[]\" disabled=\"disabled\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"service_code_lookup"+id+"_"+billingItemId+"\" class=\"service_code_lookup\" style=\"display:none;\"></div> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"\" "+totalOnkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"\" disabled=\"disabled\" /> </td>";
 	element.innerHTML = htmlString;
 	
 	var billingItems = document.getElementById("billing_items"+id);
@@ -968,35 +1227,56 @@ function addBillingItem(id) {
 	element.focus();
 }
 
+/**
+ * 
+ */ 
 function deleteBillingItem(id, billingItemId) {	
 	var billingItem = document.getElementById("billing_item"+id+"_"+billingItemId);
 	billingItem.parentNode.removeChild(billingItem);
 }
 
+/**
+ * 
+ */ 
 function submitBill(id) {
 	var result = confirm('Are you sure you want to submit this bill?');
 	
 	return result;
 }
 
-function setFocusOnFirstInputField(id) {
-	var firstBillingItem = getFirstBillingItem(id);
+/**
+ * 
+ */ 
+function setFocusOnFirstInputField(billId, billingItemId) {
+	billingItemId = billingItemId || -1;
 	
-	var firstInputField = firstBillingItem.getElementsByTagName("input")[0];
-	
-	firstInputField.focus();	
-}
-
-function getFirstBillingItem(id) {
-	var bill = document.getElementById("billing_items"+id);
-	var firstBillingItem = bill.firstChild;
-	
-	// We want the first billing item (<tr> tag), so we may have to find it
-	while (firstBillingItem.nodeType != 1) {
-		firstBillingItem = firstBillingItem.nextSibling;
+	// if billingItemId is less than 0, set focus to first input field of first billing item
+	if (billingItemId < 0) {
+		var firstBillingItem = document.getElementById("billing_items"+billId).getElementsByTagName("tr")[0];
+		var firstInputField = firstBillingItem.getElementsByTagName("input")[0];
+		firstInputField.focus();
+		return;
 	}
 	
-	return firstBillingItem
+	var billingItem = document.getElementById("billing_item"+billId+"_"+billingItemId);
+	
+	if (billingItem != null && billingItem != undefined) {
+		billingItem.getElementsByTagName("input")[0].focus();
+	}
+}
+
+/**
+ * 
+ */ 
+function setFocusOnFirstInputFieldByIndex(billId, billingItemIndex) {
+	billingItemIndex = billingItemIndex || 0;
+
+	var billingItems = document.getElementById("billing_items"+billId);
+	var rowElements = billingItems.getElementsByTagName("tr");
+	
+	if (rowElements[billingItemIndex] != null && rowElements[billingItemIndex] != undefined) {
+		rowElements[billingItemIndex].getElementsByTagName("input")[0].focus();
+	}
 }
 
 /**
@@ -1050,10 +1330,37 @@ function getPreviousBillId(id) {
 		return -1;
 	}
 	
-	return previousBillId;
-	
+	return previousBillId;	
 }
 
+function showAvailableServiceCodes(billId, billingItemId, serviceCode) {
+	getBillingCodes(billId, billingItemId, serviceCode);
+	document.getElementById("service_code_lookup"+billId+"_"+billingItemId).style.display = "";
+}
+
+function hideServiceCodeLookup(billId, billingItemId) {
+	document.getElementById("service_code_lookup"+billId+"_"+billingItemId).style.display = "none";
+}
+
+function hideAllServiceCodeLookups(billId) {
+	var bill = document.getElementById("billing_items"+billId);
+	var divElements = bill.getElementsByTagName("div");
+	
+	if (divElements == null)
+		return;
+	
+	for (var i=0; i < divElements.length; i++) {
+		if (divElements[i].id.indexOf("service_code_lookup"+billId+"_") == 0)
+			divElements[i].style.display = "none";
+	}
+	
+	
+	//document.getElementById("service_code_lookup"+billId+"_"+billingItemId).style.display = "none";
+}
+
+/**
+ * 
+ */ 
 function showMoreDetails(billId, demographicNo, appointmentNo) {
 	// load details if not already loaded
 	var element = document.getElementById("billing_history"+billId);
@@ -1075,12 +1382,14 @@ function showMoreDetails(billId, demographicNo, appointmentNo) {
 	}
 	
 	// show the details
-	var moreDetailsElement = document.getElementById("more_details"+billId);
-	moreDetailsElement.style.display = "";
+	document.getElementById("more_details"+billId).style.display = "";
 	document.getElementById("more_details_button"+billId).onclick = function() { hideMoreDetails(billId, demographicNo, appointmentNo); return false; }
 	document.getElementById("more_details_button"+billId).innerHTML = "less";
 }
 
+/**
+ * 
+ */ 
 function hideMoreDetails(billId, demographicNo, appointmentNo) {
 	// hide the details
 	document.getElementById("more_details"+billId).style.display = "none";
@@ -1101,6 +1410,9 @@ var getId = (function () {
 }());
 
 
+/**
+ * 
+ */ 
 function createXMLHttpRequest() {
 	// See http://en.wikipedia.org/wiki/XMLHttpRequest
 	// Provide the XMLHttpRequest class for IE 5.x-6.x:
@@ -1114,6 +1426,9 @@ function createXMLHttpRequest() {
 	return new XMLHttpRequest();
 }
 
+/**
+ * 
+ */ 
 function getBillsHandler(billId) {
 	return function parseResponse() {
 		if(this.readyState == 4 && this.status == 200) {
@@ -1214,10 +1529,16 @@ function getBillsHandler(billId) {
 	};
 }
 
+/**
+ * 
+ */ 
 function wrapTD(text) {
 	return "<td>" + text + "</td>";
 }
 
+/**
+ * 
+ */ 
 function getAppointmentNotesHandler(billId) {
 	return function parseResponse() {
 		if(this.readyState == 4 && this.status == 200) {
@@ -1256,6 +1577,65 @@ function getAppointmentNotesHandler(billId) {
 	};
 }
 
+/**
+ * 
+ */ 
+function getBillingCodesHandler(billId, billingItemId) {
+	return function parseResponse() {
+		if(this.readyState == 4 && this.status == 200) {
+			var json = this.responseText;
+			var json = eval('(' + this.responseText +')');	
+			
+			var serviceCodesString = "";
+			if (json.length != 0) {	
+				var serviceCodesString = "<ul>";
+				var onclick = "onclick=\"";
+				onclick += "setServiceCode("+billId+", "+billingItemId+", extractServiceCode(this));";
+				onclick += "hideServiceCodeLookup("+billId+", "+billingItemId+");";
+				onclick += "setFocusOnFirstInputField("+billId+", "+billingItemId+");";
+				onclick += "\"";
+				for (var i = 0; i < json.length; i++) { 			    
+				    serviceCodesString+= "<li "+onclick+">";
+				    serviceCodesString+= "<b><span>" + json[i]['service_code'] + "</span></b>";
+				    serviceCodesString+= " ";
+				    serviceCodesString+= json[i]['description'];
+				    serviceCodesString+= "</li>";
+				}
+				serviceCodesString += "</ul>";
+			}
+			
+			var element = document.getElementById("service_code_lookup"+billId+"_"+billingItemId);
+			element.innerHTML = serviceCodesString;
+			
+			//alert('Success. Result: ' + serviceCodesString);
+		} else if (this.readyState == 4 && this.status != 200) {
+			//alert('Something went wrong...');
+			var element = document.getElementById("service_code_lookup"+billId+"_"+billingItemId);
+			element.innerHTML = "An error occured.";
+		}
+	};
+
+}
+/**
+ * 
+ */ 
+function extractServiceCode(item){
+	if (item == null)
+		return "";
+		
+	var spanElements = item.getElementsByTagName("span");
+	
+	if (spanElements != null && spanElements.length > 0) {
+		return spanElements[0].innerHTML;
+	}
+	
+	return "";
+}
+
+
+/**
+ * 
+ */ 
 function getBillsForDemographic(billId, demographicNo) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getBillsHandler(billId);
@@ -1263,10 +1643,23 @@ function getBillsForDemographic(billId, demographicNo) {
 	AJAX.send("");
 }
 
+/**
+ * 
+ */ 
 function getAppointmentNotes(billId, appointmentNo) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getAppointmentNotesHandler(billId);
 	AJAX.open("GET", "reports/getAppointmentNotes.jsp?appointmentNo="+appointmentNo);
+	AJAX.send("");
+}
+
+/**
+ * 
+ */ 
+function getBillingCodes(billId, billingItemId, serviceCode) {
+	var AJAX = createXMLHttpRequest();
+	AJAX.onreadystatechange = getBillingCodesHandler(billId, billingItemId);
+	AJAX.open("GET", "reports/getBillingCodes.jsp?serviceCode="+serviceCode);
 	AJAX.send("");
 }
 
