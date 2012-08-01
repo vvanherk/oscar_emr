@@ -123,6 +123,37 @@
 	display: none;
 }
 
+/* Big box with list of options */
+#bill-list #bill .service_code_lookup {
+	position:absolute;
+	max-width: 600px;
+	max-height:250px;
+	overflow:auto;  /* Scrolling features */
+	border:1px solid #317082;
+	background-color:#FFF;
+	text-align:left;
+	font-size:0.9em;
+	z-index:100;
+}
+#bill-list #bill .service_code_lookup ul {
+	list-style-type: none;
+	padding: 0px;
+	margin: 3px;
+}
+#bill-list #bill .service_code_lookup li {
+	margin:1px;    
+	padding:1px;
+	cursor:pointer;
+	font-size:0.9em;
+}
+#bill-list #bill .service_code_lookup .optionLi {
+  
+}
+#bill-list #bill .service_code_lookup li:hover {
+	background-color:#317082;
+	color:#FFF;
+}
+
 
 /* 'more details' style (i.e. billing history and appointment notes) */
 #bill-list #bill .more_details tr td
