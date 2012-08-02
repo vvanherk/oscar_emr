@@ -33,9 +33,9 @@ String diagnosticCode = request.getParameter("diagnosticCode");
 String diagnosticDescription = request.getParameter("diagnosticDescription");
 
 //diagnosticCode = "216";
-//diagnosticDescription = "";
+//diagnosticDescription = "Skin rash";
 
-if (!isValidId(diagnosticCode) && diagnosticDescription.length == 0) {
+if (!isValidId(diagnosticCode) && (diagnosticDescription == null || diagnosticDescription.length() == 0)) {
 	response.setContentType("application/json");
 	response.getWriter().write( (new JSONArray()).toString() );
 	return;
@@ -48,15 +48,14 @@ if (!isValidId(diagnosticCode)) {
 	diagnosticCodes = diagnosticCodeDao.findDiagnosticCodesByCode(diagnosticCode);
 }
  
-
-
+ 
 JSONArray jsonArray = new JSONArray();
 
-for (DiagnosticCode diagnosticCode : diagnosticCodes) {
+for (DiagnosticCode diagCode : diagnosticCodes) {
 	JSONObject obj = new JSONObject();
 	
-	obj.put( "diagnostic_code", diagnosticCode.getDiagnosticCode() );
-	obj.put( "description", diagnosticCode.getDescription() );
+	obj.put( "diagnostic_code", diagCode.getDiagnosticCode() );
+	obj.put( "description", diagCode.getDescription() );
 	
 	jsonArray.add(obj);
 }
