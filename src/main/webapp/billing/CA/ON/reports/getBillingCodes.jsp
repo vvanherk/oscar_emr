@@ -28,6 +28,7 @@ for (BillingService billingService : billingServices) {
 	
 	obj.put( "service_code", billingService.getServiceCode() );
 	obj.put( "description", billingService.getDescription() );
+	obj.put( "value", billingService.getValue() );
 	
 	jsonArray.add(obj);
 }

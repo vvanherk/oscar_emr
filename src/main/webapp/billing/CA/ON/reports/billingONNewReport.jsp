@@ -17,7 +17,7 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 --%>
-<%@page import="java.util.List, java.util.Collections, java.util.Comparator, java.util.Date, java.text.SimpleDateFormat" %>
+<%@page import="java.util.List, java.util.Collections, java.util.Comparator, java.util.Date, java.text.SimpleDateFormat, java.text.NumberFormat" %>
 <%@page import="org.oscarehr.util.SpringUtils, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment" %>
 
 <%@page import="org.oscarehr.billing.CA.ON.dao.BillingClaimDAO" %>
@@ -82,6 +82,7 @@ ArrayList<String> vecHeader = new ArrayList<String>();
 ArrayList<Properties> vecValue = new ArrayList<Properties>();
 List< List<BillingClaimHeader1> > vecBills = new ArrayList< List<BillingClaimHeader1> >();
 ArrayList<String> vecDemographicNo = new ArrayList<String>();
+ArrayList<String> vecAppointmentNo = new ArrayList<String>();
 ArrayList<String> vecTotal = new ArrayList<String>();
 
 Properties prop = null;
@@ -160,6 +161,7 @@ if("unbilled".equals(action)) {
         vecBills.add(bills);
         
         vecDemographicNo.add( "" + apt.getDemographicNo() );
+        vecAppointmentNo.add( "" + apt.getId() );
     }
 
 }
@@ -395,8 +397,25 @@ if("unpaid".equals(action)) {
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
 <!-- totalNumberOfBills and incrementingId are required for the billingONNewReport.js script -->
 <script type="text/javascript"> 
-var totalNumberOfBills = 0; 
-var incrementingId = 0; 
+var totalNumberOfBills = 0;
+var incrementingId = 0;
+var demographicNumbers = new Array(<%
+	for (int i=0; i < vecDemographicNo.size(); i++) {
+		if (i != 0) {
+			%>, <%
+		}
+		%> "<%=vecDemographicNo.get(i)%>" <%
+	}
+%>);
+var appointmentNumbers = new Array(<%
+	for (int i=0; i < vecAppointmentNo.size(); i++) {
+		if (i != 0) {
+			%>, <%
+		}
+		%> "<%=vecAppointmentNo.get(i)%>" <%
+	}
+%>);
+
 </script>
 <script type="text/javascript" src="reports/billingONNewReport.js"></script>
 <title>ON Billing Report</title>
@@ -600,6 +619,7 @@ while(rslocal.next()){
 	<%	int uniqueId = 0;
 		for (int i=0; i < vecValue.size(); i++) {
 			boolean hasBills = true;
+			double billTotal = 0.0;
 			String style = "";
 			if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
 				hasBills = false;
@@ -638,16 +658,34 @@ while(rslocal.next()){
 							onkeydown+= "	hideAllServiceCodeLookups("+i+"); ";
 							onkeydown+= "	return true; ";
 							onkeydown+= "}";
-							onkeydown+= "if (isSaveBill(event)) {";
-							onkeydown+= "	saveBill(event, "+i+"); ";
-							onkeydown+= "	moveToNextBill("+i+"); ";
-							onkeydown+= "}";
-							onkeydown+= "if (isMoveBetweenBills(event)) {";
-							onkeydown+= "	moveBetweenBills(event, "+i+"); ";
+							onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
+							onkeydown+= "if (!lookupIsOpen) {";
+							onkeydown+= "	if (isSaveBill(event)) {";
+							onkeydown+= "		saveBill(event, "+i+"); ";
+							onkeydown+= "		moveToNextBill("+i+"); ";
+							onkeydown+= "	}";
+							onkeydown+= "	if (isMoveBetweenBills(event)) {";
+							onkeydown+= "		moveBetweenBills(event, "+i+"); ";
+							onkeydown+= "	}";
+							onkeydown+= "} else {";
+							onkeydown+= "	if (isMoveBetweenLookupItems(event)) {";
+							onkeydown+= "		moveBetweenLookupItems(event, "+i+");";
+							onkeydown+= "	}";
+							onkeydown+= "	if (isSelectLookupItem(event)) {";
+							onkeydown+= "		selectLookupItem("+i+");";
+							onkeydown+= "	}";
 							onkeydown+= "}";
 							onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
 							onkeydown+= "	moveBetweenBillingItems(event, "+i+");";
-							onkeydown+= "}\"";
+							onkeydown+= "}";
+							onkeydown+= "if (isShowMoreDetails(event)) {";
+							onkeydown+= "	toggleMoreDetails("+i+", "+vecDemographicNo.get(i)+", "+vecAppointmentNo.get(i)+");";
+							onkeydown+= "}";
+							onkeydown+= "\"";
+							
+							String totalOnKeyup = "onkeyup=\"";
+							totalOnKeyup+= "updateBillTotal("+i+");";
+							totalOnKeyup+= "return true;\"";
 							
 							if (!hasBills) {
 								String totalOnkeydown = "onkeydown=\"";
@@ -663,7 +701,10 @@ while(rslocal.next()){
 								totalOnkeydown+= "}";
 								totalOnkeydown+= "if (isMoveBetweenBillingItems(event)) {";
 								totalOnkeydown+= "	moveBetweenBillingItems(event, "+i+");";
-								totalOnkeydown+= "}\"";
+								totalOnkeydown+= "}";
+								totalOnkeydown+= "if (isShowMoreDetails(event)) {";
+								totalOnkeydown+= "	toggleMoreDetails("+i+", "+vecDemographicNo.get(i)+", "+vecAppointmentNo.get(i)+");";
+								totalOnkeydown+= "}";
 								totalOnkeydown+= "return true;\"";
 								
 								String onkeyup = "onkeyup=\"";
@@ -672,11 +713,11 @@ while(rslocal.next()){
 								onkeyup+= "	hideDiagnosticCodeLookup("+i+", "+uniqueId+");";
 								onkeyup+= "} else { ";
 								onkeyup+= "	if (isAlphaNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
-								onkeyup+= "		if (this.name.indexOf('bill_code') == 0) {";
+								onkeyup+= "		if (this.id.indexOf('bill_code') == 0) {";
 								onkeyup+= "			showAvailableServiceCodes("+i+", "+uniqueId+", this.value);";
-								onkeyup+= "		} else if (this.name.indexOf('dx_code') == 0) {";
+								onkeyup+= "		} else if (this.id.indexOf('dx_code') == 0) {";
 								onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", this.value);";
-								onkeyup+= "		} else if (this.name.indexOf('dx_desc') == 0) {";
+								onkeyup+= "		} else if (this.id.indexOf('dx_desc') == 0) {";
 								onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", '', this.value);";
 								onkeyup+= "		}";
 								onkeyup+= "	}";
@@ -686,19 +727,19 @@ while(rslocal.next()){
 								%>
 								<tr id="billing_item<%=i%>_<%=uniqueId%>">
 									<td> <a class="button" href="" tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;" >X</a></td>
-									<td> <input type="text" size="6" name="bill_code<%=i%>" <%=onkeydown%> <%=onkeyup%> /> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-									<td> <input type="text" size="6" name="amount<%=i%>" <%=onkeydown%> /> </td>
-									<td> <input type="text" size="3" name="units<%=i%>" <%=onkeydown%> /> </td>
-									<td> <input type="text" size="6" name="dx_code<%=i%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-									<td> <input type="text" size="12" name="dx_desc<%=i%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_desc_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-									<td> <input type="text" size="6" name="total<%=i%>" <%=totalOnkeydown%> /> </td>
-									<td> <input type="text" size="6" name="sli_code<%=i%>" /> </td>
+									<td> <input type="text" size="6" id="bill_code<%=i%>_<%=uniqueId%>" <%=onkeydown%> <%=onkeyup%> /> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
+									<td> <input type="text" size="6" id="amount<%=i%>_<%=uniqueId%>" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="3" id="units<%=i%>_<%=uniqueId%>" value="1" <%=onkeydown%> /> </td>
+									<td> <input type="text" size="6" id="dx_code<%=i%>_<%=uniqueId%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
+									<td> <input type="text" size="12" id="dx_desc<%=i%>_<%=uniqueId%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_desc_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
+									<td> <input type="text" size="6" id="total<%=i%>_<%=uniqueId%>" <%=totalOnkeydown%> <%=totalOnKeyup%> /> </td>
+									<td> <input type="text" size="6" id="sli_code<%=i%>_<%=uniqueId%>" /> </td>
 								</tr>
 								<%
 								uniqueId++;
 							} else {
 								for (BillingClaimHeader1 bill : vecBills.get(i)) {
-									appointmentNo = bill.getAppointment_no();
+									appointmentNo = bill.getAppointment_no();									
 									List<BillingItem> billingItems = bill.getBillingItems();
 									for (BillingItem item : billingItems) {
 										String serviceDesc = "";
@@ -722,7 +763,8 @@ while(rslocal.next()){
 											unitsAsDouble = Double.valueOf( units );
 										}
 										double tempTotal = feeAsDouble.doubleValue() * unitsAsDouble.doubleValue();
-										String total = String.format("%1$,.2f", (new Double(tempTotal)).doubleValue());
+										billTotal += tempTotal;
+										String total = String.format("%1$,.2f", tempTotal);
 										
 										String totalOnkeydown = "onkeydown=\"";
 										totalOnkeydown+= "if (isTabKey(event)) {";
@@ -730,12 +772,17 @@ while(rslocal.next()){
 										totalOnkeydown+= "	if (checkIfLastBillingItem("+i+", "+uniqueId+")) {";
 										totalOnkeydown+= "		addBillingItem("+i+"); ";
 										totalOnkeydown+= "	} ";
-										totalOnkeydown+= "} else if (isMoveBetweenBills(event)) {";
-										totalOnkeydown+= "	moveBetweenBills(event, "+i+"); ";
 										totalOnkeydown+= "} ";
+										totalOnkeydown+= "if (isSaveBill(event)) {";
+										totalOnkeydown+= "	saveBill(event, "+i+"); ";
+										totalOnkeydown+= "	moveToNextBill("+i+"); ";
+										totalOnkeydown+= "}";
 										totalOnkeydown+= "if (isMoveBetweenBillingItems(event)) {";
 										totalOnkeydown+= "	moveBetweenBillingItems(event, "+i+");";
-										totalOnkeydown+= "}\"";
+										totalOnkeydown+= "}";
+										totalOnkeydown+= "if (isShowMoreDetails(event)) {";
+										totalOnkeydown+= "	toggleMoreDetails("+i+", "+vecDemographicNo.get(i)+", "+vecAppointmentNo.get(i)+");";
+										totalOnkeydown+= "}";
 										totalOnkeydown+= "return true;\"";
 										
 										String onkeyup = "onkeyup=\"";
@@ -744,11 +791,11 @@ while(rslocal.next()){
 										onkeyup+= "	hideDiagnosticCodeLookup("+i+", "+uniqueId+");";
 										onkeyup+= "} else { ";
 										onkeyup+= "	if (isAlphaNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
-										onkeyup+= "		if (this.name.indexOf('bill_code') == 0) {";
+										onkeyup+= "		if (this.id.indexOf('bill_code') == 0) {";
 										onkeyup+= "			showAvailableServiceCodes("+i+", "+uniqueId+", this.value);";
-										onkeyup+= "		} else if (this.name.indexOf('dx_code') == 0) {";
+										onkeyup+= "		} else if (this.id.indexOf('dx_code') == 0) {";
 										onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", this.value);";
-										onkeyup+= "		} else if (this.name.indexOf('dx_desc') == 0) {";
+										onkeyup+= "		} else if (this.id.indexOf('dx_desc') == 0) {";
 										onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", '', this.value);";
 										onkeyup+= "		}";
 										onkeyup+= "	}";
@@ -757,24 +804,39 @@ while(rslocal.next()){
 										%>
 										<tr id="billing_item<%=i%>_<%=uniqueId%>">
 											<td> <a class="button" href=""  tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;">X</a></td>
-											<td> <input type="text" size="6" name="bill_code<%=i%>" value="<%=item.getService_code()%>" <%=onkeydown%> <%=onkeyup%> /> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-											<td> <input type="text" size="6" name="amount<%=i%>" value="<%=fee%>" <%=onkeydown%> /> </td>
-											<td> <input type="text" size="3" name="units<%=i%>" value="<%=units%>" <%=onkeydown%> /> </td>
-											<td> <input type="text" size="6" name="dx_code<%=i%>" value="<%=item.getDx()%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-											<td> <input type="text" size="12" name="dx_desc<%=i%>" value="<%=serviceDesc%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_desc_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-											<td> <input type="text" size="6" name="total<%=i%>" value="<%=total%>" <%=totalOnkeydown%> /> </td>
-											<td> <input type="text" size="6" name="sli_code<%=i%>" value="" disabled="disabled" /> </td>
+											<td> <input type="text" size="6" id="bill_code<%=i%>_<%=uniqueId%>" value="<%=item.getService_code()%>" <%=onkeydown%> <%=onkeyup%> /> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
+											<td> <input type="text" size="6" id="amount<%=i%>_<%=uniqueId%>" value="<%=fee%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="3" id="units<%=i%>_<%=uniqueId%>" value="<%=units%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="6" id="dx_code<%=i%>_<%=uniqueId%>" value="<%=item.getDx()%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
+											<td> <input type="text" size="12" id="dx_desc<%=i%>_<%=uniqueId%>" value="<%=serviceDesc%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_desc_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
+											<td> <input type="text" size="6" id="total<%=i%>_<%=uniqueId%>" value="<%=total%>" <%=totalOnkeydown%> <%=totalOnKeyup%> /> </td>
+											<td> <input type="text" size="6" id="sli_code<%=i%>_<%=uniqueId%>" value="" disabled="disabled" /> </td>
 										</tr>
 										<%
 										uniqueId++;
 									}
 								}
 							}
+							String billTotalAsString = NumberFormat.getCurrencyInstance().format(billTotal);
 							%>
 						</tbody>
 					</table>
-					<a class="button" href="" id="more_details_button<%=i%>" tabindex="-1" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=appointmentNo%>); return false;" style="color:blue;">more</a>
-					<table id="more_details<%=i%>" style="display:none;" class="more_details">
+					<a class="button" href="" id="more_details_button<%=i%>" tabindex="-1" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=vecAppointmentNo.get(i)%>); return false;" style="color:blue;">more</a>
+					<table width="40%">
+						<tbody>
+							<tr>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td align="right"><b>Total:</b></td>
+								<td id="bill_total<%=i%>"><%=billTotalAsString%></td>
+								<td></td>
+							</tr>
+						</tbody>
+					</table>
+					<table id="more_details<%=i%>" class="more_details hide">
 						<tr>
 							<td>
 								<div class="more_details">

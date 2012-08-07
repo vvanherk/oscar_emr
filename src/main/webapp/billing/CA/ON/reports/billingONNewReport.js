@@ -1,7 +1,16 @@
 /**
  * 
- * totalNumberOfBills (int) and incrementingId (int) are required for this script.
+ * totalNumberOfBills (int), incrementingId (int), demographicNumbers (Array), and appointmentNumbers (Array) are required for this script.
  */ 
+
+/**
+ * Setup our hotkeys for the page
+ */ 
+document.onkeydown = function(evt) {
+	if (isShowMoreDetails(evt)) {
+	}
+}
+
 
 /**
  * 
@@ -65,6 +74,47 @@ function hideBillDetails(id) {
 	hideAllServiceCodeLookups(id);
 }
 
+/**
+ * 
+ */ 
+function isNumber(n) {
+  return !isNaN(parseFloat(n)) && isFinite(n);
+}
+
+/** This function taken from http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript */
+/* 
+decimal_sep: character used as deciaml separtor, it defaults to '.' when omitted
+thousands_sep: char used as thousands separator, it defaults to ',' when omitted
+*/
+Number.prototype.formatCurrency = function(decimals, decimal_sep, thousands_sep) {
+	var n = this,
+		c = isNaN(decimals) ? 2 : Math.abs(decimals), //if decimal is zero we must take it, it means user does not want to show any decimal
+		d = decimal_sep || '.', //if no decimal separator is passed we use the dot as default decimal separator (we MUST use a decimal separator)
+		
+		/*
+		according to [http://stackoverflow.com/questions/411352/how-best-to-determine-if-an-argument-is-not-sent-to-the-javascript-function]
+		the fastest way to check for not defined parameter is to use typeof value === 'undefined' 
+		rather than doing value === undefined.
+		*/   
+		t = (typeof thousands_sep === 'undefined') ? ',' : thousands_sep, //if you don't want to use a thousands separator you can pass empty string as thousands_sep value
+		
+		sign = (n < 0) ? '-' : '',
+		
+		//extracting the absolute value of the integer part of the number and converting to string
+		i = parseInt(n = Math.abs(n).toFixed(c)) + '', 
+		
+		j = ((j = i.length) > 3) ? j % 3 : 0; 
+		
+	return sign + (j ? i.substr(0, j) + t : '') + i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) + (c ? d + Math.abs(n - i).toFixed(c).slice(2) : ''); 
+}
+
+Number.prototype.toMoney = function(decimals, decimal_sep, thousands_sep, currency_string) {
+	currency_string = (typeof currency_string === 'undefined') ? '$' : currency_string;
+	
+	return currency_string + this.formatCurrency(decimals, decimal_sep, thousands_sep);
+}
+
+
 function isAlphaNumericKey(evt) {
 	var keynum;
 	var keychar;
@@ -121,6 +171,9 @@ function isTabKey(evt) {
 	return (evt.keyCode == 9 && !evt.shiftKey);
 }
 
+/**
+ * 
+ */ 
 function setServiceCode(billId, billingItemId, serviceCode) {
 	var billingItem = document.getElementById("billing_item"+billId+"_"+billingItemId);
 	var inputElements = billingItem.getElementsByTagName("input");
@@ -130,6 +183,21 @@ function setServiceCode(billId, billingItemId, serviceCode) {
 	}
 }
 
+/**
+ * 
+ */ 
+function setServiceAmount(billId, billingItemId, serviceAmount) {
+	var billingItem = document.getElementById("billing_item"+billId+"_"+billingItemId);
+	var inputElements = billingItem.getElementsByTagName("input");
+	
+	if (inputElements != null && inputElements.length > 0) {
+		inputElements[1].value = serviceAmount;
+	}
+}
+
+/**
+ * 
+ */ 
 function setDiagnosticCode(billId, billingItemId, diagnosticCode) {
 	var billingItem = document.getElementById("billing_item"+billId+"_"+billingItemId);
 	var inputElements = billingItem.getElementsByTagName("input");
@@ -139,6 +207,9 @@ function setDiagnosticCode(billId, billingItemId, diagnosticCode) {
 	}
 }
 
+/**
+ * 
+ */ 
 function setDiagnosticDescription(billId, billingItemId, diagnosticDescripton) {
 	var billingItem = document.getElementById("billing_item"+billId+"_"+billingItemId);
 	var inputElements = billingItem.getElementsByTagName("input");
@@ -326,8 +397,8 @@ function isValidBillId(billId) {
 /**
  * 
  */ 
-function saveBill(evt, id) {
-	var elem = document.getElementById("bill_details"+id);
+function saveBill(evt, billId) {
+	var elem = document.getElementById("bill_details"+billId);
 	removeClass('incompleted', elem);
 	addClass('completed', elem);
 	
@@ -357,15 +428,20 @@ function saveBill(evt, id) {
 		addClass('hide_button', rows[i]);
 	}
 	
+	// hide the 'more details' table
+	hideMoreDetails(billId, demographicNumbers[billId], appointmentNumbers[billId]);
 	
 	
-	elem = document.getElementById("bill"+id);
+	elem = document.getElementById("bill"+billId);
 	removeClass('no-bills', elem);
 	addClass('completed', elem);
 	
 	
 }
 
+/**
+ * 
+ */ 
 function isSaved(billId) {
 	var elem = document.getElementById("bill"+billId);
 	
@@ -396,6 +472,9 @@ function addBillingItem(id) {
 	onkeydown+= "}";
 	onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
 	onkeydown+= "	moveBetweenBillingItems(event, "+id+");";
+	onkeydown+= "}";
+	onkeydown+= "if (isShowMoreDetails(event)) {";
+	onkeydown+= "	toggleMoreDetails("+id+", "+demographicNumbers[id]+", "+appointmentNumbers[id]+");";
 	onkeydown+= "}\"";
 	
 	var totalOnkeydown = "onkeydown=\"";
@@ -417,17 +496,21 @@ function addBillingItem(id) {
 	totalOnkeydown+= "}";
 	totalOnkeydown+= "return true;\"";
 	
+	var totalOnKeyup = "onkeyup=\"";
+	totalOnKeyup+= "updateBillTotal("+id+");";
+	totalOnKeyup+= "return true;\"";
+	
 	var onkeyup = "onkeyup=\"";
 	onkeyup+= "if (this.value.length == 0) {";
 	onkeyup+= "	hideServiceCodeLookup("+id+", "+billingItemId+");";
 	onkeyup+= "	hideDiagnosticCodeLookup("+id+", "+billingItemId+");";
 	onkeyup+= "} else { ";
 	onkeyup+= "	if (isAlphaNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
-	onkeyup+= "		if (this.name.indexOf('bill_code') == 0) {";
+	onkeyup+= "		if (this.id.indexOf('bill_code') == 0) {";
 	onkeyup+= "			showAvailableServiceCodes("+id+", "+billingItemId+", this.value);";
-	onkeyup+= "		} else if (this.name.indexOf('dx_code') == 0) {";
+	onkeyup+= "		} else if (this.id.indexOf('dx_code') == 0) {";
 	onkeyup+= "			showAvailableDiagnosticCodes("+id+", "+billingItemId+", this.value);";
-	onkeyup+= "		} else if (this.name.indexOf('dx_desc') == 0) {";
+	onkeyup+= "		} else if (this.id.indexOf('dx_desc') == 0) {";
 	onkeyup+= "			showAvailableDiagnosticCodes("+id+", "+billingItemId+", '', this.value);";
 	onkeyup+= "		}";
 	onkeyup+= "	}";
@@ -435,13 +518,13 @@ function addBillingItem(id) {
 	onkeyup+= "return true; \"";
 	
 	var htmlString = "<td> <a class=\"button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); return false;\">X</a></td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"service_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"\" "+onkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"\" "+onkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_desc_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"\" "+totalOnkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"\" disabled=\"disabled\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"bill_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"service_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"amount"+id+"_"+billingItemId+"\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"3\" id=\"units"+id+"_"+billingItemId+"\" value=\"1\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"dx_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"12\" id=\"dx_desc"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_desc_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"total"+id+"_"+billingItemId+"\" "+totalOnkeydown+" "+totalOnKeyup+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"sli_code"+id+"_"+billingItemId+"\" disabled=\"disabled\" /> </td>";
 	element.innerHTML = htmlString;
 	
 	var billingItems = document.getElementById("billing_items"+id);
@@ -505,6 +588,26 @@ function setFocusOnFirstInputFieldByIndex(billId, billingItemIndex) {
 }
 
 /**
+ * 
+ */ 
+function setFocusOnFirstLookupItem(element) {
+	if (element == null || element == undefined)
+		return;
+	
+	var ulElement = element.getElementsByTagName("ul")[0];
+	if (ulElement == null || ulElement == undefined)
+		return;
+		
+	var firstLiElement = ulElement.getElementsByTagName("li")[0];
+	if (firstLiElement == null || firstLiElement == undefined)
+		return;
+	
+	addClass("selected", firstLiElement);
+	
+	//firstLiElement.focus();
+}
+
+/**
  * function getNextBillId
  * 
  * Returns the id of the bill after the bill with id 'id'.
@@ -560,7 +663,8 @@ function getPreviousBillId(id) {
 
 function showAvailableServiceCodes(billId, billingItemId, serviceCode) {
 	getBillingCodes(billId, billingItemId, serviceCode);
-	document.getElementById("service_code_lookup"+billId+"_"+billingItemId).style.display = "";
+	var elem = document.getElementById("service_code_lookup"+billId+"_"+billingItemId);
+	elem.style.display = "";
 }
 
 function hideServiceCodeLookup(billId, billingItemId) {
@@ -611,6 +715,128 @@ function hideAllDiagnosticLookups(billId) {
 	}
 }
 
+function isLookupOpen(billId) {
+	var bill = document.getElementById("billing_items"+billId);
+	var divElements = bill.getElementsByTagName("div");
+	
+	if (divElements == null)
+		return;
+		
+	for (var i=0; i < divElements.length; i++) {
+		if (divElements[i].id.indexOf("diagnostic_code_lookup"+billId+"_") == 0)
+			if (divElements[i].style.display.indexOf("none") == -1)
+				return true;
+		if (divElements[i].id.indexOf("diagnostic_desc_lookup"+billId+"_") == 0)
+			if (divElements[i].style.display.indexOf("none") == -1)
+				return true;
+		if (divElements[i].id.indexOf("service_code_lookup"+billId+"_") == 0)
+			if (divElements[i].style.display.indexOf("none") == -1)
+				return true;
+	}
+	
+	return false;
+}
+
+function isMoveBetweenLookupItems(evt) {
+	return (isUpArrowKey(evt) || isDownArrowKey(evt));
+}
+
+function isSelectLookupItem(evt) {
+	return isEnterKey(evt);
+}
+
+/**
+ * 
+ */ 
+function moveBetweenLookupItems(evt, billId) {	
+	if (isUpArrowKey(evt)) {
+		moveToPreviousLookupItem(billId);
+	} else if(isDownArrowKey(evt)) {
+		moveToNextLookupItem(billId);
+	}
+}
+
+/**
+ * 
+ */
+function moveToNextLookupItem(billId) {	
+	var billingItems = document.getElementById("billing_items"+billId);
+	var elem = billingItems.getElementsByTagName("ul")[0];
+	
+	if (elem == null || elem == undefined)
+		return;
+		
+	var lookupItems = elem.getElementsByTagName("li");
+	
+	if (lookupItems == null || lookupItems == undefined)
+		return;
+		
+	for (var i=0; i < lookupItems.length; i++) {
+		if (hasClass("selected", lookupItems[i])) {
+			removeClass("selected", lookupItems[i]);
+			setLookupItemAsSelected(lookupItems[i+1]);
+			return true;
+		}
+	}
+}
+
+function setLookupItemAsSelected(elem) {
+	if (elem == null || elem == undefined)
+		return;
+	
+	if (!hasClass("selected", elem)) {
+		addClass("selected", elem);
+	}
+	
+	//elem.focus();
+	elem.scrollIntoView(false);
+}
+
+function selectLookupItem(billId) {	
+	var billingItems = document.getElementById("billing_items"+billId);
+	var elem = billingItems.getElementsByTagName("ul")[0];
+	
+	if (elem == null || elem == undefined)
+		return;
+		
+	var lookupItems = elem.getElementsByTagName("li");
+	
+	if (lookupItems == null || lookupItems == undefined)
+		return;
+	
+	for (var i=0; i < lookupItems.length; i++) {
+		if (hasClass("selected", lookupItems[i])) {
+			removeClass("selected", lookupItems[i]);
+			lookupItems[i].click();
+			return true;
+		}
+	}
+}
+
+/**
+ * 
+ */
+function moveToPreviousLookupItem(billId) {	
+	var billingItems = document.getElementById("billing_items"+billId);
+	var elem = billingItems.getElementsByTagName("ul")[0];
+	
+	if (elem == null || elem == undefined)
+		return;
+		
+	var lookupItems = elem.getElementsByTagName("li");
+	
+	if (lookupItems == null || lookupItems == undefined)
+		return;
+		
+	for (var i=0; i < lookupItems.length; i++) {
+		if (hasClass("selected", lookupItems[i])) {
+			removeClass("selected", lookupItems[i]);
+			setLookupItemAsSelected(lookupItems[i-1]);
+			return true;
+		}
+	}
+}
+
 /**
  * 
  */ 
@@ -635,7 +861,8 @@ function showMoreDetails(billId, demographicNo, appointmentNo) {
 	}
 	
 	// show the details
-	document.getElementById("more_details"+billId).style.display = "";
+	//document.getElementById("more_details"+billId).style.display = "";
+	removeClass("hide", document.getElementById("more_details"+billId));
 	document.getElementById("more_details_button"+billId).onclick = function() { hideMoreDetails(billId, demographicNo, appointmentNo); return false; }
 	document.getElementById("more_details_button"+billId).innerHTML = "less";
 }
@@ -645,10 +872,77 @@ function showMoreDetails(billId, demographicNo, appointmentNo) {
  */ 
 function hideMoreDetails(billId, demographicNo, appointmentNo) {
 	// hide the details
-	document.getElementById("more_details"+billId).style.display = "none";
+	//document.getElementById("more_details"+billId).style.display = "none";
+	addClass("hide", document.getElementById("more_details"+billId));
 	document.getElementById("more_details_button"+billId).onclick = function() { showMoreDetails(billId, demographicNo, appointmentNo); return false; }	
 	document.getElementById("more_details_button"+billId).innerHTML = "more";
 }
+
+/**
+ * 
+ */ 
+function toggleMoreDetails(billId, demographicNo, appointmentNo) {
+	var elem = document.getElementById("more_details"+billId);
+	
+	if (hasClass("hide", elem)) {
+		showMoreDetails(billId, demographicNo, appointmentNo);
+	} else {
+		hideMoreDetails(billId, demographicNo, appointmentNo);
+	}
+}
+
+/**
+ * 
+ */ 
+function isShowMoreDetails(evt) {
+	return (evt.keyCode == 112);
+}
+
+/**
+ * 
+ */
+function updateBillTotal(billId) {
+	var bill = document.getElementById("billing_items"+billId);
+	var trElements = bill.getElementsByTagName("tr");
+	
+	if (trElements == null)
+		return;
+	
+	var total = parseFloat(0.0);
+	
+	for (var i=0; i < trElements.length; i++) {
+		var tdElements = trElements[i].getElementsByTagName("input");
+		for (var j=0; j < tdElements.length; j++) {
+			if (tdElements[j].id.indexOf("total"+billId+"_") == 0) {
+				if (isNumber(tdElements[j].value))
+					total += parseFloat(tdElements[j].value);
+			}
+		}
+	}
+	
+	document.getElementById("bill_total"+billId).innerHTML = total.toMoney(2, '.', ',');
+}
+
+/**
+ * 
+ */
+function updateBillingItemTotal(billId, billingItemId) {
+	var amountElement = document.getElementById("amount"+billId+"_"+billingItemId);
+	var unitsElements = document.getElementById("units"+billId+"_"+billingItemId);
+	var totalElement = document.getElementById("total"+billId+"_"+billingItemId);
+	
+	if (amountElement == null || unitsElements == null || totalElement == null)
+		return;
+	
+	var units = parseFloat(unitsElements.value);
+	if (!isNumber(units))
+		units = 0;
+	var total = parseFloat(amountElement.value) * units;
+	
+	totalElement.value = total.formatCurrency(2, '.', ',');
+}
+
+
 
 /**
  * function getId
@@ -843,6 +1137,9 @@ function getBillingCodesHandler(billId, billingItemId) {
 				var serviceCodesString = "<ul>";
 				var onclick = "onclick=\"";
 				onclick += "setServiceCode("+billId+", "+billingItemId+", extractServiceCode(this));";
+				onclick += "setServiceAmount("+billId+", "+billingItemId+", extractServiceAmount(this));";
+				onclick += "updateBillingItemTotal("+billId+", "+billingItemId+");";
+				onclick += "updateBillTotal("+billId+");";
 				onclick += "hideServiceCodeLookup("+billId+", "+billingItemId+");";
 				onclick += "setFocusOnFirstInputField("+billId+", "+billingItemId+");";
 				onclick += "\"";
@@ -851,6 +1148,7 @@ function getBillingCodesHandler(billId, billingItemId) {
 				    serviceCodesString+= "<b><span>" + json[i]['service_code'] + "</span></b>";
 				    serviceCodesString+= " ";
 				    serviceCodesString+= json[i]['description'];
+				    serviceCodesString+= "<span style=\"display:none;\">" + json[i]['value'] + "</span>";
 				    serviceCodesString+= "</li>";
 				}
 				serviceCodesString += "</ul>";
@@ -858,6 +1156,8 @@ function getBillingCodesHandler(billId, billingItemId) {
 			
 			var element = document.getElementById("service_code_lookup"+billId+"_"+billingItemId);
 			element.innerHTML = serviceCodesString;
+			
+			setFocusOnFirstLookupItem(element);
 			
 			//alert('Success. Result: ' + serviceCodesString);
 		} else if (this.readyState == 4 && this.status != 200) {
@@ -879,6 +1179,22 @@ function extractServiceCode(item){
 	
 	if (spanElements != null && spanElements.length > 0) {
 		return spanElements[0].innerHTML;
+	}
+	
+	return "";
+}
+
+/**
+ * 
+ */ 
+function extractServiceAmount(item){
+	if (item == null)
+		return "";
+		
+	var spanElements = item.getElementsByTagName("span");
+	
+	if (spanElements != null && spanElements.length > 0) {
+		return spanElements[1].innerHTML;
 	}
 	
 	return "";
