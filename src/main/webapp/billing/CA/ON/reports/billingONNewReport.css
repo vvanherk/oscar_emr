@@ -127,6 +127,7 @@
 #bill-list #bill .lookup_box {
 	position:absolute;
 	max-width: 600px;
+	min-width: 100px;
 	max-height:250px;
 	overflow:auto;  /* Scrolling features */
 	border:1px solid #317082;
@@ -134,6 +135,9 @@
 	text-align:left;
 	font-size:0.9em;
 	z-index:100;
+}
+#bill-list #bill .lookup_box .selected {
+	background-color: orange;
 }
 #bill-list #bill .lookup_box ul {
 	list-style-type: none;
@@ -165,6 +169,10 @@
 #bill-list #bill div.more_details {
 	max-height: 325px;
 	overflow:auto
+}
+#bill-list #bill .more_details.hide
+{
+	display: none;
 }
 
 #bill-list #bill .billing_history tr td
