@@ -655,7 +655,7 @@ while(rslocal.next()){
 							<%	
 							String onkeydown = "onkeydown=\"";
 							onkeydown+= "if (isTabKey(event)) {";
-							onkeydown+= "	hideAllServiceCodeLookups("+i+"); ";
+							onkeydown+= "	hideAllLookups("+i+"); ";
 							onkeydown+= "	return true; ";
 							onkeydown+= "}";
 							onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
@@ -674,6 +674,9 @@ while(rslocal.next()){
 							onkeydown+= "	if (isSelectLookupItem(event)) {";
 							onkeydown+= "		selectLookupItem("+i+");";
 							onkeydown+= "	}";
+							onkeydown+= "	if (isEscapeKey(event)) {";
+							onkeydown+= "		hideAllLookups("+i+");";
+							onkeydown+= "	}";
 							onkeydown+= "}";
 							onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
 							onkeydown+= "	moveBetweenBillingItems(event, "+i+");";
@@ -681,7 +684,7 @@ while(rslocal.next()){
 							onkeydown+= "if (isShowMoreDetails(event)) {";
 							onkeydown+= "	toggleMoreDetails("+i+", "+vecDemographicNo.get(i)+", "+vecAppointmentNo.get(i)+");";
 							onkeydown+= "}";
-							onkeydown+= "\"";
+							onkeydown+= "return true;\"";
 							
 							String totalOnKeyup = "onkeyup=\"";
 							totalOnKeyup+= "updateBillTotal("+i+");";

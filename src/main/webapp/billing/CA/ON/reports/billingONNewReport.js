@@ -174,6 +174,13 @@ function isTabKey(evt) {
 /**
  * 
  */ 
+function isEscapeKey(evt) {
+	return (evt.keyCode == 27);
+}
+
+/**
+ * 
+ */ 
 function setServiceCode(billId, billingItemId, serviceCode) {
 	var billingItem = document.getElementById("billing_item"+billId+"_"+billingItemId);
 	var inputElements = billingItem.getElementsByTagName("input");
@@ -459,7 +466,7 @@ function addBillingItem(id) {
 	
 	var onkeydown = "onkeydown=\"";
 	onkeydown+= "if (isTabKey(event)) {";
-	onkeydown+= "	hideAllServiceCodeLookups("+id+"); ";
+	onkeydown+= "	hideAllLookups("+id+"); ";
 	onkeydown+= "	return true; ";
 	onkeydown+= "}";
 	onkeydown+= "var lookupIsOpen = isLookupOpen("+id+");";
@@ -477,6 +484,9 @@ function addBillingItem(id) {
 	onkeydown+= "	}";
 	onkeydown+= "	if (isSelectLookupItem(event)) {";
 	onkeydown+= "		selectLookupItem("+id+");";
+	onkeydown+= "	}";
+	onkeydown+= "	if (isEscapeKey(event)) {";
+	onkeydown+= "		hideAllLookups("+id+");";
 	onkeydown+= "	}";
 	onkeydown+= "}";
 	onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
@@ -613,7 +623,7 @@ function setFocusOnFirstLookupItem(element) {
 	if (firstLiElement == null || firstLiElement == undefined)
 		return;
 	
-	addClass("selected", firstLiElement);
+	addClass("highlighted", firstLiElement);
 	
 	//firstLiElement.focus();
 }
@@ -726,6 +736,13 @@ function hideAllDiagnosticLookups(billId) {
 	}
 }
 
+function hideAllLookups(billId) {
+	hideAllDiagnosticLookups(billId);
+	hideAllServiceCodeLookups(billId);
+	
+	unsetAllLookupItemsAsHighlighted(billId);
+}
+
 function isLookupOpen(billId) {
 	var bill = document.getElementById("billing_items"+billId);
 	var divElements = bill.getElementsByTagName("div");
@@ -784,24 +801,54 @@ function moveToNextLookupItem(billId) {
 			return;
 			
 		for (var j=0; j < lookupItems.length; j++) {
-			if (hasClass("selected", lookupItems[j]) && lookupItems[j+1]) {
-				removeClass("selected", lookupItems[j]);
-				setLookupItemAsSelected(lookupItems[j+1]);
+			if (hasClass("highlighted", lookupItems[j]) && lookupItems[j+1]) {
+				unsetLookupItemAsHighlighted(lookupItems[j]);
+				setLookupItemAsHighlighted(lookupItems[j+1]);
 				return true;
 			}
 		}
 	}
 }
 
-function setLookupItemAsSelected(elem) {
+function setLookupItemAsHighlighted(elem) {
 	if (elem == null || elem == undefined)
 		return;
 	
-	if (!hasClass("selected", elem)) {
-		addClass("selected", elem);
+	if (!hasClass("highlighted", elem)) {
+		addClass("highlighted", elem);
 	}
 	
 	elem.scrollIntoView(false);
+}
+
+function unsetLookupItemAsHighlighted(elem) {
+	if (elem == null || elem == undefined)
+		return;
+	
+	if (hasClass("highlighted", elem)) {
+		removeClass("highlighted", elem);
+	}
+}
+
+function unsetAllLookupItemsAsHighlighted(billId) {
+	var billingItems = document.getElementById("billing_items"+billId);
+	var lookups = billingItems.getElementsByTagName("ul");
+	
+	if (lookups == null || lookups == undefined)
+		return;
+	
+	for (var i=0; i < lookups.length; i++) {	
+		var lookupItems = lookups[i].getElementsByTagName("li");
+		
+		if (lookupItems == null || lookupItems == undefined)
+			return;
+			
+		for (var j=0; j < lookupItems.length; j++) {
+			if (hasClass("highlighted", lookupItems[j])) {
+				unsetLookupItemAsHighlighted(lookupItems[j]);
+			}
+		}
+	}
 }
 
 function selectLookupItem(billId) {	
@@ -818,8 +865,8 @@ function selectLookupItem(billId) {
 			return;
 			
 		for (var j=0; j < lookupItems.length; j++) {
-			if (hasClass("selected", lookupItems[j])) {
-				removeClass("selected", lookupItems[j]);
+			if (hasClass("highlighted", lookupItems[j])) {
+				unsetLookupItemAsHighlighted(lookupItems[j]);
 				lookupItems[j].click();
 				return true;
 			}
@@ -844,9 +891,9 @@ function moveToPreviousLookupItem(billId) {
 			return;
 			
 		for (var j=0; j < lookupItems.length; j++) {
-			if (hasClass("selected", lookupItems[j]) && lookupItems[j-1]) {
-				removeClass("selected", lookupItems[j]);
-				setLookupItemAsSelected(lookupItems[j-1]);
+			if (hasClass("highlighted", lookupItems[j]) && lookupItems[j-1]) {
+				removeClass("highlighted", lookupItems[j]);
+				setLookupItemAsHighlighted(lookupItems[j-1]);
 				return true;
 			}
 		}
