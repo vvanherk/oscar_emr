@@ -33,7 +33,7 @@
 	border-collapse: collapse;
 }
 
-#bill-list
+.bill-list
 {
 	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
 	font-size: 12px;
@@ -42,7 +42,7 @@
 	text-align: left;
 	border-collapse: collapse;
 }
-#bill-list th
+.bill-list th
 {
 	font-size: 13px;
 	font-weight: normal;
@@ -52,7 +52,7 @@
 	border-bottom: 1px solid #fff;
 	color: #039;
 }
-#bill-list td
+.bill-list td
 {
 	padding: 8px;
 	background: #e8edff;
@@ -61,70 +61,70 @@
 	font-weight: normal;
 	border-top: 1px solid transparent;
 }
-#bill-list tr:hover td
+.bill-list tr:hover td
 {
 	background: #d0dafd;
 	color: #339;
 	font-weight: normal;
 }
 
-#bill-list #bill td
+.bill-list .bill.show_bill td
 {
 	background: white;
 }
 
-#bill-list .no-bills
+.bill-list .no-bills
 {
 	background: #e8edff;
 	color: red;
 	font-weight: bold;
 	
 }
-#bill-list tr:hover .no-bills
+.bill-list tr:hover .no-bills
 {
 	background: #d0dafd;
 	color: red;
 	font-weight: bold;
 }
 
-#bill-list #bill .show_bill
+.bill-list .bill.show_bill
 {
 	display: ;
 }
 
-#bill-list #bill .hide_bill
+.bill-list .bill.hide_bill
 {
 	display: none;
 }
 
-#bill-list #bill td.completed
+.bill-list .bill.hide_bill td.completed
 {
 	display: table-cell;
 }
-#bill-list tr.completed td
+.bill-list tr.bill.completed td
 {
 	color: green;
 	font-weight: bold;
 }
-#bill-list tr.completed:hover td
+.bill-list tr.bill.completed:hover td
 {
 	color: green;
 	font-weight: bold;
 }
 
-#bill-list #bill a.button
+.bill-list .bill a.button
 {
 	text-decoration: none;
 	color: blue;
 }
 
-#bill-list #bill a.button.hide_button
+.bill-list .bill a.button.hide_button
 {
 	display: none;
 }
 
 /* Big box with list of options */
-#bill-list #bill .lookup_box {
+.bill-list .bill .lookup_box {
 	position:absolute;
 	max-width: 600px;
 	min-width: 100px;
@@ -136,46 +136,46 @@
 	font-size:0.9em;
 	z-index:100;
 }
-#bill-list #bill .lookup_box .highlighted {
+.bill-list .bill .lookup_box .highlighted {
 	background-color: orange;
 }
-#bill-list #bill .lookup_box ul {
+.bill-list .bill .lookup_box ul {
 	list-style-type: none;
 	padding: 0px;
 	margin: 3px;
 }
-#bill-list #bill .lookup_box li {
+.bill-list .bill .lookup_box li {
 	margin:1px;    
 	padding:1px;
 	cursor:pointer;
 	font-size:0.9em;
 }
-#bill-list #bill .lookup_box .optionLi {
+.bill-list .bill .lookup_box .optionLi {
   
 }
-#bill-list #bill .lookup_box li:hover {
+.bill-list .bill .lookup_box li:hover {
 	background-color:#317082;
 	color:#FFF;
 }
 
 
 /* 'more details' style (i.e. billing history and appointment notes) */
-#bill-list #bill .more_details tr td
+.bill-list .bill .more_details tr td
 {
 	background: white;
 	border: none;
-	vertical-align:text-top;
+	vertical-align: text-top;
 }
-#bill-list #bill div.more_details {
+.bill-list .bill div.more_details {
 	max-height: 325px;
-	overflow:auto
+	overflow: auto
 }
-#bill-list #bill .more_details.hide
+.bill-list .bill .more_details.hide
 {
 	display: none;
 }
 
-#bill-list #bill .billing_history tr td
+.bill-list .bill .billing_history tr td
 {
 	background: #e8edff;
 	border-top: 1px solid transparent;
@@ -186,12 +186,12 @@
 	
 	text-align: left;
 }
-#bill-list #bill .billing_history tr td.space
+.bill-list .bill .billing_history tr td.space
 {
 	background: white;
 	padding: 10px;
 }
-#bill-list #bill .billing_history th
+.bill-list .bill .billing_history th
 {
 	background: #b9c9fe;
 	border-top: 1px solid transparent;
@@ -202,14 +202,14 @@
 	
 	text-align: left;
 }
-#bill-list #bill table .billing_history
+.bill-list .bill table .billing_history
 {
 	background: white;
 	border: none;
 	border-collapse: collapse;
 }
 
-#bill-list #bill .appointment_notes tr td
+.bill-list .bill .appointment_notes tr td
 {
 	background: #e8edff;
 	border-top: 1px solid transparent;
@@ -218,7 +218,7 @@
 	font-size: 11px;
 	padding: 8px;
 }
-#bill-list #bill .appointment_notes th
+.bill-list .bill .appointment_notes th
 {
 	background: #b9c9fe;
 	border-top: 1px solid transparent;
@@ -229,7 +229,7 @@
 	
 	text-align: left;
 }
-#bill-list #bill table .appointment_notes
+.bill-list .bill table .appointment_notes
 {
 	background: white;
 	border: none;

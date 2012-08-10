@@ -97,7 +97,6 @@ if("unbilled".equals(action)) {
     vecHeader.add("Remarks");
     vecHeader.add("Notes");
     vecHeader.add("Service Description");
-    vecHeader.add("COMMENTS");
     
 	Comparator<Appointment> appointmentComparator = new Comparator<Appointment>() {
 		// This is where the sorting happens.
@@ -148,13 +147,15 @@ if("unbilled".equals(action)) {
 		prop.setProperty( "Remarks",  apt.getRemarks() );
 		prop.setProperty( "Notes", apt.getNotes() );
         
+        /*
         String tempStr = "<a href=# onClick='popupPage(700,1000, \"billingOB.jsp?billForm=" 
                 + URLEncoder.encode(oscarVariables.getProperty("default_view")) + "&hotclick=&appointment_no="
                 + apt.getId() + "&demographic_name=" + URLEncoder.encode(apt.getName())
 				+ "&demographic_no=" + apt.getDemographicNo() + "&user_no=" + apt.getProviderNo() 
 				+ "&apptProvider_no=" + providerview + "&appointment_date=" + apt.getAppointmentDate().toString() 
 				+ "&start_time=" + apt.getStartTime().toString() + "&bNewForm=1\"); return false;'>Bill ";
-        prop.setProperty("COMMENTS", tempStr);
+		*/
+        //prop.setProperty("COMMENTS", tempStr);
         vecValue.add(prop);
         
         List<BillingClaimHeader1> bills = billingClaimDAO.getInvoices(new Integer(apt.getDemographicNo()).toString(), apt.getId().toString());
@@ -606,7 +607,7 @@ while(rslocal.next()){
 	</tbody>
 </table>
 
-<table id="bill-list">
+<table class="bill-list">
 <thead>
 	<tr>
 		<% for (int i=0; i<vecHeader.size(); i++) { %>
@@ -634,8 +635,8 @@ while(rslocal.next()){
 					<td <%=style%>><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
 				<% } %>
 			</tr>
-			<tr id="bill">
-				<td id="bill_details<%=i%>" class="hide_bill" colspan=7> 
+			<tr id="bill_details<%=i%>" class="bill hide_bill">
+				<td colspan="5">
 					<a class="button" href="" tabindex="-1" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
 									
 					<table>
@@ -861,6 +862,11 @@ while(rslocal.next()){
 							</td>
 						</tr>	
 					</table>
+				</td>
+				<td>
+					Manual
+					Referral Doctor
+					NOTES
 				</td>
 			</tr>
 		<%}%>
