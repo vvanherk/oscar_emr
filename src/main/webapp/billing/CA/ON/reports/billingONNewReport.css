@@ -136,7 +136,7 @@
 	font-size:0.9em;
 	z-index:100;
 }
-#bill-list #bill .lookup_box .selected {
+#bill-list #bill .lookup_box .highlighted {
 	background-color: orange;
 }
 #bill-list #bill .lookup_box ul {
