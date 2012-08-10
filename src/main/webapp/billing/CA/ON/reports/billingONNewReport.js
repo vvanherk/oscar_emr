@@ -562,6 +562,10 @@ function deleteBillingItem(id, billingItemId) {
 	billingItem.parentNode.removeChild(billingItem);
 }
 
+function isDeleteBillingItemKey(evt) {
+	return isDeleteKey(evt) && evt.altKey;
+}
+
 /**
  * 
  */ 
