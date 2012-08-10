@@ -658,6 +658,10 @@ while(rslocal.next()){
 							onkeydown+= "	hideAllLookups("+i+"); ";
 							onkeydown+= "	return true; ";
 							onkeydown+= "}";
+							onkeydown+= "if (isDeleteBillingItemKey(event)) {";
+							//onkeydown+= "	deleteBillingItem("+i+", "+uniqueId+");";
+							onkeydown+= "";
+							onkeydown+= "}";
 							onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
 							onkeydown+= "if (!lookupIsOpen) {";
 							onkeydown+= "	if (isSaveBill(event)) {";
