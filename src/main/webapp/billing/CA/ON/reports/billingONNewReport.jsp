@@ -627,7 +627,7 @@ while(rslocal.next()){
 			}
 			String appointmentNo = "-1";	
 			%>
-			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>); setFocusOnFirstInputField(<%=i%>);">
+			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>); setFocusOnInputField(<%=i%>);">
 				<% for (int j=0; j < vecHeader.size(); j++) {
 					prop = (Properties)vecValue.get(i);
 					%>
