@@ -59,7 +59,7 @@ function showBillDetails(id) {
 	removeClass('hide_bill', elem);
 	addClass('show_bill', elem);
 	document.getElementById("bill"+id).onclick = function() { hideBillDetails(id); }
-	setFocusOnFirstInputField(id);
+	setFocusOnInputField(id);
 }
 
 /**
@@ -309,7 +309,7 @@ function moveToPreviousBill(currentBillId) {
 function moveFromBillToBill(moveFromId, moveToId) {
 	hideBillDetails(moveFromId);
 	showBillDetails(moveToId);
-	setFocusOnFirstInputField(moveToId);
+	setFocusOnInputField(moveToId);
 }
 
 /**
@@ -341,14 +341,14 @@ function moveToNextBillingItem(billId, billingItemIndex) {
 				if (inputElements[j] == document.activeElement) {
 					// set focus to first input element of the next billing item
 					if (rowElements[i+1] != null && rowElements[i+1] != undefined) {
-						setFocusOnFirstInputFieldByIndex(billId, i+1);
+						setFocusOnInputField_By_RelativeBillingItemIndex(billId, i+1);
 						return;
 					}
 				}
 			}
 		}
 	} else {
-		setFocusOnFirstInputFieldByIndex(billId, billingItemIndex+1);
+		setFocusOnInputField_By_RelativeBillingItemIndex(billId, billingItemIndex+1);
 	}
 }
 
@@ -371,14 +371,14 @@ function moveToPreviousBillingItem(billId, billingItemIndex) {
 				if (inputElements[j] == document.activeElement) {
 					// set focus to first input element of the next billing item
 					if (rowElements[i-1] != null && rowElements[i-1] != undefined) {
-						setFocusOnFirstInputFieldByIndex(billId, i-1);
+						setFocusOnInputField_By_RelativeBillingItemIndex(billId, i-1);
 						return;
 					}
 				}
 			}
 		}
 	} else {
-		setFocusOnFirstInputFieldByIndex(billId, billingItemIndex-1);
+		setFocusOnInputField_By_RelativeBillingItemIndex(billId, billingItemIndex-1);
 	}
 }
 
@@ -457,18 +457,27 @@ function addBillingItem(id) {
 	var billingItemId = getId();
 	element.setAttribute("id", "billing_item"+id+"_"+billingItemId);
 	
-	
 	var onkeydown = "onkeydown=\"";
 	onkeydown+= "if (isTabKey(event)) {";
 	onkeydown+= "	hideAllServiceCodeLookups("+id+"); ";
 	onkeydown+= "	return true; ";
 	onkeydown+= "}";
-	onkeydown+= "if (isSaveBill(event)) {";
-	onkeydown+= "	saveBill(event, "+id+"); ";
-	onkeydown+= "	moveToNextBill("+id+"); ";
-	onkeydown+= "}";
-	onkeydown+= "if (isMoveBetweenBills(event)) {";
-	onkeydown+= "	moveBetweenBills(event, "+id+"); ";
+	onkeydown+= "var lookupIsOpen = isLookupOpen("+id+");";
+	onkeydown+= "if (!lookupIsOpen) {";
+	onkeydown+= "	if (isSaveBill(event)) {";
+	onkeydown+= "		saveBill(event, "+id+"); ";
+	onkeydown+= "		moveToNextBill("+id+"); ";
+	onkeydown+= "	}";
+	onkeydown+= "	if (isMoveBetweenBills(event)) {";
+	onkeydown+= "		moveBetweenBills(event, "+id+"); ";
+	onkeydown+= "	}";
+	onkeydown+= "} else {";
+	onkeydown+= "	if (isMoveBetweenLookupItems(event)) {";
+	onkeydown+= "		moveBetweenLookupItems(event, "+id+");";
+	onkeydown+= "	}";
+	onkeydown+= "	if (isSelectLookupItem(event)) {";
+	onkeydown+= "		selectLookupItem("+id+");";
+	onkeydown+= "	}";
 	onkeydown+= "}";
 	onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
 	onkeydown+= "	moveBetweenBillingItems(event, "+id+");";
@@ -555,35 +564,37 @@ function submitBill(id) {
 /**
  * 
  */ 
-function setFocusOnFirstInputField(billId, billingItemId) {
+function setFocusOnInputField(billId, billingItemId, inputIndex) {
 	billingItemId = billingItemId || -1;
+	inputIndex = inputIndex || 0;
 	
-	// if billingItemId is less than 0, set focus to first input field of first billing item
+	// if billingItemId is less than 0, set focus to inputNumber input field of first billing item
 	if (billingItemId < 0) {
 		var firstBillingItem = document.getElementById("billing_items"+billId).getElementsByTagName("tr")[0];
-		var firstInputField = firstBillingItem.getElementsByTagName("input")[0];
-		firstInputField.focus();
+		var inputField = firstBillingItem.getElementsByTagName("input")[inputIndex];
+		inputField.focus();
 		return;
 	}
 	
 	var billingItem = document.getElementById("billing_item"+billId+"_"+billingItemId);
 	
 	if (billingItem != null && billingItem != undefined) {
-		billingItem.getElementsByTagName("input")[0].focus();
+		billingItem.getElementsByTagName("input")[inputIndex].focus();
 	}
 }
 
 /**
  * 
  */ 
-function setFocusOnFirstInputFieldByIndex(billId, billingItemIndex) {
+function setFocusOnInputField_By_RelativeBillingItemIndex(billId, billingItemIndex, inputIndex) {
 	billingItemIndex = billingItemIndex || 0;
+	inputIndex = inputIndex || 0;
 
 	var billingItems = document.getElementById("billing_items"+billId);
 	var rowElements = billingItems.getElementsByTagName("tr");
 	
 	if (rowElements[billingItemIndex] != null && rowElements[billingItemIndex] != undefined) {
-		rowElements[billingItemIndex].getElementsByTagName("input")[0].focus();
+		rowElements[billingItemIndex].getElementsByTagName("input")[inputIndex].focus();
 	}
 }
 
@@ -761,21 +772,23 @@ function moveBetweenLookupItems(evt, billId) {
  */
 function moveToNextLookupItem(billId) {	
 	var billingItems = document.getElementById("billing_items"+billId);
-	var elem = billingItems.getElementsByTagName("ul")[0];
+	var lookups = billingItems.getElementsByTagName("ul");
 	
-	if (elem == null || elem == undefined)
+	if (lookups == null || lookups == undefined)
 		return;
-		
-	var lookupItems = elem.getElementsByTagName("li");
 	
-	if (lookupItems == null || lookupItems == undefined)
-		return;
+	for (var i=0; i < lookups.length; i++) {	
+		var lookupItems = lookups[i].getElementsByTagName("li");
 		
-	for (var i=0; i < lookupItems.length; i++) {
-		if (hasClass("selected", lookupItems[i])) {
-			removeClass("selected", lookupItems[i]);
-			setLookupItemAsSelected(lookupItems[i+1]);
-			return true;
+		if (lookupItems == null || lookupItems == undefined)
+			return;
+			
+		for (var j=0; j < lookupItems.length; j++) {
+			if (hasClass("selected", lookupItems[j]) && lookupItems[j+1]) {
+				removeClass("selected", lookupItems[j]);
+				setLookupItemAsSelected(lookupItems[j+1]);
+				return true;
+			}
 		}
 	}
 }
@@ -788,27 +801,28 @@ function setLookupItemAsSelected(elem) {
 		addClass("selected", elem);
 	}
 	
-	//elem.focus();
 	elem.scrollIntoView(false);
 }
 
 function selectLookupItem(billId) {	
 	var billingItems = document.getElementById("billing_items"+billId);
-	var elem = billingItems.getElementsByTagName("ul")[0];
+	var lookups = billingItems.getElementsByTagName("ul");
 	
-	if (elem == null || elem == undefined)
+	if (lookups == null || lookups == undefined)
 		return;
 		
-	var lookupItems = elem.getElementsByTagName("li");
-	
-	if (lookupItems == null || lookupItems == undefined)
-		return;
-	
-	for (var i=0; i < lookupItems.length; i++) {
-		if (hasClass("selected", lookupItems[i])) {
-			removeClass("selected", lookupItems[i]);
-			lookupItems[i].click();
-			return true;
+	for (var i=0; i < lookups.length; i++) {	
+		var lookupItems = lookups[i].getElementsByTagName("li");
+		
+		if (lookupItems == null || lookupItems == undefined)
+			return;
+			
+		for (var j=0; j < lookupItems.length; j++) {
+			if (hasClass("selected", lookupItems[j])) {
+				removeClass("selected", lookupItems[j]);
+				lookupItems[j].click();
+				return true;
+			}
 		}
 	}
 }
@@ -818,21 +832,23 @@ function selectLookupItem(billId) {
  */
 function moveToPreviousLookupItem(billId) {	
 	var billingItems = document.getElementById("billing_items"+billId);
-	var elem = billingItems.getElementsByTagName("ul")[0];
+	var lookups = billingItems.getElementsByTagName("ul");
 	
-	if (elem == null || elem == undefined)
+	if (lookups == null || lookups == undefined)
 		return;
 		
-	var lookupItems = elem.getElementsByTagName("li");
-	
-	if (lookupItems == null || lookupItems == undefined)
-		return;
+	for (var i=0; i < lookups.length; i++) {	
+		var lookupItems = lookups[i].getElementsByTagName("li");
 		
-	for (var i=0; i < lookupItems.length; i++) {
-		if (hasClass("selected", lookupItems[i])) {
-			removeClass("selected", lookupItems[i]);
-			setLookupItemAsSelected(lookupItems[i-1]);
-			return true;
+		if (lookupItems == null || lookupItems == undefined)
+			return;
+			
+		for (var j=0; j < lookupItems.length; j++) {
+			if (hasClass("selected", lookupItems[j]) && lookupItems[j-1]) {
+				removeClass("selected", lookupItems[j]);
+				setLookupItemAsSelected(lookupItems[j-1]);
+				return true;
+			}
 		}
 	}
 }
@@ -1141,7 +1157,7 @@ function getBillingCodesHandler(billId, billingItemId) {
 				onclick += "updateBillingItemTotal("+billId+", "+billingItemId+");";
 				onclick += "updateBillTotal("+billId+");";
 				onclick += "hideServiceCodeLookup("+billId+", "+billingItemId+");";
-				onclick += "setFocusOnFirstInputField("+billId+", "+billingItemId+");";
+				onclick += "setFocusOnInputField("+billId+", "+billingItemId+", 2);";
 				onclick += "\"";
 				for (var i = 0; i < json.length; i++) { 			    
 				    serviceCodesString+= "<li "+onclick+">";
@@ -1217,7 +1233,7 @@ function getDiagnosticCodeHandler(billId, billingItemId, diagnosticCode, descrip
 				onclick += "setDiagnosticDescription("+billId+", "+billingItemId+", extractDiagnosticDescription(this));";
 				onclick += "hideDiagnosticCodeLookup("+billId+", "+billingItemId+");";
 				onclick += "hideDiagnosticDescriptionLookup("+billId+", "+billingItemId+");";
-				onclick += "setFocusOnFirstInputField("+billId+", "+billingItemId+");";
+				onclick += "setFocusOnInputField("+billId+", "+billingItemId+", 5);";
 				onclick += "\"";
 				for (var i = 0; i < json.length; i++) { 			    
 				    serviceCodesString+= "<li "+onclick+">";
@@ -1229,13 +1245,16 @@ function getDiagnosticCodeHandler(billId, billingItemId, diagnosticCode, descrip
 				serviceCodesString += "</ul>";
 			}
 			
+			var element = null;
 			if (diagnosticCode) {
-				var element = document.getElementById("diagnostic_code_lookup"+billId+"_"+billingItemId);
-				element.innerHTML = serviceCodesString;
+				 element = document.getElementById("diagnostic_code_lookup"+billId+"_"+billingItemId);
 			} else {
-				var element = document.getElementById("diagnostic_desc_lookup"+billId+"_"+billingItemId);
-				element.innerHTML = serviceCodesString;
+				element = document.getElementById("diagnostic_desc_lookup"+billId+"_"+billingItemId);
 			}
+			
+			element.innerHTML = serviceCodesString;
+			
+			setFocusOnFirstLookupItem(element);
 			
 			//alert('Success. Result: ' + serviceCodesString);
 		} else if (this.readyState == 4 && this.status != 200) {
