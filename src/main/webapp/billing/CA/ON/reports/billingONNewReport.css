@@ -101,15 +101,20 @@
 {
 	display: table-cell;
 }
-.bill-list tr.bill.completed td
+.bill-list .completed td
 {
 	color: green;
 	font-weight: bold;
 }
-.bill-list tr.bill.completed:hover td
+.bill-list .completed:hover td
 {
 	color: green;
 	font-weight: bold;
+}
+.bill-list tr.bill.completed td
+{
+	color: #669;
+	font-weight: normal;
 }
 
 .bill-list .bill a.button

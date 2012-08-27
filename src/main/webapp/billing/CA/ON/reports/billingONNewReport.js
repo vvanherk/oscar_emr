@@ -55,21 +55,25 @@ function removeClass( classname, element ) {
  * 
  */ 
 function showBillDetails(id) {
-	var elem = document.getElementById("bill_details"+id);
-	removeClass('hide_bill', elem);
-	addClass('show_bill', elem);
-	document.getElementById("bill"+id).onclick = function() { hideBillDetails(id); }
-	setFocusOnInputField(id);
+	if (!isSaved(id)) {
+		var elem = document.getElementById("bill_details"+id);
+		removeClass('hide_bill', elem);
+		addClass('show_bill', elem);
+		document.getElementById("bill"+id).onclick = function() { hideBillDetails(id); }
+		setFocusOnInputField(id);
+	}
 }
 
 /**
  * 
  */ 
 function hideBillDetails(id) {
-	var elem = document.getElementById("bill_details"+id);
-	removeClass('show_bill', elem);
-	addClass('hide_bill', elem);
-	document.getElementById("bill"+id).onclick = function() { showBillDetails(id); }
+	if (!isSaved(id)) {
+		var elem = document.getElementById("bill_details"+id);
+		removeClass('show_bill', elem);
+		addClass('hide_bill', elem);
+		document.getElementById("bill"+id).onclick = function() { showBillDetails(id); }
+	}
 	
 	hideAllServiceCodeLookups(id);
 }
@@ -120,10 +124,28 @@ function isAlphaNumericKey(evt) {
 	var keychar;
 	var charcheck;
 	
-	keynum = evt.keyCode;
-		
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	
+	// hack for function keys
+	if (keynum >= 112 && keynum <= 123)
+		return;
+	
 	keychar = String.fromCharCode(keynum);
+	
 	charcheck = /[a-zA-Z0-9]/;
+	
+	return charcheck.test(keychar);
+}
+
+function isNumericKey(evt) {
+	var keynum;
+	var keychar;
+	var charcheck;
+	
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	keychar = String.fromCharCode(keynum);
+	
+	charcheck = /[0-9]/;
 	
 	return charcheck.test(keychar);
 }
@@ -494,7 +516,8 @@ function addBillingItem(id) {
 	onkeydown+= "}";
 	onkeydown+= "if (isShowMoreDetails(event)) {";
 	onkeydown+= "	toggleMoreDetails("+id+", "+demographicNumbers[id]+", "+appointmentNumbers[id]+");";
-	onkeydown+= "}\"";
+	onkeydown+= "}";
+	onkeydown+= "\"";
 	
 	var totalOnkeydown = "onkeydown=\"";
 	totalOnkeydown+= "if (isTabKey(event)) {";
@@ -523,8 +546,13 @@ function addBillingItem(id) {
 	onkeyup+= "if (this.value.length == 0) {";
 	onkeyup+= "	hideServiceCodeLookup("+id+", "+billingItemId+");";
 	onkeyup+= "	hideDiagnosticCodeLookup("+id+", "+billingItemId+");";
+	onkeyup+= "	if (this.id.indexOf('amount') == 0 || this.id.indexOf('units') == 0) {";
+	onkeyup+= "		updateBillingItemTotal("+id+", "+billingItemId+");";
+	onkeyup+= "		updateBillTotal("+id+");";
+	onkeyup+= "	}";
 	onkeyup+= "} else { ";
 	onkeyup+= "	if (isAlphaNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
+					// show diagnostic/service codes lookup list
 	onkeyup+= "		if (this.id.indexOf('bill_code') == 0) {";
 	onkeyup+= "			showAvailableServiceCodes("+id+", "+billingItemId+", this.value);";
 	onkeyup+= "		} else if (this.id.indexOf('dx_code') == 0) {";
@@ -532,14 +560,21 @@ function addBillingItem(id) {
 	onkeyup+= "		} else if (this.id.indexOf('dx_desc') == 0) {";
 	onkeyup+= "			showAvailableDiagnosticCodes("+id+", "+billingItemId+", '', this.value);";
 	onkeyup+= "		}";
+					// update total if units/amount values change
+	onkeyup+= "		else if (this.id.indexOf('amount') == 0 || this.id.indexOf('units') == 0) {";
+	onkeyup+= "			if (isNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
+	onkeyup+= "				updateBillingItemTotal("+id+", "+billingItemId+");";
+	onkeyup+= "				updateBillTotal("+id+");";
+	onkeyup+= "			}";
+	onkeyup+= "		}";
 	onkeyup+= "	}";
 	onkeyup+= "}";
 	onkeyup+= "return true; \"";
 	
-	var htmlString = "<td> <a class=\"button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); return false;\">X</a></td>";
+	var htmlString = "<td> <a class=\"button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); updateBillTotal("+id+"); return false;\">X</a></td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"bill_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"service_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"amount"+id+"_"+billingItemId+"\" "+onkeydown+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"3\" id=\"units"+id+"_"+billingItemId+"\" value=\"1\" "+onkeydown+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"amount"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"3\" id=\"units"+id+"_"+billingItemId+"\" value=\"1\" "+onkeydown+" "+onkeyup+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"dx_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"12\" id=\"dx_desc"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_desc_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"total"+id+"_"+billingItemId+"\" "+totalOnkeydown+" "+totalOnKeyup+" /> </td>";
@@ -962,7 +997,7 @@ function toggleMoreDetails(billId, demographicNo, appointmentNo) {
  * 
  */ 
 function isShowMoreDetails(evt) {
-	return (evt.keyCode == 112);
+	return (evt.keyCode == 113);
 }
 
 /**
@@ -1004,7 +1039,12 @@ function updateBillingItemTotal(billId, billingItemId) {
 	var units = parseFloat(unitsElements.value);
 	if (!isNumber(units))
 		units = 0;
-	var total = parseFloat(amountElement.value) * units;
+		
+	var amount = parseFloat(amountElement.value);
+	if (!isNumber(amount))
+		amount = 0;
+		
+	var total = parseFloat(amount) * units;
 	
 	totalElement.value = total.formatCurrency(2, '.', ',');
 }
