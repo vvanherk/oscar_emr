@@ -654,87 +654,20 @@ while(rslocal.next()){
 						<thead>
 						<tbody id="billing_items<%=i%>">
 							<%	
-							String onkeydown = "onkeydown=\"";
-							onkeydown+= "if (isTabKey(event)) {";
-							onkeydown+= "	hideAllLookups("+i+"); ";
-							onkeydown+= "	return true; ";
-							onkeydown+= "}";
-							onkeydown+= "if (isDeleteBillingItemKey(event)) {";
-							//onkeydown+= "	deleteBillingItem("+i+", "+uniqueId+");";
-							onkeydown+= "";
-							onkeydown+= "}";
-							onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
-							onkeydown+= "if (!lookupIsOpen) {";
-							onkeydown+= "	if (isSaveBill(event)) {";
-							onkeydown+= "		saveBill(event, "+i+"); ";
-							onkeydown+= "		moveToNextBill("+i+"); ";
-							onkeydown+= "	}";
-							onkeydown+= "	if (isMoveBetweenBills(event)) {";
-							onkeydown+= "		moveBetweenBills(event, "+i+"); ";
-							onkeydown+= "	}";
-							onkeydown+= "} else {";
-							onkeydown+= "	if (isMoveBetweenLookupItems(event)) {";
-							onkeydown+= "		moveBetweenLookupItems(event, "+i+");";
-							onkeydown+= "	}";
-							onkeydown+= "	if (isSelectLookupItem(event)) {";
-							onkeydown+= "		selectLookupItem("+i+");";
-							onkeydown+= "	}";
-							onkeydown+= "	if (isEscapeKey(event)) {";
-							onkeydown+= "		hideAllLookups("+i+");";
-							onkeydown+= "	}";
-							onkeydown+= "}";
-							onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
-							onkeydown+= "	moveBetweenBillingItems(event, "+i+");";
-							onkeydown+= "}";
-							onkeydown+= "if (isShowMoreDetails(event)) {";
-							onkeydown+= "	toggleMoreDetails("+i+", "+vecDemographicNo.get(i)+", "+vecAppointmentNo.get(i)+");";
-							onkeydown+= "}";
-							onkeydown+= "return true;\"";
+							String onkeydown = getOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i));
 							
 							String totalOnKeyup = "onkeyup=\"";
 							totalOnKeyup+= "updateBillTotal("+i+");";
 							totalOnKeyup+= "return true;\"";
 							
 							if (!hasBills) {
-								String totalOnkeydown = "onkeydown=\"";
-								totalOnkeydown+= "if (isTabKey(event)) {";
-								totalOnkeydown+= "	hideAllServiceCodeLookups("+i+"); ";
-								totalOnkeydown+= "	if (checkIfLastBillingItem("+i+", "+uniqueId+")) {";
-								totalOnkeydown+= "		addBillingItem("+i+"); ";
-								totalOnkeydown+= "	} ";
-								totalOnkeydown+= "} ";
-								totalOnkeydown+= "if (isSaveBill(event)) {";
-								totalOnkeydown+= "	saveBill(event, "+i+"); ";
-								totalOnkeydown+= "	moveToNextBill("+i+"); ";
-								totalOnkeydown+= "}";
-								totalOnkeydown+= "if (isMoveBetweenBillingItems(event)) {";
-								totalOnkeydown+= "	moveBetweenBillingItems(event, "+i+");";
-								totalOnkeydown+= "}";
-								totalOnkeydown+= "if (isShowMoreDetails(event)) {";
-								totalOnkeydown+= "	toggleMoreDetails("+i+", "+vecDemographicNo.get(i)+", "+vecAppointmentNo.get(i)+");";
-								totalOnkeydown+= "}";
-								totalOnkeydown+= "return true;\"";
+								String totalOnkeydown = getTotalOnKeydownString(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i));
 								
-								String onkeyup = "onkeyup=\"";
-								onkeyup+= "if (this.value.length == 0) {";
-								onkeyup+= "	hideServiceCodeLookup("+i+", "+uniqueId+");";
-								onkeyup+= "	hideDiagnosticCodeLookup("+i+", "+uniqueId+");";
-								onkeyup+= "} else { ";
-								onkeyup+= "	if (isAlphaNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
-								onkeyup+= "		if (this.id.indexOf('bill_code') == 0) {";
-								onkeyup+= "			showAvailableServiceCodes("+i+", "+uniqueId+", this.value);";
-								onkeyup+= "		} else if (this.id.indexOf('dx_code') == 0) {";
-								onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", this.value);";
-								onkeyup+= "		} else if (this.id.indexOf('dx_desc') == 0) {";
-								onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", '', this.value);";
-								onkeyup+= "		}";
-								onkeyup+= "	}";
-								onkeyup+= "}";
-								onkeyup+= "return true; \"";
+								String onkeyup = getOnKeyupString(i, uniqueId);
 								
 								%>
 								<tr id="billing_item<%=i%>_<%=uniqueId%>">
-									<td> <a class="button" href="" tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;" >X</a></td>
+									<td> <a class="button" href="" tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); updateBillTotal(<%=i%>); return false;" >X</a></td>
 									<td> <input type="text" size="6" id="bill_code<%=i%>_<%=uniqueId%>" <%=onkeydown%> <%=onkeyup%> /> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
 									<td> <input type="text" size="6" id="amount<%=i%>_<%=uniqueId%>" <%=onkeydown%> /> </td>
 									<td> <input type="text" size="3" id="units<%=i%>_<%=uniqueId%>" value="1" <%=onkeydown%> /> </td>
@@ -774,47 +707,15 @@ while(rslocal.next()){
 										billTotal += tempTotal;
 										String total = String.format("%1$,.2f", tempTotal);
 										
-										String totalOnkeydown = "onkeydown=\"";
-										totalOnkeydown+= "if (isTabKey(event)) {";
-										totalOnkeydown+= "	hideAllServiceCodeLookups("+i+"); ";
-										totalOnkeydown+= "	if (checkIfLastBillingItem("+i+", "+uniqueId+")) {";
-										totalOnkeydown+= "		addBillingItem("+i+"); ";
-										totalOnkeydown+= "	} ";
-										totalOnkeydown+= "} ";
-										totalOnkeydown+= "if (isSaveBill(event)) {";
-										totalOnkeydown+= "	saveBill(event, "+i+"); ";
-										totalOnkeydown+= "	moveToNextBill("+i+"); ";
-										totalOnkeydown+= "}";
-										totalOnkeydown+= "if (isMoveBetweenBillingItems(event)) {";
-										totalOnkeydown+= "	moveBetweenBillingItems(event, "+i+");";
-										totalOnkeydown+= "}";
-										totalOnkeydown+= "if (isShowMoreDetails(event)) {";
-										totalOnkeydown+= "	toggleMoreDetails("+i+", "+vecDemographicNo.get(i)+", "+vecAppointmentNo.get(i)+");";
-										totalOnkeydown+= "}";
-										totalOnkeydown+= "return true;\"";
+										String totalOnkeydown = getTotalOnKeydownString(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i));
 										
-										String onkeyup = "onkeyup=\"";
-										onkeyup+= "if (this.value.length == 0) {";
-										onkeyup+= "	hideServiceCodeLookup("+i+", "+uniqueId+");";
-										onkeyup+= "	hideDiagnosticCodeLookup("+i+", "+uniqueId+");";
-										onkeyup+= "} else { ";
-										onkeyup+= "	if (isAlphaNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
-										onkeyup+= "		if (this.id.indexOf('bill_code') == 0) {";
-										onkeyup+= "			showAvailableServiceCodes("+i+", "+uniqueId+", this.value);";
-										onkeyup+= "		} else if (this.id.indexOf('dx_code') == 0) {";
-										onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", this.value);";
-										onkeyup+= "		} else if (this.id.indexOf('dx_desc') == 0) {";
-										onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", '', this.value);";
-										onkeyup+= "		}";
-										onkeyup+= "	}";
-										onkeyup+= "}";
-										onkeyup+= "return true; \"";
+										String onkeyup = getOnKeyupString(i, uniqueId);
 										%>
 										<tr id="billing_item<%=i%>_<%=uniqueId%>">
-											<td> <a class="button" href=""  tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); return false;">X</a></td>
+											<td> <a class="button" href=""  tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); updateBillTotal(<%=i%>); return false;">X</a></td>
 											<td> <input type="text" size="6" id="bill_code<%=i%>_<%=uniqueId%>" value="<%=item.getService_code()%>" <%=onkeydown%> <%=onkeyup%> /> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-											<td> <input type="text" size="6" id="amount<%=i%>_<%=uniqueId%>" value="<%=fee%>" <%=onkeydown%> /> </td>
-											<td> <input type="text" size="3" id="units<%=i%>_<%=uniqueId%>" value="<%=units%>" <%=onkeydown%> /> </td>
+											<td> <input type="text" size="6" id="amount<%=i%>_<%=uniqueId%>" value="<%=fee%>" <%=onkeydown%> <%=onkeyup%> /> </td>
+											<td> <input type="text" size="3" id="units<%=i%>_<%=uniqueId%>" value="<%=units%>" <%=onkeydown%> <%=onkeyup%> /> </td>
 											<td> <input type="text" size="6" id="dx_code<%=i%>_<%=uniqueId%>" value="<%=item.getDx()%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
 											<td> <input type="text" size="12" id="dx_desc<%=i%>_<%=uniqueId%>" value="<%=serviceDesc%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_desc_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
 											<td> <input type="text" size="6" id="total<%=i%>_<%=uniqueId%>" value="<%=total%>" <%=totalOnkeydown%> <%=totalOnKeyup%> /> </td>
@@ -916,5 +817,102 @@ String getFormatDateStr(String str) {
 	    ret = str.substring(0,4) + "/" + str.substring(4,6) + "/" + str.substring(6);
 	}
 	return ret;
+}
+
+String getOnKeydownString(int i, String demoNo, String apptNo) {
+	String onkeydown = "onkeydown=\"";
+	onkeydown+= "if (isTabKey(event)) {";
+	onkeydown+= "	hideAllLookups("+i+"); ";
+	onkeydown+= "	return true; ";
+	onkeydown+= "}";
+	onkeydown+= "if (isDeleteBillingItemKey(event)) {";
+	//onkeydown+= "	deleteBillingItem("+i+", "+uniqueId+");";
+	onkeydown+= "";
+	onkeydown+= "}";
+	onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
+	onkeydown+= "if (!lookupIsOpen) {";
+	onkeydown+= "	if (isSaveBill(event)) {";
+	onkeydown+= "		saveBill(event, "+i+"); ";
+	onkeydown+= "		moveToNextBill("+i+"); ";
+	onkeydown+= "	}";
+	onkeydown+= "	if (isMoveBetweenBills(event)) {";
+	onkeydown+= "		moveBetweenBills(event, "+i+"); ";
+	onkeydown+= "	}";
+	onkeydown+= "} else {";
+	onkeydown+= "	if (isMoveBetweenLookupItems(event)) {";
+	onkeydown+= "		moveBetweenLookupItems(event, "+i+");";
+	onkeydown+= "	}";
+	onkeydown+= "	if (isSelectLookupItem(event)) {";
+	onkeydown+= "		selectLookupItem("+i+");";
+	onkeydown+= "	}";
+	onkeydown+= "	if (isEscapeKey(event)) {";
+	onkeydown+= "		hideAllLookups("+i+");";
+	onkeydown+= "	}";
+	onkeydown+= "}";
+	onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
+	onkeydown+= "	moveBetweenBillingItems(event, "+i+");";
+	onkeydown+= "}";
+	onkeydown+= "if (isShowMoreDetails(event)) {";
+	onkeydown+= "	toggleMoreDetails("+i+", "+demoNo+", "+apptNo+");";
+	onkeydown+= "}";
+	onkeydown+= "return true;\"";
+	
+	return onkeydown;
+}
+
+String getTotalOnKeydownString(int i, int uniqueId, String demoNo, String apptNo) {
+	String totalOnkeydown = "onkeydown=\"";
+	totalOnkeydown+= "if (isTabKey(event)) {";
+	totalOnkeydown+= "	hideAllServiceCodeLookups("+i+"); ";
+	totalOnkeydown+= "	if (checkIfLastBillingItem("+i+", "+uniqueId+")) {";
+	totalOnkeydown+= "		addBillingItem("+i+"); ";
+	totalOnkeydown+= "	} ";
+	totalOnkeydown+= "} ";
+	totalOnkeydown+= "if (isSaveBill(event)) {";
+	totalOnkeydown+= "	saveBill(event, "+i+"); ";
+	totalOnkeydown+= "	moveToNextBill("+i+"); ";
+	totalOnkeydown+= "}";
+	totalOnkeydown+= "if (isMoveBetweenBillingItems(event)) {";
+	totalOnkeydown+= "	moveBetweenBillingItems(event, "+i+");";
+	totalOnkeydown+= "}";
+	totalOnkeydown+= "if (isShowMoreDetails(event)) {";
+	totalOnkeydown+= "	toggleMoreDetails("+i+", "+demoNo+", "+apptNo+");";
+	totalOnkeydown+= "}";
+	totalOnkeydown+= "return true;\"";
+	
+	return totalOnkeydown;
+}
+
+String getOnKeyupString(int i, int uniqueId) {
+	String onkeyup = "onkeyup=\"";
+	onkeyup+= "if (this.value.length == 0) {";
+	onkeyup+= "	hideServiceCodeLookup("+i+", "+uniqueId+");";
+	onkeyup+= "	hideDiagnosticCodeLookup("+i+", "+uniqueId+");";
+	onkeyup+= "	if (this.id.indexOf('amount') == 0 || this.id.indexOf('units') == 0) {";
+	onkeyup+= "		updateBillingItemTotal("+i+", "+uniqueId+");";
+	onkeyup+= "		updateBillTotal("+i+");";
+	onkeyup+= "	}";
+	onkeyup+= "} else { ";
+	onkeyup+= "	if (isAlphaNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
+					// show diagnostic/service codes lookup list
+	onkeyup+= "		if (this.id.indexOf('bill_code') == 0) {";
+	onkeyup+= "			showAvailableServiceCodes("+i+", "+uniqueId+", this.value);";
+	onkeyup+= "		} else if (this.id.indexOf('dx_code') == 0) {";
+	onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", this.value);";
+	onkeyup+= "		} else if (this.id.indexOf('dx_desc') == 0) {";
+	onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", '', this.value);";
+	onkeyup+= "		}";
+					// update total if units/amount values change
+	onkeyup+= "		else if (this.id.indexOf('amount') == 0 || this.id.indexOf('units') == 0) {";
+	onkeyup+= "			if (isNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
+	onkeyup+= "				updateBillingItemTotal("+i+", "+uniqueId+");";
+	onkeyup+= "				updateBillTotal("+i+");";
+	onkeyup+= "			}";
+	onkeyup+= "		}";
+	onkeyup+= "	}";
+	onkeyup+= "}";
+	onkeyup+= "return true; \"";
+	
+	return onkeyup;
 }
 %>
