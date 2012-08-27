@@ -638,6 +638,8 @@ while(rslocal.next()){
 			<tr id="bill_details<%=i%>" class="bill hide_bill">
 				<td colspan="5">
 					<a class="button" href="" tabindex="-1" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
+					<input type="checkbox" name="manual_checkbox<%=i%>" /> Manual
+					<input type="checkbox" name="referral_doc_checkbox<%=i%>" /> Referral Doctor
 									
 					<table>
 						<thead>
@@ -656,9 +658,7 @@ while(rslocal.next()){
 							<%	
 							String onkeydown = getOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i));
 							
-							String totalOnKeyup = "onkeyup=\"";
-							totalOnKeyup+= "updateBillTotal("+i+");";
-							totalOnKeyup+= "return true;\"";
+							String totalOnKeyup = getTotalOnKeyupString(i);
 							
 							if (!hasBills) {
 								String totalOnkeydown = getTotalOnKeydownString(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i));
@@ -763,11 +763,6 @@ while(rslocal.next()){
 							</td>
 						</tr>	
 					</table>
-				</td>
-				<td>
-					Manual
-					Referral Doctor
-					NOTES
 				</td>
 			</tr>
 		<%}%>
@@ -881,6 +876,14 @@ String getTotalOnKeydownString(int i, int uniqueId, String demoNo, String apptNo
 	totalOnkeydown+= "return true;\"";
 	
 	return totalOnkeydown;
+}
+
+String getTotalOnKeyupString(int i) {
+	String totalOnKeyup = "onkeyup=\"";
+	totalOnKeyup+= "updateBillTotal("+i+");";
+	totalOnKeyup+= "return true;\"";
+	
+	return totalOnKeyup;
 }
 
 String getOnKeyupString(int i, int uniqueId) {
