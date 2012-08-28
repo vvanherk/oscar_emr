@@ -426,7 +426,7 @@ function isValidBillId(billId) {
 /**
  * 
  */ 
-function saveBill(evt, billId) {
+function saveBill(billId) {
 	var elem = document.getElementById("bill_details"+billId);
 	removeClass('incompleted', elem);
 	addClass('completed', elem);
@@ -437,6 +437,7 @@ function saveBill(evt, billId) {
 		var cells = rows[i].getElementsByTagName("td");
 		for (var j=0; j < cells.length; j++) {
 			var replacementElement = document.createElement("span");
+			replacementElement.className = "saved_element";
 			
 			if (cells[j] == undefined)
 				continue;
@@ -446,7 +447,9 @@ function saveBill(evt, billId) {
 				continue;
 				
 			replacementElement.innerHTML = inputElement.value;
-			cells[j].removeChild(inputElement);
+			inputElement.style.visibility = "hidden";
+			inputElement.style.display = "none";
+			//cells[j].removeChild(inputElement);
 			cells[j].appendChild(replacementElement);
 		}
 	}
@@ -460,10 +463,61 @@ function saveBill(evt, billId) {
 	// hide the 'more details' table
 	hideMoreDetails(billId, demographicNumbers[billId], appointmentNumbers[billId]);
 	
-	
 	elem = document.getElementById("bill"+billId);
 	removeClass('no-bills', elem);
 	addClass('completed', elem);
+	
+	// setup unsave function (if user clicks on the bill, they can re-open it for editing)
+	document.getElementById("bill"+billId).onclick = function() { unsaveBill(billId); setFocusOnInputField(billId); }
+	
+	
+}
+
+/**
+ * 
+ */ 
+function unsaveBill(billId) {
+	var elem = document.getElementById("bill_details"+billId);
+	removeClass('completed', elem);
+	//addClass('incompleted', elem);
+	
+	// delete elements of class 'saved_element' and show input elements
+	var rows = elem.getElementsByTagName("tr");
+	for (var i=0; i < rows.length; i++) {
+		var cells = rows[i].getElementsByTagName("td");
+		for (var j=0; j < cells.length; j++) {
+			if (cells[j] == undefined)
+				continue;
+			
+			var replacementElement = cells[j].getElementsByClassName("saved_element")[0];
+			if (replacementElement == null)
+				continue;
+				
+			var inputElement = cells[j].getElementsByTagName("input")[0];
+			if (inputElement == null)
+				continue;
+
+			inputElement.style.visibility = "visible";
+			inputElement.style.display = "";
+			//cells[j].removeChild(inputElement);
+			//cells[j].appendChild(replacementElement);
+			cells[j].removeChild(replacementElement);
+		}
+	}
+	
+	// show all 'buttons'
+	var rows = elem.getElementsByTagName("a");
+	for (var i=0; i < rows.length; i++) {
+		removeClass('hide_button', rows[i]);
+	}
+	
+	// hide the 'more details' table
+	//hideMoreDetails(billId, demographicNumbers[billId], appointmentNumbers[billId]);
+	
+	
+	elem = document.getElementById("bill"+billId);
+	removeClass('no-bills', elem);
+	removeClass('completed', elem);
 	
 	
 }
@@ -494,7 +548,7 @@ function addBillingItem(id) {
 	onkeydown+= "var lookupIsOpen = isLookupOpen("+id+");";
 	onkeydown+= "if (!lookupIsOpen) {";
 	onkeydown+= "	if (isSaveBill(event)) {";
-	onkeydown+= "		saveBill(event, "+id+"); ";
+	onkeydown+= "		saveBill("+id+"); ";
 	onkeydown+= "		moveToNextBill("+id+"); ";
 	onkeydown+= "	}";
 	onkeydown+= "	if (isMoveBetweenBills(event)) {";
@@ -527,7 +581,7 @@ function addBillingItem(id) {
 	totalOnkeydown+= "	} ";
 	totalOnkeydown+= "} ";
 	totalOnkeydown+= "if (isSaveBill(event)) {";
-	totalOnkeydown+= "	saveBill(event, "+id+"); ";
+	totalOnkeydown+= "	saveBill("+id+"); ";
 	totalOnkeydown+= "	moveToNextBill("+id+"); ";
 	totalOnkeydown+= "}";
 	totalOnkeydown+= "if (isMoveBetweenBills(event)) {";
