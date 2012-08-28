@@ -602,7 +602,8 @@ while(rslocal.next()){
 					<option value="OHIP">OHIP</option>
 				</select>
 			</td>
-			<td onclick="setAsProviderDefault()" style="color:blue;">Set as Provider Default</td>
+			<td> <a class="button" href="" tabindex="-1" onclick="setAsProviderDefault(); return false;">Set as Provider Default</a> </td>
+			<td> <input type="button" name="submit_billing" value="Submit Billing" /> </td>
 		</tr>
 	</tbody>
 </table>
@@ -730,7 +731,7 @@ while(rslocal.next()){
 							%>
 						</tbody>
 					</table>
-					<a class="button" href="" id="more_details_button<%=i%>" tabindex="-1" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=vecAppointmentNo.get(i)%>); return false;" style="color:blue;">more</a>
+					<a class="button" href="" id="more_details_button<%=i%>" tabindex="-1" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=vecAppointmentNo.get(i)%>); return false;">more</a>
 					<table width="40%">
 						<tbody>
 							<tr>
@@ -827,7 +828,7 @@ String getOnKeydownString(int i, String demoNo, String apptNo) {
 	onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
 	onkeydown+= "if (!lookupIsOpen) {";
 	onkeydown+= "	if (isSaveBill(event)) {";
-	onkeydown+= "		saveBill(event, "+i+"); ";
+	onkeydown+= "		saveBill("+i+"); ";
 	onkeydown+= "		moveToNextBill("+i+"); ";
 	onkeydown+= "	}";
 	onkeydown+= "	if (isMoveBetweenBills(event)) {";
@@ -864,7 +865,7 @@ String getTotalOnKeydownString(int i, int uniqueId, String demoNo, String apptNo
 	totalOnkeydown+= "	} ";
 	totalOnkeydown+= "} ";
 	totalOnkeydown+= "if (isSaveBill(event)) {";
-	totalOnkeydown+= "	saveBill(event, "+i+"); ";
+	totalOnkeydown+= "	saveBill("+i+"); ";
 	totalOnkeydown+= "	moveToNextBill("+i+"); ";
 	totalOnkeydown+= "}";
 	totalOnkeydown+= "if (isMoveBetweenBillingItems(event)) {";
