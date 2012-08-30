@@ -422,6 +422,13 @@ function isValidBillId(billId) {
 }
 
 
+function setBillUneditable(billId) {
+	
+}
+
+function setBillEditable(billId) {
+	
+}
 
 /**
  * 
@@ -454,11 +461,23 @@ function saveBill(billId) {
 		}
 	}
 	
-	// hide all 'buttons'
-	var rows = elem.getElementsByTagName("a");
+	// hide all input and input related elements
+	var rows = elem.getElementsByClassName("billing_button");
 	for (var i=0; i < rows.length; i++) {
-		addClass('hide_button', rows[i]);
+		addClass('hide_element', rows[i]);
 	}
+	var rows = elem.getElementsByClassName("dropdown");
+	for (var i=0; i < rows.length; i++) {
+		addClass('hide_element', rows[i]);
+	}
+	var rows = elem.getElementsByClassName("checkbox");
+	for (var i=0; i < rows.length; i++) {
+		addClass('hide_element', rows[i]);
+	}
+	var rows = elem.getElementsByClassName("input_element_label");
+	for (var i=0; i < rows.length; i++) {
+		addClass('hide_element', rows[i]);
+	}	
 	
 	// hide the 'more details' table
 	hideMoreDetails(billId, demographicNumbers[billId], appointmentNumbers[billId]);
@@ -468,9 +487,7 @@ function saveBill(billId) {
 	addClass('completed', elem);
 	
 	// setup unsave function (if user clicks on the bill, they can re-open it for editing)
-	document.getElementById("bill"+billId).onclick = function() { unsaveBill(billId); setFocusOnInputField(billId); }
-	
-	
+	document.getElementById("bill"+billId).onclick = function() { unsaveBill(billId); showBillDetails(billId); }
 }
 
 /**
@@ -505,10 +522,22 @@ function unsaveBill(billId) {
 		}
 	}
 	
-	// show all 'buttons'
-	var rows = elem.getElementsByTagName("a");
+	// hide all input and input related elements
+	var rows = elem.getElementsByClassName("billing_button");
 	for (var i=0; i < rows.length; i++) {
-		removeClass('hide_button', rows[i]);
+		removeClass('hide_element', rows[i]);
+	}
+	var rows = elem.getElementsByClassName("dropdown");
+	for (var i=0; i < rows.length; i++) {
+		removeClass('hide_element', rows[i]);
+	}
+	var rows = elem.getElementsByClassName("checkbox");
+	for (var i=0; i < rows.length; i++) {
+		removeClass('hide_element', rows[i]);
+	}
+	var rows = elem.getElementsByClassName("input_element_label");
+	for (var i=0; i < rows.length; i++) {
+		removeClass('hide_element', rows[i]);
 	}
 	
 	// hide the 'more details' table
@@ -518,8 +547,6 @@ function unsaveBill(billId) {
 	elem = document.getElementById("bill"+billId);
 	removeClass('no-bills', elem);
 	removeClass('completed', elem);
-	
-	
 }
 
 /**
@@ -625,7 +652,7 @@ function addBillingItem(id) {
 	onkeyup+= "}";
 	onkeyup+= "return true; \"";
 	
-	var htmlString = "<td> <a class=\"button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); updateBillTotal("+id+"); return false;\">X</a></td>";
+	var htmlString = "<td> <a class=\"billing_button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); updateBillTotal("+id+"); return false;\">X</a></td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"bill_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"service_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"amount"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"3\" id=\"units"+id+"_"+billingItemId+"\" value=\"1\" "+onkeydown+" "+onkeyup+" /> </td>";
@@ -675,7 +702,8 @@ function setFocusOnInputField(billId, billingItemId, inputIndex) {
 	if (billingItemId < 0) {
 		var firstBillingItem = document.getElementById("billing_items"+billId).getElementsByTagName("tr")[0];
 		var inputField = firstBillingItem.getElementsByTagName("input")[inputIndex];
-		inputField.focus();
+		if (inputField != undefined)
+			inputField.focus();
 		return;
 	}
 	

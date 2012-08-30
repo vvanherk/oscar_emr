@@ -27,6 +27,8 @@
 <%@page import="org.oscarehr.billing.CA.ON.model.BillingItem" %>
 <%@page import="org.oscarehr.common.model.BillingService" %>
 
+<%@page import="org.oscarehr.util.MiscUtils"%>
+
 
 <% OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao"); %>
 <% BillingClaimDAO billingClaimDAO = (BillingClaimDAO)SpringUtils.getBean("billingClaimDAO"); %>
@@ -59,7 +61,7 @@ String providerview = request.getParameter("providerview")==null?"all":request.g
 
 <%@ page
 	import="java.util.*, java.sql.*, oscar.login.*, oscar.*, java.net.*"
-	errorPage="errorpage.jsp"%>
+	errorPage="../errorpage.jsp"%>
 <%@ include file="../../../../admin/dbconnection.jsp"%>
 <jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
 	scope="session" />
@@ -89,7 +91,75 @@ Properties prop = null;
 ResultSet rs = null;
 String sql = null;
 
+boolean editable = true;
+
+// handle saving of submitted bills
+if (request.getParameter("submit_billing") != null) {
+	String tempNumberOfBills = request.getParameter("number_of_bills");
+	int numBills = 0;
+	try {
+		numBills = Integer.parseInt(tempNumberOfBills);
+	} catch (Exception e) {
+	}
+	
+	for (int i=0; i < numBills; i++) {
+		String[] billIds = request.getParameterValues("bill_id"+i);
+		String[] billDates = request.getParameterValues("bill_date"+i);
+		String[] billCodes = request.getParameterValues("bill_code"+i);
+		String[] amounts = request.getParameterValues("amount"+i);
+		String[] units = request.getParameterValues("units"+i);
+		String[] dxCodes = request.getParameterValues("dx_code"+i);
+		String[] dxDescs = request.getParameterValues("dx_desc"+i);
+		String[] totals = request.getParameterValues("total"+i);
+		String[] sliCodes = request.getParameterValues("sli_code"+i);
+		
+		if (billIds != null) {
+			for (int j=0; j < billIds.length; j++) {
+				if (billIds[j].equals("")) {
+					// create new bill
+					
+				} else {
+					// update bill
+					BillingClaimHeader1 bill = getInvoice(billIds[j]);
+					bill.getBillingItems().clear();
+					
+					BillingService billingservice = null;
+			        BillingItem item = null;
+			        for( String code : codes) {
+			            item = new BillingItem();
+			            item.setTransc_id(BillingDataHlp.ITEM_TRANSACTIONIDENTIFIER);
+			            item.setRec_id(BillingDataHlp.ITEM_REORDIDENTIFICATION);
+			            item.setService_code(billCodes[j]);
+			
+			            //billingservice = billServiceDAO.searchBillingCode(code, "ON", serviceDate);
+			            item.setFee(amounts[j]);
+			            item.setSer_num(units[j]);
+			            item.setService_date(billDates[j]);
+			            item.setStatus("S");
+			            //item.setBillingClaimHeader1(h1);
+						
+						item.setDx(billCodes[j]);
+						item.setDx1("");
+		                item.setDx2("");
+			
+			            bill.getBillingItems().add(item);
+			        }
+					
+					billingClaimDAO.updateBill(bill);
+				}
+			}
+		}
+	}
+	
+	//for (int i=0; i < results.length; i++) {
+	//	MiscUtils.getLogger().info(results[i]);
+	//}
+}
+
+
 String action = request.getParameter("reportAction") == null ? "" : request.getParameter("reportAction");
+
+// handle loading of unbilled items
 if("unbilled".equals(action)) {
     vecHeader.add("Service Date");
     vecHeader.add("Time");
@@ -167,33 +237,52 @@ if("unbilled".equals(action)) {
 
 }
 
+// handle loading of billed items
 if("billed".equals(action)) {
-    vecHeader.add("SERVICE DATE");
-    vecHeader.add("TIME");
-    vecHeader.add("PATIENT");
-    vecHeader.add("DESCRIPTION");
+	editable = false;
+	
+    vecHeader.add("Service Date");
+    vecHeader.add("Time");
+    vecHeader.add("Patient Name");
+    vecHeader.add("Service Description");
     vecHeader.add("ACCOUNT");
+	
+	SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
+    
+    Date startTime = (Date)formatter.parse(xml_vdate);
+    Date endTime = (Date)formatter.parse(xml_appointment_date);
+	
+	//MiscUtils.getLogger().error("provider_no:" + providerview + " start:" + startTime + " end:" + endTime);
+	
+	List<BillingClaimHeader1> bills = billingClaimDAO.getInvoices(providerview, startTime, endTime);
+    
     //sql = "select * from billing_on_cheader1 where provider_no='" + providerview + "' and billing_date >='" + xml_vdate 
     //        + "' and billing_date<='" + xml_appointment_date + "' and (status<>'D' and status<>'S' and status<>'B')" 
     //        + " order by billing_date , billing_time ";
     //rs = dbObj.searchDBRecord(sql);
-    while (rs.next()) {
+    
+    for (BillingClaimHeader1 bill : bills) {
+		String status = bill.getStatus();
+		if (status.equals("D") || status.equals("S") || status.equals("B"))
+			continue;
+		
     	if (bMultisites) {
+			String clinic = bill.getClinic();
     		// skip record if clinic is not match the selected site, blank clinic always gets displayed for backward compatible
-    		String clinic = rs.getString("clinic");
     		if (StringUtils.isNotBlank(clinic) && !clinic.equals(request.getParameter("site"))) 
     			continue; 
     	}
-    	
-        prop = new Properties();
-        prop.setProperty("SERVICE DATE", rs.getString("billing_date"));
-        prop.setProperty("TIME", rs.getString("billing_time").substring(0,5));
-        prop.setProperty("PATIENT", rs.getString("demographic_name"));
-        
-        String apptDoctorNo = rs.getString("apptProvider_no");
-        String userno=rs.getString("provider_no");
-        String reason = rs.getString("status");
+
+		prop = new Properties();
+    	prop.setProperty( "Service Date", bill.getBilling_date().toString() );
+        prop.setProperty( "Time", bill.getBilling_time().toString() );
+        prop.setProperty( "Patient Name", bill.getDemographic_name() );
+
+        String apptDoctorNo = bill.getApptProvider_no();
+        String userno= bill.getProvider_no();
+        String reason = bill.getStatus();
         String note = "";
+
         if (apptDoctorNo.compareTo("none") == 0){
         	note = "No Appt / INR";
         } else {
@@ -203,23 +292,30 @@ if("billed".equals(action)) {
     	    	note = "Unmatched Appt. Doctor";
     	    }
         }
+
     	if (reason.compareTo("N") == 0) reason="Do Not Bill ";
     	else if (reason.compareTo("O") == 0) reason="Bill OHIP ";
     	else if (reason.compareTo("W") == 0) reason="Bill WSIB ";
     	else if (reason.compareTo("H") == 0) reason="Capitated Bill ";
     	else if (reason.compareTo("P") == 0) reason="Bill Patient";
 
-    	prop.setProperty("DESCRIPTION", reason + "(" + note + ")");
+    	prop.setProperty("Service Description", reason + "(" + note + ")");
         String tempStr = "<a href=# onClick='popupPage(700,720, \"../../../billing/CA/ON/billingCorrection.jsp?billing_no="
-                + rs.getString("id") + "&dboperation=search_bill&hotclick=0\"); return false;' title="
-                + reason + ">" + rs.getString("id") + "</a>";
+                + bill.getId() + "&dboperation=search_bill&hotclick=0\"); return false;' title="
+                + reason + ">" + bill.getId() + "</a>";
+
   	    prop.setProperty("ACCOUNT", tempStr);
         vecValue.add(prop);
+        
+        List<BillingClaimHeader1> appointmentBill = billingClaimDAO.getInvoices(new Integer(bill.getDemographic_no()).toString(), bill.getAppointment_no());
+        vecBills.add(appointmentBill);
+        
+        vecDemographicNo.add( "" + bill.getDemographic_no() );
+        vecAppointmentNo.add( "" + bill.getAppointment_no() );
     }
-    
-    
 }
 
+// no longer used (not sure why)
 if("paid".equals(action)) {
     vecHeader.add("No");
     vecHeader.add("Billing No");
@@ -321,6 +417,7 @@ if("paid".equals(action)) {
     vecTotal.add("");  
 }
 
+// no longer used (not sure why)
 if("unpaid".equals(action)) {
     vecHeader.add("No");
     vecHeader.add("Billing No");
@@ -488,8 +585,9 @@ function calToday(field) {
 			type="radio" name="reportAction" value="unbilled"
 			<%="unbilled".equals(action)? "checked" : "" %>>Unbilled <input
 			type="radio" name="reportAction" value="billed"
-			<%="billed".equals(action)? "checked" : "" %>>Billed <!--  input type="radio" name="reportAction" value="paid" <%="paid".equals(action)? "checked" : "" %>>Paid 
-	<input type="radio" name="reportAction" value="unpaid" <%="unpaid".equals(action)? "checked" : "" %>>Unpaid -->
+			<%="billed".equals(action)? "checked" : "" %>>Billed 
+			<!--  input type="radio" name="reportAction" value="paid" <%="paid".equals(action)? "checked" : "" %>>Paid 
+			<input type="radio" name="reportAction" value="unpaid" <%="unpaid".equals(action)? "checked" : "" %>>Unpaid -->
 		</font></td>
 		<td width="20%" align="right" nowrap><b>Provider </b></font> 
 <% if (bMultisites) 
@@ -538,7 +636,7 @@ function changeSite(sel) {
 } else {
 %>
 		<select
-			name="providerview">
+			class="dropdown" name="providerview">
 			<% 
 String proFirst="";
 String proLast="";
@@ -574,36 +672,50 @@ while(rslocal.next()){
 			onDblClick="calToday(this)" size="10"
 			value="<%=xml_appointment_date%>"> <img
 			src="../../../images/cal.gif" id="xml_appointment_date_cal"></td>
-		<td align="right"><input type="submit" name="Submit"
+		<td align="right"><input type="submit" class="billing_button" name="Submit"
 			value="Create Report"> </font></td>
 	</tr>
 	<tr>
 		</form>
 </table>
 
+<%
+if (editable) {
+%>
+<form name="submitbillingform" method="post" action="billingONReport.jsp">
+<%
+}
+%>
+
 <table class="search_details">
 	<thead></thead>
 	<tbody>
 		<tr>
 			<td>Visit Type &nbsp;
-				<select name="visit_type">
+				<select class="dropdown" name="visit_type">
 					<option value="Clinic">Clinic</option>
 				</select>
 			</td>
 			
 			<td>Location &nbsp;
-				<select name="location">
+				<select class="dropdown" name="location">
 					<option value="Kitchener">Kitchener</option>
 				</select>
 			</td>
 			
 			<td>Bill Type &nbsp;
-				<select name="bill_type">
+				<select class="dropdown" name="bill_type">
 					<option value="OHIP">OHIP</option>
 				</select>
 			</td>
-			<td> <a class="button" href="" tabindex="-1" onclick="setAsProviderDefault(); return false;">Set as Provider Default</a> </td>
-			<td> <input type="button" name="submit_billing" value="Submit Billing" /> </td>
+			<td> <a class="billing_button" href="" tabindex="-1" onclick="setAsProviderDefault(); return false;">Set as Provider Default</a> </td>
+			<%
+			if (editable) {
+			%>
+				<td> <input type="submit" method="POST" class="billing_button" name="submit_billing" value="Submit Billing" /> </td>
+			<%
+			}
+			%>
 		</tr>
 	</tbody>
 </table>
@@ -623,24 +735,41 @@ while(rslocal.next()){
 			boolean hasBills = true;
 			double billTotal = 0.0;
 			String style = "";
+			String billId = "";
 			if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
 				hasBills = false;
 				style = "class=\"no-bills\"";
+			} else {
+				billId = vecBills.get(i).getId();
 			}
-			String appointmentNo = "-1";	
+			String appointmentNo = "-1";
+			prop = (Properties)vecValue.get(i);	
 			%>
 			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>); setFocusOnInputField(<%=i%>);">
 				<% for (int j=0; j < vecHeader.size(); j++) {
-					prop = (Properties)vecValue.get(i);
 					%>
 					<td <%=style%>><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
 				<% } %>
 			</tr>
 			<tr id="bill_details<%=i%>" class="bill hide_bill">
 				<td colspan="5">
-					<a class="button" href="" tabindex="-1" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
-					<input type="checkbox" name="manual_checkbox<%=i%>" /> Manual
-					<input type="checkbox" name="referral_doc_checkbox<%=i%>" /> Referral Doctor
+					<%
+					if (editable) {
+					%>
+						<a class="billing_button" href="" tabindex="-1" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
+						<select class="dropdown" onchange="">
+							<option>1</option>
+							<option>2</option>
+							<option>3</option>
+						</select>
+						<a class="billing_button" href="" tabindex="-1" onclick="">Add Super Code</a>
+						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" /> <span class="input_element_label">Manual</span>
+						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" /> <span class="input_element_label">Referral Doctor</span>
+						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" />
+						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" />
+					<%
+					}
+					%>
 									
 					<table>
 						<thead>
@@ -656,27 +785,22 @@ while(rslocal.next()){
 							</tr>
 						<thead>
 						<tbody id="billing_items<%=i%>">
-							<%	
-							String onkeydown = getOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i));
-							
-							String totalOnKeyup = getTotalOnKeyupString(i);
-							
-							if (!hasBills) {
-								String totalOnkeydown = getTotalOnKeydownString(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i));
-								
-								String onkeyup = getOnKeyupString(i, uniqueId);
-								
+							<%								
+							if (!hasBills) {								
 								%>
-								<tr id="billing_item<%=i%>_<%=uniqueId%>">
-									<td> <a class="button" href="" tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); updateBillTotal(<%=i%>); return false;" >X</a></td>
-									<td> <input type="text" size="6" id="bill_code<%=i%>_<%=uniqueId%>" <%=onkeydown%> <%=onkeyup%> /> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-									<td> <input type="text" size="6" id="amount<%=i%>_<%=uniqueId%>" <%=onkeydown%> /> </td>
-									<td> <input type="text" size="3" id="units<%=i%>_<%=uniqueId%>" value="1" <%=onkeydown%> /> </td>
-									<td> <input type="text" size="6" id="dx_code<%=i%>_<%=uniqueId%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-									<td> <input type="text" size="12" id="dx_desc<%=i%>_<%=uniqueId%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_desc_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-									<td> <input type="text" size="6" id="total<%=i%>_<%=uniqueId%>" <%=totalOnkeydown%> <%=totalOnKeyup%> /> </td>
-									<td> <input type="text" size="6" id="sli_code<%=i%>_<%=uniqueId%>" /> </td>
-								</tr>
+								
+								<%
+								if (editable) {
+								%>
+									<%=getEditableBillingItemText(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i), null)%>
+								<%
+								} else {
+								%>
+									<%=getUneditableBillingItemText(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i), null)%>
+								<%
+								}
+								%>
+								
 								<%
 								uniqueId++;
 							} else {
@@ -708,20 +832,27 @@ while(rslocal.next()){
 										billTotal += tempTotal;
 										String total = String.format("%1$,.2f", tempTotal);
 										
-										String totalOnkeydown = getTotalOnKeydownString(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i));
-										
-										String onkeyup = getOnKeyupString(i, uniqueId);
+										List<String> values = new ArrayList<String>();
+										values.add(item.getService_code());
+										values.add(fee);
+										values.add(units);
+										values.add(item.getDx());
+										values.add(serviceDesc);
+										values.add(total);
 										%>
-										<tr id="billing_item<%=i%>_<%=uniqueId%>">
-											<td> <a class="button" href=""  tabindex="-1" onclick="deleteBillingItem(<%=i%>, <%=uniqueId%>); updateBillTotal(<%=i%>); return false;">X</a></td>
-											<td> <input type="text" size="6" id="bill_code<%=i%>_<%=uniqueId%>" value="<%=item.getService_code()%>" <%=onkeydown%> <%=onkeyup%> /> <div id="service_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-											<td> <input type="text" size="6" id="amount<%=i%>_<%=uniqueId%>" value="<%=fee%>" <%=onkeydown%> <%=onkeyup%> /> </td>
-											<td> <input type="text" size="3" id="units<%=i%>_<%=uniqueId%>" value="<%=units%>" <%=onkeydown%> <%=onkeyup%> /> </td>
-											<td> <input type="text" size="6" id="dx_code<%=i%>_<%=uniqueId%>" value="<%=item.getDx()%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_code_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-											<td> <input type="text" size="12" id="dx_desc<%=i%>_<%=uniqueId%>" value="<%=serviceDesc%>" <%=onkeydown%> <%=onkeyup%> /> <div id="diagnostic_desc_lookup<%=i%>_<%=uniqueId%>" class="lookup_box" style="display:none;"></div> </td>
-											<td> <input type="text" size="6" id="total<%=i%>_<%=uniqueId%>" value="<%=total%>" <%=totalOnkeydown%> <%=totalOnKeyup%> /> </td>
-											<td> <input type="text" size="6" id="sli_code<%=i%>_<%=uniqueId%>" value="" disabled="disabled" /> </td>
-										</tr>
+										
+										<%
+										if (editable) {
+											%>
+											<%=getEditableBillingItemText(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i), values)%>
+										<%
+										} else {
+										%>
+											<%=getUneditableBillingItemText(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i), values)%>
+										<%
+										}
+										%>
+										
 										<%
 										uniqueId++;
 									}
@@ -731,7 +862,7 @@ while(rslocal.next()){
 							%>
 						</tbody>
 					</table>
-					<a class="button" href="" id="more_details_button<%=i%>" tabindex="-1" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=vecAppointmentNo.get(i)%>); return false;">more</a>
+					<a class="billing_button" href="" id="more_details_button<%=i%>" tabindex="-1" onclick="showMoreDetails(<%=i%>, <%=vecDemographicNo.get(i)%>, <%=vecAppointmentNo.get(i)%>); return false;">more</a>
 					<table width="40%">
 						<tbody>
 							<tr>
@@ -791,6 +922,15 @@ while(rslocal.next()){
 			height="20" align="absmiddle"></a></td>
 	</tr>
 </table>
+
+<%
+if (editable) {
+%>
+<input type="text" name="number_of_bills" value="<%=vecValue.size()%>" />
+</form>
+<%
+}
+%>
 
 </body>
 <script type="text/javascript">
@@ -918,5 +1058,66 @@ String getOnKeyupString(int i, int uniqueId) {
 	onkeyup+= "return true; \"";
 	
 	return onkeyup;
+}
+
+String getEditableBillingItemText(int i, int uniqueId, String demoNo, String apptNo, List<String> values) {
+	String onkeydown = getOnKeydownString(i, demoNo, apptNo);
+	String totalOnKeyup = getTotalOnKeyupString(i);
+	String totalOnkeydown = getTotalOnKeydownString(i, uniqueId, demoNo, apptNo);
+	String onkeyup = getOnKeyupString(i, uniqueId);
+	
+	if (values == null) 
+		values = new ArrayList<String>();
+	
+	while (values.size() < 7) {
+		// 'units' should default to '1'
+		if (values.size() == 2)
+			values.add("1");
+		// everything else defaults to an empty string
+		else 
+			values.add("");
+	}
+	
+	String html = "";
+	html += "<tr id='billing_item"+i+"_"+uniqueId+"'>";
+	html += "	<td> <a class='billing_button' href='' tabindex='-1' onclick='deleteBillingItem("+i+", "+uniqueId+"); updateBillTotal("+i+"); return false;' >X</a></td>";
+	html += "	<td> <input type='text' size='6'  name='bill_code"+i+"' id='bill_code"+i+"_"+uniqueId+"' value='"+values.get(0)+"' "+onkeydown+" "+onkeyup+" /> <div id='service_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
+	html += "	<td> <input type='text' size='6' name='amount"+i+"' id='amount"+i+"_"+uniqueId+"' value='"+values.get(1)+"' "+onkeydown+" "+onkeyup+" /> </td>";
+	html += "	<td> <input type='text' size='3' name='units"+i+"' id='units"+i+"_"+uniqueId+"' value='"+values.get(2)+"' "+onkeydown+" "+onkeyup+" /> </td>";
+	html += "	<td> <input type='text' size='6' name='dx_code"+i+"' id='dx_code"+i+"_"+uniqueId+"' value='"+values.get(3)+"' "+onkeydown+" "+onkeyup+" /> <div id='diagnostic_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
+	html += "	<td> <input type='text' size='12' name='dx_desc"+i+"' id='dx_desc"+i+"_"+uniqueId+"' value='"+values.get(4)+"' "+onkeydown+" "+onkeyup+" /> <div id='diagnostic_desc_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
+	html += "	<td> <input type='text' size='6' name='total"+i+"' id='total"+i+"_"+uniqueId+"' value='"+values.get(5)+"' "+totalOnkeydown+" "+totalOnKeyup+" /> </td>";
+	html += "	<td> <input type='text' size='6' name='sli_code"+i+"' id='sli_code"+i+"_"+uniqueId+"' value='"+values.get(6)+"' /> </td>";
+	html += "</tr>";
+	
+	return html;
+}
+
+String getUneditableBillingItemText(int i, int uniqueId, String demoNo, String apptNo, List<String> values) {	
+	if (values == null) 
+		values = new ArrayList<String>();
+	
+	while (values.size() < 7) {
+		// 'units' should default to '1'
+		if (values.size() == 2)
+			values.add("1");
+		// everything else defaults to an empty string
+		else 
+			values.add("");
+	}
+	
+	String html = "";
+	html += "<tr>";
+	html += "	<td> </td>";
+	html += "	<td> <span>"+values.get(0)+"</span> </td>";
+	html += "	<td> <span>"+values.get(1)+"</span> </td>";
+	html += "	<td> <span>"+values.get(2)+"</span> </td>";
+	html += "	<td> <span>"+values.get(3)+"</span> </td>";
+	html += "	<td> <span>"+values.get(4)+"</span> </td>";
+	html += "	<td> <span>"+values.get(5)+"</span> </td>";
+	html += "	<td> <span>"+values.get(6)+"</span> </td>";
+	html += "</tr>";
+	
+	return html;
 }
 %>

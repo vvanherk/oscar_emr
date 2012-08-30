@@ -151,6 +151,10 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         
         return total;
     }
+    
+    public void updateBill(BillingClaimHeader1 h1) {
+		this.persist(header1);
+	}
 
     private BillingClaimHeader1 assembleHeader1(Provider prov, String demographic, String clinic_ref_code, Date serviceDate, String total, String cursuser, OscarProperties properties) {
         Demographic demo;
@@ -384,9 +388,25 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         Query q = entityManager.createQuery(sql);
         
         q.setParameter("demo", new Integer(demographic_no));
+        q.setParameter("apt", appointment_no);
         
         return q.getResultList();
     }
+
+	@SuppressWarnings("unchecked")
+    public List<BillingClaimHeader1> getInvoices(String provider_no, Date startTime, Date endTime) {
+    	String sql = "select h1 from BillingClaimHeader1 h1 where " +
+                " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status != 'D' order by h1.billing_date, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("prov", provider_no);
+        q.setParameter("startTime", startTime);
+        q.setParameter("endTime", endTime);
+        
+        return q.getResultList();
+    }
+
+	
 
     /**
      * @return the gstCtontrolDao

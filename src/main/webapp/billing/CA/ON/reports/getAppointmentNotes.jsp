@@ -11,17 +11,14 @@
 <%@page import="org.oscarehr.util.SpringUtils" %>
 
 <%!
-boolean isValidId(String input) {
+Integer parseId(String input) {
+	Integer result = null;
 	try  {
-		Integer.parseInt( input );  
+		result = Integer.parseInt( input );  
 	} catch(Exception e) {
-		return false;
 	}
-	
-	if (input.equals(""))
-		return false;
       
-	return true;
+	return result;
 }
 %>
 
@@ -29,17 +26,15 @@ boolean isValidId(String input) {
 
 CaseManagementNoteDAO caseManagementNoteDAO = (CaseManagementNoteDAO)SpringUtils.getBean("caseManagementNoteDAO");
 
-String appointmentNo = request.getParameter("appointmentNo");
+Integer appointmentNo = parseId( request.getParameter("appointmentNo") );
 
-//appointmentNo = "1437734";
-
-if (!isValidId(appointmentNo)) {
+if (appointmentNo == null || appointmentNo.intValue() == 0) {
 	response.setContentType("application/json");
 	response.getWriter().write( (new JSONArray()).toString() );
 	return;
 }
 
-List<CaseManagementNote> notes = caseManagementNoteDAO.getMostRecentNotesByAppointmentNo( Integer.parseInt(appointmentNo) );
+List<CaseManagementNote> notes = caseManagementNoteDAO.getMostRecentNotesByAppointmentNo( appointmentNo );
 
 JSONArray jsonArray = new JSONArray();
 

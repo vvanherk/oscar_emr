@@ -33,8 +33,11 @@
 	border-collapse: collapse;
 }
 
+.input_element_label {
 
-a.button {
+}
+
+.billing_button {
 	-moz-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
 	-webkit-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
 	box-shadow:inset 0px 1px 0px 0px #bbdaf7;
@@ -48,16 +51,46 @@ a.button {
 	font-family:arial;
 	font-size:12px;
 	font-weight:normal;
-	padding:4px 13px;
+	padding:4px 10px;
+	text-decoration:none;
+	text-shadow:1px 1px 0px #528ecc;
+	cursor:pointer;
+}
+.billing_button:hover {
+	background-color:#aabcfe;
+}
+.billing_button:active {
+	position:relative;
+	top:1px;
+}
+
+.dropdown {
+	-moz-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	background-color:#b9c9fe;
+	-moz-border-radius:6px;
+	-webkit-border-radius:6px;
+	border-radius:6px;
+	border:1px solid #84bbf3;
+	display:inline-block;
+	color:#ffffff;
+	font-family:arial;
+	font-size:12px;
+	font-weight:normal;
+	padding:4px 4px;
 	text-decoration:none;
 	text-shadow:1px 1px 0px #528ecc;
 }
-a.button:hover {
+.dropdown:hover {
 	background-color:#aabcfe;
 }
-a.button:active {
-	position:relative;
-	top:1px;
+
+.checkbox {
+}
+
+.hide_element {
+	display: none;
 }
 
 .bill-list
@@ -144,7 +177,7 @@ a.button:active {
 	font-weight: normal;
 }
 
-.bill-list .bill a.button.hide_button
+.bill-list .bill .billing_button.hide_button
 {
 	display: none;
 }
