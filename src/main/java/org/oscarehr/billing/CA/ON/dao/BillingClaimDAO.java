@@ -149,8 +149,8 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         return total;
     }
     
-    public void updateBill(BillingClaimHeader1 h1) {
-		this.persist(header1);
+    public void updateBill(BillingClaimHeader1 h1) {		
+		this.merge(h1);
 	}
 
     private BillingClaimHeader1 assembleHeader1(Provider prov, String demographic, String clinic_ref_code, Date serviceDate, String total, String cursuser, OscarProperties properties) {
@@ -333,7 +333,7 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
     
     @SuppressWarnings("unchecked")
     public BillingClaimHeader1 getInvoice(String id) {
-    	String sql = "select h1 from BillingClaimHeader1 h1 where h1.id = :id";
+    	String sql = "select h1 from BillingClaimHeader1 h1 where h1.id = :id and h1.status != 'D'";
         Query q = entityManager.createQuery(sql);
         
         q.setParameter("id", new Integer(id));

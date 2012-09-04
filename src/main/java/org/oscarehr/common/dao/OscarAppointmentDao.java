@@ -139,6 +139,21 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 
 		return rs;
 	}
+	
+	public Appointment getAppointment(Integer appointmentNo) {
+
+		String sql = "SELECT a FROM Appointment a WHERE a.id = ?";
+		Query query = entityManager.createQuery(sql);
+		query.setParameter(1, appointmentNo);
+
+		@SuppressWarnings("unchecked")
+		List<Appointment> rs = query.getResultList();
+		
+		if (rs == null || rs.size() == 0)
+			return null;
+
+		return rs.get(0);
+	}
 
 	public List<Appointment> find(Date date, String providerNo,Date startTime, Date endTime, String name,
 			String notes, String reason, Date createDateTime, String creator, Integer demographicNo) {
@@ -190,4 +205,8 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 
 		return rs;
 	}
+	
+	public void updateAppointment( Appointment a ) {
+        this.merge(a);
+    }
 }

@@ -89,11 +89,58 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     private Date timestamp1;
     private String clinic;
 
-    private List<BillingItem>billingItems = new ArrayList<BillingItem>();
+    private List<BillingItem> billingItems = new ArrayList<BillingItem>();
 
     /** Creates a new instance of BillingClaimHeader1 */
     public BillingClaimHeader1() {
 
+    }
+    
+    public BillingClaimHeader1(BillingClaimHeader1 bill) {
+		this.header_id = bill.getHeader_id();
+		this.transc_id = bill.getTransc_id();
+		this.rec_id = bill.getRec_id();
+		this.hin = bill.getHin();
+		this.ver = bill.getVer();
+		this.dob = bill.getDob();
+		this.pay_program = bill.getPay_program();
+		this.payee = bill.getPayee();
+		this.ref_num = bill.getRef_num();
+		this.facilty_num = bill.getFacilty_num();
+		this.admission_date = bill.getAdmission_date();
+		this.ref_lab_num = bill.getRef_lab_num();
+		this.man_review = bill.getMan_review();
+		
+		this.location = bill.getLocation();
+		this.demographic_no = bill.getDemographic_no();
+		this.provider_no = bill.getProvider_no();
+		this.appointment_no = bill.getAppointment_no();
+		
+		this.demographic_name = bill.getDemographic_name();
+		this.sex = bill.getSex();
+		this.province = bill.getProvince();
+		this.billing_date = bill.getBilling_date();
+		this.billing_time = bill.getBilling_time();
+		this.total = bill.getTotal();
+		this.paid = bill.getPaid();
+		
+		this.status = bill.getStatus();
+		this.comment1 = bill.getComment1();
+		this.visittype = bill.getVisittype();
+		this.provider_ohip_no = bill.getProvider_ohip_no();
+		this.provider_rma_no = bill.getProvider_rma_no();
+		this.apptProvider_no = bill.getApptProvider_no();
+		this.asstProvider_no = bill.getAsstProvider_no();
+		
+		this.creator = bill.getCreator();
+		this.timestamp1 = bill.getTimestamp1();
+		this.clinic = bill.getClinic();
+		
+		List<BillingItem> items = bill.getBillingItems();
+		for (BillingItem item : items) {
+			BillingItem newItem = new BillingItem(item);
+			billingItems.add(newItem);
+		}
     }
 
     @Override

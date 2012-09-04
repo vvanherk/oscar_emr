@@ -60,6 +60,25 @@ public class BillingItem  extends AbstractModel<Integer> implements Serializable
     private String status;
     private Date timestamp;
 
+	public BillingItem() {
+		
+	}
+
+	public BillingItem(BillingItem item) {
+		this.ch1_id = item.getCh1_id();
+		this.transc_id = item.getTransc_id();
+		this.rec_id = item.getRec_id();
+		this.service_code = item.getService_code();
+		this.fee = item.getFee();
+		this.ser_num = item.getSer_num();
+		this.service_date = item.getService_date();
+		this.dx = item.getDx();
+		this.dx1 = item.getDx1();
+		this.dx2 = item.getDx2();
+		this.status = item.getStatus();
+		this.timestamp = item.getTimestamp();
+	}
+
     @Override
     @Id()
     @GeneratedValue(strategy = GenerationType.AUTO)
