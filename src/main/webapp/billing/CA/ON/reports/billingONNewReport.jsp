@@ -27,6 +27,8 @@
 <%@page import="org.oscarehr.billing.CA.ON.model.BillingItem" %>
 <%@page import="org.oscarehr.common.model.BillingService" %>
 
+<%@page import="oscar.oscarBilling.ca.on.data.BillingDataHlp" %>
+
 <%@page import="org.oscarehr.util.MiscUtils"%>
 
 
@@ -85,6 +87,7 @@ ArrayList<Properties> vecValue = new ArrayList<Properties>();
 List< List<BillingClaimHeader1> > vecBills = new ArrayList< List<BillingClaimHeader1> >();
 ArrayList<String> vecDemographicNo = new ArrayList<String>();
 ArrayList<String> vecAppointmentNo = new ArrayList<String>();
+ArrayList<String> vecProviderNo = new ArrayList<String>();
 ArrayList<String> vecTotal = new ArrayList<String>();
 
 Properties prop = null;
@@ -101,10 +104,21 @@ if (request.getParameter("submit_billing") != null) {
 		numBills = Integer.parseInt(tempNumberOfBills);
 	} catch (Exception e) {
 	}
-	
+	//MiscUtils.getLogger().info("numbills: " + numBills);
 	for (int i=0; i < numBills; i++) {
-		String[] billIds = request.getParameterValues("bill_id"+i);
-		String[] billDates = request.getParameterValues("bill_date"+i);
+		String billId = request.getParameter("bill_id"+i);
+		String apptNo = request.getParameter("appt_no"+i);
+		Integer demoNo = null;
+		try {
+			demoNo = Integer.parseInt(request.getParameter("demo_no"+i));
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Invalid demographic number:", e);
+		}
+		String provNo = request.getParameter("prov_no"+i);
+		boolean billSaved = (request.getParameter("bill_saved"+i) != null);
+		String billDate = request.getParameter("bill_date"+i);
+		String billTime = request.getParameter("bill_time"+i);
+		String demoName = request.getParameter("demo_name"+i);
 		String[] billCodes = request.getParameterValues("bill_code"+i);
 		String[] amounts = request.getParameterValues("amount"+i);
 		String[] units = request.getParameterValues("units"+i);
@@ -113,47 +127,90 @@ if (request.getParameter("submit_billing") != null) {
 		String[] totals = request.getParameterValues("total"+i);
 		String[] sliCodes = request.getParameterValues("sli_code"+i);
 		
-		if (billIds != null) {
-			for (int j=0; j < billIds.length; j++) {
-				if (billIds[j].equals("")) {
-					// create new bill
-					
-				} else {
-					// update bill
-					BillingClaimHeader1 bill = getInvoice(billIds[j]);
-					bill.getBillingItems().clear();
-					
-					BillingService billingservice = null;
-			        BillingItem item = null;
-			        for( String code : codes) {
-			            item = new BillingItem();
-			            item.setTransc_id(BillingDataHlp.ITEM_TRANSACTIONIDENTIFIER);
-			            item.setRec_id(BillingDataHlp.ITEM_REORDIDENTIFICATION);
-			            item.setService_code(billCodes[j]);
+		if (billId != null && billSaved) {
+			BillingClaimHeader1 bill = null;
 			
-			            //billingservice = billServiceDAO.searchBillingCode(code, "ON", serviceDate);
-			            item.setFee(amounts[j]);
-			            item.setSer_num(units[j]);
-			            item.setService_date(billDates[j]);
-			            item.setStatus("S");
-			            //item.setBillingClaimHeader1(h1);
-						
-						item.setDx(billCodes[j]);
-						item.setDx1("");
-		                item.setDx2("");
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+			Date billDateAsDate = (Date)formatter.parse(billDate);
+			formatter = new SimpleDateFormat("HH:mm:ss");
+			Date billTimeAsDate = (Date)formatter.parse(billTime);
 			
-			            bill.getBillingItems().add(item);
-			        }
+			if (billId.equals("")) {
+				// create new bill
+				bill = new BillingClaimHeader1();
+				bill.setHeader_id(0);
+				bill.setDemographic_no(demoNo);
+				bill.setProvider_no(provNo);
+				bill.setAppointment_no(apptNo);
+				bill.setBilling_date(billDateAsDate);
+				bill.setBilling_time(billTimeAsDate);
+				bill.setDemographic_name(demoName);
+				bill.setStatus("W");
+				bill.setApptProvider_no("none");
+			} else {
+				// set old bills' status as 'D' for deleted
+				bill = billingClaimDAO.getInvoice(billId);
+				bill.setStatus("D");
+				billingClaimDAO.updateBill(bill);
+				
+				String apptProvNo = bill.getApptProvider_no();
+				
+				// create new bill to replace old bill
+				bill = new BillingClaimHeader1();
+				bill.setHeader_id(0);
+				bill.setDemographic_no(demoNo);
+				bill.setProvider_no(provNo);
+				bill.setAppointment_no(apptNo);
+				bill.setBilling_date(billDateAsDate);
+				bill.setBilling_time(billTimeAsDate);
+				bill.setDemographic_name(demoName);
+				bill.setStatus("W");
+				
+				bill.setApptProvider_no(apptProvNo);
+				
+				bill.getBillingItems().clear();
+			}
+			
+			// set values for billing items
+			
+			for (int j=0; j < billCodes.length; j++) {
+		        BillingItem item = null;
+		        for( String code : billCodes) {
+		            item = new BillingItem();
+		            item.setCh1_id(bill.getId());
+		            item.setTransc_id(BillingDataHlp.ITEM_TRANSACTIONIDENTIFIER);
+		            item.setRec_id(BillingDataHlp.ITEM_REORDIDENTIFICATION);
+		            item.setService_code(billCodes[j]);
+		
+		            item.setFee(amounts[j]);
+		            item.setSer_num(units[j]);
+		            item.setStatus("S");
 					
-					billingClaimDAO.updateBill(bill);
+		            item.setService_date(billDateAsDate);
+					
+					item.setDx(billCodes[j]);
+					item.setDx1("");
+	                item.setDx2("");
+		
+		            bill.getBillingItems().add(item);
+		        }
+				
+				try {
+					billingClaimDAO.createBill(bill);
+				} catch (Exception e) {
+					MiscUtils.getLogger().error("create bill error:", e);
 				}
+			}
+			
+			// update appointment status to be 'B' for billed
+			Appointment appointment = appointmentDao.getAppointment(new Integer(apptNo));
+			
+			if (appointment != null) {
+				appointment.setStatus("B");
+				appointmentDao.updateAppointment(appointment);
 			}
 		}
 	}
-	
-	//for (int i=0; i < results.length; i++) {
-	//	MiscUtils.getLogger().info(results[i]);
-	//}
 }
 
 
@@ -199,7 +256,7 @@ if("unbilled".equals(action)) {
     
     for (Appointment apt : appointments) {
 		String status = apt.getStatus();
-		if (apt.getDemographicNo() == 0 || status.equals("P") || status.equals("H") || status.equals("HS") || status.equals("PV") || status.equals("PS") || status.equals("E") || status.equals("ES") || status.equals("EV"))
+		if (apt.getDemographicNo() == 0 || !(status.equals("P") || status.equals("H") || status.equals("HS") || status.equals("PV") || status.equals("PS") || status.equals("E") || status.equals("ES") || status.equals("EV")))
 			continue;
 		
     	if (bMultisites) {
@@ -233,6 +290,7 @@ if("unbilled".equals(action)) {
         
         vecDemographicNo.add( "" + apt.getDemographicNo() );
         vecAppointmentNo.add( "" + apt.getId() );
+        vecProviderNo.add( "" + apt.getProviderNo() );
     }
 
 }
@@ -251,8 +309,6 @@ if("billed".equals(action)) {
     
     Date startTime = (Date)formatter.parse(xml_vdate);
     Date endTime = (Date)formatter.parse(xml_appointment_date);
-	
-	//MiscUtils.getLogger().error("provider_no:" + providerview + " start:" + startTime + " end:" + endTime);
 	
 	List<BillingClaimHeader1> bills = billingClaimDAO.getInvoices(providerview, startTime, endTime);
     
@@ -274,6 +330,7 @@ if("billed".equals(action)) {
     	}
 
 		prop = new Properties();
+		
     	prop.setProperty( "Service Date", bill.getBilling_date().toString() );
         prop.setProperty( "Time", bill.getBilling_time().toString() );
         prop.setProperty( "Patient Name", bill.getDemographic_name() );
@@ -312,6 +369,7 @@ if("billed".equals(action)) {
         
         vecDemographicNo.add( "" + bill.getDemographic_no() );
         vecAppointmentNo.add( "" + bill.getAppointment_no() );
+        vecProviderNo.add( "" + bill.getProvider_no() );
     }
 }
 
@@ -740,7 +798,7 @@ if (editable) {
 				hasBills = false;
 				style = "class=\"no-bills\"";
 			} else {
-				billId = vecBills.get(i).getId();
+				billId = ((BillingClaimHeader1)vecBills.get(i).get(0)).getId().toString();
 			}
 			String appointmentNo = "-1";
 			prop = (Properties)vecValue.get(i);	
@@ -767,6 +825,11 @@ if (editable) {
 						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" /> <span class="input_element_label">Referral Doctor</span>
 						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" />
 						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" />
+						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" />
+						<input type="hidden" name="demo_name<%=i%>" value="<%=prop.getProperty("Patient Name", "")%>" />
+						<input type="hidden" name="appt_no<%=i%>" value="<%=vecAppointmentNo.get(i)%>" />
+						<input type="hidden" name="demo_no<%=i%>" value="<%=vecDemographicNo.get(i)%>" />
+						<input type="hidden" name="prov_no<%=i%>" value="<%=vecProviderNo.get(i)%>" />
 					<%
 					}
 					%>
@@ -926,7 +989,7 @@ if (editable) {
 <%
 if (editable) {
 %>
-<input type="text" name="number_of_bills" value="<%=vecValue.size()%>" />
+<input type="hidden" name="number_of_bills" value="<%=vecValue.size()%>" />
 </form>
 <%
 }

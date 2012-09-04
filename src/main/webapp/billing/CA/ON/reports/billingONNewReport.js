@@ -461,6 +461,15 @@ function saveBill(billId) {
 		}
 	}
 	
+	elem = document.getElementById("bill"+billId);
+	removeClass('no-bills', elem);
+	addClass('completed', elem);
+	
+	var inputElement = document.createElement("input");
+	inputElement.type = "hidden";
+	inputElement.name = "bill_saved"+billId;
+	elem.appendChild(inputElement);
+	
 	// hide all input and input related elements
 	var rows = elem.getElementsByClassName("billing_button");
 	for (var i=0; i < rows.length; i++) {
@@ -482,9 +491,7 @@ function saveBill(billId) {
 	// hide the 'more details' table
 	hideMoreDetails(billId, demographicNumbers[billId], appointmentNumbers[billId]);
 	
-	elem = document.getElementById("bill"+billId);
-	removeClass('no-bills', elem);
-	addClass('completed', elem);
+	//elem = document.getElementById("bill"+billId);
 	
 	// setup unsave function (if user clicks on the bill, they can re-open it for editing)
 	document.getElementById("bill"+billId).onclick = function() { unsaveBill(billId); showBillDetails(billId); }
@@ -522,6 +529,14 @@ function unsaveBill(billId) {
 		}
 	}
 	
+	elem = document.getElementById("bill"+billId);
+	removeClass('no-bills', elem);
+	removeClass('completed', elem);
+	
+	var inputElement = elem.getElementsByName("bill_saved")[0];
+	if (inputElement != undefined)
+		elem.removeChild(inputElement);
+	
 	// hide all input and input related elements
 	var rows = elem.getElementsByClassName("billing_button");
 	for (var i=0; i < rows.length; i++) {
@@ -542,11 +557,6 @@ function unsaveBill(billId) {
 	
 	// hide the 'more details' table
 	//hideMoreDetails(billId, demographicNumbers[billId], appointmentNumbers[billId]);
-	
-	
-	elem = document.getElementById("bill"+billId);
-	removeClass('no-bills', elem);
-	removeClass('completed', elem);
 }
 
 /**

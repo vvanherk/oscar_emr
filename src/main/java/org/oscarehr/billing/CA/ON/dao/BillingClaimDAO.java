@@ -152,8 +152,8 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         return total;
     }
     
-    public void updateBill(BillingClaimHeader1 h1) {
-		this.persist(header1);
+    public void updateBill(BillingClaimHeader1 h1) {		
+		this.merge(h1);
 	}
 
     private BillingClaimHeader1 assembleHeader1(Provider prov, String demographic, String clinic_ref_code, Date serviceDate, String total, String cursuser, OscarProperties properties) {
