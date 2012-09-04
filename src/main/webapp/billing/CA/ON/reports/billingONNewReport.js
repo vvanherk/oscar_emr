@@ -9,6 +9,10 @@
 document.onkeydown = function(evt) {
 	if (isShowMoreDetails(evt)) {
 	}
+	
+	if (isSubmitBillsKey(evt)) {
+		setSubmit();
+	}
 }
 
 
@@ -283,7 +287,7 @@ function isMoveBetweenBillingItems(evt) {
  * 
  */ 
 function isSaveBill(evt) {
-	return isEnterKey(evt);
+	return isEnterKey(evt) && !isShiftKey(evt);
 }
 
 /**
@@ -695,10 +699,22 @@ function isDeleteBillingItemKey(evt) {
 /**
  * 
  */ 
-function submitBill(id) {
-	var result = confirm('Are you sure you want to submit this bill?');
+function submitBills() {
+	if (submitFlag)
+		return true;
 	
-	return result;
+	return false;
+}
+
+var submitFlag = false;
+var setSubmit = (function () {
+  return function() {
+    submitFlag = true;
+  };
+}());
+
+function isSubmitBillsKey(evt) {
+	return isEnterKey(evt) && isShiftKey(evt);
 }
 
 /**

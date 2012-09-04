@@ -740,7 +740,7 @@ while(rslocal.next()){
 <%
 if (editable) {
 %>
-<form name="submitbillingform" method="post" action="billingONReport.jsp">
+<form name="submitbillingform" method="post" action="billingONReport.jsp" onkeypress="return submitBills();">
 <%
 }
 %>
@@ -770,7 +770,7 @@ if (editable) {
 			<%
 			if (editable) {
 			%>
-				<td> <input type="submit" method="POST" class="billing_button" name="submit_billing" value="Submit Billing" /> </td>
+				<td> <input type="submit" method="POST" class="billing_button" onclick="setSubmit(); return true;" name="submit_billing" value="Submit Billing" /> </td>
 			<%
 			}
 			%>
