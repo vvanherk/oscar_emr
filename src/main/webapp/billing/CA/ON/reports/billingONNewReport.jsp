@@ -740,7 +740,7 @@ while(rslocal.next()){
 <%
 if (editable) {
 %>
-<form name="submitbillingform" method="post" action="billingONReport.jsp" onkeypress="return submitBills();">
+<form name="submitbillingform" method="post" action="billingONReport.jsp" onsubmit="">
 <%
 }
 %>
@@ -770,7 +770,11 @@ if (editable) {
 			<%
 			if (editable) {
 			%>
-				<td> <input type="submit" method="POST" class="billing_button" onclick="setSubmit(); return true;" name="submit_billing" value="Submit Billing" /> </td>
+				<td>
+					<!-- Stupid hack - need button before actual submit button to prevent enter key from submitting form -->
+					<input type="submit" method="POST" class="hide_element" onclick="return false;" name="submit_billing" value="Submit Billing" />
+					<input type="submit" method="POST" class="billing_button" onclick="return true;" name="submit_billing" value="Submit Billing" /> 
+				</td>
 			<%
 			}
 			%>

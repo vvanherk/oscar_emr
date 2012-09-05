@@ -12,6 +12,7 @@ document.onkeydown = function(evt) {
 	
 	if (isSubmitBillsKey(evt)) {
 		setSubmit();
+		submitBills();
 	}
 }
 
@@ -472,6 +473,7 @@ function saveBill(billId) {
 	var inputElement = document.createElement("input");
 	inputElement.type = "hidden";
 	inputElement.name = "bill_saved"+billId;
+	inputElement.class = "bill_saved";
 	elem.appendChild(inputElement);
 	
 	// hide all input and input related elements
@@ -537,7 +539,7 @@ function unsaveBill(billId) {
 	removeClass('no-bills', elem);
 	removeClass('completed', elem);
 	
-	var inputElement = elem.getElementsByName("bill_saved")[0];
+	var inputElement = elem.getElementsByClassName("bill_saved")[0];
 	if (inputElement != undefined)
 		elem.removeChild(inputElement);
 	
@@ -699,18 +701,19 @@ function isDeleteBillingItemKey(evt) {
 /**
  * 
  */ 
+function isSubmitFlagSet() {
+	return submitFlag;
+}
+
 function submitBills() {
-	if (submitFlag)
-		return true;
-	
-	return false;
+	document.forms[1].submit();
 }
 
 var submitFlag = false;
 var setSubmit = (function () {
-  return function() {
-    submitFlag = true;
-  };
+	return function() {
+		submitFlag = true;
+	};
 }());
 
 function isSubmitBillsKey(evt) {
@@ -1213,7 +1216,7 @@ function getBillsHandler(billId) {
 				billString+= "<tbody>";
 				
 				for (var i = 0; i < json.length; i++) { 
-				    //alert(json[i]);
+				    //json[i]);
 				    
 				    if (i != 0)
 						billString+= "<tr><td class=\"space\"></td></tr>";
