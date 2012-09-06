@@ -232,4 +232,28 @@ public class OscarProperties extends Properties {
 		return faxEnabled() || isRxFaxEnabled() || isConsultationFaxEnabled() || isRichEFormFaxEnabled();
 	}
 	
+	public boolean isSpireClientEnabled() {
+		return isPropertyActive("SPIRE_CLIENT_ENABLED");
+	}
+	
+	public int getSpireClientRunFrequency() {
+		String prop = getProperty("spire_client_run_frequency");
+		return Integer.parseInt(prop);
+	}
+	
+	public String getSpireServerUser() {
+		return getProperty("spire_server_user");
+	}
+	
+	public String getSpireServerPassword() {
+		return getProperty("spire_server_password");
+	}
+	
+	public String getSpireServerHostname() {
+		return getProperty("spire_server_hostname");
+	}
+	
+	public String getSpireDownloadDir() {
+		return getProperty("spire_download_dir");
+	}
 }

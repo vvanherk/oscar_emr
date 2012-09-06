@@ -10,4 +10,7 @@
 	<suppress checks="RegexpMultiline" files="ResponseDefaultsFilter.java" lines="54" />
 	<suppress checks="RegexpMultiline" files="ResponseDefaultsChangeDetectingWrapper.java" lines="44" />
 	 -->
+	 
+	 <!-- <suppress checks="org.oscarehr.utils.checkstyle.TrackingRegexpCheck" files="SpireClient.java" lines="59" /> -->
+	 
 </suppressions>

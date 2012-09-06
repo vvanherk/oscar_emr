@@ -106,7 +106,6 @@ public class LabResultData implements Comparable{
         }else if (HRM.equals(labT)) {
         		labType = HRM;
         }
-
         
     }
     
@@ -217,7 +216,6 @@ public class LabResultData implements Comparable{
             PathnetResultsData prd = new PathnetResultsData();
             this.discipline = prd.findPathnetDisipline(this.segmentID);
         }
-        
         return this.discipline;
     }
     
