@@ -454,6 +454,7 @@ function autoFillHin(){
                 <option value="SEN"><bean:message key="demographic.demographicaddrecordhtm.msgSen"/></option>
                 <option value="SGT"><bean:message key="demographic.demographicaddrecordhtm.msgSgt"/></option>
                 <option value="SR"><bean:message key="demographic.demographicaddrecordhtm.msgSr"/></option>
+                <option value="DR"><bean:message key="demographic.demographicaddrecordhtm.msgDr"/></option>
 	    </select>
 	</td>
     </tr>

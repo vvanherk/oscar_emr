@@ -65,7 +65,7 @@
 <table width="100%" border="0" bgcolor="#ffffff">
 	<tr class="myYellow">
 		<TH width="12%"><b>Invoice No.</b></TH>
-		<TH width="15%"><b>Appt. Date</b></TH>
+		<TH width="15%"><b>Bill Created</b></TH>
 		<TH width="10%"><b>Bill Type</b></TH>
 		<TH width="35%"><b>Service Code</b></TH>
 		<TH width="5%"><b>Dx</b></TH>
