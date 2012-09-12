@@ -2,6 +2,7 @@ package org.oscarehr.common.dao;
 
 import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.persistence.Query;
 
@@ -81,17 +82,158 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 
 	public List<Appointment> findByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
+		
+		return findByDateRangeAndProvider(startTime, endTime, providerNo, null, null);
+	}
+	
+	public List<Appointment> findByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
 		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate < ? and providerNo = ?";
 
 		Query query = entityManager.createQuery(sql);
 		query.setParameter(1, startTime);
 		query.setParameter(2, endTime);
 		query.setParameter(3, providerNo);
+		
+		if (firstResult != null && firstResult.intValue() >= 0)
+			query.setFirstResult(firstResult);
+			
+		if (maxResults != null && maxResults.intValue() > 0)
+			query.setMaxResults(maxResults);
+		
 
 		@SuppressWarnings("unchecked")
 		List<Appointment> rs = query.getResultList();
 
 		return rs;
+	}
+	
+	public int getCountByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
+		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate < ? and providerNo = ?";
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter(1, startTime);
+		query.setParameter(2, endTime);
+		query.setParameter(3, providerNo);
+		
+
+		@SuppressWarnings("unchecked")
+		
+		Number numRows = (Number)query.getSingleResult();
+		
+
+		return numRows.intValue();
+	}
+	
+	public List<Appointment> getUnbilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate < :end_time and providerNo = :provider_no";
+		sql += " and a.demographicNo != 0 and a.status IN (:status_list)";
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("P");
+		statusList.add("H");
+		statusList.add("HS");
+		statusList.add("PV");
+		statusList.add("PS");
+		statusList.add("E");
+		statusList.add("ES");
+		statusList.add("EV");	
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("start_time", startTime);
+		query.setParameter("end_time", endTime);
+		query.setParameter("provider_no", providerNo);
+		query.setParameter("status_list", statusList);
+		
+		if (firstResult != null && firstResult.intValue() >= 0)
+			query.setFirstResult(firstResult);
+			
+		if (maxResults != null && maxResults.intValue() > 0)
+			query.setMaxResults(maxResults);
+		
+		
+		@SuppressWarnings("unchecked")
+		List<Appointment> rs = query.getResultList();
+
+		return rs;
+	}
+	
+	public List<Appointment> getBilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate < :end_time and providerNo = :provider_no";
+		sql += " and a.demographicNo != 0 and a.status NOT IN (:status_list)";
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("D");
+		statusList.add("S");
+		statusList.add("B");
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("start_time", startTime);
+		query.setParameter("end_time", endTime);
+		query.setParameter("provider_no", providerNo);
+		query.setParameter("status_list", statusList);
+		
+		if (firstResult != null && firstResult.intValue() >= 0)
+			query.setFirstResult(firstResult);
+			
+		if (maxResults != null && maxResults.intValue() > 0)
+			query.setMaxResults(maxResults);
+		
+		
+		@SuppressWarnings("unchecked")
+		List<Appointment> rs = query.getResultList();
+
+		return rs;
+	}
+	
+	public int getCountUnbilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
+		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate < :end_time and providerNo = :provider_no";
+		sql += " and a.demographicNo != 0 and a.status IN (:status_list)";
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("P");
+		statusList.add("H");
+		statusList.add("HS");
+		statusList.add("PV");
+		statusList.add("PS");
+		statusList.add("E");
+		statusList.add("ES");
+		statusList.add("EV");
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("start_time", startTime);
+		query.setParameter("end_time", endTime);
+		query.setParameter("provider_no", providerNo);
+		query.setParameter("status_list", statusList);
+		
+
+		@SuppressWarnings("unchecked")
+		
+		Number numRows = (Number)query.getSingleResult();
+		
+		return numRows.intValue();
+	}
+	
+	public int getCountBilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
+		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate < :end_time and providerNo = :provider_no";
+		sql += " and a.demographicNo != 0 and a.status NOT IN (:status_list)";
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("D");
+		statusList.add("S");
+		statusList.add("B");
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("start_time", startTime);
+		query.setParameter("end_time", endTime);
+		query.setParameter("provider_no", providerNo);
+		query.setParameter("status_list", statusList);
+		
+
+		@SuppressWarnings("unchecked")
+		
+		Number numRows = (Number)query.getSingleResult();
+		
+		return numRows.intValue();
 	}
 
 	public List<Appointment> getByProviderAndDay(Date date, String providerNo) {
