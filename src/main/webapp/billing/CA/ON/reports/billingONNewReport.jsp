@@ -107,8 +107,13 @@ String sql = null;
 
 boolean editable = true;
 
+boolean billsSubmitted = request.getParameter("submit_billing") != null;
+int numBillsSaved = 0;
+int numBillsSubmitted = 0;
+int numBills = 0;
+
 // handle saving of submitted bills
-if (request.getParameter("submit_billing") != null) {
+if (billsSubmitted) {
 	saveSubmittedBills();	
 }
 
@@ -168,14 +173,10 @@ if("unbilled".equals(action)) {
     	if (bMultisites) {
     		// skip record if location does not match the selected site, blank location always gets displayed for backward-compatibility
     		String location = apt.getLocation();
-    		MiscUtils.getLogger().info("location: " + location);
     		if (StringUtils.isNotBlank(location) && !location.equals(request.getParameter("site"))) 
     			continue; 
     	}
-		
-		MiscUtils.getLogger().info("status: " + status);
-		MiscUtils.getLogger().info("demoNo: " + apt.getDemographicNo());
-		
+
     	prop = new Properties();
         prop.setProperty( "Service Date", apt.getAppointmentDate().toString() );
         prop.setProperty( "Time", apt.getStartTime().toString() );
@@ -712,6 +713,28 @@ if ((maxPerPage != 0 && maxPerPage != 25 && maxPerPage != 50 && maxPerPage != 75
 
 </form>
 
+<%
+if (billsSubmitted) {
+	String message = "No bills submitted!";
+	if (numBillsSubmitted > 0) {
+		message = numBillsSaved + " bill(s) saved successfully!";
+		int numErrors = numBillsSubmitted - numBillsSaved;
+		if (numErrors != 0) {
+			message += "<br>"+numErrors + " bill(s) NOT saved successfully!";
+		}
+	}
+	%>
+<table>
+	<tbody>
+	<tr>
+		<td> <%=message%> </td>
+	</tr>
+	</tbody>
+</table>
+<%
+}
+%>
+
 
 <%
 if (editable) {
@@ -758,14 +781,31 @@ if (editable) {
 	</tbody>
 </table>
 
+<%
+if (vecHeader != null && vecHeader.size() > 0) {
+%>
+<table>
+	<tbody>
+	<tr>
+		<td> <a class="billing_button" href="" tabindex="-1" onclick="">Paste to selected</a> </td>
+		<td> <a class="billing_button" href="" tabindex="-1" onclick="">Print selected</a> </td>
+	</tr>
+	</tbody>
+</table>
+
 <table class="bill-list">
 <thead>
 	<tr>
+		<th> <input type="checkbox" class="checkbox" name="select_all_bills" id="select_all_bills" onclick="toggleSelectAllBills();"/> </th>
 		<% for (int i=0; i<vecHeader.size(); i++) { %>
 			<th><%=vecHeader.get(i) %></th>
 		<% } %>
+		<th></th>
 	</tr>
 </thead>
+<%
+}
+%>
 
 <tbody>
 	<%	int uniqueId = 0;
@@ -784,10 +824,12 @@ if (editable) {
 			prop = (Properties)vecValue.get(i);	
 			%>
 			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>); setFocusOnInputField(<%=i%>);">
+				<td width="10px"> <input type="checkbox" class="checkbox" name="select_bill" id="select_bill<%=i%>" onclick="preventEventPropagation(event);"/> </td>
 				<% for (int j=0; j < vecHeader.size(); j++) {
 					%>
 					<td <%=style%>><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
 				<% } %>
+				<td width="10px"> <a class="billing_button" href="" tabindex="-1" onclick="preventEventPropagation(event); return false;">Copy</a> </td>
 			</tr>
 			<tr id="bill_details<%=i%>" class="bill hide_bill">
 				<td colspan="5">
@@ -835,6 +877,17 @@ if (editable) {
 								<%
 								if (editable) {
 								%>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td> <textarea rows="4" cols="20"></textarea> </td>
+									</tr>
 									<%=getEditableBillingItemText(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i), null)%>
 								<%
 								} else {
@@ -850,6 +903,23 @@ if (editable) {
 								for (BillingClaimHeader1 bill : vecBills.get(i)) {
 									appointmentNo = bill.getAppointment_no();									
 									List<BillingItem> billingItems = bill.getBillingItems();
+									%>
+									<%
+									if (editable) {
+										%>
+									<tr>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td></td>
+										<td> <textarea rows="4" cols="20"></textarea> </td>
+									</tr>
+									<%
+									
 									for (BillingItem item : billingItems) {
 										String serviceDesc = "";
 										
@@ -989,7 +1059,6 @@ incrementingId = <%=uniqueId%>;
 </script>
 
 </html>
-
 <%! 
 String getFormatDateStr(String str) {
     String ret = str;
@@ -1167,14 +1236,11 @@ String getUneditableBillingItemText(int i, int uniqueId, String demoNo, String a
 
 void saveSubmittedBills() {
 	String tempNumberOfBills = request.getParameter("number_of_bills");
-	int numBills = 0;
+	numBills = 0;
 	try {
 		numBills = Integer.parseInt(tempNumberOfBills);
 	} catch (Exception e) {
 	}
-	
-	numBillsSaved = 0;
-	
 	//MiscUtils.getLogger().info("numbills: " + numBills);
 	for (int i=0; i < numBills; i++) {
 		String billId = request.getParameter("bill_id"+i);
@@ -1199,6 +1265,8 @@ void saveSubmittedBills() {
 		String[] sliCodes = request.getParameterValues("sli_code"+i);
 		
 		if (billId != null && billSaved) {
+			numBillsSubmitted++;
+			
 			BillingClaimHeader1 bill = null;
 			
 			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -1268,6 +1336,7 @@ void saveSubmittedBills() {
 				
 				try {
 					billingClaimDAO.createBill(bill);
+					numBillsSaved++;
 				} catch (Exception e) {
 					MiscUtils.getLogger().error("create bill error:", e);
 				}
