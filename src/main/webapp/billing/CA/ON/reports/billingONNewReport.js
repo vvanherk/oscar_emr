@@ -16,6 +16,21 @@ document.onkeydown = function(evt) {
 	}
 }
 
+/**
+ * Stop the given event from propagating up to parent elements.
+ * 
+ * Why do this? Some elements don't want to allow events to propogate up (i.e. clicking a checkbox on a bill shouldn't open the bill)
+ */ 
+function  preventEventPropagation(event) {
+   if (event.stopPropagation){
+       event.stopPropagation();
+   } else if(window.event){
+      window.event.cancelBubble = true;
+   }
+}
+
+
+
 
 function previousPage() {
 	var elem = document.getElementsByName('current_page')[0];
@@ -740,6 +755,27 @@ var setSubmit = (function () {
 function isSubmitBillsKey(evt) {
 	return isEnterKey(evt) && isShiftKey(evt);
 }
+
+
+var selectAllFlag = false;
+var toggleSelectAllBills = (function () {
+	return function() {
+		var inputElements = document.getElementsByName("select_bill");
+		
+		if (inputElements == null)
+			return;
+		
+		if (selectAllFlag) {
+			selectAllFlag = false;
+		} else {
+			selectAllFlag = true;
+		}
+		
+		for (var i=0; i < inputElements.length; i++) {
+			inputElements[i].checked = selectAllFlag;
+		}
+	};
+}());
 
 /**
  * 
