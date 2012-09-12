@@ -17,6 +17,27 @@ document.onkeydown = function(evt) {
 }
 
 
+function previousPage() {
+	var elem = document.getElementsByName('current_page')[0];
+	jumpToPage(parseInt(elem.value, 10) - 1);
+}
+
+function nextPage() {
+	var elem = document.getElementsByName('current_page')[0];
+	jumpToPage(parseInt(elem.value, 10) + 1);
+}
+
+function jumpToPage(pageNum) {
+	if (pageNum <= 0)
+		return;
+	
+	var elem = document.getElementsByName('current_page')[0];
+	elem.value = pageNum;
+	
+	document.forms['serviceform'].submit();
+}
+
+
 /**
  * 
  */ 

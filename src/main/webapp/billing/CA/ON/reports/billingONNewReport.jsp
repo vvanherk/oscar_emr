@@ -54,10 +54,21 @@ String user_no = (String) session.getAttribute("user");
 
 
 int nItems=0;
-String strLimit1="0";
-String strLimit2="50";
-if(request.getParameter("limit1")!=null) strLimit1 = request.getParameter("limit1");
-if(request.getParameter("limit2")!=null) strLimit2 = request.getParameter("limit2");
+int firstResult = 0;
+int maxPerPage = -1;
+int maxPaginationListSize = 10;
+int totalResults = 0;
+int currentPage = 1;
+if(request.getParameter("current_page")!=null) {
+	try {
+		currentPage = Integer.parseInt(request.getParameter("current_page"));
+	} catch (Exception e) { }
+}
+if(request.getParameter("max_per_page")!=null) {
+	try {
+		maxPerPage = Integer.parseInt(request.getParameter("max_per_page"));
+	} catch (Exception e) { }
+} 
 String providerview = request.getParameter("providerview")==null?"all":request.getParameter("providerview") ;
 %>
 
@@ -98,119 +109,7 @@ boolean editable = true;
 
 // handle saving of submitted bills
 if (request.getParameter("submit_billing") != null) {
-	String tempNumberOfBills = request.getParameter("number_of_bills");
-	int numBills = 0;
-	try {
-		numBills = Integer.parseInt(tempNumberOfBills);
-	} catch (Exception e) {
-	}
-	//MiscUtils.getLogger().info("numbills: " + numBills);
-	for (int i=0; i < numBills; i++) {
-		String billId = request.getParameter("bill_id"+i);
-		String apptNo = request.getParameter("appt_no"+i);
-		Integer demoNo = null;
-		try {
-			demoNo = Integer.parseInt(request.getParameter("demo_no"+i));
-		} catch (Exception e) {
-			MiscUtils.getLogger().error("Invalid demographic number:", e);
-		}
-		String provNo = request.getParameter("prov_no"+i);
-		boolean billSaved = (request.getParameter("bill_saved"+i) != null);
-		String billDate = request.getParameter("bill_date"+i);
-		String billTime = request.getParameter("bill_time"+i);
-		String demoName = request.getParameter("demo_name"+i);
-		String[] billCodes = request.getParameterValues("bill_code"+i);
-		String[] amounts = request.getParameterValues("amount"+i);
-		String[] units = request.getParameterValues("units"+i);
-		String[] dxCodes = request.getParameterValues("dx_code"+i);
-		String[] dxDescs = request.getParameterValues("dx_desc"+i);
-		String[] totals = request.getParameterValues("total"+i);
-		String[] sliCodes = request.getParameterValues("sli_code"+i);
-		
-		if (billId != null && billSaved) {
-			BillingClaimHeader1 bill = null;
-			
-			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-			Date billDateAsDate = (Date)formatter.parse(billDate);
-			formatter = new SimpleDateFormat("HH:mm:ss");
-			Date billTimeAsDate = (Date)formatter.parse(billTime);
-			
-			if (billId.equals("")) {
-				// create new bill
-				bill = new BillingClaimHeader1();
-				bill.setHeader_id(0);
-				bill.setDemographic_no(demoNo);
-				bill.setProvider_no(provNo);
-				bill.setAppointment_no(apptNo);
-				bill.setBilling_date(billDateAsDate);
-				bill.setBilling_time(billTimeAsDate);
-				bill.setDemographic_name(demoName);
-				bill.setStatus("W");
-				bill.setApptProvider_no("none");
-			} else {
-				// set old bills' status as 'D' for deleted
-				bill = billingClaimDAO.getInvoice(billId);
-				bill.setStatus("D");
-				billingClaimDAO.updateBill(bill);
-				
-				String apptProvNo = bill.getApptProvider_no();
-				
-				// create new bill to replace old bill
-				bill = new BillingClaimHeader1();
-				bill.setHeader_id(0);
-				bill.setDemographic_no(demoNo);
-				bill.setProvider_no(provNo);
-				bill.setAppointment_no(apptNo);
-				bill.setBilling_date(billDateAsDate);
-				bill.setBilling_time(billTimeAsDate);
-				bill.setDemographic_name(demoName);
-				bill.setStatus("W");
-				
-				bill.setApptProvider_no(apptProvNo);
-				
-				bill.getBillingItems().clear();
-			}
-			
-			// set values for billing items
-			
-			for (int j=0; j < billCodes.length; j++) {
-		        BillingItem item = null;
-		        for( String code : billCodes) {
-		            item = new BillingItem();
-		            item.setCh1_id(bill.getId());
-		            item.setTransc_id(BillingDataHlp.ITEM_TRANSACTIONIDENTIFIER);
-		            item.setRec_id(BillingDataHlp.ITEM_REORDIDENTIFICATION);
-		            item.setService_code(billCodes[j]);
-		
-		            item.setFee(amounts[j]);
-		            item.setSer_num(units[j]);
-		            item.setStatus("S");
-					
-		            item.setService_date(billDateAsDate);
-					
-					item.setDx(billCodes[j]);
-					item.setDx1("");
-	                item.setDx2("");
-		
-		            bill.getBillingItems().add(item);
-		        }
-				
-				try {
-					billingClaimDAO.createBill(bill);
-				} catch (Exception e) {
-					MiscUtils.getLogger().error("create bill error:", e);
-				}
-			}
-			
-			// update appointment status to be 'B' for billed
-			Appointment appointment = appointmentDao.getAppointment(new Integer(apptNo));
-			
-			if (appointment != null) {
-				appointment.setStatus("B");
-				appointmentDao.updateAppointment(appointment);
-			}
-		}
-	}
+	saveSubmittedBills();	
 }
 
 
@@ -249,7 +148,14 @@ if("unbilled".equals(action)) {
     
     Date startTime = (Date)formatter.parse(xml_vdate);
     Date endTime = (Date)formatter.parse(xml_appointment_date);
-    List<Appointment> appointments = appointmentDao.findByDateRangeAndProvider(startTime, endTime, providerview);
+	
+	totalResults = appointmentDao.getCountUnbilledByDateRangeAndProvider(startTime, endTime, providerview);
+    
+    firstResult = currentPage * maxPerPage - maxPerPage;
+    
+    List<Appointment> appointments = appointmentDao.getUnbilledByDateRangeAndProvider(startTime, endTime, providerview, new Integer(firstResult), new Integer(maxPerPage));    
+    
+    MiscUtils.getLogger().info("na: " + appointments.size());
     
     // sort appointments
     Collections.sort(appointments, appointmentComparator);
@@ -262,10 +168,14 @@ if("unbilled".equals(action)) {
     	if (bMultisites) {
     		// skip record if location does not match the selected site, blank location always gets displayed for backward-compatibility
     		String location = apt.getLocation();
+    		MiscUtils.getLogger().info("location: " + location);
     		if (StringUtils.isNotBlank(location) && !location.equals(request.getParameter("site"))) 
     			continue; 
     	}
-
+		
+		MiscUtils.getLogger().info("status: " + status);
+		MiscUtils.getLogger().info("demoNo: " + apt.getDemographicNo());
+		
     	prop = new Properties();
         prop.setProperty( "Service Date", apt.getAppointmentDate().toString() );
         prop.setProperty( "Time", apt.getStartTime().toString() );
@@ -292,6 +202,8 @@ if("unbilled".equals(action)) {
         vecAppointmentNo.add( "" + apt.getId() );
         vecProviderNo.add( "" + apt.getProviderNo() );
     }
+    
+    MiscUtils.getLogger().info("nvb: " + vecBills.size());
 
 }
 
@@ -636,8 +548,8 @@ function calToday(field) {
 	</tr>
 </table>
 
+<form id="serviceform" name="serviceform" method="post" action="billingONReport.jsp">
 <table width="100%" border="0" bgcolor="#EEEEFF">
-	<form name="serviceform" method="post" action="billingONReport.jsp">
 	<tr>
 		<td width="30%" align="center"><font size="2"> <input
 			type="radio" name="reportAction" value="unbilled"
@@ -719,23 +631,87 @@ while(rslocal.next()){
 %>
 		</select>
 <% } %>
+
+<%
+boolean isMaxPerPageValid = true;
+if ((maxPerPage != 0 && maxPerPage != 25 && maxPerPage != 50 && maxPerPage != 75 && maxPerPage != 100) || maxPerPage < 0)
+	isMaxPerPageValid = false;
+%>
 		
 		
 		</td>
-		<td align="center" nowrap><font size="1"> From:</font> <input
-			type="text" name="xml_vdate" id="xml_vdate" size="10"
-			value="<%=xml_vdate%>"> <font size="1"> <img
-			src="../../../images/cal.gif" id="xml_vdate_cal"> To:</font> <input
-			type="text" name="xml_appointment_date" id="xml_appointment_date"
-			onDblClick="calToday(this)" size="10"
-			value="<%=xml_appointment_date%>"> <img
-			src="../../../images/cal.gif" id="xml_appointment_date_cal"></td>
-		<td align="right"><input type="submit" class="billing_button" name="Submit"
-			value="Create Report"> </font></td>
+		<td align="center" nowrap>
+			<font size="1"> From:</font> 
+			<input type="text" name="xml_vdate" id="xml_vdate" size="10" value="<%=xml_vdate%>"> 
+			
+			<font size="1"> 				
+				<img src="../../../images/cal.gif" id="xml_vdate_cal"> To:
+			</font> 
+			
+			<input type="text" name="xml_appointment_date" id="xml_appointment_date" onDblClick="calToday(this)" size="10" value="<%=xml_appointment_date%>"> 
+			<img src="../../../images/cal.gif" id="xml_appointment_date_cal">
+		</td>
+		<td align="center">
+			<select class="dropdown" name="max_per_page">
+				<option value="25" <%=(maxPerPage < 0 || maxPerPage == 25 ? "selected=\"selected\"" : "")%>>25</option>
+				<option value="50" <%=(isMaxPerPageValid && maxPerPage == 50 ? "selected=\"selected\"" : "")%>>50</option>
+				<option value="75" <%=(isMaxPerPageValid && maxPerPage == 75 ? "selected=\"selected\"" : "")%>>75</option>
+				<option value="100" <%=(isMaxPerPageValid && maxPerPage == 100 ? "selected=\"selected\"" : "")%>>100</option>
+				<option value="0" <%=(isMaxPerPageValid && maxPerPage == 0 ? "selected=\"selected\"" : "")%>>All</option>
+			</select>
+		</td>
+		<td align="right"><input type="submit" class="billing_button" name="Submit" value="Create Report"> </font></td>
 	</tr>
 	<tr>
-		</form>
 </table>
+
+<input type="hidden" name="current_page" value="<%=currentPage%>" />
+
+<!-- Pagination -->
+<ul class="pagination-clean">
+	<li class="previous-off"> <a href="#" onclick="previousPage(); return false;">Previous</a> </li>
+	<%
+	int numPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
+	int numPagesToSkip = 0;
+	int startSkipAtPage = 0;
+	if (numPages > maxPaginationListSize) {
+		numPagesToSkip = numPages - maxPaginationListSize;
+		startSkipAtPage = maxPaginationListSize/2;
+	}
+		
+	for (int i=1; i < numPages+1; i++) {
+		if (startSkipAtPage != 0 && (i > startSkipAtPage && i < numPages-startSkipAtPage))
+			continue;
+		
+		String liClass = "";
+		String pageLink = "<a href='#' onclick='jumpToPage("+i+"); return false;'>"+i+"</a>";
+		
+		if (startSkipAtPage == i) {
+			pageLink = "<a href='#' onclick='return false;'>...</a>";			
+		} else {
+			if (i == currentPage) {
+				liClass="class='active'";
+				pageLink = "" +i;
+			}
+		}
+		
+		%> 
+		
+		<li <%=liClass%>> <%=pageLink%> </li> 
+		
+		<%
+	}
+	%>
+	<li class="next"> <a href="#" onclick="nextPage(); return false;">Next</a> </li>	
+</ul>
+<br>
+
+<ul>
+	<li class="pagination-clean"> Showing results <%=firstResult%>-<%=firstResult+maxPerPage-1%> of <%=totalResults%> </li>
+</ul>
+
+</form>
+
 
 <%
 if (editable) {
@@ -1013,6 +989,7 @@ incrementingId = <%=uniqueId%>;
 </script>
 
 </html>
+
 <%! 
 String getFormatDateStr(String str) {
     String ret = str;
@@ -1186,5 +1163,124 @@ String getUneditableBillingItemText(int i, int uniqueId, String demoNo, String a
 	html += "</tr>";
 	
 	return html;
+}
+
+void saveSubmittedBills() {
+	String tempNumberOfBills = request.getParameter("number_of_bills");
+	int numBills = 0;
+	try {
+		numBills = Integer.parseInt(tempNumberOfBills);
+	} catch (Exception e) {
+	}
+	
+	numBillsSaved = 0;
+	
+	//MiscUtils.getLogger().info("numbills: " + numBills);
+	for (int i=0; i < numBills; i++) {
+		String billId = request.getParameter("bill_id"+i);
+		String apptNo = request.getParameter("appt_no"+i);
+		Integer demoNo = null;
+		try {
+			demoNo = Integer.parseInt(request.getParameter("demo_no"+i));
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Invalid demographic number:", e);
+		}
+		String provNo = request.getParameter("prov_no"+i);
+		boolean billSaved = (request.getParameter("bill_saved"+i) != null);
+		String billDate = request.getParameter("bill_date"+i);
+		String billTime = request.getParameter("bill_time"+i);
+		String demoName = request.getParameter("demo_name"+i);
+		String[] billCodes = request.getParameterValues("bill_code"+i);
+		String[] amounts = request.getParameterValues("amount"+i);
+		String[] units = request.getParameterValues("units"+i);
+		String[] dxCodes = request.getParameterValues("dx_code"+i);
+		String[] dxDescs = request.getParameterValues("dx_desc"+i);
+		String[] totals = request.getParameterValues("total"+i);
+		String[] sliCodes = request.getParameterValues("sli_code"+i);
+		
+		if (billId != null && billSaved) {
+			BillingClaimHeader1 bill = null;
+			
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+			Date billDateAsDate = (Date)formatter.parse(billDate);
+			formatter = new SimpleDateFormat("HH:mm:ss");
+			Date billTimeAsDate = (Date)formatter.parse(billTime);
+			
+			if (billId.equals("")) {
+				// create new bill
+				bill = new BillingClaimHeader1();
+				bill.setHeader_id(0);
+				bill.setDemographic_no(demoNo);
+				bill.setProvider_no(provNo);
+				bill.setAppointment_no(apptNo);
+				bill.setBilling_date(billDateAsDate);
+				bill.setBilling_time(billTimeAsDate);
+				bill.setDemographic_name(demoName);
+				bill.setStatus("W");
+				bill.setApptProvider_no("none");
+			} else {
+				// set old bills' status as 'D' for deleted
+				bill = billingClaimDAO.getInvoice(billId);
+				bill.setStatus("D");
+				billingClaimDAO.updateBill(bill);
+				
+				String apptProvNo = bill.getApptProvider_no();
+				
+				// create new bill to replace old bill
+				bill = new BillingClaimHeader1();
+				bill.setHeader_id(0);
+				bill.setDemographic_no(demoNo);
+				bill.setProvider_no(provNo);
+				bill.setAppointment_no(apptNo);
+				bill.setBilling_date(billDateAsDate);
+				bill.setBilling_time(billTimeAsDate);
+				bill.setDemographic_name(demoName);
+				bill.setStatus("W");
+				
+				bill.setApptProvider_no(apptProvNo);
+				
+				bill.getBillingItems().clear();
+			}
+			
+			// set values for billing items
+			
+			for (int j=0; j < billCodes.length; j++) {
+		        BillingItem item = null;
+		        for( String code : billCodes) {
+		            item = new BillingItem();
+		            item.setCh1_id(bill.getId());
+		            item.setTransc_id(BillingDataHlp.ITEM_TRANSACTIONIDENTIFIER);
+		            item.setRec_id(BillingDataHlp.ITEM_REORDIDENTIFICATION);
+		            item.setService_code(billCodes[j]);
+		
+		            item.setFee(amounts[j]);
+		            item.setSer_num(units[j]);
+		            item.setStatus("S");
+					
+		            item.setService_date(billDateAsDate);
+					
+					item.setDx(billCodes[j]);
+					item.setDx1("");
+	                item.setDx2("");
+		
+		            bill.getBillingItems().add(item);
+		        }
+				
+				try {
+					billingClaimDAO.createBill(bill);
+				} catch (Exception e) {
+					MiscUtils.getLogger().error("create bill error:", e);
+				}
+			}
+			
+			// update appointment status to be 'B' for billed
+			Appointment appointment = appointmentDao.getAppointment(new Integer(apptNo));
+			
+			if (appointment != null) {
+				appointment.setStatus("B");
+				appointmentDao.updateAppointment(appointment);
+			}
+		}
+	}
 }
 %>
