@@ -21,18 +21,25 @@
 <%@page import="org.oscarehr.util.SpringUtils, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment" %>
 
 <%@page import="org.oscarehr.billing.CA.ON.dao.BillingClaimDAO" %>
+<%@page import="org.oscarehr.common.dao.DemographicDao" %>
+<%@page import="org.oscarehr.PMmodule.dao.ProviderDao" %>
 <%@page import="org.oscarehr.common.dao.BillingServiceDao" %>
 
 <%@page import="org.oscarehr.billing.CA.ON.model.BillingClaimHeader1" %>
 <%@page import="org.oscarehr.billing.CA.ON.model.BillingItem" %>
 <%@page import="org.oscarehr.common.model.BillingService" %>
+<%@page import="org.oscarehr.common.model.Demographic" %>
+<%@page import="org.oscarehr.common.model.Provider" %>
 
 <%@page import="oscar.oscarBilling.ca.on.data.BillingDataHlp" %>
 
 <%@page import="org.oscarehr.util.MiscUtils"%>
+<%@page import="oscar.OscarProperties"%>
 
 
 <% OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao"); %>
+<% DemographicDao demographicDao = (DemographicDao)SpringUtils.getBean("demographicDao"); %>
+<% ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao"); %>
 <% BillingClaimDAO billingClaimDAO = (BillingClaimDAO)SpringUtils.getBean("billingClaimDAO"); %>
 <% BillingServiceDao billingServiceDao = (BillingServiceDao)SpringUtils.getBean("billingServiceDao"); %>
 
@@ -76,8 +83,7 @@ String providerview = request.getParameter("providerview")==null?"all":request.g
 	import="java.util.*, java.sql.*, oscar.login.*, oscar.*, java.net.*"
 	errorPage="../errorpage.jsp"%>
 <%@ include file="../../../../admin/dbconnection.jsp"%>
-<jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
-	scope="session" />
+<jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean" scope="session" />
 <jsp:useBean id="SxmlMisc" class="oscar.SxmlMisc" scope="session" />
 <%@ include file="../dbBilling.jspf"%>
 
@@ -94,6 +100,7 @@ String xml_appointment_date = request.getParameter("xml_appointment_date") == nu
 <%
 // action
 ArrayList<String> vecHeader = new ArrayList<String>();
+ArrayList<String> vecHeaderWidths = new ArrayList<String>();
 ArrayList<Properties> vecValue = new ArrayList<Properties>();
 List< List<BillingClaimHeader1> > vecBills = new ArrayList< List<BillingClaimHeader1> >();
 ArrayList<String> vecDemographicNo = new ArrayList<String>();
@@ -114,7 +121,11 @@ int numBills = 0;
 
 // handle saving of submitted bills
 if (billsSubmitted) {
-	saveSubmittedBills();	
+	int[] results = saveSubmittedBills(request, appointmentDao, billingClaimDAO, demographicDao, providerDao );	
+	
+	numBills = results[0];
+	numBillsSubmitted = results[1];
+	numBillsSaved = results[2];
 }
 
 
@@ -128,6 +139,15 @@ if("unbilled".equals(action)) {
     vecHeader.add("Remarks");
     vecHeader.add("Notes");
     vecHeader.add("Service Description");
+    vecHeader.add("COMMENTS");
+    
+    vecHeaderWidths.add("10%");
+    vecHeaderWidths.add("10%");
+    vecHeaderWidths.add("20%");
+    vecHeaderWidths.add("10%");
+    vecHeaderWidths.add("15%");
+    vecHeaderWidths.add("30%");
+    vecHeaderWidths.add("30%");
     
 	Comparator<Appointment> appointmentComparator = new Comparator<Appointment>() {
 		// This is where the sorting happens.
@@ -151,8 +171,16 @@ if("unbilled".equals(action)) {
     
 	SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
     
-    Date startTime = (Date)formatter.parse(xml_vdate);
-    Date endTime = (Date)formatter.parse(xml_appointment_date);
+    Date startTime = null;
+    
+    Date endTime = null;
+    
+    try {
+		startTime = (Date)formatter.parse(xml_vdate);
+	} catch (Exception e) {}
+	try {
+		endTime = (Date)formatter.parse(xml_appointment_date);
+    } catch (Exception e) {}
 	
 	totalResults = appointmentDao.getCountUnbilledByDateRangeAndProvider(startTime, endTime, providerview);
     
@@ -185,15 +213,15 @@ if("unbilled".equals(action)) {
 		prop.setProperty( "Remarks",  apt.getRemarks() );
 		prop.setProperty( "Notes", apt.getNotes() );
         
-        /*
+        
         String tempStr = "<a href=# onClick='popupPage(700,1000, \"billingOB.jsp?billForm=" 
                 + URLEncoder.encode(oscarVariables.getProperty("default_view")) + "&hotclick=&appointment_no="
                 + apt.getId() + "&demographic_name=" + URLEncoder.encode(apt.getName())
 				+ "&demographic_no=" + apt.getDemographicNo() + "&user_no=" + apt.getProviderNo() 
 				+ "&apptProvider_no=" + providerview + "&appointment_date=" + apt.getAppointmentDate().toString() 
-				+ "&start_time=" + apt.getStartTime().toString() + "&bNewForm=1\"); return false;'>Bill ";
-		*/
-        //prop.setProperty("COMMENTS", tempStr);
+				+ "&start_time=" + apt.getStartTime().toString() + "&bNewForm=1\"); return false;'>Bill</a> ";
+		
+        prop.setProperty("COMMENTS", tempStr);
         vecValue.add(prop);
         
         List<BillingClaimHeader1> bills = billingClaimDAO.getInvoices(new Integer(apt.getDemographicNo()).toString(), apt.getId().toString());
@@ -286,174 +314,6 @@ if("billed".equals(action)) {
     }
 }
 
-// no longer used (not sure why)
-if("paid".equals(action)) {
-    vecHeader.add("No");
-    vecHeader.add("Billing No");
-    vecHeader.add("HIN");
-    vecHeader.add("Claim");
-    vecHeader.add("Paid");
-    vecHeader.add("Billing Date");
-    //vecHeader.add("Time");
-    float fTotalClaim = 0.00f;
-    float fTotalPaid = 0.00f;
-        
-    // get billing no in the date range
-    ArrayList<String> vecBillingNo = new ArrayList<String>();
-    Properties propTotal = new Properties();
-    sql = "select billing_no,total from billing where provider_no='" + providerview 
-    + "' and billing_date>='" + xml_vdate + "' and billing_date<='" + xml_appointment_date 
-    + "' and status ='S' order by billing_date, billing_time";
-    
-    // change 'S' to 'O' for testing
-    
-    //rs = dbObj.searchDBRecord(sql);
-    while (rs.next()) {
-        vecBillingNo.add("" + rs.getInt("billing_no"));
-        propTotal.setProperty(""+rs.getInt("billing_no"), rs.getString("total"));
-    }
-    rs.close();
-    
-    // get detail ra for the billing no
-    String tempStr = "";
-    for(int i=0; i<vecBillingNo.size(); i++) {
-        tempStr += ("".equals(tempStr) ? "" : ",") + (String)vecBillingNo.get(i);
-    }
-    tempStr = "".equals(tempStr) ? "-1" : tempStr;
-    
-    // change tempStr to '75980, 75982, 75990' for testing
-    //tempStr = "75980, 75982, 75990,79571,79066";
-    
-    sql = "select billing_no, amountclaim, amountpay, hin, service_date from radetail where billing_no in ("
-            + tempStr + ") and raheader_no !=0 order by billing_no, radetail_no";
-    //rs = dbObj.searchDBRecord(sql);
-    String sAmountclaim = "", sAmountpay = "", hin = "";
-    int nNo = 0;
-    while (rs.next()) {
-        if(!tempStr.equals("" + rs.getInt("billing_no")) ) { // new billing no
-            prop = new Properties();
-        	// reset something
-            tempStr = "" + rs.getInt("billing_no");
-            nNo++;
-            sAmountclaim = rs.getString("amountclaim");
-			sAmountpay = rs.getString("amountpay");
-			String strT = "<a href=# onClick='popupPage(700,720, \"../../../billing/CA/BC/billingView.do?billing_no="
-		        + rs.getString("billing_no") + "&dboperation=search_bill&hotclick=0\"); return false;' >" 
-		        + rs.getString("billing_no") + "</a>";
-	        prop.setProperty("No", ""+nNo);
-	        prop.setProperty("Billing No", strT);
-	        prop.setProperty("HIN", rs.getString("hin"));
-	        prop.setProperty("Claim", sAmountclaim);
-	        prop.setProperty("Paid", sAmountpay);
-	        prop.setProperty("Billing Date", getFormatDateStr(rs.getString("service_date")));
-	        vecValue.add(prop);
-	        
-	        fTotalClaim += Float.parseFloat(rs.getString("amountclaim"));
-	        fTotalPaid += Float.parseFloat(rs.getString("amountpay"));
-        } else { // old billing no
-            prop = new Properties();
-            //sAmountclaim = rs.getString("amountclaim");
-			//sAmountpay = rs.getString("amountpay");
-			float fAmountclaim = Float.parseFloat(sAmountclaim);
-			fAmountclaim = fAmountclaim + Float.parseFloat(rs.getString("amountclaim"));
-			sAmountclaim = "" + Math.round(fAmountclaim*100)/100.00;
-			float fAmountpay = Float.parseFloat(sAmountpay);
-			fAmountpay = fAmountpay + Float.parseFloat(rs.getString("amountpay"));
-			sAmountpay = "" + Math.round(fAmountpay*100)/100.00;
-			//hin = rs.getString("hin");
-			String strT = "<a href=# onClick='popupPage(700,720, \"../../../billing/CA/BC/billingView.do?billing_no="
-		        + rs.getString("billing_no") + "&dboperation=search_bill&hotclick=0\"); return false;' >" 
-		        + rs.getString("billing_no") + "</a>";
-	        prop.setProperty("No", ""+nNo);
-	        prop.setProperty("Billing No", strT);
-	        prop.setProperty("HIN", rs.getString("hin"));
-	        // repeated records
-	        //prop.setProperty("Claim", sAmountclaim);
-	        prop.setProperty("Claim", propTotal.getProperty(tempStr));
-	        prop.setProperty("Paid", sAmountpay);
-	        prop.setProperty("Billing Date", getFormatDateStr(rs.getString("service_date")));
-	        vecValue.remove(vecValue.size()-1);
-	        vecValue.add(prop);
-	        
-	        fTotalClaim += Float.parseFloat(rs.getString("amountclaim"));
-	        fTotalPaid += Float.parseFloat(rs.getString("amountpay"));
-        }
-    }
-    rs.close();
-    vecTotal.add("Total");  
-    vecTotal.add("");  
-    vecTotal.add("");  
-    vecTotal.add("" + Math.round(fTotalClaim*100)/100.00);  
-    vecTotal.add("" + Math.round(fTotalPaid*100)/100.00);  
-    vecTotal.add("");  
-}
-
-// no longer used (not sure why)
-if("unpaid".equals(action)) {
-    vecHeader.add("No");
-    vecHeader.add("Billing No");
-    vecHeader.add("Patient");
-    vecHeader.add("Claim");
-    vecHeader.add("Description");
-    vecHeader.add("Service Date");
-    vecHeader.add("Time");
-    float fTotalClaim = 0.00f;
-    String sAmountclaim = "";
-        
-    sql = "select * from billing where provider_no='" + providerview + "' and billing_date >='" + xml_vdate 
-    + "' and billing_date<='" + xml_appointment_date + "' and (status<>'D' and status<>'S')" 
-    + " order by billing_date , billing_time ";
-    int nNo = 0;
-	//rs = dbObj.searchDBRecord(sql);
-	while (rs.next()) {
-		prop = new Properties();
-		nNo++;
-        prop.setProperty("No", ""+nNo);
-		prop.setProperty("Service Date", rs.getString("billing_date"));
-		prop.setProperty("Time", rs.getString("billing_time").substring(0,5));
-		prop.setProperty("Patient", rs.getString("demographic_name"));
-		
-		String apptDoctorNo = rs.getString("apptProvider_no");
-		String userno=rs.getString("provider_no");
-		String reason = rs.getString("status");
-		String note = "";
-		if (apptDoctorNo.compareTo("none") == 0){
-			note = "No Appt / INR";
-		} else {
-		    if (apptDoctorNo.compareTo(userno) == 0) {
-		    	note = "With Appt. Doctor";
-		    } else {
-		    	note = "Unmatched Appt. Doctor";
-		    }
-		}
-		if (reason.compareTo("N") == 0) reason="Do Not Bill ";
-		else if (reason.compareTo("O") == 0) reason="Bill OHIP ";
-		else if (reason.compareTo("W") == 0) reason="Bill WSIB ";
-		else if (reason.compareTo("H") == 0) reason="Capitated Bill ";
-		else if (reason.compareTo("P") == 0) reason="Bill Patient";
-		else if (reason.compareTo("B") == 0) reason="Sent OHIP";
-		
-		prop.setProperty("Description", reason + "(" + note + ")");
-		String tempStr = "<a href=# onClick='popupPage(700,720, \"../../../billing/CA/BC/billingView.do?billing_no="
-		        + rs.getString("billing_no") + "&dboperation=search_bill&hotclick=0\"); return false;' title="
-		        + reason + ">" + rs.getString("billing_no") + "</a>";
-		prop.setProperty("Billing No", tempStr);
-        sAmountclaim = rs.getString("total");
-		prop.setProperty("Claim", sAmountclaim);
-        fTotalClaim += Float.parseFloat(rs.getString("total"));
-		
-		vecValue.add(prop);
-	}
-    rs.close();
-    vecTotal.add("Total");  
-    vecTotal.add("");  
-    vecTotal.add("");  
-    vecTotal.add("" + Math.round(fTotalClaim*100)/100.00);  
-    vecTotal.add("");  
-    vecTotal.add("");  
-    vecTotal.add("");  
-}
-
 %>
 
 
@@ -488,21 +348,18 @@ var appointmentNumbers = new Array(<%
 </script>
 <script type="text/javascript" src="reports/billingONNewReport.js"></script>
 <title>ON Billing Report</title>
-<link rel="stylesheet" href="../../web.css">
-<link rel="stylesheet" type="text/css" media="all" href="../share/css/extractedFromPages.css"  />
-<link rel="stylesheet" type="text/css" media="all" href="reports/billingONNewReport.css"  />
+<link rel="stylesheet" href="../../web.css" >
+<link rel="stylesheet" type="text/css" media="all" href="../share/css/extractedFromPages.css"  >
+<link rel="stylesheet" type="text/css" media="all" href="reports/billingONNewReport.css"  >
 <!-- calendar stylesheet -->
-<link rel="stylesheet" type="text/css" media="all"
-	href="../../../share/calendar/calendar.css" title="win2k-cold-1" />
+<link rel="stylesheet" type="text/css" media="all" href="../../../share/calendar/calendar.css" title="win2k-cold-1" >
 <!-- main calendar program -->
 <script type="text/javascript" src="../../../share/calendar/calendar.js"></script>
 <!-- language for the calendar -->
-<script type="text/javascript"
-	src="../../../share/calendar/lang/calendar-en.js"></script>
+<script type="text/javascript" src="../../../share/calendar/lang/calendar-en.js"></script>
 <!-- the following script defines the Calendar.setup helper function, which makes
        adding a calendar a matter of 1 or 2 lines of code. -->
-<script type="text/javascript"
-	src="../../../share/calendar/calendar-setup.js"></script>
+<script type="text/javascript" src="../../../share/calendar/calendar-setup.js"></script>
 <script type="text/javascript">
 <!--
 
@@ -534,8 +391,7 @@ function calToday(field) {
 </script>
 </head>
 
-<body bgcolor="#FFFFFF" text="#000000" leftmargin="0" rightmargin="0"
-	topmargin="0">
+<body bgcolor="#FFFFFF" text="#000000" style="margin: 0 0 0">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 	<tr bgcolor="#CCCCFF">
 		<td width="5%"></td>
@@ -552,15 +408,13 @@ function calToday(field) {
 <form id="serviceform" name="serviceform" method="post" action="billingONReport.jsp">
 <table width="100%" border="0" bgcolor="#EEEEFF">
 	<tr>
-		<td width="30%" align="center"><font size="2"> <input
-			type="radio" name="reportAction" value="unbilled"
-			<%="unbilled".equals(action)? "checked" : "" %>>Unbilled <input
-			type="radio" name="reportAction" value="billed"
-			<%="billed".equals(action)? "checked" : "" %>>Billed 
-			<!--  input type="radio" name="reportAction" value="paid" <%="paid".equals(action)? "checked" : "" %>>Paid 
-			<input type="radio" name="reportAction" value="unpaid" <%="unpaid".equals(action)? "checked" : "" %>>Unpaid -->
-		</font></td>
-		<td width="20%" align="right" nowrap><b>Provider </b></font> 
+		<td width="30%" align="center">
+			<font size="2"> 
+				<input type="radio" name="reportAction" value="unbilled" <%="unbilled".equals(action)? "checked" : "" %>>Unbilled 
+				<input type="radio" name="reportAction" value="billed" <%="billed".equals(action)? "checked" : "" %>>Billed 
+			</font>
+		</td>
+		<td width="20%" align="right" nowrap><b>Provider </b>
 <% if (bMultisites) 
 { // multisite start ==========================================
         	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
@@ -632,6 +486,7 @@ while(rslocal.next()){
 %>
 		</select>
 <% } %>
+	</td>
 
 <%
 boolean isMaxPerPageValid = true;
@@ -639,20 +494,19 @@ if ((maxPerPage != 0 && maxPerPage != 25 && maxPerPage != 50 && maxPerPage != 75
 	isMaxPerPageValid = false;
 %>
 		
-		
-		</td>
 		<td align="center" nowrap>
 			<font size="1"> From:</font> 
 			<input type="text" name="xml_vdate" id="xml_vdate" size="10" value="<%=xml_vdate%>"> 
 			
 			<font size="1"> 				
-				<img src="../../../images/cal.gif" id="xml_vdate_cal"> To:
+				<img src="../../../images/cal.gif" alt="" id="xml_vdate_cal"> To:
 			</font> 
 			
 			<input type="text" name="xml_appointment_date" id="xml_appointment_date" onDblClick="calToday(this)" size="10" value="<%=xml_appointment_date%>"> 
-			<img src="../../../images/cal.gif" id="xml_appointment_date_cal">
+			<img src="../../../images/cal.gif" alt="" id="xml_appointment_date_cal">
 		</td>
 		<td align="center">
+			<span style="font-size: small;">Results per page:</span>
 			<select class="dropdown" name="max_per_page">
 				<option value="25" <%=(maxPerPage < 0 || maxPerPage == 25 ? "selected=\"selected\"" : "")%>>25</option>
 				<option value="50" <%=(isMaxPerPageValid && maxPerPage == 50 ? "selected=\"selected\"" : "")%>>50</option>
@@ -661,76 +515,32 @@ if ((maxPerPage != 0 && maxPerPage != 25 && maxPerPage != 50 && maxPerPage != 75
 				<option value="0" <%=(isMaxPerPageValid && maxPerPage == 0 ? "selected=\"selected\"" : "")%>>All</option>
 			</select>
 		</td>
-		<td align="right"><input type="submit" class="billing_button" name="Submit" value="Create Report"> </font></td>
+		<td align="right"> <input type="submit" class="billing_button" name="Submit" value="Create Report"> </td>
 	</tr>
-	<tr>
 </table>
 
-<input type="hidden" name="current_page" value="<%=currentPage%>" />
-
-<!-- Pagination -->
-<ul class="pagination-clean">
-	<li class="previous-off"> <a href="#" onclick="previousPage(); return false;">Previous</a> </li>
-	<%
-	int numPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
-	int numPagesToSkip = 0;
-	int startSkipAtPage = 0;
-	if (numPages > maxPaginationListSize) {
-		numPagesToSkip = numPages - maxPaginationListSize;
-		startSkipAtPage = maxPaginationListSize/2;
-	}
-		
-	for (int i=1; i < numPages+1; i++) {
-		if (startSkipAtPage != 0 && (i > startSkipAtPage && i < numPages-startSkipAtPage))
-			continue;
-		
-		String liClass = "";
-		String pageLink = "<a href='#' onclick='jumpToPage("+i+"); return false;'>"+i+"</a>";
-		
-		if (startSkipAtPage == i) {
-			pageLink = "<a href='#' onclick='return false;'>...</a>";			
-		} else {
-			if (i == currentPage) {
-				liClass="class='active'";
-				pageLink = "" +i;
-			}
-		}
-		
-		%> 
-		
-		<li <%=liClass%>> <%=pageLink%> </li> 
-		
-		<%
-	}
-	%>
-	<li class="next"> <a href="#" onclick="nextPage(); return false;">Next</a> </li>	
-</ul>
-<br>
-
-<ul>
-	<li class="pagination-clean"> Showing results <%=firstResult%>-<%=firstResult+maxPerPage-1%> of <%=totalResults%> </li>
-</ul>
+<input type="hidden" name="current_page" value="<%=currentPage%>" >
 
 </form>
 
 <%
 if (billsSubmitted) {
 	String message = "No bills submitted!";
+	String className = "warning";
 	if (numBillsSubmitted > 0) {
 		message = numBillsSaved + " bill(s) saved successfully!";
+		className = "success";
 		int numErrors = numBillsSubmitted - numBillsSaved;
 		if (numErrors != 0) {
 			message += "<br>"+numErrors + " bill(s) NOT saved successfully!";
+			if (numErrors == numBillsSubmitted)
+				className = "error";
+			else 
+				className = "warning";
 		}
 	}
 	%>
-<table>
-	<tbody>
-	<tr>
-		<td> <%=message%> </td>
-	</tr>
-	</tbody>
-</table>
+<div class="<%=className%>"><%=message%></div>
 <%
 }
 %>
@@ -741,11 +551,46 @@ if (editable) {
 %>
 <form name="submitbillingform" method="post" action="billingONReport.jsp" onsubmit="">
 <%
+
+	if (request.getParameter("reportAction") != null) {
+		%> 
+			<input type="hidden" name="reportAction" value="<%=request.getParameter("reportAction")%>" > 
+		<%
+	}
+	if (request.getParameter("providerview") != null) {
+		%> 
+			<input type="hidden" name="providerview" value="<%=request.getParameter("providerview")%>" > 
+		<%
+	}
+	if (request.getParameter("site") != null) {
+		%> 
+			<input type="hidden" name="site" value="<%=request.getParameter("site")%>" > 
+		<%
+	}
+	if (request.getParameter("xml_vdate") != null) {
+		%> 
+			<input type="hidden" name="xml_vdate" value="<%=request.getParameter("xml_vdate")%>" > 
+		<%
+	}
+	if (request.getParameter("xml_appointment_date") != null) {
+		%> 
+			<input type="hidden" name="xml_appointment_date" value="<%=request.getParameter("xml_appointment_date")%>" > 
+		<%
+	}
+	if (request.getParameter("max_per_page") != null) {
+		%> 
+			<input type="hidden" name="max_per_page" value="<%=request.getParameter("max_per_page")%>" > 
+		<%
+	}
+	if (request.getParameter("current_page") != null) {
+		%> 
+			<input type="hidden" name="current_page" value="<%=request.getParameter("current_page")%>" > 
+		<%
+	}
 }
 %>
 
 <table class="search_details">
-	<thead></thead>
 	<tbody>
 		<tr>
 			<td>Visit Type &nbsp;
@@ -771,8 +616,8 @@ if (editable) {
 			%>
 				<td>
 					<!-- Stupid hack - need button before actual submit button to prevent enter key from submitting form -->
-					<input type="submit" method="POST" class="hide_element" onclick="return false;" name="submit_billing" value="Submit Billing" />
-					<input type="submit" method="POST" class="billing_button" onclick="return true;" name="submit_billing" value="Submit Billing" /> 
+					<input type="submit" method="post" class="hide_element" onclick="return false;" name="submit_billing" value="Submit Billing" >
+					<input type="submit" method="post" class="billing_button" onclick="return true;" name="submit_billing" value="Submit Billing" > 
 				</td>
 			<%
 			}
@@ -789,24 +634,79 @@ if (vecHeader != null && vecHeader.size() > 0) {
 	<tr>
 		<td> <a class="billing_button" href="" tabindex="-1" onclick="">Paste to selected</a> </td>
 		<td> <a class="billing_button" href="" tabindex="-1" onclick="">Print selected</a> </td>
+		<td width="80%">
+			<!-- Pagination -->
+			<%
+			if (vecValue.size() > 0 && maxPerPage != 0) {
+				int numPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
+				int numPagesToSkip = 0;
+				int startSkipAtPage = 0;
+				if (numPages > maxPaginationListSize) {
+					numPagesToSkip = numPages - maxPaginationListSize;
+					startSkipAtPage = maxPaginationListSize/2;
+				}
+				
+				boolean canGoPrevious = true;
+				boolean canGoNext = true;
+				
+				if (currentPage == 1)
+					canGoPrevious = false;
+				if (currentPage == numPages)
+					canGoNext = false;
+
+				%>
+				<ul class="pagination-clean">
+					<li class="<%=canGoPrevious ? "previous" : "previous-off"%>"> <a href="#" onclick="<%=canGoPrevious ? "previousPage(); " : ""%>return false;">Previous</a> </li>
+					<%
+						
+					for (int i=1; i < numPages+1; i++) {
+						if (startSkipAtPage != 0 && (i > startSkipAtPage && i < numPages-startSkipAtPage))
+							continue;
+						
+						String liClass = "";
+						String pageLink = "<a href='#' onclick='jumpToPage("+i+"); return false;'>"+i+"</a>";
+						
+						if (startSkipAtPage == i) {
+							pageLink = "<a href='#' onclick='return false;'>...</a>";			
+						} else {
+							if (i == currentPage) {
+								liClass="class='active'";
+								pageLink = "" +i;
+							}
+						}
+						
+						%> 
+						
+						<li <%=liClass%>> <%=pageLink%> </li> 
+						
+						<%
+					}
+					%>
+					<li class="<%=canGoNext ? "next" : "next-off"%>"> <a href="#" onclick="<%=canGoNext ? "nextPage(); " : ""%>return false;">Next</a> </li>
+					<li class="pagination-clean" valign="center"> Showing results <%=firstResult%>-<%=Math.min(firstResult+maxPerPage-1, totalResults)%> of <%=totalResults%> </li>
+				</ul>
+			<% 
+			} 
+			%>
+		</td>
 	</tr>
 	</tbody>
 </table>
 
-<table class="bill-list">
-<thead>
-	<tr>
-		<th> <input type="checkbox" class="checkbox" name="select_all_bills" id="select_all_bills" onclick="toggleSelectAllBills();"/> </th>
-		<% for (int i=0; i<vecHeader.size(); i++) { %>
-			<th><%=vecHeader.get(i) %></th>
-		<% } %>
-		<th></th>
-	</tr>
-</thead>
 <%
 }
 %>
 
+<table class="bill-list">
+<thead>
+	<tr>
+		<th> <input type="checkbox" class="checkbox" name="select_all_bills" id="select_all_bills" onclick="toggleSelectAllBills();"> </th>
+		<% for (int i=0; i<vecHeader.size(); i++) { %>
+			<th width="<%=vecHeaderWidths.get(i)%>"><%=vecHeader.get(i) %></th>
+		<% } %>
+		<th></th>
+	</tr>
+</thead>
 <tbody>
 	<%	int uniqueId = 0;
 		for (int i=0; i < vecValue.size(); i++) {
@@ -824,7 +724,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 			prop = (Properties)vecValue.get(i);	
 			%>
 			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>); setFocusOnInputField(<%=i%>);">
-				<td width="10px"> <input type="checkbox" class="checkbox" name="select_bill" id="select_bill<%=i%>" onclick="preventEventPropagation(event);"/> </td>
+				<td width="10px"> <input type="checkbox" class="checkbox" name="select_bill" id="select_bill<%=i%>" onclick="preventEventPropagation(event);"> </td>
 				<% for (int j=0; j < vecHeader.size(); j++) {
 					%>
 					<td <%=style%>><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
@@ -843,15 +743,15 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							<option>3</option>
 						</select>
 						<a class="billing_button" href="" tabindex="-1" onclick="">Add Super Code</a>
-						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" /> <span class="input_element_label">Manual</span>
-						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" /> <span class="input_element_label">Referral Doctor</span>
-						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" />
-						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" />
-						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" />
-						<input type="hidden" name="demo_name<%=i%>" value="<%=prop.getProperty("Patient Name", "")%>" />
-						<input type="hidden" name="appt_no<%=i%>" value="<%=vecAppointmentNo.get(i)%>" />
-						<input type="hidden" name="demo_no<%=i%>" value="<%=vecDemographicNo.get(i)%>" />
-						<input type="hidden" name="prov_no<%=i%>" value="<%=vecProviderNo.get(i)%>" />
+						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" > <span class="input_element_label">Manual</span>
+						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" > <span class="input_element_label">Referral Doctor</span>
+						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" >
+						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" >
+						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" >
+						<input type="hidden" name="demo_name<%=i%>" value="<%=prop.getProperty("Patient Name", "")%>" >
+						<input type="hidden" name="appt_no<%=i%>" value="<%=vecAppointmentNo.get(i)%>" >
+						<input type="hidden" name="demo_no<%=i%>" value="<%=vecDemographicNo.get(i)%>" >
+						<input type="hidden" name="prov_no<%=i%>" value="<%=vecProviderNo.get(i)%>" >
 					<%
 					}
 					%>
@@ -867,27 +767,21 @@ if (vecHeader != null && vecHeader.size() > 0) {
 								<td>Dx Description</td>
 								<td>Total</td>
 								<td>SLI Code</td>
+								<% 
+								if (editable) { 
+									%>
+									<td> <textarea rows="4" cols="20" class="hide_element"></textarea> </td>
+								<% } %>
 							</tr>
-						<thead>
+						</thead>
 						<tbody id="billing_items<%=i%>">
-							<%								
+							<%		
 							if (!hasBills) {								
 								%>
 								
 								<%
 								if (editable) {
 								%>
-									<tr>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td> <textarea rows="4" cols="20"></textarea> </td>
-									</tr>
 									<%=getEditableBillingItemText(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i), null)%>
 								<%
 								} else {
@@ -903,22 +797,6 @@ if (vecHeader != null && vecHeader.size() > 0) {
 								for (BillingClaimHeader1 bill : vecBills.get(i)) {
 									appointmentNo = bill.getAppointment_no();									
 									List<BillingItem> billingItems = bill.getBillingItems();
-									%>
-									<%
-									if (editable) {
-										%>
-									<tr>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td></td>
-										<td> <textarea rows="4" cols="20"></textarea> </td>
-									</tr>
-									<%
 									
 									for (BillingItem item : billingItems) {
 										String serviceDesc = "";
@@ -991,6 +869,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						</tbody>
 					</table>
 					<table id="more_details<%=i%>" class="more_details hide">
+						<tbody>
 						<tr>
 							<td>
 								<div class="more_details">
@@ -1006,7 +885,8 @@ if (vecHeader != null && vecHeader.size() > 0) {
 									</table>
 								</div>
 							</td>
-						</tr>	
+						</tr>
+					</tbody>
 					</table>
 				</td>
 			</tr>
@@ -1014,38 +894,46 @@ if (vecHeader != null && vecHeader.size() > 0) {
 	
 	<% if(vecTotal.size() > 0) { %>
 		<tr bgcolor="silver">
-		<% for (int i=0; i < vecTotal.size(); i++) {%>
-			<th><%=vecTotal.get(i) %>&nbsp;</th>
+		<% for (int j=0; j < vecTotal.size(); j++) {%>
+			<th><%=vecTotal.get(j) %>&nbsp;</th>
 		<% } %>
 		</tr>
 	<%}%>
+
 </tbody>
 </table>
+
 
 <br>
 
 <hr width="100%">
 <table border="0" cellspacing="0" cellpadding="0" width="100%">
+<tbody>
 	<tr>
-		<td><a href=# onClick="javascript:history.go(-1);return false;">
-		<img src="images/leftarrow.gif" border="0" width="25" height="20"
-			align="absmiddle"> Back </a></td>
-		<td align="right"><a href="" onClick="self.close();">Close
-		the Window<img src="images/rightarrow.gif" border="0" width="25"
-			height="20" align="absmiddle"></a></td>
+		<td>
+			<a href=# onClick="javascript:history.go(-1);return false;">
+				<img src="images/leftarrow.gif" alt="" border="0" width="25" height="20" align="absmiddle"> Back 
+			</a>
+		</td>
+		<td align="right">
+			<a href="" onClick="self.close();">
+				Close the Window <img src="images/rightarrow.gif" alt="" border="0" width="25" height="20" align="absmiddle">
+			</a>
+		</td>
 	</tr>
+</tbody>
 </table>
 
 <%
 if (editable) {
 %>
-<input type="hidden" name="number_of_bills" value="<%=vecValue.size()%>" />
+<input type="hidden" name="number_of_bills" value="<%=vecValue.size()%>" >
 </form>
 <%
 }
 %>
 
-</body>
+
 <script type="text/javascript">
 Calendar.setup( { inputField : "xml_vdate", ifFormat : "%Y/%m/%d", showsTime :false, button : "xml_vdate_cal", singleClick : true, step : 1 } );
 Calendar.setup( { inputField : "xml_appointment_date", ifFormat : "%Y/%m/%d", showsTime :false, button : "xml_appointment_date_cal", singleClick : true, step : 1 } );
@@ -1058,7 +946,9 @@ incrementingId = <%=uniqueId%>;
 
 </script>
 
+</body>
 </html>
+
 <%! 
 String getFormatDateStr(String str) {
     String ret = str;
@@ -1194,13 +1084,13 @@ String getEditableBillingItemText(int i, int uniqueId, String demoNo, String app
 	String html = "";
 	html += "<tr id='billing_item"+i+"_"+uniqueId+"'>";
 	html += "	<td> <a class='billing_button' href='' tabindex='-1' onclick='deleteBillingItem("+i+", "+uniqueId+"); updateBillTotal("+i+"); return false;' >X</a></td>";
-	html += "	<td> <input type='text' size='6'  name='bill_code"+i+"' id='bill_code"+i+"_"+uniqueId+"' value='"+values.get(0)+"' "+onkeydown+" "+onkeyup+" /> <div id='service_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
-	html += "	<td> <input type='text' size='6' name='amount"+i+"' id='amount"+i+"_"+uniqueId+"' value='"+values.get(1)+"' "+onkeydown+" "+onkeyup+" /> </td>";
-	html += "	<td> <input type='text' size='3' name='units"+i+"' id='units"+i+"_"+uniqueId+"' value='"+values.get(2)+"' "+onkeydown+" "+onkeyup+" /> </td>";
-	html += "	<td> <input type='text' size='6' name='dx_code"+i+"' id='dx_code"+i+"_"+uniqueId+"' value='"+values.get(3)+"' "+onkeydown+" "+onkeyup+" /> <div id='diagnostic_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
-	html += "	<td> <input type='text' size='12' name='dx_desc"+i+"' id='dx_desc"+i+"_"+uniqueId+"' value='"+values.get(4)+"' "+onkeydown+" "+onkeyup+" /> <div id='diagnostic_desc_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
-	html += "	<td> <input type='text' size='6' name='total"+i+"' id='total"+i+"_"+uniqueId+"' value='"+values.get(5)+"' "+totalOnkeydown+" "+totalOnKeyup+" /> </td>";
-	html += "	<td> <input type='text' size='6' name='sli_code"+i+"' id='sli_code"+i+"_"+uniqueId+"' value='"+values.get(6)+"' /> </td>";
+	html += "	<td> <input type='text' size='6'  name='bill_code"+i+"' id='bill_code"+i+"_"+uniqueId+"' value='"+values.get(0)+"' "+onkeydown+" "+onkeyup+" > <div id='service_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
+	html += "	<td> <input type='text' size='6' name='amount"+i+"' id='amount"+i+"_"+uniqueId+"' value='"+values.get(1)+"' "+onkeydown+" "+onkeyup+" > </td>";
+	html += "	<td> <input type='text' size='3' name='units"+i+"' id='units"+i+"_"+uniqueId+"' value='"+values.get(2)+"' "+onkeydown+" "+onkeyup+" > </td>";
+	html += "	<td> <input type='text' size='6' name='dx_code"+i+"' id='dx_code"+i+"_"+uniqueId+"' value='"+values.get(3)+"' "+onkeydown+" "+onkeyup+" > <div id='diagnostic_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
+	html += "	<td> <input type='text' size='12' name='dx_desc"+i+"' id='dx_desc"+i+"_"+uniqueId+"' value='"+values.get(4)+"' "+onkeydown+" "+onkeyup+" > <div id='diagnostic_desc_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
+	html += "	<td> <input type='text' size='6' name='total"+i+"' id='total"+i+"_"+uniqueId+"' value='"+values.get(5)+"' "+totalOnkeydown+" "+totalOnKeyup+" > </td>";
+	html += "	<td> <input type='text' size='6' name='sli_code"+i+"' id='sli_code"+i+"_"+uniqueId+"' value='"+values.get(6)+"' > </td>";
 	html += "</tr>";
 	
 	return html;
@@ -1234,13 +1124,17 @@ String getUneditableBillingItemText(int i, int uniqueId, String demoNo, String a
 	return html;
 }
 
-void saveSubmittedBills() {
+int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appointmentDao, BillingClaimDAO billingClaimDAO, DemographicDao demographicDao, ProviderDao providerDao ) {
 	String tempNumberOfBills = request.getParameter("number_of_bills");
-	numBills = 0;
+	int numBills = 0;
 	try {
 		numBills = Integer.parseInt(tempNumberOfBills);
 	} catch (Exception e) {
 	}
+	
+	int numBillsSubmitted = 0;
+	int numBillsSaved = 0;
+	
 	//MiscUtils.getLogger().info("numbills: " + numBills);
 	for (int i=0; i < numBills; i++) {
 		String billId = request.getParameter("bill_id"+i);
@@ -1264,20 +1158,44 @@ void saveSubmittedBills() {
 		String[] totals = request.getParameterValues("total"+i);
 		String[] sliCodes = request.getParameterValues("sli_code"+i);
 		
+		
 		if (billId != null && billSaved) {
+			MiscUtils.getLogger().info("billCodes length: " + billCodes.length);
 			numBillsSubmitted++;
 			
 			BillingClaimHeader1 bill = null;
 			
 			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-			Date billDateAsDate = (Date)formatter.parse(billDate);
+			Date billDateAsDate = null;
+			Date billTimeAsDate = null;
+			try {
+				billDateAsDate = (Date)formatter.parse(billDate);
+			} catch (Exception e) {}
+			
 			formatter = new SimpleDateFormat("HH:mm:ss");
-			Date billTimeAsDate = (Date)formatter.parse(billTime);
+			try {
+				billTimeAsDate = (Date)formatter.parse(billTime);
+			} catch (Exception e) {}
+			
+			double tempTotal = 0;
+			String total = "";
+			try {
+				for (int j = 0; j < totals.length; j++) {
+					tempTotal += Double.parseDouble(totals[j]);
+				}
+				total = String.format("%1$,.2f", tempTotal);
+			} catch (Exception e) {
+				MiscUtils.getLogger().error("total calc error:", e);
+			}
 			
 			if (billId.equals("")) {
+				MiscUtils.getLogger().info("demoName: " + demoName);
+
 				// create new bill
 				bill = new BillingClaimHeader1();
 				bill.setHeader_id(0);
+				bill.setTransc_id(BillingDataHlp.CLAIMHEADER1_TRANSACTIONIDENTIFIER);
+		        bill.setRec_id(BillingDataHlp.CLAIMHEADER1_REORDIDENTIFICATION);
 				bill.setDemographic_no(demoNo);
 				bill.setProvider_no(provNo);
 				bill.setAppointment_no(apptNo);
@@ -1286,16 +1204,50 @@ void saveSubmittedBills() {
 				bill.setDemographic_name(demoName);
 				bill.setStatus("W");
 				bill.setApptProvider_no("none");
+				
+				bill.setPayee(BillingDataHlp.CLAIMHEADER1_PAYEE);
+		        bill.setRef_num("");
+		        bill.setApptProvider_no("");
+		        bill.setAsstProvider_no("");
+		        bill.setPaid("");
+		        bill.setStatus("O");
+		        bill.setComment1("");
+		        bill.setVisittype("00");
+		        bill.setAdmission_date("");
+		        bill.setRef_lab_num("");
+		        bill.setMan_review("");
+
+				Demographic demo = demographicDao.getDemographic(demoNo.toString());
+				Provider prov = providerDao.getProvider(provNo);
+				OscarProperties properties = OscarProperties.getInstance();
+				
+				String payProg = demo.getHcType().equals("ON") ? "HCP" : "RMB";
+		        bill.setPay_program(payProg);
+				bill.setHin(demo.getHin());
+		        bill.setVer(demo.getVer());
+		        bill.setDob(demo.getYearOfBirth() + demo.getMonthOfBirth() + demo.getDateOfBirth());
+				bill.setFacilty_num( "0000" );
+				bill.setLocation(properties.getProperty("clinic_no", ""));
+				bill.setSex(demo.getSex());
+				bill.setProvince(demo.getHcType());
+				bill.setProvider_ohip_no(prov.getOhipNo());
+				bill.setProvider_rma_no(prov.getRmaNo());
+				bill.setCreator( (String) request.getSession().getAttribute("user") );
+				bill.setTotal(total);
+
+
+		        
 			} else {
 				// set old bills' status as 'D' for deleted
-				bill = billingClaimDAO.getInvoice(billId);
-				bill.setStatus("D");
-				billingClaimDAO.updateBill(bill);
+				BillingClaimHeader1 oldBill = billingClaimDAO.getInvoice(billId);
+				bill = BillingClaimHeader1.copy(oldBill);
+				oldBill.setStatus("D");
+				billingClaimDAO.updateBill(oldBill);
 				
-				String apptProvNo = bill.getApptProvider_no();
+				//String apptProvNo = bill.getApptProvider_no();
 				
 				// create new bill to replace old bill
-				bill = new BillingClaimHeader1();
+				//bill = new BillingClaimHeader1();
 				bill.setHeader_id(0);
 				bill.setDemographic_no(demoNo);
 				bill.setProvider_no(provNo);
@@ -1305,41 +1257,42 @@ void saveSubmittedBills() {
 				bill.setDemographic_name(demoName);
 				bill.setStatus("W");
 				
-				bill.setApptProvider_no(apptProvNo);
+				//bill.setApptProvider_no(apptProvNo);
 				
 				bill.getBillingItems().clear();
 			}
 			
 			// set values for billing items
-			
 			for (int j=0; j < billCodes.length; j++) {
-		        BillingItem item = null;
-		        for( String code : billCodes) {
-		            item = new BillingItem();
-		            item.setCh1_id(bill.getId());
-		            item.setTransc_id(BillingDataHlp.ITEM_TRANSACTIONIDENTIFIER);
-		            item.setRec_id(BillingDataHlp.ITEM_REORDIDENTIFICATION);
-		            item.setService_code(billCodes[j]);
-		
-		            item.setFee(amounts[j]);
-		            item.setSer_num(units[j]);
-		            item.setStatus("S");
-					
-		            item.setService_date(billDateAsDate);
-					
-					item.setDx(billCodes[j]);
-					item.setDx1("");
-	                item.setDx2("");
-		
-		            bill.getBillingItems().add(item);
-		        }
+		        BillingItem item = new BillingItem();
+	            item.setCh1_id(bill.getId());
+	            item.setTransc_id(BillingDataHlp.ITEM_TRANSACTIONIDENTIFIER);
+	            item.setRec_id(BillingDataHlp.ITEM_REORDIDENTIFICATION);
+	            item.setService_code(billCodes[j]);
+	
+	            item.setFee(amounts[j]);
+	            item.setSer_num(units[j]);
+	            item.setStatus("W");
 				
-				try {
-					billingClaimDAO.createBill(bill);
-					numBillsSaved++;
-				} catch (Exception e) {
-					MiscUtils.getLogger().error("create bill error:", e);
-				}
+	            item.setService_date(billDateAsDate);
+				
+				item.setDx(dxCodes[j]);
+				item.setDx1("");
+                item.setDx2("");
+	
+	            bill.getBillingItems().add(item);
+	            MiscUtils.getLogger().info("billCodes[j] " + billCodes[j]);
+	            MiscUtils.getLogger().info("amounts[j] " + amounts[j]);
+	            MiscUtils.getLogger().info("units[j] " + units[j]);
+	            MiscUtils.getLogger().info("dxCodes[j] " + dxCodes[j]);
+	            MiscUtils.getLogger().info("billDateAsDate " + billDateAsDate);
+			}
+			
+			try {
+				billingClaimDAO.createBill(bill);
+				numBillsSaved++;
+			} catch (Exception e) {
+				MiscUtils.getLogger().error("create bill error:", e);
 			}
 			
 			// update appointment status to be 'B' for billed
@@ -1351,5 +1304,7 @@ void saveSubmittedBills() {
 			}
 		}
 	}
+	
+	return new int[]{ numBills, numBillsSubmitted, numBillsSaved };
 }
 %>

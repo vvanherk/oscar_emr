@@ -105,51 +105,55 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
 
     }
     
-    public BillingClaimHeader1(BillingClaimHeader1 bill) {
-		this.header_id = bill.getHeader_id();
-		this.transc_id = bill.getTransc_id();
-		this.rec_id = bill.getRec_id();
-		this.hin = bill.getHin();
-		this.ver = bill.getVer();
-		this.dob = bill.getDob();
-		this.pay_program = bill.getPay_program();
-		this.payee = bill.getPayee();
-		this.ref_num = bill.getRef_num();
-		this.facilty_num = bill.getFacilty_num();
-		this.admission_date = bill.getAdmission_date();
-		this.ref_lab_num = bill.getRef_lab_num();
-		this.man_review = bill.getMan_review();
+    public static BillingClaimHeader1 copy(BillingClaimHeader1 bill) {
+		BillingClaimHeader1 bill2 = new BillingClaimHeader1();
+		bill2.header_id = new Integer( bill.getHeader_id() );
+		bill2.transc_id = new String( bill.getTransc_id() );
+		bill2.rec_id = new String( bill.getRec_id() );
+		bill2.hin = new String( bill.getHin() );
+		bill2.ver = new String( bill.getVer() );
+		bill2.dob = new String( bill.getDob() );
+		bill2.pay_program = new String( bill.getPay_program() );
+		bill2.payee = new String( bill.getPayee() );
+		bill2.ref_num = new String( bill.getRef_num() );
+		bill2.facilty_num = new String( bill.getFacilty_num() );
+		bill2.admission_date = new String( bill.getAdmission_date() );
+		bill2.ref_lab_num = new String( bill.getRef_lab_num() );
+		bill2.man_review = new String( bill.getMan_review() );
 		
-		this.location = bill.getLocation();
-		this.demographic_no = bill.getDemographic_no();
-		this.provider_no = bill.getProvider_no();
-		this.appointment_no = bill.getAppointment_no();
+		bill2.location = new String( bill.getLocation() );
+		bill2.demographic_no = new Integer( bill.getDemographic_no() );
+		bill2.provider_no = new String( bill.getProvider_no() );
+		bill2.appointment_no = new String( bill.getAppointment_no() );
 		
-		this.demographic_name = bill.getDemographic_name();
-		this.sex = bill.getSex();
-		this.province = bill.getProvince();
-		this.billing_date = bill.getBilling_date();
-		this.billing_time = bill.getBilling_time();
-		this.total = bill.getTotal();
-		this.paid = bill.getPaid();
+		bill2.demographic_name = new String( bill.getDemographic_name() );
+		bill2.sex = new String( bill.getSex() );
+		bill2.province = new String( bill.getProvince() );
+		bill2.billing_date = new Date( bill.getBilling_date().getTime() );
+		bill2.billing_time = new Date( bill.getBilling_time().getTime() );
+		bill2.total = new String( bill.getTotal() );
+		bill2.paid = new String( bill.getPaid() );
 		
-		this.status = bill.getStatus();
-		this.comment1 = bill.getComment1();
-		this.visittype = bill.getVisittype();
-		this.provider_ohip_no = bill.getProvider_ohip_no();
-		this.provider_rma_no = bill.getProvider_rma_no();
-		this.apptProvider_no = bill.getApptProvider_no();
-		this.asstProvider_no = bill.getAsstProvider_no();
+		bill2.status = new String( bill.getStatus() );
+		bill2.comment1 = new String( bill.getComment1() );
+		bill2.visittype = new String( bill.getVisittype() );
+		bill2.provider_ohip_no = new String( bill.getProvider_ohip_no() );
+		bill2.provider_rma_no = new String( bill.getProvider_rma_no() );
+		bill2.apptProvider_no = new String( bill.getApptProvider_no() );
+		bill2.asstProvider_no = new String( bill.getAsstProvider_no() );
 		
-		this.creator = bill.getCreator();
-		this.timestamp1 = bill.getTimestamp1();
-		this.clinic = bill.getClinic();
+		bill2.creator = new String( bill.getCreator() );
+		bill2.timestamp1 = new Date( bill.getTimestamp1().getTime() );
+		bill2.clinic = new String( bill.getClinic() );
 		
 		List<BillingItem> items = bill.getBillingItems();
+		List<BillingItem> billingItems = bill2.getBillingItems();
 		for (BillingItem item : items) {
-			BillingItem newItem = new BillingItem(item);
+			BillingItem newItem = BillingItem.copy(item);
 			billingItems.add(newItem);
 		}
+		
+		return bill2;
     }
 
     @Override
