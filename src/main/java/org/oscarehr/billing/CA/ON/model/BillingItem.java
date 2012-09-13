@@ -64,19 +64,22 @@ public class BillingItem  extends AbstractModel<Integer> implements Serializable
 		
 	}
 
-	public BillingItem(BillingItem item) {
-		this.ch1_id = item.getCh1_id();
-		this.transc_id = item.getTransc_id();
-		this.rec_id = item.getRec_id();
-		this.service_code = item.getService_code();
-		this.fee = item.getFee();
-		this.ser_num = item.getSer_num();
-		this.service_date = item.getService_date();
-		this.dx = item.getDx();
-		this.dx1 = item.getDx1();
-		this.dx2 = item.getDx2();
-		this.status = item.getStatus();
-		this.timestamp = item.getTimestamp();
+	public static BillingItem copy(BillingItem item) {
+		BillingItem item2 = new BillingItem();
+		
+		item2.ch1_id = item.getCh1_id();
+		item2.transc_id = item.getTransc_id();
+		item2.rec_id = item.getRec_id();
+		item2.service_code = item.getService_code();
+		item2.fee = item.getFee();
+		item2.ser_num = item.getSer_num();
+		item2.service_date = item.getService_date();
+		item2.dx = item.getDx();
+		item2.dx1 = item.getDx1();
+		item2.dx2 = item.getDx2();
+		item2.status = item.getStatus();
+		item2.timestamp = item.getTimestamp();
+		return item2;
 	}
 
     @Override

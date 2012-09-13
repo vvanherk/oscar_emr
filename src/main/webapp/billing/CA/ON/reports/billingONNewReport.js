@@ -705,13 +705,13 @@ function addBillingItem(id) {
 	onkeyup+= "return true; \"";
 	
 	var htmlString = "<td> <a class=\"billing_button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); updateBillTotal("+id+"); return false;\">X</a></td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"bill_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"service_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"amount"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"3\" id=\"units"+id+"_"+billingItemId+"\" value=\"1\" "+onkeydown+" "+onkeyup+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"dx_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"12\" id=\"dx_desc"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_desc_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"total"+id+"_"+billingItemId+"\" "+totalOnkeydown+" "+totalOnKeyup+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" id=\"sli_code"+id+"_"+billingItemId+"\" disabled=\"disabled\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"\" id=\"bill_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"service_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"\" id=\"amount"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"\" id=\"units"+id+"_"+billingItemId+"\" value=\"1\" "+onkeydown+" "+onkeyup+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"\" id=\"dx_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"\" id=\"dx_desc"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_desc_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"\" id=\"total"+id+"_"+billingItemId+"\" "+totalOnkeydown+" "+totalOnKeyup+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"\" id=\"sli_code"+id+"_"+billingItemId+"\" disabled=\"disabled\" /> </td>";
 	element.innerHTML = htmlString;
 	
 	var billingItems = document.getElementById("billing_items"+id);

@@ -25,47 +25,82 @@
 
 /** Pagination */
 
-.pagination {border:0; margin:0; padding:0;}
-
 .pagination-clean {
-border:0; margin:0; padding:0;
-font-size:11px;
-list-style:none;
+	border:0; 
+	margin:0; 
+	padding:0;
+	font-size:11px;
+	list-style:none;
 }
-.pagination-clean li, .pagination-clean a{
-border:solid 1px #DEDEDE
-margin-right:2px;
+.pagination-clean a {
+	border:solid 1px #DEDEDE;
+	margin-right:2px;
+	
+	color:#0033CC;
+	display:block;
+	float:left;
+	padding:3px 6px;
+	text-decoration:none;
 }
-.pagination-clean .previous-off,
-.pagination-clean .next-off {
-color:#888888
-display:block;
-float:left;
-font-weight:bold;
-padding:3px 4px;
+.pagination-clean .previous-off a, .pagination-clean .next-off a {
+	color:#DEDEDE;
+	display:block;
+	float:left;
+	font-weight:bold;
+	padding:3px 4px;
+	border:none;
+	
+	cursor:default;
 }
-.pagination-clean .next a,
-.pagination-clean .previous a {
-font-weight:bold;
-border:solid 1px #FFFFFF;
+.pagination-clean .next a, .pagination-clean .previous a {
+	font-weight:bold;
+	border:none;
 }
-.pagination-clean .active{
-color:#00000
-font-weight:bold;
-display:block;
-float:left;
-padding:4px 6px;
+.pagination-clean .active {
+	color:#000000;
+	font-weight:bold;
+	display:block;
+	float:left;
+	padding:4px 6px;
 }
-.pagination-clean a:link,
-.pagination-clean a:visited {
-color:#0033CC
-display:block;
-float:left;
-padding:3px 6px;
-text-decoration:none;
+
+
+
+/** Notification Boxes */
+.info, .success, .warning, .error, .validation {
+border: 1px solid;
+
+padding:15px 10px 15px 50px;
+background-repeat: no-repeat;
+background-position: 10px center;
+margin-left: auto;
+margin-right: auto;
+width: 40%;
 }
-.pagination-clean a:hover{
-text-decoration:none;
+.info {
+color: #00529B;
+background-color: #BDE5F8;
+background-image: url('info.png');
+}
+.success {
+color: #4F8A10;
+background-color: #DFF2BF;
+background-image:url('success.png');
+}
+.warning {
+color: #9F6000;
+background-color: #FEEFB3;
+background-image: url('warning.png');
+}
+.error {
+color: #D8000C;
+background-color: #FFBABA;
+background-image: url('error.png');
+}
+.validation {
+color: #D63301;
+background-color: #FFCCBA;
+background-image: url('validation.png');
 }
 
 
