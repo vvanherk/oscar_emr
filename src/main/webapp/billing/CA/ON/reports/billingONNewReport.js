@@ -1168,6 +1168,42 @@ function isShowMoreDetails(evt) {
 	return (evt.keyCode == 113);
 }
 
+function showBillNotes(billId) {
+	removeClass("hide_element", document.getElementById("bill_notes_container"+billId));
+}
+
+function hideBillNotes(billId) {
+	addClass("hide_element", document.getElementById("bill_notes_container"+billId));
+}
+
+function toggleBillNotesVisible(billId) {
+	var elem = document.getElementById("bill_notes_container"+billId);
+	
+	if (hasClass("hide_element", elem)) {
+		showBillNotes(billId);
+	} else {
+		hideBillNotes(billId);
+	}
+}
+
+function showReferralDoctor(billId) {
+	removeClass("hide_element", document.getElementById("referral_doc_container"+billId));
+}
+
+function hideReferralDoctor(billId) {
+	addClass("hide_element", document.getElementById("referral_doc_container"+billId));
+}
+
+function toggleReferralDoctorVisible(billId) {
+	var elem = document.getElementById("referral_doc_container"+billId);
+	
+	if (hasClass("hide_element", elem)) {
+		showReferralDoctor(billId);
+	} else {
+		hideReferralDoctor(billId);
+	}
+}
+
 /**
  * 
  */

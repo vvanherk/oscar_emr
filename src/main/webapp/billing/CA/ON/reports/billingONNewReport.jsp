@@ -733,6 +733,28 @@ if (vecHeader != null && vecHeader.size() > 0) {
 			</tr>
 			<tr id="bill_details<%=i%>" class="bill hide_bill">
 				<td colspan="5">
+					<% 
+					if (editable) { 
+						%>
+						<table class="extras_container">
+						<tr>
+						<td id="bill_notes_container<%=i%>" class="hide_element">
+							Bill Notes:<br>
+							<textarea rows="4" cols="20" id="bill_notes<%=i%>" name="bill_notes<%=i%>"></textarea>
+						</td>
+						<td id="referral_doc_container<%=i%>" class="hide_element">
+							Referral Doctor:<br>
+							No: <input type="text" id="referral_no<%=i%>" name="referral_no<%=i%>">
+							<br>
+							First name: <input type="text" id="referral_first_name<%=i%>" name="referral_first_name<%=i%>">
+							Last name: <input type="text" id="referral_last_name<%=i%>" name="referral_last_name<%=i%>">
+							<br>
+							Specialty: <input type="text" id="referral_specialty<%=i%>" name="referral_specialty<%=i%>">
+						</td>
+						</tr>
+						</table>
+					<% } %>
+				
 					<%
 					if (editable) {
 					%>
@@ -743,8 +765,16 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							<option>3</option>
 						</select>
 						<a class="billing_button" href="" tabindex="-1" onclick="">Add Super Code</a>
-						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" > <span class="input_element_label">Manual</span>
-						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" > <span class="input_element_label">Referral Doctor</span>
+						
+						Admission date:
+						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" size="10" value="" > 
+						<img src="../../../images/cal.gif" alt="" id="admission_date<%=i%>_cal">
+						<script>
+							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y/%m/%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1 } );
+						</script>
+						
+						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" onclick="toggleBillNotesVisible(<%=i%>);" > <span class="input_element_label">Manual</span>
+						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="toggleReferralDoctorVisible(<%=i%>);" > <span class="input_element_label">Referral Doctor</span>
 						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" >
 						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" >
 						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" >
@@ -767,11 +797,6 @@ if (vecHeader != null && vecHeader.size() > 0) {
 								<td>Dx Description</td>
 								<td>Total</td>
 								<td>SLI Code</td>
-								<% 
-								if (editable) { 
-									%>
-									<td> <textarea rows="4" cols="20" class="hide_element"></textarea> </td>
-								<% } %>
 							</tr>
 						</thead>
 						<tbody id="billing_items<%=i%>">
@@ -1149,7 +1174,10 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		boolean billSaved = (request.getParameter("bill_saved"+i) != null);
 		String billDate = request.getParameter("bill_date"+i);
 		String billTime = request.getParameter("bill_time"+i);
+		String admissionDate = request.getParameter("admission_date"+i);
+		String billNotes = request.getParameter("bill_notes"+i);
 		String demoName = request.getParameter("demo_name"+i);
+		String referralNo = request.getParameter("referral_no"+i);
 		String[] billCodes = request.getParameterValues("bill_code"+i);
 		String[] amounts = request.getParameterValues("amount"+i);
 		String[] units = request.getParameterValues("units"+i);
@@ -1191,6 +1219,10 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 			if (billId.equals("")) {
 				MiscUtils.getLogger().info("demoName: " + demoName);
 
+				Demographic demo = demographicDao.getDemographic(demoNo.toString());
+				Provider prov = providerDao.getProvider(provNo);
+				OscarProperties properties = OscarProperties.getInstance();
+
 				// create new bill
 				bill = new BillingClaimHeader1();
 				bill.setHeader_id(0);
@@ -1206,20 +1238,16 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				bill.setApptProvider_no("none");
 				
 				bill.setPayee(BillingDataHlp.CLAIMHEADER1_PAYEE);
-		        bill.setRef_num("");
+		        bill.setRef_num(referralNo);
 		        bill.setApptProvider_no("");
 		        bill.setAsstProvider_no("");
 		        bill.setPaid("");
 		        bill.setStatus("O");
-		        bill.setComment1("");
+		        bill.setComment1(billNotes);
 		        bill.setVisittype("00");
-		        bill.setAdmission_date("");
+		        bill.setAdmission_date(admissionDate);
 		        bill.setRef_lab_num("");
 		        bill.setMan_review("");
-
-				Demographic demo = demographicDao.getDemographic(demoNo.toString());
-				Provider prov = providerDao.getProvider(provNo);
-				OscarProperties properties = OscarProperties.getInstance();
 				
 				String payProg = demo.getHcType().equals("ON") ? "HCP" : "RMB";
 		        bill.setPay_program(payProg);
