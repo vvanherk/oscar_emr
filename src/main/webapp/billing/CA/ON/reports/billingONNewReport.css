@@ -260,6 +260,13 @@ background-image: url('validation.png');
 	font-weight: normal;
 }
 
+.bill-list .bill .extras_container {
+	float: right;
+	width: 100px;
+	margin: 5px 0 0 60%;
+	position: absolute;
+}
+
 .bill-list .bill .billing_button.hide_button
 {
 	display: none;

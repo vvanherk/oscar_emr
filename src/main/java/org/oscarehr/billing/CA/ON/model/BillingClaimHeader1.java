@@ -96,6 +96,15 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
 
     }
     
+    /**
+	 * Method copy
+	 * Performs a deep copy of the given BillingClaimHeader1 and returns the new copy.  The id
+	 * of the given object is not copied.
+	 * 
+	 * @param item The BillingClaimHeader1 object that we want to copy
+	 * 
+	 * @return A new BillingClaimHeader1 object with identical values to the provided BillingClaimHeader1 object (except for the id)
+	 */
     public static BillingClaimHeader1 copy(BillingClaimHeader1 bill) {
 		BillingClaimHeader1 bill2 = new BillingClaimHeader1();
 		bill2.header_id = new Integer( bill.getHeader_id() );
