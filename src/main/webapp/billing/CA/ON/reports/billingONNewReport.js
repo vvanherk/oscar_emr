@@ -289,6 +289,23 @@ function setDiagnosticDescription(billId, billingItemId, diagnosticDescripton) {
 	}
 }
 
+function setReferralDoctorName(billId, fullName) {
+	var refDocContainer = document.getElementById("referral_doc_container"+billId);
+	var inputElements = refDocContainer.getElementsByTagName("input");
+	
+	if (inputElements != null && inputElements.length > 0) {
+		inputElements[0].value = fullName;
+	}
+}
+
+function setReferralDoctorId(billId, refDocId) {
+	var element = document.getElementById("referral_doc_no"+billId);
+	
+	if (element != null && element != undefined) {
+		element.value = refDocId;
+	}
+}
+
 /**
  * function checkIfLastBillingItem
  * 
@@ -777,6 +794,11 @@ var toggleSelectAllBills = (function () {
 	};
 }());
 
+function setFocusOnReferralDoctorInput(billId) {
+	var refDocInput = document.getElementById("referral_full_name"+billId);
+	refDocInput.focus();
+}
+
 /**
  * 
  */ 
@@ -889,6 +911,29 @@ function getPreviousBillId(id) {
 	return previousBillId;	
 }
 
+function showAvailableReferralDoctors(billId, name) {
+	getReferralDoctors(billId, name);
+	var elem = document.getElementById("referral_doc_lookup"+billId);
+	elem.style.display = "";
+}
+
+function hideReferralDoctorsLookup(billId) {
+	document.getElementById("referral_doc_lookup"+billId).style.display = "none";
+}
+
+function hideAllReferralDoctorLookups(billId) {
+	var bill = document.getElementById("bill_details"+billId);
+	var divElements = bill.getElementsByTagName("div");
+	
+	if (divElements == null)
+		return;
+	
+	for (var i=0; i < divElements.length; i++) {
+		if (divElements[i].id.indexOf("referral_doc_lookup"+billId) == 0)
+			divElements[i].style.display = "none";
+	}
+}
+
 function showAvailableServiceCodes(billId, billingItemId, serviceCode) {
 	getBillingCodes(billId, billingItemId, serviceCode);
 	var elem = document.getElementById("service_code_lookup"+billId+"_"+billingItemId);
@@ -900,7 +945,7 @@ function hideServiceCodeLookup(billId, billingItemId) {
 }
 
 function hideAllServiceCodeLookups(billId) {
-	var bill = document.getElementById("billing_items"+billId);
+	var bill = document.getElementById("bill_details"+billId);
 	var divElements = bill.getElementsByTagName("div");
 	
 	if (divElements == null)
@@ -929,7 +974,7 @@ function hideDiagnosticDescriptionLookup(billId, billingItemId) {
 }
 
 function hideAllDiagnosticLookups(billId) {
-	var bill = document.getElementById("billing_items"+billId);
+	var bill = document.getElementById("bill_details"+billId);
 	var divElements = bill.getElementsByTagName("div");
 	
 	if (divElements == null)
@@ -946,12 +991,13 @@ function hideAllDiagnosticLookups(billId) {
 function hideAllLookups(billId) {
 	hideAllDiagnosticLookups(billId);
 	hideAllServiceCodeLookups(billId);
+	hideAllReferralDoctorLookups(billId);
 	
 	unsetAllLookupItemsAsHighlighted(billId);
 }
 
 function isLookupOpen(billId) {
-	var bill = document.getElementById("billing_items"+billId);
+	var bill = document.getElementById("bill_details"+billId);
 	var divElements = bill.getElementsByTagName("div");
 	
 	if (divElements == null)
@@ -965,6 +1011,9 @@ function isLookupOpen(billId) {
 			if (divElements[i].style.display.indexOf("none") == -1)
 				return true;
 		if (divElements[i].id.indexOf("service_code_lookup"+billId+"_") == 0)
+			if (divElements[i].style.display.indexOf("none") == -1)
+				return true;
+		if (divElements[i].id.indexOf("referral_doc_lookup"+billId) == 0)
 			if (divElements[i].style.display.indexOf("none") == -1)
 				return true;
 	}
@@ -995,7 +1044,7 @@ function moveBetweenLookupItems(evt, billId) {
  * 
  */
 function moveToNextLookupItem(billId) {	
-	var billingItems = document.getElementById("billing_items"+billId);
+	var billingItems = document.getElementById("bill_details"+billId);
 	var lookups = billingItems.getElementsByTagName("ul");
 	
 	if (lookups == null || lookups == undefined)
@@ -1038,7 +1087,7 @@ function unsetLookupItemAsHighlighted(elem) {
 }
 
 function unsetAllLookupItemsAsHighlighted(billId) {
-	var billingItems = document.getElementById("billing_items"+billId);
+	var billingItems = document.getElementById("bill_details"+billId);
 	var lookups = billingItems.getElementsByTagName("ul");
 	
 	if (lookups == null || lookups == undefined)
@@ -1059,7 +1108,7 @@ function unsetAllLookupItemsAsHighlighted(billId) {
 }
 
 function selectLookupItem(billId) {	
-	var billingItems = document.getElementById("billing_items"+billId);
+	var billingItems = document.getElementById("bill_details"+billId);
 	var lookups = billingItems.getElementsByTagName("ul");
 	
 	if (lookups == null || lookups == undefined)
@@ -1085,7 +1134,7 @@ function selectLookupItem(billId) {
  * 
  */
 function moveToPreviousLookupItem(billId) {	
-	var billingItems = document.getElementById("billing_items"+billId);
+	var billingItems = document.getElementById("bill_details"+billId);
 	var lookups = billingItems.getElementsByTagName("ul");
 	
 	if (lookups == null || lookups == undefined)
@@ -1281,6 +1330,77 @@ function createXMLHttpRequest() {
 	throw new Error( "This browser does not support XMLHttpRequest." )
 	};
 	return new XMLHttpRequest();
+}
+
+
+function getReferralDoctorsHandler(billId) {
+	return function parseResponse() {
+		if(this.readyState == 4 && this.status == 200) {
+			var json = this.responseText;
+			var json = eval('(' + this.responseText +')');	
+			
+			var referralDocsString = "";
+			if (json.length != 0) {	
+				var referralDocsString = "<ul>";
+				var onclick = "onclick=\"";
+				onclick += "setReferralDoctorName("+billId+", extractReferralDoctorName(this));";
+				onclick += "setReferralDoctorId("+billId+", extractReferralDoctorId(this));";
+				onclick += "hideReferralDoctorsLookup("+billId+");";
+				//onclick += "setFocusOnInputField("+billId+", "+billingItemId+", 2);";
+				onclick += "\"";
+				for (var i = 0; i < json.length; i++) { 			    
+				    referralDocsString+= "<li "+onclick+">";
+				    referralDocsString+= "<b><span>" + json[i]['last_name'] + ", " + json[i]['first_name'] + "</span></b>";
+				    referralDocsString+= "<span style=\"display:none;\">" + json[i]['referral_no'] + "</span>";
+				    referralDocsString+= "</li>";
+				}
+				referralDocsString += "</ul>";
+			}
+			
+			var element = document.getElementById("referral_doc_lookup"+billId);
+			element.innerHTML = referralDocsString;
+			
+			setFocusOnFirstLookupItem(element);
+			
+			//alert('Success. Result: ' + referralDocsString);
+		} else if (this.readyState == 4 && this.status != 200) {
+			//alert('Something went wrong...');
+			var element = document.getElementById("referral_doc_lookup"+billId);
+			element.innerHTML = "An error occured.";
+		}
+	};
+}
+
+/**
+ * 
+ */ 
+function extractReferralDoctorName(item){
+	if (item == null)
+		return "";
+		
+	var spanElements = item.getElementsByTagName("span");
+	
+	if (spanElements != null && spanElements.length > 0) {
+		return spanElements[0].innerHTML;
+	}
+	
+	return "";
+}
+
+/**
+ * 
+ */ 
+function extractReferralDoctorId(item){
+	if (item == null)
+		return "";
+		
+	var spanElements = item.getElementsByTagName("span");
+	
+	if (spanElements != null && spanElements.length > 0) {
+		return spanElements[1].innerHTML;
+	}
+	
+	return "";
 }
 
 /**
@@ -1598,6 +1718,13 @@ function extractDiagnosticDescription(item){
 	return "";
 }
 
+
+function getReferralDoctors(billId, referralDocName) {
+	var AJAX = createXMLHttpRequest();
+	AJAX.onreadystatechange = getReferralDoctorsHandler(billId);
+	AJAX.open("GET", "reports/getReferralDoctors.jsp?full_name="+referralDocName);
+	AJAX.send("");
+}
 /**
  * 
  */ 

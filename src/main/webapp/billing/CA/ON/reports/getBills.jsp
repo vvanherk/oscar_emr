@@ -1,4 +1,6 @@
 <%@page import="java.util.List" %>
+<%@page import="java.util.Calendar" %>
+<%@page import="java.util.Date" %>
 <%@page import="java.lang.Exception" %>
 
 <%@page import="net.sf.json.JSONArray" %>
@@ -12,6 +14,7 @@
 <%@page import="org.oscarehr.common.model.BillingService" %>
 
 <%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 
 <%!
 boolean isValidId(String input) {
@@ -36,8 +39,6 @@ BillingServiceDao billingServiceDao = (BillingServiceDao)SpringUtils.getBean("bi
 String demographicNo = request.getParameter("demographicNo");
 String appointmentNo = request.getParameter("appointmentNo");
 
-//demographicNo = "100";
-
 if (!isValidId(demographicNo)) {
 	response.setContentType("application/json");
 	response.getWriter().write( (new JSONArray()).toString() );
@@ -46,7 +47,19 @@ if (!isValidId(demographicNo)) {
 
 List<BillingClaimHeader1> bills = null;
 if (!isValidId(appointmentNo)) {
-	bills = billingClaimDAO.getInvoices(demographicNo, new Integer(30));
+	Date endDate = new Date();
+
+	// Use the Calendar class to subtract 2 years
+	Calendar calendar = Calendar.getInstance();
+	calendar.setTime(endDate);
+	calendar.add(Calendar.YEAR, -2);
+
+	Date startDate = calendar.getTime();
+	
+	MiscUtils.getLogger().info("startDate: " + startDate);
+	MiscUtils.getLogger().info("endDate: " + endDate);
+	
+	bills = billingClaimDAO.getInvoices(demographicNo, startDate, endDate);
 } else {
 	bills = billingClaimDAO.getInvoices(demographicNo, appointmentNo);
 }

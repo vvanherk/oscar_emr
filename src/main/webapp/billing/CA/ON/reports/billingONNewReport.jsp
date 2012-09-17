@@ -66,6 +66,7 @@ int maxPerPage = -1;
 int maxPaginationListSize = 10;
 int totalResults = 0;
 int currentPage = 1;
+int totalNumberOfPages = 0;
 if(request.getParameter("current_page")!=null) {
 	try {
 		currentPage = Integer.parseInt(request.getParameter("current_page"));
@@ -141,13 +142,13 @@ if("unbilled".equals(action)) {
     vecHeader.add("Service Description");
     vecHeader.add("COMMENTS");
     
-    vecHeaderWidths.add("10%");
-    vecHeaderWidths.add("10%");
-    vecHeaderWidths.add("20%");
-    vecHeaderWidths.add("10%");
-    vecHeaderWidths.add("15%");
-    vecHeaderWidths.add("30%");
-    vecHeaderWidths.add("30%");
+	vecHeaderWidths.add("10%");
+	vecHeaderWidths.add("10%");
+	vecHeaderWidths.add("20%");
+	vecHeaderWidths.add("10%");
+	vecHeaderWidths.add("15%");
+	vecHeaderWidths.add("30%");
+	vecHeaderWidths.add("30%");
     
 	Comparator<Appointment> appointmentComparator = new Comparator<Appointment>() {
 		// This is where the sorting happens.
@@ -183,7 +184,10 @@ if("unbilled".equals(action)) {
     } catch (Exception e) {}
 	
 	totalResults = appointmentDao.getCountUnbilledByDateRangeAndProvider(startTime, endTime, providerview);
-    
+    totalNumberOfPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
+    if (currentPage > totalNumberOfPages)
+		currentPage = totalNumberOfPages;
+		
     firstResult = currentPage * maxPerPage - maxPerPage;
     
     List<Appointment> appointments = appointmentDao.getUnbilledByDateRangeAndProvider(startTime, endTime, providerview, new Integer(firstResult), new Integer(maxPerPage));    
@@ -195,7 +199,7 @@ if("unbilled".equals(action)) {
     
     for (Appointment apt : appointments) {
 		String status = apt.getStatus();
-		if (apt.getDemographicNo() == 0 || !(status.equals("P") || status.equals("H") || status.equals("HS") || status.equals("PV") || status.equals("PS") || status.equals("E") || status.equals("ES") || status.equals("EV")))
+		if (apt.getDemographicNo() == 0 )
 			continue;
 		
     	if (bMultisites) {
@@ -245,6 +249,12 @@ if("billed".equals(action)) {
     vecHeader.add("Patient Name");
     vecHeader.add("Service Description");
     vecHeader.add("ACCOUNT");
+    
+    vecHeaderWidths.add("10%");
+	vecHeaderWidths.add("10%");
+	vecHeaderWidths.add("20%");
+	vecHeaderWidths.add("10%");
+	vecHeaderWidths.add("15%");
 	
 	SimpleDateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
     
@@ -312,6 +322,11 @@ if("billed".equals(action)) {
         vecAppointmentNo.add( "" + bill.getAppointment_no() );
         vecProviderNo.add( "" + bill.getProvider_no() );
     }
+    
+    totalResults = vecBills.size();
+    totalNumberOfPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
+    if (currentPage > totalNumberOfPages)
+		currentPage = totalNumberOfPages;
 }
 
 %>
@@ -637,13 +652,48 @@ if (vecHeader != null && vecHeader.size() > 0) {
 		<td width="80%">
 			<!-- Pagination -->
 			<%
-			if (vecValue.size() > 0 && maxPerPage != 0) {
-				int numPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
-				int numPagesToSkip = 0;
-				int startSkipAtPage = 0;
-				if (numPages > maxPaginationListSize) {
-					numPagesToSkip = numPages - maxPaginationListSize;
-					startSkipAtPage = maxPaginationListSize/2;
+			if (vecValue.size() > 0 && maxPerPage != 0) {				
+				boolean[] visible = new boolean[totalNumberOfPages+1];
+				int dotIndex1 = 0;
+				int dotIndex2 = 0;
+				for (int i=0; i < visible.length; i++) {
+					visible[i] = true;
+				}
+				if (totalNumberOfPages > maxPaginationListSize) {
+					// minimum # of pages to be visible at the beginning and the end of the page list
+					int minVisibleFirstLast = 3;
+					// minimum # of pages to be visible to the left and right of the current page
+					int visiblePageBuffer = (maxPaginationListSize-minVisibleFirstLast)/2;
+					
+					// set pages that are outside the visiblePageBuffer radius from the currentPage to not be visible
+					for (int i=1; i < visible.length; i++) {
+						if (i < currentPage - visiblePageBuffer || i > currentPage + visiblePageBuffer)
+							visible[i] = false;
+					}
+					
+					// first and last few page numbers should be visisble
+					for (int i=1; i < visible.length && i < minVisibleFirstLast; i++) {
+						visible[i] = true;
+					}
+					for (int i=visible.length-1; i > 0 && i > visible.length-1 - minVisibleFirstLast; i--) {
+						visible[i] = true;
+					}
+					
+					// find indices where we want to place the '...'s
+					for (int i=1; i < visible.length; i++) {
+						if (!visible[i]) {
+							dotIndex1 = i;
+							break;
+						}
+					}
+					for (int i=visible.length-1; i > 0; i--) {
+						if (visible[i]) {
+							if (i-1 > 0 && !visible[i-1]) {
+								dotIndex2 = i-1;
+								break;
+							}
+						}
+					}
 				}
 				
 				boolean canGoPrevious = true;
@@ -651,22 +701,22 @@ if (vecHeader != null && vecHeader.size() > 0) {
 				
 				if (currentPage == 1)
 					canGoPrevious = false;
-				if (currentPage == numPages)
+				if (currentPage == totalNumberOfPages)
 					canGoNext = false;
-
+				
 				%>
 				<ul class="pagination-clean">
 					<li class="<%=canGoPrevious ? "previous" : "previous-off"%>"> <a href="#" onclick="<%=canGoPrevious ? "previousPage(); " : ""%>return false;">Previous</a> </li>
 					<%
 						
-					for (int i=1; i < numPages+1; i++) {
-						if (startSkipAtPage != 0 && (i > startSkipAtPage && i < numPages-startSkipAtPage))
+					for (int i=1; i < totalNumberOfPages+1; i++) {
+						if (!visible[i] && i != dotIndex1 && i != dotIndex2)
 							continue;
 						
 						String liClass = "";
 						String pageLink = "<a href='#' onclick='jumpToPage("+i+"); return false;'>"+i+"</a>";
 						
-						if (startSkipAtPage == i) {
+						if (i == dotIndex1 || i == dotIndex2) {
 							pageLink = "<a href='#' onclick='return false;'>...</a>";			
 						} else {
 							if (i == currentPage) {
@@ -734,25 +784,57 @@ if (vecHeader != null && vecHeader.size() > 0) {
 			<tr id="bill_details<%=i%>" class="bill hide_bill">
 				<td colspan="5">
 					<% 
-					if (editable) { 
+					if (editable) {
+						
+						String onkeydown = "onkeydown=\"";
+						onkeydown+= "if (isTabKey(event)) {";
+						onkeydown+= "	hideAllLookups("+i+"); ";
+						onkeydown+= "	return true; ";
+						onkeydown+= "}";
+						onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
+						onkeydown+= "if (lookupIsOpen) {";
+						onkeydown+= "	if (isMoveBetweenLookupItems(event)) {";
+						onkeydown+= "		moveBetweenLookupItems(event, "+i+");";
+						onkeydown+= "	}";
+						onkeydown+= "	if (isSelectLookupItem(event)) {";
+						onkeydown+= "		selectLookupItem("+i+");";
+						onkeydown+= "	}";
+						onkeydown+= "	if (isEscapeKey(event)) {";
+						onkeydown+= "		hideAllLookups("+i+");";
+						onkeydown+= "	}";
+						onkeydown+= "}";
+						onkeydown+= "return true;\"";
+						
+						String onkeyup = "onkeyup=\"";
+						onkeyup+= "if (this.value.length == 0) {";
+						onkeyup+= "	hideAllLookups("+i+");";
+						onkeyup+= "} else { ";
+						onkeyup+= "	if (isAlphaNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
+						onkeyup+= "		showAvailableReferralDoctors("+i+", this.value);";
+						onkeyup+= "	}";
+						onkeyup+= "}";
+						onkeyup+= "return true; \"";
 						%>
-						<table class="extras_container">
-						<tr>
-						<td id="bill_notes_container<%=i%>" class="hide_element">
-							Bill Notes:<br>
-							<textarea rows="4" cols="20" id="bill_notes<%=i%>" name="bill_notes<%=i%>"></textarea>
-						</td>
-						<td id="referral_doc_container<%=i%>" class="hide_element">
-							Referral Doctor:<br>
-							No: <input type="text" id="referral_no<%=i%>" name="referral_no<%=i%>">
-							<br>
-							First name: <input type="text" id="referral_first_name<%=i%>" name="referral_first_name<%=i%>">
-							Last name: <input type="text" id="referral_last_name<%=i%>" name="referral_last_name<%=i%>">
-							<br>
-							Specialty: <input type="text" id="referral_specialty<%=i%>" name="referral_specialty<%=i%>">
-						</td>
-						</tr>
-						</table>
+						<div class="extras_container">
+							<div id="bill_notes_container<%=i%>">
+								Bill Notes:<br>
+								<textarea rows="6" cols="30" id="bill_notes<%=i%>" name="bill_notes<%=i%>"></textarea>
+							</div>
+							<div id="referral_doc_container<%=i%>" class="hide_element">
+								Referral Doctor:<br>
+								<!-- No: <input type="text" id="referral_no<%=i%>" name="referral_no<%=i%>">
+								<br>
+								First name: <input type="text" id="referral_first_name<%=i%>" name="referral_first_name<%=i%>">
+								Last name: <input type="text" id="referral_last_name<%=i%>" name="referral_last_name<%=i%>">
+								<br>
+								Specialty: <input type="text" id="referral_specialty<%=i%>" name="referral_specialty<%=i%>"> -->
+								
+								Name: <input type="text" id="referral_full_name<%=i%>" name="referral_full_name<%=i%>" <%=onkeydown%> <%=onkeyup%>>
+								<div id='referral_doc_lookup<%=i%>' class='lookup_box' style='display:none;'></div>
+								<br>
+								Format is <i>'lastname, firstname'</i>
+							</div>
+						</div>
 					<% } %>
 				
 					<%
@@ -773,8 +855,8 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y/%m/%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1 } );
 						</script>
 						
-						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" onclick="toggleBillNotesVisible(<%=i%>);" > <span class="input_element_label">Manual</span>
-						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="toggleReferralDoctorVisible(<%=i%>);" > <span class="input_element_label">Referral Doctor</span>
+						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" onclick="/*toggleBillNotesVisible(<%=i%>);*/" > <span class="input_element_label">Manual</span>
+						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="toggleReferralDoctorVisible(<%=i%>); setFocusOnReferralDoctorInput(<%=i%>);" > <span class="input_element_label">Referral Doctor</span>
 						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" >
 						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" >
 						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" >
@@ -782,6 +864,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						<input type="hidden" name="appt_no<%=i%>" value="<%=vecAppointmentNo.get(i)%>" >
 						<input type="hidden" name="demo_no<%=i%>" value="<%=vecDemographicNo.get(i)%>" >
 						<input type="hidden" name="prov_no<%=i%>" value="<%=vecProviderNo.get(i)%>" >
+						<input type="hidden" id="referral_doc_no<%=i%>" name="referral_doc_no<%=i%>" value="" >
 					<%
 					}
 					%>
@@ -1115,7 +1198,7 @@ String getEditableBillingItemText(int i, int uniqueId, String demoNo, String app
 	html += "	<td> <input type='text' size='6' name='dx_code"+i+"' id='dx_code"+i+"_"+uniqueId+"' value='"+values.get(3)+"' "+onkeydown+" "+onkeyup+" > <div id='diagnostic_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
 	html += "	<td> <input type='text' size='12' name='dx_desc"+i+"' id='dx_desc"+i+"_"+uniqueId+"' value='"+values.get(4)+"' "+onkeydown+" "+onkeyup+" > <div id='diagnostic_desc_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
 	html += "	<td> <input type='text' size='6' name='total"+i+"' id='total"+i+"_"+uniqueId+"' value='"+values.get(5)+"' "+totalOnkeydown+" "+totalOnKeyup+" > </td>";
-	html += "	<td> <input type='text' size='6' name='sli_code"+i+"' id='sli_code"+i+"_"+uniqueId+"' value='"+values.get(6)+"' > </td>";
+	html += "	<td> <input type='text' size='6' name='sli_code"+i+"' id='sli_code"+i+"_"+uniqueId+"' disabled='disabled' value='"+values.get(6)+"' > </td>";
 	html += "</tr>";
 	
 	return html;
@@ -1171,13 +1254,14 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 			MiscUtils.getLogger().error("Invalid demographic number:", e);
 		}
 		String provNo = request.getParameter("prov_no"+i);
-		boolean billSaved = (request.getParameter("bill_saved"+i) != null);
+		boolean isBillSaved = (request.getParameter("bill_saved"+i) != null);
 		String billDate = request.getParameter("bill_date"+i);
 		String billTime = request.getParameter("bill_time"+i);
 		String admissionDate = request.getParameter("admission_date"+i);
+		boolean isManuallyReviewed = (request.getParameter("manual_checkbox"+i) != null);
 		String billNotes = request.getParameter("bill_notes"+i);
 		String demoName = request.getParameter("demo_name"+i);
-		String referralNo = request.getParameter("referral_no"+i);
+		String referralNo = request.getParameter("referral_doc_no"+i);		
 		String[] billCodes = request.getParameterValues("bill_code"+i);
 		String[] amounts = request.getParameterValues("amount"+i);
 		String[] units = request.getParameterValues("units"+i);
@@ -1187,7 +1271,7 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		String[] sliCodes = request.getParameterValues("sli_code"+i);
 		
 		
-		if (billId != null && billSaved) {
+		if (billId != null && isBillSaved) {
 			MiscUtils.getLogger().info("billCodes length: " + billCodes.length);
 			numBillsSubmitted++;
 			
@@ -1247,7 +1331,7 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		        bill.setVisittype("00");
 		        bill.setAdmission_date(admissionDate);
 		        bill.setRef_lab_num("");
-		        bill.setMan_review("");
+		        bill.setMan_review( (isManuallyReviewed ? "Y" : "") );
 				
 				String payProg = demo.getHcType().equals("ON") ? "HCP" : "RMB";
 		        bill.setPay_program(payProg);

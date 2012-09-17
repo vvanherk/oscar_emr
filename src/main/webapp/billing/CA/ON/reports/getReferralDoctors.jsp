@@ -33,18 +33,35 @@ String referralNo = request.getParameter("referral_no");
 String firstName = request.getParameter("first_name");
 String lastName = request.getParameter("last_name");
 String specialty = request.getParameter("specialty");
+// fullName in the format 'lastname, firstname'
+String fullName = request.getParameter("full_name");
 
-//firstName = "Public";
+// parse fullName
+if (isValidStringInput(fullName)) {
+	String[] flName = fullName.split(",");
+	
+	if (flName != null) {
+		if (flName.length == 1) {
+			firstName = "";
+			lastName = flName[0];
+		} else if (flName.length == 2) {
+			firstName = flName[1];
+			lastName = flName[0];
+		}
+	}
+}
 
+MiscUtils.getLogger().info("firstName: " + firstName);
+MiscUtils.getLogger().info("lastName: " + lastName);
+MiscUtils.getLogger().info("fullName: " + fullName);
+
+// query for the referral doctors
 List<Billingreferral> billingReferrals = null;
 if ( isValidStringInput(referralNo) ) {
 	Billingreferral billingReferral = billingReferralDao.getByReferralNo(referralNo);
 	billingReferrals = new ArrayList<Billingreferral>();
 	billingReferrals.add(billingReferral);
 } else if ( isValidStringInput(firstName)  || isValidStringInput(lastName) ) {
-	
-	MiscUtils.getLogger().info("lastName: " + lastName);
-	MiscUtils.getLogger().info("firstName: " + firstName);
 	billingReferrals = billingReferralDao.getBillingreferral( tokenize(lastName), tokenize(firstName) );
 } else if (isValidStringInput(specialty)) {
 	billingReferrals = billingReferralDao.getBillingreferralBySpecialty(specialty);
@@ -61,9 +78,9 @@ if (billingReferrals == null) {
 
 JSONArray jsonArray = new JSONArray();
 
+// parse results into json array
 for (Billingreferral billingReferral : billingReferrals) {
 	JSONObject obj = new JSONObject();
-	MiscUtils.getLogger().info("billingReferral.getReferralNo(): " + billingReferral.getReferralNo());
 	
 	obj.put( "referral_no", billingReferral.getReferralNo() );
 	obj.put( "last_name", billingReferral.getLastName() );
