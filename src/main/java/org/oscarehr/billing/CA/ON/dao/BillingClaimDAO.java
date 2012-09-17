@@ -371,6 +371,19 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
     }
     
     @SuppressWarnings("unchecked")
+    public List<BillingClaimHeader1> getInvoicesByDemographic(String demographic_no, Date startDate, Date endDate) {
+    	String sql = "select h1 from BillingClaimHeader1 h1 where " +
+                " h1.demographic_no = :demo and h1.billing_date >= (:startDate) and h1.billing_date <= (:endDate) and h1.status != 'D' order by h1.billing_date, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("demo", new Integer(demographic_no));
+        q.setParameter("startDate", startDate);
+        q.setParameter("endDate", endDate);
+        
+        return q.getResultList();
+    }
+    
+    @SuppressWarnings("unchecked")
     public List<BillingClaimHeader1> getInvoices(String provider_no, Date startTime, Date endTime) {
     	String sql = "select h1 from BillingClaimHeader1 h1 where " +
                 " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status != 'D' order by h1.billing_date, h1.billing_time desc";

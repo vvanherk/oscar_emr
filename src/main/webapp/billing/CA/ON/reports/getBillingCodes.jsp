@@ -16,8 +16,6 @@ BillingServiceDao billingServiceDao = (BillingServiceDao)SpringUtils.getBean("bi
 
 String serviceCode = request.getParameter("serviceCode");
 
-//serviceCode = "A00";
-
 List<BillingService> billingServices = billingServiceDao.findBillingCodesByCode(serviceCode, "ON");
 
 
