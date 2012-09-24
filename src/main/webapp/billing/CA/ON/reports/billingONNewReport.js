@@ -126,6 +126,27 @@ function isNumber(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
 }
 
+function isCurrency(n) {
+	if (n == null || n === 'undefined')
+		return false;
+		
+	n = n.replace('$', '').replace(',', '');
+	
+	return isNumber(n);
+}
+
+function formatCurrencyAsFloat(n) {
+	if (n == null || n === 'undefined')
+		return '';
+	
+	if (isNumber(n))
+		return parseFloat(n);
+	
+	n = n.replace('$', '').replace(',', '');
+	
+	return parseFloat(n);
+}
+
 /** This function taken from http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript */
 /* 
 decimal_sep: character used as deciaml separtor, it defaults to '.' when omitted
@@ -189,6 +210,15 @@ function isNumericKey(evt) {
 	charcheck = /[0-9]/;
 	
 	return charcheck.test(keychar);
+}
+
+/**
+ * Returns true if the key pressed results in a '$', a '.' or a numeric character (i.e. 0-9)
+ */ 
+function isCurrencyKey(evt) {
+	keynum = (evt.which) ? evt.which : evt.keyCode;
+	
+	return keynum == 190 || (isShiftKey(evt) && keynum == 52) || isNumericKey(evt);
 }
 
 function isBackspaceKey(evt) {
@@ -488,10 +518,37 @@ function setBillEditable(billId) {
 	
 }
 
+function validateBill(billId) {
+	var result = true;
+		
+	$('#bill_details' + billId + ' > *').find('input').each(function () {
+	    //alert($(this).text()); // "this" is the current element in the loop
+	    //alert("#"+$(this).attr('id'));
+	    
+	    if ($(this).attr('id') !== undefined) {
+		    if (!$("#submitbillingform").validate().element( "#"+$(this).attr('id') )) {
+				result = false;
+				return false;
+			}
+		}
+	});
+	
+	
+	return result;
+}
+
+function validateAdmissionTime(billId) {
+	$('#submitbillingform').validate().element( '#admission_date'+billId);
+}
+
 /**
  * 
  */ 
 function saveBill(billId) {
+	if (!validateBill(billId)) {
+		return false;
+	}	
+	
 	var elem = document.getElementById("bill_details"+billId);
 	removeClass('incompleted', elem);
 	addClass('completed', elem);
@@ -526,7 +583,7 @@ function saveBill(billId) {
 	var inputElement = document.createElement("input");
 	inputElement.type = "hidden";
 	inputElement.name = "bill_saved"+billId;
-	inputElement.class = "bill_saved";
+	inputElement.className = "bill_saved";
 	elem.appendChild(inputElement);
 	
 	// hide all input and input related elements
@@ -554,6 +611,8 @@ function saveBill(billId) {
 	
 	// setup unsave function (if user clicks on the bill, they can re-open it for editing)
 	document.getElementById("bill"+billId).onclick = function() { unsaveBill(billId); showBillDetails(billId); }
+	
+	return true;
 }
 
 /**
@@ -644,8 +703,9 @@ function addBillingItem(id) {
 	onkeydown+= "var lookupIsOpen = isLookupOpen("+id+");";
 	onkeydown+= "if (!lookupIsOpen) {";
 	onkeydown+= "	if (isSaveBill(event)) {";
-	onkeydown+= "		saveBill("+id+"); ";
-	onkeydown+= "		moveToNextBill("+id+"); ";
+	onkeydown+= "		if (saveBill("+id+")) { ";
+	onkeydown+= "			moveToNextBill("+id+"); ";
+	onkeydown+= "		}";
 	onkeydown+= "	}";
 	onkeydown+= "	if (isMoveBetweenBills(event)) {";
 	onkeydown+= "		moveBetweenBills(event, "+id+"); ";
@@ -677,8 +737,9 @@ function addBillingItem(id) {
 	totalOnkeydown+= "	} ";
 	totalOnkeydown+= "} ";
 	totalOnkeydown+= "if (isSaveBill(event)) {";
-	totalOnkeydown+= "	saveBill("+id+"); ";
-	totalOnkeydown+= "	moveToNextBill("+id+"); ";
+	totalOnkeydown+= "	if (saveBill("+id+")) { ";
+	totalOnkeydown+= "		moveToNextBill("+id+"); ";
+	totalOnkeydown+= "	}";
 	totalOnkeydown+= "}";
 	totalOnkeydown+= "if (isMoveBetweenBills(event)) {";
 	totalOnkeydown+= "	moveBetweenBills(event, "+id+"); ";
@@ -723,12 +784,12 @@ function addBillingItem(id) {
 	
 	var htmlString = "<td> <a class=\"billing_button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); updateBillTotal("+id+"); return false;\">X</a></td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"\" id=\"bill_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"service_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"\" id=\"amount"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"\" id=\"amount"+id+"_"+billingItemId+"\" class='currency' "+onkeydown+" "+onkeyup+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"\" id=\"units"+id+"_"+billingItemId+"\" value=\"1\" "+onkeydown+" "+onkeyup+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"\" id=\"dx_code"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"\" id=\"dx_desc"+id+"_"+billingItemId+"\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_desc_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"\" id=\"total"+id+"_"+billingItemId+"\" "+totalOnkeydown+" "+totalOnKeyup+" /> </td>";
-	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"\" id=\"sli_code"+id+"_"+billingItemId+"\" disabled=\"disabled\" /> </td>";
+	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"\" id=\"total"+id+"_"+billingItemId+"\" class='currency' "+totalOnkeydown+" "+totalOnKeyup+" /> </td>";
+	//htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"\" id=\"sli_code"+id+"_"+billingItemId+"\" disabled=\"disabled\" /> </td>";
 	element.innerHTML = htmlString;
 	
 	var billingItems = document.getElementById("billing_items"+id);
@@ -1269,8 +1330,8 @@ function updateBillTotal(billId) {
 		var tdElements = trElements[i].getElementsByTagName("input");
 		for (var j=0; j < tdElements.length; j++) {
 			if (tdElements[j].id.indexOf("total"+billId+"_") == 0) {
-				if (isNumber(tdElements[j].value))
-					total += parseFloat(tdElements[j].value);
+				if (isCurrency( tdElements[j].value ))
+					total += formatCurrencyAsFloat( tdElements[j].value );
 			}
 		}
 	}
@@ -1289,15 +1350,15 @@ function updateBillingItemTotal(billId, billingItemId) {
 	if (amountElement == null || unitsElements == null || totalElement == null)
 		return;
 	
-	var units = parseFloat(unitsElements.value);
+	var units = formatCurrencyAsFloat(unitsElements.value);
 	if (!isNumber(units))
 		units = 0;
 		
-	var amount = parseFloat(amountElement.value);
+	var amount = formatCurrencyAsFloat(amountElement.value);
 	if (!isNumber(amount))
 		amount = 0;
 		
-	var total = parseFloat(amount) * units;
+	var total = formatCurrencyAsFloat(amount) * units;
 	
 	totalElement.value = total.formatCurrency(2, '.', ',');
 }
