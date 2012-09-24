@@ -1360,7 +1360,6 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 			}
 			
 			
-			// create new bill
 			if (billId.equals("")) {
 				MiscUtils.getLogger().info("demoName: " + demoName);
 
@@ -1406,9 +1405,7 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				newBill.setProvider_rma_no(prov.getRmaNo());
 				newBill.setCreator( (String) request.getSession().getAttribute("user") );
 				newBill.setTotal(total);
-			
-			// create new bill using values from old bill (i.e. copy it)
-			} else { 
+			} else {
 				oldBill = billingClaimDAO.getInvoice(billId);
 				newBill = BillingClaimHeader1.copy(oldBill);
 				
