@@ -23,8 +23,13 @@
  */
 -->
 
-/** Pagination */
 
+/** Validation */
+label { width: 10em; float: left; }
+label.error { float: none; color: red; padding-left: .5em; vertical-align: top; }
+
+
+/** Pagination */
 .pagination-clean {
 	border:0; 
 	margin:0; 
@@ -67,7 +72,7 @@
 
 
 /** Notification Boxes */
-.info, .success, .warning, .error, .validation {
+.oscar_info, .oscar_success, .oscar_warning, .oscar_error, .oscar_validation {
 border: 1px solid;
 
 padding:15px 10px 15px 50px;
@@ -77,27 +82,27 @@ margin-left: auto;
 margin-right: auto;
 width: 40%;
 }
-.info {
+.oscar_info {
 color: #00529B;
 background-color: #BDE5F8;
 background-image: url('info.png');
 }
-.success {
+.oscar_success {
 color: #4F8A10;
 background-color: #DFF2BF;
 background-image:url('success.png');
 }
-.warning {
+.oscar_warning {
 color: #9F6000;
 background-color: #FEEFB3;
 background-image: url('warning.png');
 }
-.error {
+.oscar_error {
 color: #D8000C;
 background-color: #FFBABA;
 background-image: url('error.png');
 }
-.validation {
+.oscar_validation {
 color: #D63301;
 background-color: #FFCCBA;
 background-image: url('validation.png');

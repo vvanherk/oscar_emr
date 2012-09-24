@@ -44,6 +44,9 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+
 import org.oscarehr.common.model.AbstractModel;
 
 /**
@@ -191,6 +194,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
         this.transc_id = id;
     }
 
+	@NotNull(message="Header Id must be specified.")
     public int getHeader_id() {
         return this.header_id;
     }
@@ -263,6 +267,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     }
 
     @Column(length=10)
+    @Pattern(regexp = "\\d\\d\\d\\d-\\d\\d-\\d\\d", message="Admission date must be in the format yyyy-mm-dd.")
     public String getAdmission_date() {
         return admission_date;
     }
@@ -298,6 +303,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
         this.location = location;
     }
 
+	@NotNull(message="Demographic No must be specified.")
     public Integer getDemographic_no() {
         return demographic_no;
     }
@@ -348,6 +354,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
         this.total = total;
     }
 
+	@Pattern(regexp = "\\d*(\\.|)\\d*", message="Paid amount must be a numeric value (i.e. 100.00, 32.6, 50, etc).")
     public String getPaid() {
         return paid;
     }
@@ -489,6 +496,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     /**
      * @return the provider_no
      */
+	@NotNull(message="Provider No must be specified.")
     public String getProvider_no() {
         return provider_no;
     }
