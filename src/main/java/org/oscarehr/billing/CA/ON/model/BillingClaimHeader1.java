@@ -42,10 +42,15 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+//import javax.validation.constraints.Min;
+//import javax.validation.constraints.Max;
+//import javax.validation.constraints.Size;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 
 import org.oscarehr.common.model.AbstractModel;
+
+import oscar.oscarBilling.ca.on.data.BillingDataHlp;
 
 /**
  *
@@ -57,37 +62,37 @@ import org.oscarehr.common.model.AbstractModel;
 public class BillingClaimHeader1 extends AbstractModel<Integer> implements Serializable {
 
     private Integer id;
-    private Integer header_id;
-    private String transc_id;
-    private String rec_id;
+    private Integer header_id = 0;
+    private String transc_id = BillingDataHlp.CLAIMHEADER1_TRANSACTIONIDENTIFIER;
+    private String rec_id = BillingDataHlp.CLAIMHEADER1_REORDIDENTIFICATION;
     private String hin;
     private String ver;
     private String dob;
     private String pay_program;
-    private String payee;
-    private String ref_num;
+    private String payee = BillingDataHlp.CLAIMHEADER1_PAYEE;
+    private String ref_num = "";
     private String facilty_num;
-    private String admission_date;
-    private String ref_lab_num;
-    private String man_review;
+    private String admission_date = "";
+    private String ref_lab_num = "";
+    private String man_review = "";
     private String location;
     private Integer demographic_no;
     private String provider_no;
-    private String appointment_no;
+    private String appointment_no = "0";
     private String demographic_name;
     private String sex;
     private String province;
     private Date billing_date;
     private Date billing_time;
-    private String total;
-    private String paid;
-    private String status;
-    private String comment1;
-    private String visittype;
+    private String total = "";
+    private String paid = "";
+    private String status = "O";
+    private String comment1 = "";
+    private String visittype = "00";
     private String provider_ohip_no;
     private String provider_rma_no;
-    private String apptProvider_no;
-    private String asstProvider_no;
+    private String apptProvider_no = "";
+    private String asstProvider_no = "";
     private String creator;
     private Date timestamp1;
     private String clinic;
@@ -96,7 +101,9 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
 
     /** Creates a new instance of BillingClaimHeader1 */
     public BillingClaimHeader1() {
-
+        //this.setLocation(properties.getProperty("clinic_no", ""));
+        //this.setFacilty_num( "0000" );
+        //this.setSex("U");
     }
     
     /**
@@ -187,7 +194,6 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
         this.transc_id = id;
     }
 
-	@NotNull(message="Header Id must be specified.")
     public int getHeader_id() {
         return this.header_id;
     }
@@ -340,7 +346,8 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     public void setBilling_time(Date time) {
         this.billing_time = time;
     }
-
+	
+	@Pattern(regexp = "\\d*(\\.|)\\d*", message="Total amount must be a numeric value (i.e. 100.00, 32.6, 50, etc).")
     public String getTotal() {
         return total;
     }

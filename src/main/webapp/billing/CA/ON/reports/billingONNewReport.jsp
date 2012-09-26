@@ -378,7 +378,7 @@ $(document).ready(function(){
 	});
 	
 	$.validator.addMethod("currency", function(value, element) { 
-		var re = /^\$?\d{1,9}(\.\d{1,2})?$/;
+		var re = /^\$?[0-9][0-9\,]*(\.\d{1,2})?$|^\$?[\.]([\d][\d]?)$/;
 		return this.optional(element) || re.test(value); 
 	}, "Must be a valid amount.");
 
@@ -897,7 +897,14 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						<img src="../../../images/cal.gif" alt="" id="admission_date<%=i%>_cal">
 						<script>
 							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y-%m-%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1,
-								onUpdate: function() { $('#submitbillingform').validate().element( '#admission_date<%=i%>') }
+								onUpdate: 
+										function() { 
+											var isValid = $('#submitbillingform').validate().element( '#admission_date<%=i%>');
+											if (isValid) {
+												setFocusOnInputField(<%=i%>);
+											}
+											
+										}
 							} );
 						</script>
 						
@@ -922,6 +929,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 								<td>Billing Code</td>
 								<td>Amount</td>
 								<td>Units</td>
+								<td>Percent</td>
 								<td>Dx Code</td>
 								<td>Dx Description</td>
 								<td>Total</td>
@@ -981,6 +989,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 										values.add(item.getService_code());
 										values.add(fee);
 										values.add(units);
+										values.add("1.0"); // percent
 										values.add(item.getDx());
 										values.add(serviceDesc);
 										values.add(total);
@@ -1210,7 +1219,7 @@ String getOnKeyupString(int i, int uniqueId) {
 	onkeyup+= "			showAvailableDiagnosticCodes("+i+", "+uniqueId+", '', this.value);";
 	onkeyup+= "		}";
 					// update total if units/amount values change
-	onkeyup+= "		else if (this.id.indexOf('amount') == 0 || this.id.indexOf('units') == 0) {";
+	onkeyup+= "		else if (this.id.indexOf('amount') == 0 || this.id.indexOf('units') == 0 || this.id.indexOf('percent') == 0) {";
 	onkeyup+= "			if (isNumericKey(event) || isBackspaceKey(event) || isDeleteKey(event)) {";
 	onkeyup+= "				updateBillingItemTotal("+i+", "+uniqueId+");";
 	onkeyup+= "				updateBillTotal("+i+");";
@@ -1232,10 +1241,13 @@ String getEditableBillingItemText(int i, int uniqueId, String demoNo, String app
 	if (values == null) 
 		values = new ArrayList<String>();
 	
-	while (values.size() < 7) {
+	while (values.size() < 8) {
 		// 'units' should default to '1'
 		if (values.size() == 2)
 			values.add("1");
+		// 'percent' should default to '1.0' (i.e. 100%)
+		if (values.size() == 3)
+			values.add("1.0");
 		// everything else defaults to an empty string
 		else 
 			values.add("");
@@ -1244,13 +1256,14 @@ String getEditableBillingItemText(int i, int uniqueId, String demoNo, String app
 	String html = "";
 	html += "<tr id='billing_item"+i+"_"+uniqueId+"'>";
 	html += "	<td> <a class='billing_button' href='' tabindex='-1' onclick='deleteBillingItem("+i+", "+uniqueId+"); updateBillTotal("+i+"); return false;' >X</a></td>";
-	html += "	<td> <input type='text' size='6' name='bill_code"+i+"' id='bill_code"+i+"_"+uniqueId+"' value='"+values.get(0)+"' "+onkeydown+" "+onkeyup+" > <div id='service_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
+	html += "	<td> <input type='text' size='6' name='bill_code"+i+"' id='bill_code"+i+"_"+uniqueId+"' value='"+values.get(0)+"' autocomplete='off' "+onkeydown+" "+onkeyup+" > <div id='service_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
 	html += "	<td> <input type='text' size='6' name='amount"+i+"' id='amount"+i+"_"+uniqueId+"' class='currency' value='"+values.get(1)+"' "+onkeydown+" "+onkeyup+" > </td>";
 	html += "	<td> <input type='text' size='3' name='units"+i+"' id='units"+i+"_"+uniqueId+"' value='"+values.get(2)+"' "+onkeydown+" "+onkeyup+" > </td>";
-	html += "	<td> <input type='text' size='6' name='dx_code"+i+"' id='dx_code"+i+"_"+uniqueId+"' value='"+values.get(3)+"' "+onkeydown+" "+onkeyup+" > <div id='diagnostic_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
-	html += "	<td> <input type='text' size='12' name='dx_desc"+i+"' id='dx_desc"+i+"_"+uniqueId+"' value='"+values.get(4)+"' "+onkeydown+" "+onkeyup+" > <div id='diagnostic_desc_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
-	html += "	<td> <input type='text' size='6' name='total"+i+"' id='total"+i+"_"+uniqueId+"' class='currency' value='"+values.get(5)+"' "+totalOnkeydown+" "+totalOnKeyup+" > </td>";
-	//html += "	<td> <input type='text' size='6' name='sli_code"+i+"' id='sli_code"+i+"_"+uniqueId+"' disabled='disabled' value='"+values.get(6)+"' > </td>";
+	html += "	<td> <input type='text' size='3' name='percent"+i+"' id='percent"+i+"_"+uniqueId+"' value='"+values.get(3)+"' "+onkeydown+" "+onkeyup+" > </td>";
+	html += "	<td> <input type='text' size='6' name='dx_code"+i+"' id='dx_code"+i+"_"+uniqueId+"' value='"+values.get(4)+"' autocomplete='off' "+onkeydown+" "+onkeyup+" > <div id='diagnostic_code_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
+	html += "	<td> <input type='text' size='12' name='dx_desc"+i+"' id='dx_desc"+i+"_"+uniqueId+"' value='"+values.get(5)+"' autocomplete='off' "+onkeydown+" "+onkeyup+" > <div id='diagnostic_desc_lookup"+i+"_"+uniqueId+"' class='lookup_box' style='display:none;'></div> </td>";
+	html += "	<td> <input type='text' size='6' name='total"+i+"' id='total"+i+"_"+uniqueId+"' class='currency' value='"+values.get(6)+"' "+totalOnkeydown+" "+totalOnKeyup+" > </td>";
+	//html += "	<td> <input type='text' size='6' name='sli_code"+i+"' id='sli_code"+i+"_"+uniqueId+"' disabled='disabled' value='"+values.get(7)+"' > </td>";
 	html += "</tr>";
 	
 	return html;
@@ -1260,10 +1273,13 @@ String getUneditableBillingItemText(int i, int uniqueId, String demoNo, String a
 	if (values == null) 
 		values = new ArrayList<String>();
 	
-	while (values.size() < 7) {
+	while (values.size() < 8) {
 		// 'units' should default to '1'
 		if (values.size() == 2)
 			values.add("1");
+		// 'percent' should default to '1.0' (i.e. 100%)
+		if (values.size() == 3)
+			values.add("1.0");
 		// everything else defaults to an empty string
 		else 
 			values.add("");
@@ -1279,6 +1295,7 @@ String getUneditableBillingItemText(int i, int uniqueId, String demoNo, String a
 	html += "	<td> <span>"+values.get(4)+"</span> </td>";
 	html += "	<td> <span>"+values.get(5)+"</span> </td>";
 	html += "	<td> <span>"+values.get(6)+"</span> </td>";
+	html += "	<td> <span>"+values.get(7)+"</span> </td>";
 	html += "</tr>";
 	
 	return html;
@@ -1318,6 +1335,7 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		String[] billCodes = request.getParameterValues("bill_code"+i);
 		String[] amounts = request.getParameterValues("amount"+i);
 		String[] units = request.getParameterValues("units"+i);
+		String[] percents = request.getParameterValues("percent"+i);
 		String[] dxCodes = request.getParameterValues("dx_code"+i);
 		String[] dxDescs = request.getParameterValues("dx_desc"+i);
 		String[] totals = request.getParameterValues("total"+i);
@@ -1352,6 +1370,9 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 			String total = "";
 			try {
 				for (int j = 0; j < totals.length; j++) {
+					totals[j] = totals[j].replace("$", "");
+					totals[j] = totals[j].replace(",", "");
+					//MiscUtils.getLogger().info("total: " + totals[j]);
 					tempTotal += Double.parseDouble(totals[j]);
 				}
 				total = String.format("%1$,.2f", tempTotal);
@@ -1368,28 +1389,19 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 
 				// create new bill
 				newBill = new BillingClaimHeader1();
-				newBill.setHeader_id(0);
-				newBill.setTransc_id(BillingDataHlp.CLAIMHEADER1_TRANSACTIONIDENTIFIER);
-		        newBill.setRec_id(BillingDataHlp.CLAIMHEADER1_REORDIDENTIFICATION);
+				
 				newBill.setDemographic_no(demoNo);
 				newBill.setProvider_no(provNo);
 				newBill.setAppointment_no(apptNo);
 				newBill.setBilling_date(billDateAsDate);
 				newBill.setBilling_time(billTimeAsDate);
 				newBill.setDemographic_name(demoName);
-				newBill.setStatus("W");
+				//newBill.setStatus("W");
+				newBill.setStatus("O");
 				newBill.setApptProvider_no("none");
-				
-				newBill.setPayee(BillingDataHlp.CLAIMHEADER1_PAYEE);
 		        newBill.setRef_num(referralNo);
-		        newBill.setApptProvider_no("");
-		        newBill.setAsstProvider_no("");
-		        newBill.setPaid("");
-		        newBill.setStatus("O");
 		        newBill.setComment1(billNotes);
-		        newBill.setVisittype("00");
 		        newBill.setAdmission_date(admissionDate);
-		        newBill.setRef_lab_num("");
 		        newBill.setMan_review( (isManuallyReviewed ? "Y" : "") );
 				
 				String payProg = demo.getHcType().equals("ON") ? "HCP" : "RMB";
@@ -1413,7 +1425,6 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				
 				// create new bill to replace old bill
 				//bill = new BillingClaimHeader1();
-				newBill.setHeader_id(0);
 				newBill.setDemographic_no(demoNo);
 				newBill.setProvider_no(provNo);
 				newBill.setAppointment_no(apptNo);
@@ -1456,6 +1467,11 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 			    
 			    // if there are validation errors, throw exception
 			    if (constraintViolations.size() > 0) {
+					MiscUtils.getLogger().info("validation errors: " + constraintViolations.size());
+					
+					for (ConstraintViolation violation : constraintViolations) {
+						MiscUtils.getLogger().info("validation error: " + violation.toString());
+					}
 					// error in ConstraintViolationException definition, so we need to create an intermediate collection
 					// see: https://forum.hibernate.org/viewtopic.php?f=26&t=998831
 					throw new ConstraintViolationException(new HashSet<ConstraintViolation<?>>(constraintViolations));
