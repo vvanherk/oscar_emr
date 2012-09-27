@@ -367,8 +367,8 @@ var appointmentNumbers = new Array(<%
 </script>
 <script type="text/javascript" src="reports/billingONNewReport.js"></script>
 
-<script src="http://code.jquery.com/jquery-latest.js"></script>
-<script type="text/javascript" src="http://jzaefferer.github.com/jquery-validation/jquery.validate.js"></script>
+<script src="<%= request.getContextPath() %>/js/jquery-1.7.1.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/jquery.validate.js"></script>
 <script>
 $(document).ready(function(){	
 	$("#serviceform").validate();
@@ -804,7 +804,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 			String appointmentNo = "-1";
 			prop = (Properties)vecValue.get(i);	
 			%>
-			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>); setFocusOnInputField(<%=i%>);">
+			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>);">
 				<td width="10px"> <input type="checkbox" class="checkbox" name="select_bill" id="select_bill<%=i%>" onclick="preventEventPropagation(event);"> </td>
 				<% for (int j=0; j < vecHeader.size(); j++) {
 					%>
@@ -860,7 +860,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 								<br>
 								Specialty: <input type="text" id="referral_specialty<%=i%>" name="referral_specialty<%=i%>"> -->
 								
-								Name: <input type="text" id="referral_full_name<%=i%>" name="referral_full_name<%=i%>" <%=onkeydown%> <%=onkeyup%>>
+								Name: <input type="text" id="referral_full_name<%=i%>" name="referral_full_name<%=i%>" autocomplete="off" <%=onkeydown%> <%=onkeyup%>>
 								<div id='referral_doc_lookup<%=i%>' class='lookup_box' style='display:none;'></div>
 								<br>
 								Format is <i>'lastname, firstname'</i>
@@ -893,7 +893,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						</select>
 						
 						Admission date:
-						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="required date" size="10" value="" > 
+						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="required date" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
 						<img src="../../../images/cal.gif" alt="" id="admission_date<%=i%>_cal">
 						<script>
 							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y-%m-%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1,
@@ -948,7 +948,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 								<%
 								} else {
 								%>
-									<%=getUneditableBillingItemText(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i), null)%>
+									<%=getUneditableBillingItemText(i, uniqueId, null)%>
 								<%
 								}
 								%>
@@ -1002,7 +1002,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 										<%
 										} else {
 										%>
-											<%=getUneditableBillingItemText(i, uniqueId, vecDemographicNo.get(i), vecAppointmentNo.get(i), values)%>
+											<%=getUneditableBillingItemText(i, uniqueId, values)%>
 										<%
 										}
 										%>
@@ -1123,6 +1123,33 @@ String getFormatDateStr(String str) {
 	    ret = str.substring(0,4) + "/" + str.substring(4,6) + "/" + str.substring(6);
 	}
 	return ret;
+}
+
+String getAdmissionDateOnKeydownString(int i, String demoNo, String apptNo) {
+	String onkeydown = "onkeydown=\"";
+	onkeydown+= "if (isTabKey(event)) {";
+	onkeydown+= "	hideAllLookups("+i+"); ";
+	onkeydown+= "	return true; ";
+	onkeydown+= "}";
+	onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
+	onkeydown+= "if (!lookupIsOpen) {";
+	onkeydown+= "	if (isMoveBetweenBills(event) && isCtrlKey(event)) {";
+	onkeydown+= "		moveBetweenBills(event, "+i+"); ";
+	onkeydown+= "	}";
+	onkeydown+= "} else {";
+	onkeydown+= "	if (isEscapeKey(event)) {";
+	onkeydown+= "		hideAllLookups("+i+");";
+	onkeydown+= "	}";
+	onkeydown+= "}";
+	onkeydown+= "if (isMoveBetweenBillingItems(event)) {";
+	onkeydown+= "	moveBetweenBillingItems(event, "+i+");";
+	onkeydown+= "}";
+	onkeydown+= "if (isShowMoreDetails(event)) {";
+	onkeydown+= "	toggleMoreDetails("+i+", "+demoNo+", "+apptNo+");";
+	onkeydown+= "}";
+	onkeydown+= "return true;\"";
+	
+	return onkeydown;
 }
 
 String getOnKeydownString(int i, String demoNo, String apptNo) {
@@ -1269,7 +1296,7 @@ String getEditableBillingItemText(int i, int uniqueId, String demoNo, String app
 	return html;
 }
 
-String getUneditableBillingItemText(int i, int uniqueId, String demoNo, String apptNo, List<String> values) {	
+String getUneditableBillingItemText(int i, int uniqueId, List<String> values) {	
 	if (values == null) 
 		values = new ArrayList<String>();
 	
