@@ -663,7 +663,7 @@ if (editable) {
 				<td>
 					<!-- Stupid hack - need button before actual submit button to prevent enter key from submitting form -->
 					<input type="submit" method="post" class="hide_element" onclick="return false;" name="submit_billing" value="Submit Billing" >
-					<input type="submit" method="post" class="billing_button" onclick="return true;" name="submit_billing" value="Submit Billing" > 
+					<input type="submit" method="post" class="billing_button" onclick="return true;" id="submit_billing"  name="submit_billing" value="Submit Billing" > 
 				</td>
 			<%
 			}
@@ -893,7 +893,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						</select>
 						
 						Admission date:
-						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="required date" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
+						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="required date" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
 						<img src="../../../images/cal.gif" alt="" id="admission_date<%=i%>_cal">
 						<script>
 							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y-%m-%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1,
@@ -1357,6 +1357,7 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		boolean isManuallyReviewed = (request.getParameter("manual_checkbox"+i) != null);
 		String billNotes = request.getParameter("bill_notes"+i);
 		String demoName = request.getParameter("demo_name"+i);
+		boolean isReferralDocSelected = (request.getParameter("referral_doc_checkbox"+i) != null);
 		String referralNo = request.getParameter("referral_doc_no"+i);		
 		String sliCode = request.getParameter("sli_code"+i);
 		String[] billCodes = request.getParameterValues("bill_code"+i);
@@ -1426,7 +1427,8 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				//newBill.setStatus("W");
 				newBill.setStatus("O");
 				newBill.setApptProvider_no("none");
-		        newBill.setRef_num(referralNo);
+				if (isReferralDocSelected)
+					newBill.setRef_num(referralNo);
 		        newBill.setComment1(billNotes);
 		        newBill.setAdmission_date(admissionDate);
 		        newBill.setMan_review( (isManuallyReviewed ? "Y" : "") );
