@@ -101,7 +101,8 @@ function showBillDetails(id) {
 		removeClass('hide_bill', elem);
 		addClass('show_bill', elem);
 		document.getElementById("bill"+id).onclick = function() { hideBillDetails(id); }
-		setFocusOnInputField(id);
+		setFocusOnAdmissionDateField(id);
+		//setFocusOnInputField(id);
 	}
 }
 
@@ -219,6 +220,14 @@ function isCurrencyKey(evt) {
 	keynum = (evt.which) ? evt.which : evt.keyCode;
 	
 	return keynum == 190 || (isShiftKey(evt) && keynum == 52) || isNumericKey(evt);
+}
+
+function isCtrlKey(evt) {
+	return (evt.ctrlKey);
+}
+
+function isAltKey(evt) {
+	return (evt.altKey);
 }
 
 function isBackspaceKey(evt) {
@@ -426,7 +435,7 @@ function moveToPreviousBill(currentBillId) {
 function moveFromBillToBill(moveFromId, moveToId) {
 	hideBillDetails(moveFromId);
 	showBillDetails(moveToId);
-	setFocusOnInputField(moveToId);
+	//setFocusOnInputField(moveToId);
 }
 
 /**
@@ -464,6 +473,16 @@ function moveToNextBillingItem(billId, billingItemIndex) {
 				}
 			}
 		}
+		
+		// if no billing item input elements have focus, set focus on first input element of first billing item
+		if (rowElements.length > 0) {
+			var inputElements = rowElements[0].getElementsByTagName("input");
+			if (inputElements.length > 0) {
+				setFocusOnInputField_By_RelativeBillingItemIndex(billId, 0);
+				return;
+			}
+		}
+		
 	} else {
 		setFocusOnInputField_By_RelativeBillingItemIndex(billId, billingItemIndex+1);
 	}
@@ -859,6 +878,14 @@ var toggleSelectAllBills = (function () {
 function setFocusOnReferralDoctorInput(billId) {
 	var refDocInput = document.getElementById("referral_full_name"+billId);
 	refDocInput.focus();
+}
+
+function setFocusOnAdmissionDateField(billId) {
+	var admissionDateItem = document.getElementById("admission_date"+billId);
+	
+	if (admissionDateItem != null && admissionDateItem != undefined) {
+		admissionDateItem.focus();
+	}
 }
 
 /**
