@@ -70,7 +70,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 
 	public List<Appointment> findByDateRange(Date startTime, Date endTime) {
-		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate < ?";
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate <= ?";
 
 		Query query = entityManager.createQuery(sql);
 		query.setParameter(1, startTime);
@@ -87,7 +87,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 	
 	public List<Appointment> findByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
-		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate < ? and providerNo = ?";
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate <= ? and providerNo = ?";
 
 		Query query = entityManager.createQuery(sql);
 		query.setParameter(1, startTime);
@@ -108,7 +108,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 	
 	public int getCountByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
-		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate < ? and providerNo = ?";
+		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate <= ? and providerNo = ?";
 
 		Query query = entityManager.createQuery(sql);
 		query.setParameter(1, startTime);
@@ -125,7 +125,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 	
 	public List<Appointment> getUnbilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
-		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate < :end_time and providerNo = :provider_no";
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate <= :end_time and providerNo = :provider_no";
 		sql += " and a.demographicNo != 0 and a.status IN (:status_list)";
 
 		List<String> statusList = new ArrayList<String>();
@@ -158,7 +158,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 	
 	public List<Appointment> getBilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
-		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate < :end_time and providerNo = :provider_no";
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate <= :end_time and providerNo = :provider_no";
 		sql += " and a.demographicNo != 0 and a.status NOT IN (:status_list)";
 
 		List<String> statusList = new ArrayList<String>();
@@ -186,7 +186,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 	
 	public int getCountUnbilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
-		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate < :end_time and providerNo = :provider_no";
+		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate <= :end_time and providerNo = :provider_no";
 		sql += " and a.demographicNo != 0 and a.status IN (:status_list)";
 
 		List<String> statusList = new ArrayList<String>();
@@ -214,7 +214,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 	
 	public int getCountBilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
-		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate < :end_time and providerNo = :provider_no";
+		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate <= :end_time and providerNo = :provider_no";
 		sql += " and a.demographicNo != 0 and a.status NOT IN (:status_list)";
 
 		List<String> statusList = new ArrayList<String>();

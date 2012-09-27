@@ -101,8 +101,8 @@ function showBillDetails(id) {
 		removeClass('hide_bill', elem);
 		addClass('show_bill', elem);
 		document.getElementById("bill"+id).onclick = function() { hideBillDetails(id); }
-		setFocusOnAdmissionDateField(id);
-		//setFocusOnInputField(id);
+		//setFocusOnAdmissionDateField(id);
+		setFocusOnInputField(id);
 	}
 }
 
@@ -840,7 +840,9 @@ function isSubmitFlagSet() {
 }
 
 function submitBills() {
-	document.forms[1].submit();
+	$('#submit_billing').trigger('click');
+	//document.getElementById('submit_billing').click();
+	//document.forms['submitbillingform'].submit();
 }
 
 var submitFlag = false;
