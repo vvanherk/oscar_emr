@@ -257,7 +257,10 @@ background-image: url('validation.png');
 	color: green;
 	font-weight: bold;
 }
-.bill-list .completed:hover td
+/* Using [class="completed"]:hover instead of .completed:hover due to firefox 3.6 browser compatibility.
+ * see: http://support.mozilla.org/en-US/questions/746770
+ */
+.bill-list [class="completed"]:hover td
 {
 	color: green;
 	font-weight: bold;

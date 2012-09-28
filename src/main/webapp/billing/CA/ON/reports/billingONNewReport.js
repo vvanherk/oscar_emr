@@ -710,9 +710,9 @@ function isSaved(billId) {
  */ 
 function addBillingItem(id) {
 	//Create an input type dynamically.
-	var element = document.createElement("tr");	
+	//var element = document.createElement("tr");	
 	var billingItemId = getId();
-	element.setAttribute("id", "billing_item"+id+"_"+billingItemId);
+	//element.setAttribute("id", "billing_item"+id+"_"+billingItemId);
 	
 	var onkeydown = "onkeydown=\"";
 	onkeydown+= "if (isTabKey(event)) {";
@@ -801,7 +801,8 @@ function addBillingItem(id) {
 	onkeyup+= "}";
 	onkeyup+= "return true; \"";
 	
-	var htmlString = "<td> <a class=\"billing_button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); updateBillTotal("+id+"); return false;\">X</a></td>";
+	var htmlString = "<tr id='billing_item"+id+"_"+billingItemId+"'>";
+	htmlString += "<td> <a class=\"billing_button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); updateBillTotal("+id+"); return false;\">X</a></td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"bill_code"+id+"\" id=\"bill_code"+id+"_"+billingItemId+"\" autocomplete=\"off\" "+onkeydown+" "+onkeyup+" /> <div id=\"service_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"amount"+id+"\" id=\"amount"+id+"_"+billingItemId+"\" class='currency' "+onkeydown+" "+onkeyup+" /> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"3\" name=\"units"+id+"\" id=\"units"+id+"_"+billingItemId+"\" value=\"1\" "+onkeydown+" "+onkeyup+" /> </td>";
@@ -809,15 +810,22 @@ function addBillingItem(id) {
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"dx_code"+id+"\" id=\"dx_code"+id+"_"+billingItemId+"\" autocomplete=\"off\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_code_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"12\" name=\"dx_desc"+id+"\" id=\"dx_desc"+id+"_"+billingItemId+"\" autocomplete=\"off\" "+onkeydown+" "+onkeyup+" /> <div id=\"diagnostic_desc_lookup"+id+"_"+billingItemId+"\" class=\"lookup_box\" style=\"display:none;\"></div> </td>";
 	htmlString += "<td> <input type=\"text\" size=\"6\" name=\"total"+id+"\" id=\"total"+id+"_"+billingItemId+"\" class='currency' "+totalOnkeydown+" "+totalOnKeyup+" /> </td>";
+	htmlString += "</tr>";
 	//htmlString += "<td> <input type=\"text\" size=\"6\" name=\"sli_code"+id+"\" id=\"sli_code"+id+"_"+billingItemId+"\" disabled=\"disabled\" /> </td>";
-	element.innerHTML = htmlString;
+	//element.innerHTML = htmlString;
 	
-	var billingItems = document.getElementById("billing_items"+id);
+	//alert(element);
+	//$('#billing_items'+id+'').append(element);
+	
+	$(htmlString).appendTo('#billing_items'+id+'');
+	$("#billing_item"+id+"_"+billingItemId).focus();
+	
+	//var billingItems = document.getElementById("billing_items"+id);
 	
 	//Append the element in page (in span).
-	billingItems.appendChild(element);
+	//billingItems.appendChild(element);
 	
-	element.focus();
+	//element.focus();
 }
 
 /**
@@ -1214,7 +1222,7 @@ function selectLookupItem(billId) {
 		for (var j=0; j < lookupItems.length; j++) {
 			if (hasClass("highlighted", lookupItems[j])) {
 				unsetLookupItemAsHighlighted(lookupItems[j]);
-				lookupItems[j].click();
+				$(lookupItems[j]).click();
 				return true;
 			}
 		}

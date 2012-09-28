@@ -369,6 +369,7 @@ var appointmentNumbers = new Array(<%
 
 <script src="<%= request.getContextPath() %>/js/jquery-1.7.1.min.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/jquery.validate.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/additional-methods.js"></script>
 <script>
 $(document).ready(function(){	
 	$("#serviceform").validate();
@@ -802,7 +803,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 				billId = ((BillingClaimHeader1)vecBills.get(i).get(0)).getId().toString();
 			}
 			String appointmentNo = "-1";
-			prop = (Properties)vecValue.get(i);	
+			prop = (Properties)vecValue.get(i);
 			%>
 			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>);">
 				<td width="10px"> <input type="checkbox" class="checkbox" name="select_bill" id="select_bill<%=i%>" onclick="preventEventPropagation(event);"> </td>
@@ -893,7 +894,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						</select>
 						
 						Admission date:
-						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="required date" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
+						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="required dateCA" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
 						<img src="../../../images/cal.gif" alt="" id="admission_date<%=i%>_cal">
 						<script>
 							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y-%m-%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1,
@@ -909,7 +910,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						</script>
 						
 						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" onclick="/*toggleBillNotesVisible(<%=i%>);*/" > <span class="input_element_label">Manual</span>
-						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="toggleReferralDoctorVisible(<%=i%>); setFocusOnReferralDoctorInput(<%=i%>);" > <span class="input_element_label">Referral Doctor</span>
+						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="toggleReferralDoctorVisible(<%=i%>); if (this.checked) setFocusOnReferralDoctorInput(<%=i%>);" > <span class="input_element_label">Referral Doctor</span>
 						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" >
 						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" >
 						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" >
