@@ -51,7 +51,7 @@
         var msg = "<bean:message key="provider.editRxFax.msgPhoneFormat" />";
         var strnum = document.forms[0].elements[0].value;
 		if(strnum.length > 0) {        
-	        if( !strnum.match(/^\d{3}-\d{3}-\d{4}$/) ) {
+	        if( !strnum.match(/^\d{3}-\d{3}-\d{4}( x \d(\d*))?$/) ) {
 	            alert(msg);
 	            return false;
 	        }
