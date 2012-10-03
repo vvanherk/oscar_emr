@@ -894,7 +894,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						</select>
 						
 						Admission date:
-						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="required dateCA" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
+						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
 						<img src="../../../images/cal.gif" alt="" id="admission_date<%=i%>_cal">
 						<script>
 							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y-%m-%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1,
@@ -1395,20 +1395,11 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				billTimeAsDate = (Date)formatter.parse(billTime);
 			} catch (Exception e) {}
 			
-			double tempTotal = 0;
-			String total = "";
-			try {
-				for (int j = 0; j < totals.length; j++) {
-					totals[j] = totals[j].replace("$", "");
-					totals[j] = totals[j].replace(",", "");
-					//MiscUtils.getLogger().info("total: " + totals[j]);
-					tempTotal += Double.parseDouble(totals[j]);
-				}
-				total = String.format("%1$,.2f", tempTotal);
-			} catch (Exception e) {
-				MiscUtils.getLogger().error("total calc error:", e);
-			}
 			
+			formatAmounts(amounts);
+			formatPercents(percents);
+			String total = formatAndCalculateTotal(totals);
+						
 			
 			if (billId.equals("")) {
 				MiscUtils.getLogger().info("demoName: " + demoName);
@@ -1470,13 +1461,21 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 			
 			// set values for billing items
 			for (int j=0; j < billCodes.length; j++) {
+						
+				// skip 'empty' billing items
+				//if (billCodes[j].length() == 0 && amounts[j].equals("0.00") && (units[j].length() == 0 || units[j].equals("1")) && dxCodes[j].length() == 0)
+				//	continue;
+				
 		        BillingItem item = new BillingItem();
 	            item.setCh1_id(newBill.getId());
 	            item.setTransc_id(BillingDataHlp.ITEM_TRANSACTIONIDENTIFIER);
 	            item.setRec_id(BillingDataHlp.ITEM_REORDIDENTIFICATION);
 	            item.setService_code(billCodes[j]);
-	
-	            item.setFee(amounts[j]);
+				
+				double amount = Double.parseDouble(amounts[j]);
+				double percent = Double.parseDouble(percents[j]);
+				
+	            item.setFee( String.format("%1$,.2f", amount * percent) );
 	            item.setSer_num(units[j]);
 	            item.setStatus("W");
 				
@@ -1489,23 +1488,10 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 	            newBill.getBillingItems().add(item);
 			}
 			
-			boolean saveSuccessful = false;
+			//boolean saveSuccessful = false;
 			try {
 			    // Validate
-			    Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
-			    Set<ConstraintViolation<BillingClaimHeader1>>  constraintViolations = validator.validate(newBill);
-			    
-			    // if there are validation errors, throw exception
-			    if (constraintViolations.size() > 0) {
-					MiscUtils.getLogger().info("validation errors: " + constraintViolations.size());
-					
-					for (ConstraintViolation violation : constraintViolations) {
-						MiscUtils.getLogger().info("validation error: " + violation.toString());
-					}
-					// error in ConstraintViolationException definition, so we need to create an intermediate collection
-					// see: https://forum.hibernate.org/viewtopic.php?f=26&t=998831
-					throw new ConstraintViolationException(new HashSet<ConstraintViolation<?>>(constraintViolations));
-				}
+			    validate(newBill);
 				
 				billingClaimDAO.createBill(newBill);
 				numBillsSaved++;
@@ -1530,5 +1516,91 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 	}
 	
 	return new int[]{ numBills, numBillsSubmitted, numBillsSaved };
+}
+
+void formatAmounts(String[] amounts) {
+	try {
+		for (int j = 0; j < amounts.length; j++) {
+			amounts[j] = amounts[j].replace("$", "");
+			amounts[j] = amounts[j].replace(",", "");
+			if (amounts[j].length() == 0)
+				amounts[j] = "0";
+				
+			amounts[j] = "" + Double.parseDouble(amounts[j]);
+		}
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("error formatting amount:", e);
+	}
+}
+
+void formatPercents(String[] percents) {
+	try {
+		for (int j = 0; j < percents.length; j++) {
+			percents[j] = percents[j].replace("%", "");
+			if (percents[j].length() == 0)
+				percents[j] = "1";
+				
+			percents[j] = "" + Double.parseDouble(percents[j]);
+		}
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("error formatting percent:", e);
+	}
+}
+
+String formatAndCalculateTotal(String[] totals) {
+	double tempTotal = 0;
+	String total = "";
+	try {
+		for (int j = 0; j < totals.length; j++) {
+			totals[j] = totals[j].replace("$", "");
+			totals[j] = totals[j].replace(",", "");
+
+			if (totals[j].length() == 0)
+				totals[j] = "0";
+			tempTotal += Double.parseDouble(totals[j]);
+		}
+		total = String.format("%1$,.2f", tempTotal);
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("total calc error:", e);
+	}
+	
+	return total;
+}
+
+void validate(BillingClaimHeader1 newBill) throws ConstraintViolationException {
+    // Validate
+    Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
+    Set<ConstraintViolation<BillingClaimHeader1>>  constraintViolations = validator.validate(newBill);
+    
+    // if there are validation errors, throw exception
+    if (constraintViolations.size() > 0) {
+		MiscUtils.getLogger().info("validation errors: " + constraintViolations.size());
+		
+		for (ConstraintViolation violation : constraintViolations) {
+			MiscUtils.getLogger().info("validation error: " + violation.toString());
+		}
+		// error in ConstraintViolationException definition, so we need to create an intermediate collection
+		// see: https://forum.hibernate.org/viewtopic.php?f=26&t=998831
+		throw new ConstraintViolationException(new HashSet<ConstraintViolation<?>>(constraintViolations));
+	}
+	
+	
+	List<BillingItem> billingItems = newBill.getBillingItems();
+	for (BillingItem item : billingItems) {
+	
+		Set<ConstraintViolation<BillingItem>> constraintViolationsBillingItems = validator.validate(item);
+	    
+	    // if there are validation errors, throw exception
+	    if (constraintViolationsBillingItems.size() > 0) {
+			MiscUtils.getLogger().info("validation errors: " + constraintViolationsBillingItems.size());
+			
+			for (ConstraintViolation violation : constraintViolationsBillingItems) {
+				MiscUtils.getLogger().info("validation error: " + violation.toString());
+			}
+			// error in ConstraintViolationException definition, so we need to create an intermediate collection
+			// see: https://forum.hibernate.org/viewtopic.php?f=26&t=998831
+			throw new ConstraintViolationException(new HashSet<ConstraintViolation<?>>(constraintViolationsBillingItems));
+		}
+	}
 }
 %>

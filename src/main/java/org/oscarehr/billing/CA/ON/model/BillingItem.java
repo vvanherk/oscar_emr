@@ -36,6 +36,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import javax.validation.constraints.NotNull;
+
 import org.oscarehr.common.model.AbstractModel;
 
 /**
@@ -136,6 +138,7 @@ public class BillingItem  extends AbstractModel<Integer> implements Serializable
     /**
      * @return the service_code
      */
+    @NotNull(message="Service Code must be specified.")
     public String getService_code() {
         return service_code;
     }

@@ -16,7 +16,7 @@ BillingServiceDao billingServiceDao = (BillingServiceDao)SpringUtils.getBean("bi
 
 String serviceCode = request.getParameter("serviceCode");
 
-List<BillingService> billingServices = billingServiceDao.findBillingCodesByCode(serviceCode, "ON");
+List<BillingService> billingServices = billingServiceDao.findBillingCodesByCode(serviceCode, "ON", 1);
 
 
 JSONArray jsonArray = new JSONArray();
