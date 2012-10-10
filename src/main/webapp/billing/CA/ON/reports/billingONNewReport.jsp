@@ -22,16 +22,18 @@
 <%@page import="java.util.List, java.util.Set, java.util.Collections, java.util.Comparator, java.util.Date, java.text.SimpleDateFormat, java.text.NumberFormat" %>
 <%@page import="org.oscarehr.util.SpringUtils, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment" %>
 
-<%@page import="javax.validation.Validator, javax.validation.Validation, javax.validation.ConstraintViolation, javax.validation.ConstraintViolationException" %>
+<%@page import="javax.validation.Validator, javax.validation.Validation, javax.validation.ValidationException, javax.validation.ConstraintViolation, javax.validation.ConstraintViolationException" %>
 
 <%@page import="org.oscarehr.billing.CA.ON.dao.BillingClaimDAO" %>
 <%@page import="org.oscarehr.common.dao.DemographicDao" %>
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao" %>
 <%@page import="org.oscarehr.common.dao.BillingServiceDao" %>
+<%@page import="org.oscarehr.common.dao.DiagnosticCodeDao" %>
 
 <%@page import="org.oscarehr.billing.CA.ON.model.BillingClaimHeader1" %>
 <%@page import="org.oscarehr.billing.CA.ON.model.BillingItem" %>
 <%@page import="org.oscarehr.common.model.BillingService" %>
+<%@page import="org.oscarehr.common.model.DiagnosticCode" %>
 <%@page import="org.oscarehr.common.model.Demographic" %>
 <%@page import="org.oscarehr.common.model.Provider" %>
 
@@ -46,6 +48,7 @@
 <% ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao"); %>
 <% BillingClaimDAO billingClaimDAO = (BillingClaimDAO)SpringUtils.getBean("billingClaimDAO"); %>
 <% BillingServiceDao billingServiceDao = (BillingServiceDao)SpringUtils.getBean("billingServiceDao"); %>
+<% DiagnosticCodeDao diagnosticCodeDao = (DiagnosticCodeDao)SpringUtils.getBean("diagnosticCodeDao"); %>
 
 <%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 
@@ -126,7 +129,7 @@ int numBills = 0;
 
 // handle saving of submitted bills
 if (billsSubmitted) {
-	int[] results = saveSubmittedBills(request, appointmentDao, billingClaimDAO, demographicDao, providerDao );	
+	int[] results = saveSubmittedBills( request, appointmentDao, billingClaimDAO, billingServiceDao, diagnosticCodeDao, demographicDao, providerDao );	
 	
 	numBills = results[0];
 	numBillsSubmitted = results[1];
@@ -196,7 +199,7 @@ if("unbilled".equals(action)) {
     
     List<Appointment> appointments = appointmentDao.getUnbilledByDateRangeAndProvider(startTime, endTime, providerview, new Integer(firstResult), new Integer(maxPerPage));    
     
-    MiscUtils.getLogger().info("na: " + appointments.size());
+    //MiscUtils.getLogger().info("na: " + appointments.size());
     
     // sort appointments
     Collections.sort(appointments, appointmentComparator);
@@ -240,7 +243,7 @@ if("unbilled".equals(action)) {
         vecProviderNo.add( "" + apt.getProviderNo() );
     }
     
-    MiscUtils.getLogger().info("nvb: " + vecBills.size());
+    //MiscUtils.getLogger().info("nvb: " + vecBills.size());
 
 }
 
@@ -1329,7 +1332,7 @@ String getUneditableBillingItemText(int i, int uniqueId, List<String> values) {
 	return html;
 }
 
-int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appointmentDao, BillingClaimDAO billingClaimDAO, DemographicDao demographicDao, ProviderDao providerDao ) {
+int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appointmentDao, BillingClaimDAO billingClaimDAO, BillingServiceDao billingServiceDao, DiagnosticCodeDao diagnosticCodeDao, DemographicDao demographicDao, ProviderDao providerDao ) {
 	String tempNumberOfBills = request.getParameter("number_of_bills");
 	int numBills = 0;
 	try {
@@ -1372,7 +1375,6 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		
 		
 		if (billId != null && isBillSaved) {
-			MiscUtils.getLogger().info("billCodes length: " + billCodes.length);
 			numBillsSubmitted++;
 			
 			BillingClaimHeader1 newBill = null;
@@ -1402,8 +1404,6 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 						
 			
 			if (billId.equals("")) {
-				MiscUtils.getLogger().info("demoName: " + demoName);
-
 				Demographic demo = demographicDao.getDemographic(demoNo.toString());
 				Provider prov = providerDao.getProvider(provNo);
 
@@ -1491,7 +1491,7 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 			//boolean saveSuccessful = false;
 			try {
 			    // Validate
-			    validate(newBill);
+			    validate(newBill, billingServiceDao, diagnosticCodeDao);
 				
 				billingClaimDAO.createBill(newBill);
 				numBillsSaved++;
@@ -1567,7 +1567,7 @@ String formatAndCalculateTotal(String[] totals) {
 	return total;
 }
 
-void validate(BillingClaimHeader1 newBill) throws ConstraintViolationException {
+void validate(BillingClaimHeader1 newBill, BillingServiceDao billingServiceDao, DiagnosticCodeDao diagnosticCodeDao) throws ValidationException, ConstraintViolationException {
     // Validate
     Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
     Set<ConstraintViolation<BillingClaimHeader1>>  constraintViolations = validator.validate(newBill);
@@ -1586,6 +1586,9 @@ void validate(BillingClaimHeader1 newBill) throws ConstraintViolationException {
 	
 	
 	List<BillingItem> billingItems = newBill.getBillingItems();
+	List<String> serviceCodes = new ArrayList<String>();
+	List<String> diagnosticCodes = new ArrayList<String>();
+	
 	for (BillingItem item : billingItems) {
 	
 		Set<ConstraintViolation<BillingItem>> constraintViolationsBillingItems = validator.validate(item);
@@ -1600,6 +1603,37 @@ void validate(BillingClaimHeader1 newBill) throws ConstraintViolationException {
 			// error in ConstraintViolationException definition, so we need to create an intermediate collection
 			// see: https://forum.hibernate.org/viewtopic.php?f=26&t=998831
 			throw new ConstraintViolationException(new HashSet<ConstraintViolation<?>>(constraintViolationsBillingItems));
+		}
+		
+		serviceCodes.add(item.getService_code());
+		diagnosticCodes.add(item.getDx());
+	}
+	
+	// validate the service codes
+	List<BillingService> billingServices = billingServiceDao.findBillingCodesByCode(serviceCodes, "ON");
+	List<String> matchedServiceCodes = new ArrayList<String>();
+	
+	for (BillingService code : billingServices) {
+		matchedServiceCodes.add(code.getServiceCode());
+	}
+	
+	for (String code : serviceCodes) {
+		if ( !matchedServiceCodes.contains(code) ) {
+			throw new ValidationException(code + " is not a valid Billing Service Code!");
+		}
+	}
+	
+	// validate the diagnostic codes
+	List<DiagnosticCode> diagnosticCodeList = diagnosticCodeDao.findDiagnosticCodesByCode(diagnosticCodes);
+	List<String> matchedDiagnosticCodes = new ArrayList<String>();
+	
+	for (DiagnosticCode code : diagnosticCodeList) {
+		matchedDiagnosticCodes.add(code.getDiagnosticCode());
+	}
+	
+	for (String code : diagnosticCodes) {
+		if ( code.length() != 0 && !matchedDiagnosticCodes.contains(code) ) {
+			throw new ValidationException(code + " is not a valid Diagnostic Service Code!");
 		}
 	}
 }
