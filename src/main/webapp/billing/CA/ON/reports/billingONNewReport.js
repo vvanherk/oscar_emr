@@ -800,9 +800,12 @@ function addBillingItem(id) {
 	onkeyup+= "	}";
 	onkeyup+= "}";
 	onkeyup+= "return true; \"";
-	
+
 	var firstDxCode = getInputFieldValue(id, 0, 4);
 	var firstDxDescription = getInputFieldValue(id, 0, 5);
+	
+	firstDxCode = firstDxCode || "";
+	firstDxDescription = firstDxDescription || "";
 	
 	var htmlString = "<tr id='billing_item"+id+"_"+billingItemId+"'>";
 	htmlString += "<td> <a class=\"billing_button\" href=\"\"  tabindex=\"-1\" onclick=\"deleteBillingItem("+id+", "+billingItemId+"); updateBillTotal("+id+"); return false;\">X</a></td>";
@@ -966,20 +969,26 @@ function getInputFieldValue(billId, billingItemId, inputIndex) {
 	billingItemId = billingItemId || -1;
 	inputIndex = inputIndex || 0;
 	
-	// if billingItemId is less than 0, set focus to inputNumber input field of first billing item
+	// if billingItemId is less than 0, get value of inputIndex input field of first billing item
 	if (billingItemId < 0) {
 		var firstBillingItem = document.getElementById("billing_items"+billId).getElementsByTagName("tr")[0];
-		var inputField = firstBillingItem.getElementsByTagName("input")[inputIndex];
-		if (inputField != undefined)
-			return inputField.value;
+
+		if (firstBillingItem != null && firstBillingItem != undefined) {
+			var inputField = firstBillingItem.getElementsByTagName("input")[inputIndex];
+
+			if (inputField != undefined)
+				return inputField.value;
+		}
 		return;
 	}
-	
+
 	var billingItem = document.getElementById("billing_item"+billId+"_"+billingItemId);
-	
+
 	if (billingItem != null && billingItem != undefined) {
 		return billingItem.getElementsByTagName("input")[inputIndex].value;
 	}
+	
+	return;
 }
 
 /**
