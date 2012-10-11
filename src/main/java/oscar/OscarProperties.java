@@ -232,4 +232,15 @@ public class OscarProperties extends Properties {
 		return faxEnabled() || isRxFaxEnabled() || isConsultationFaxEnabled() || isRichEFormFaxEnabled();
 	}
 	
+	public int getBillingHistoryNumYears() {
+		String numYears = getProperty("billing_history_num_years");
+		int numYearsAsInt = 2;
+		try {
+			numYearsAsInt = Integer.parseInt(numYears);
+		} catch (Exception e) {}
+		
+		return numYearsAsInt;
+	}
+	
+	
 }

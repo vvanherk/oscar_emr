@@ -259,7 +259,7 @@ public class JdbcBillingReviewImpl {
 		try {
 			while (rs.next()) {
 				iRow++;
-		        if(iRow>iPageSize) break;
+		        if(iRow>iPageSize && iPageSize != 0) break;
 				ch1Obj = new BillingClaimHeader1Data();
 				ch1Obj.setId("" + rs.getInt("id"));
 				ch1Obj.setBilling_date(rs.getString("billing_date"));
