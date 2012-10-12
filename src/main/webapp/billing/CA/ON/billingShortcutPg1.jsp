@@ -26,10 +26,11 @@
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
 
-<% java.util.Properties oscarVariables = OscarProperties.getInstance(); %>
+<% oscar.OscarProperties oscarVariables = OscarProperties.getInstance(); %>
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
 <%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.oscarehr.common.model.Billingreferral" %>
 <%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
 <%
@@ -241,7 +242,9 @@
 
   //visitType
   paraName = request.getParameter("xml_visittype");
-  paraName = (paraName == null || paraName.length() == 0? "03 | ER" : paraName);
+  String defaultVisitType = oscarVariables.getHospitalBillingDefaultVisitType();
+  if (defaultVisitType != null)
+	paraName = (paraName == null || paraName.length() == 0? defaultVisitType : paraName);
   String xml_visittype = getDefaultValue(paraName, vecHist, "visitType");
   if(!"".equals(xml_visittype)) {
     visitType = xml_visittype;
@@ -250,7 +253,11 @@
   }
 
   paraName = request.getParameter("xml_location");
-  paraName = (paraName == null || paraName.length() == 0? "4094" : paraName); // 4094 = ER Kincardine Hospital
+  String defaultVisitLocation = oscarVariables.getHospitalBillingDefaultVisitLocation();
+  if (defaultVisitLocation != null) {
+	paraName = (paraName == null || paraName.length() == 0? defaultVisitLocation : paraName); // 4094 = ER Kincardine Hospital
+	MiscUtils.getLogger().info("YES: " + defaultVisitLocation);
+}
   String xml_location = getDefaultValue(paraName, vecHist, "clinic_ref_code");
   if(!"".equals(xml_location)) {
     clinicview = xml_location;
