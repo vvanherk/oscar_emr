@@ -191,7 +191,7 @@
 		
 		Calendar calendar = Calendar.getInstance();
 		String strToday = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DATE);
-		calendar.add(Calendar.YEAR, -oscarVariables.getBillingHistoryNumYears());
+		calendar.add(Calendar.DATE, -oscarVariables.getBillingHistoryNumDays());
 		String strStartDay = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DATE);
 		
 		DBPreparedHandlerParam[] pDateRange= new DBPreparedHandlerParam[2];
@@ -1243,13 +1243,20 @@ ctlCount = 0;
 </table>
 <% } else { %>
 
+<%
+String numYears = "";
+float numYearsAsFloat = (float)oscarVariables.getBillingHistoryNumDays() / 365.0f;
+numYears = "" + numYearsAsFloat;
+%>
+
 <table border="0" cellpadding="1" cellspacing="2" width="100%" class="myIvory">
     <tr class="myYellow">
 	<td colspan="6"><%=demoname%> - <b><bean:message key="billing.hospitalBilling.frmBillHistory"/></b> 
 		(
 			<bean:message key="billing.hospitalBilling.frmLast"/> 
-			<%=oscarVariables.getBillingHistoryNumYears()%> 
-			<bean:message key="billing.hospitalBilling.frmYears"/>
+			<%=oscarVariables.getBillingHistoryNumDays()%> 
+			<bean:message key="billing.hospitalBilling.frmDays"/>
+			(<%=numYears%> <bean:message key="billing.hospitalBilling.frmYears"/>)
 		)
 	</td>
 	<td width="20%" align="right">
