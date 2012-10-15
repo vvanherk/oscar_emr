@@ -1696,21 +1696,13 @@ function changeSite(sel) {
 	
 </table>
 
-<%
-String numYears = "";
-float numYearsAsFloat = (float)oscarVariables.getBillingHistoryNumDays() / 365.0f;
-numYears = "" + numYearsAsFloat;
-%>
-
 <table border="0" cellpadding="0" cellspacing="2" width="100%" class="myIvory">
     <tr class="myYellow">
 	<td><%=demoname%> - <b>Billing History</b> 
-		(
+		-
 			<bean:message key="billing.hospitalBilling.frmLast"/> 
 			<%=oscarVariables.getBillingHistoryNumDays()%> 
 			<bean:message key="billing.hospitalBilling.frmDays"/>
-			(<%=numYears%> <bean:message key="billing.hospitalBilling.frmYears"/>)
-		)
 	</td>
 	<td width="20%" align="right">
 	    Last <input type="text" name="day" value="365" size="3" /> days

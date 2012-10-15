@@ -1243,21 +1243,13 @@ ctlCount = 0;
 </table>
 <% } else { %>
 
-<%
-String numYears = "";
-float numYearsAsFloat = (float)oscarVariables.getBillingHistoryNumDays() / 365.0f;
-numYears = "" + numYearsAsFloat;
-%>
-
 <table border="0" cellpadding="1" cellspacing="2" width="100%" class="myIvory">
     <tr class="myYellow">
 	<td colspan="6"><%=demoname%> - <b><bean:message key="billing.hospitalBilling.frmBillHistory"/></b> 
-		(
+		-
 			<bean:message key="billing.hospitalBilling.frmLast"/> 
 			<%=oscarVariables.getBillingHistoryNumDays()%> 
 			<bean:message key="billing.hospitalBilling.frmDays"/>
-			(<%=numYears%> <bean:message key="billing.hospitalBilling.frmYears"/>)
-		)
 	</td>
 	<td width="20%" align="right">
 	    Last <input type="text" name="day" value="365" size="3" /> days
