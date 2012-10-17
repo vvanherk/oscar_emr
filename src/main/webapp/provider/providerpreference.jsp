@@ -561,7 +561,7 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 			<%
 				String visitType = providerPreference.getBillingVisitTypeDefault();				
 			%>
-	      <option value="none" <%=visitType.length()==0?"selected":""%>>-- None --</option>
+	      <option value="" <%=visitType.length()==0?"selected":""%>>-- None --</option>
 						<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
 					    <% 
 					    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
@@ -598,15 +598,14 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 	  
 	  <br>
 	  
-	  <bean:message key="provider.labelDefaultBillVisitLocation"/>:
-	  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.formVisitLocation"/> <% } %>:
+	  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.msgVisitLocation"/> <% } %>:
 	  <select name="default_bill_visit_location">
 			<%
 				String selectedVisitLocation = providerPreference.getBillingVisitLocationDefault();
 				ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
-				ArrayList<ClinicLocation> clinicLocations = clinicLocationDao.findAll();			
+				List<ClinicLocation> clinicLocations = clinicLocationDao.findAll();			
 			%>
-	      <option value="none" <%=selectedVisitLocation.length()==0?"selected":""%>>-- None --</option>
+	      <option value="" <%=selectedVisitLocation.length()==0?"selected":""%>>-- None --</option>
 				<%	for(int i=0; i<clinicLocations.size(); i++) {
 						ClinicLocation clinicLocation = clinicLocations.get(i);
 						String strLocation = clinicLocation.getClinicLocationNo();
