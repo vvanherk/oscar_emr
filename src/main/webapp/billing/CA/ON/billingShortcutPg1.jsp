@@ -21,8 +21,10 @@
 <%@ page import="java.util.*,java.net.*, java.sql.*, oscar.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
 <%@page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@page import="org.oscarehr.common.model.ClinicNbr"%>
 <%@page import="org.oscarehr.common.model.Provider"%>
+<%@page import="org.oscarehr.common.dao.ProviderPreferenceDao"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
 
@@ -35,6 +37,9 @@
 <%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
 <%
 	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+	
+	ProviderPreferenceDao providerPreferenceDao = (ProviderPreferenceDao)SpringUtils.getBean("providerPreferenceDao");
+    ProviderPreference providerPreference = providerPreferenceDao.find(user_no);
 %>
 <%
   boolean bHospitalBilling = true;
@@ -242,7 +247,7 @@
 
   //visitType
   paraName = request.getParameter("xml_visittype");
-  String defaultVisitType = oscarVariables.getHospitalBillingDefaultVisitType();
+  String defaultVisitType = providerPreference.getBillingVisitTypeDefault();
   if (defaultVisitType != null)
 	paraName = (paraName == null || paraName.length() == 0? defaultVisitType : paraName);
   String xml_visittype = getDefaultValue(paraName, vecHist, "visitType");
@@ -253,9 +258,9 @@
   }
 
   paraName = request.getParameter("xml_location");
-  String defaultVisitLocation = oscarVariables.getHospitalBillingDefaultVisitLocation();
+  String defaultVisitLocation = providerPreference.getBillingVisitLocationDefault();
   if (defaultVisitLocation != null) {
-	paraName = (paraName == null || paraName.length() == 0? defaultVisitLocation : paraName); // 4094 = ER Kincardine Hospital
+	paraName = (paraName == null || paraName.length() == 0? defaultVisitLocation : paraName);
 	MiscUtils.getLogger().info("YES: " + defaultVisitLocation);
 }
   String xml_location = getDefaultValue(paraName, vecHist, "clinic_ref_code");
