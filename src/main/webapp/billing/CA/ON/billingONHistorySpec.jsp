@@ -40,7 +40,13 @@
 <%@ page
 	import="java.util.*, java.sql.*, java.net.*, oscar.*, oscar.oscarDB.*"
 	errorPage="errorpage.jsp"%>
+<%@page import="org.oscarehr.util.SpringUtils"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
+
+<%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+
+<%@page import="org.oscarehr.common.model.Provider"%>
+
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
@@ -87,22 +93,27 @@ function upCaseCtrl(ctrl) {
 <CENTER>
 <table width="100%" border="0" bgcolor="#ffffff">
 	<tr class="myYellow">
-		<TH width="12%"><b>Invoice No.</b></TH>
-		<TH width="20%"><b>Appt. Date</b></TH>
-		<TH width="15%"><b>Bill Type</b></TH>
-		<TH width="35%"><b>Service Code</b></TH>
-		<TH width="5%"><b>Dx</b></TH>
+		<TH><b>Invoice No.</b></TH>
+		<th><b>Doctor</b></th>
+		<TH><b>Appt. Date</b></TH>
+		<TH><b>Bill Type</b></TH>
+		<TH><b>Service Code</b></TH>
+		<th><b>Create Date</b></th>
+		<TH><b>Dx</b></TH>
 		<TH><b>Fee</b></TH>
 	</tr>
 	<% // new billing records
 JdbcBillingReviewImpl dbObj = new JdbcBillingReviewImpl();
 String limit = "";
 //List aL = dbObj.getBillingHist(request.getParameter("demographic_no"), limit, dateRange);
-List aL = dbObj.getBillingHist(request.getParameter("demographic_no"), 10000000, 0, pDateRange);
+List aL = dbObj.getBillingHist(request.getParameter("demographic_no"), 0, 0, pDateRange);
 int nItems=0;
 for(int i=0; i<aL.size(); i=i+2) {
 	BillingClaimHeader1Data obj = (BillingClaimHeader1Data) aL.get(i);
 	BillingItemData itObj = (BillingItemData) aL.get(i+1);
+	ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+	Provider p = providerDao.getProvider(obj.getProviderNo());
+	
 	String strServiceCode = itObj.getService_code();
 	if(!serviceCode.equals("")) {
 		if(strServiceCode.indexOf(serviceCode) < 0) {
@@ -111,10 +122,12 @@ for(int i=0; i<aL.size(); i=i+2) {
 	}
 %>
 	<tr bgcolor="<%=i%2==0?"#CCFF99":"white"%>">
-		<td width="5%" align="center" height="25"><%=obj.getId()%></td>
+		<td align="center" width="5%" height="25"><%=obj.getId()%></td>
+		<td align="center"><%=p.getLastName()%>, <%=p.getFirstName()%></td>
 		<td align="center"><%=obj.getBilling_date()%> <%--=obj.getBilling_time()--%></td>
 		<td align="center"><%=BillingDataHlp.propBillingType.getProperty(obj.getStatus(),"")%></td>
 		<td align="center"><%=strServiceCode%></td>
+		<td align="center"><%=obj.getUpdate_datetime().substring(0, 10)%></td>
 		<td align="center"><%=itObj.getDx()%></td>
 		<td align="center"><%=obj.getTotal()%></td>
 	</tr>
@@ -126,7 +139,9 @@ for(int i=0; i<aL.size(); i=i+2) {
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
+		<td>&nbsp;</td>
 		<td align="center"><%=nItems %></td>
+		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 		<td>&nbsp;</td>
 	</tr>
