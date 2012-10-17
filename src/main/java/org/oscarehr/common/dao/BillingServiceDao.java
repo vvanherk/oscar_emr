@@ -58,6 +58,17 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 		List<BillingService> list = query.getResultList();
 		return list;
 	}
+	
+	public List<BillingService> findBillingCodesByCode(List<String> codes, String region) {
+		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.serviceCode in (:code) and region = (:region) order by bs.billingserviceDate");
+		
+		query.setParameter("code", codes);
+		query.setParameter("region", region);
+
+		@SuppressWarnings("unchecked")		
+		List<BillingService> list = query.getResultList();
+		return list;
+	}
 
 	public List<BillingService> findBillingCodesByCode(String code, String region, int order) {
 		return findBillingCodesByCode(code, region, new Date(), order);

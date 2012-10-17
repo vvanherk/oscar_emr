@@ -1,0 +1,399 @@
+<!-- /*
+ * 
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+ * This software is published under the GPL GNU General Public License. 
+ * This program is free software; you can redistribute it and/or 
+ * modify it under the terms of the GNU General Public License 
+ * as published by the Free Software Foundation; either version 2 
+ * of the License, or (at your option) any later version. * 
+ * This program is distributed in the hope that it will be useful, 
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
+ * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
+ * along with this program; if not, write to the Free Software 
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
+ * 
+ * <OSCAR TEAM>
+ * 
+ * This software was written for the 
+ * Department of Family Medicine 
+ * McMaster University 
+ * Hamilton 
+ * Ontario, Canada 
+ */
+-->
+
+
+/** Validation */
+label { width: 10em; float: left; }
+label.error { float: none; color: red; padding-left: .5em; vertical-align: top; }
+
+
+/** Pagination */
+.pagination-clean {
+	border:0; 
+	margin:0; 
+	padding:0;
+	font-size:11px;
+	list-style:none;
+}
+.pagination-clean a {
+	border:solid 1px #DEDEDE;
+	margin-right:2px;
+	
+	color:#0033CC;
+	display:block;
+	float:left;
+	padding:3px 6px;
+	text-decoration:none;
+}
+.pagination-clean .previous-off a, .pagination-clean .next-off a {
+	color:#DEDEDE;
+	display:block;
+	float:left;
+	font-weight:bold;
+	padding:3px 4px;
+	border:none;
+	
+	cursor:default;
+}
+.pagination-clean .next a, .pagination-clean .previous a {
+	font-weight:bold;
+	border:none;
+}
+.pagination-clean .active {
+	color:#000000;
+	font-weight:bold;
+	display:block;
+	float:left;
+	padding:4px 6px;
+}
+
+
+
+/** Notification Boxes */
+.oscar_info, .oscar_success, .oscar_warning, .oscar_error, .oscar_validation {
+border: 1px solid;
+
+padding:15px 10px 15px 50px;
+background-repeat: no-repeat;
+background-position: 10px center;
+margin-left: auto;
+margin-right: auto;
+width: 40%;
+}
+.oscar_info {
+color: #00529B;
+background-color: #BDE5F8;
+background-image: url('info.png');
+}
+.oscar_success {
+color: #4F8A10;
+background-color: #DFF2BF;
+background-image:url('success.png');
+}
+.oscar_warning {
+color: #9F6000;
+background-color: #FEEFB3;
+background-image: url('warning.png');
+}
+.oscar_error {
+color: #D8000C;
+background-color: #FFBABA;
+background-image: url('error.png');
+}
+.oscar_validation {
+color: #D63301;
+background-color: #FFCCBA;
+background-image: url('validation.png');
+}
+
+
+
+.clear {
+	clear: both;
+}
+
+.search_details
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	margin: 10px;
+	width: 60%;
+	text-align: left;
+	border-collapse: collapse;
+}
+
+.input_element_label {
+
+}
+
+.billing_button {
+	-moz-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	background-color:#b9c9fe;
+	-moz-border-radius:6px;
+	-webkit-border-radius:6px;
+	border-radius:6px;
+	border:1px solid #84bbf3;
+	display:inline-block;
+	color:#ffffff;
+	font-family:arial;
+	font-size:12px;
+	font-weight:normal;
+	padding:4px 10px;
+	text-decoration:none;
+	text-shadow:1px 1px 0px #528ecc;
+	cursor:pointer;
+}
+.billing_button:hover {
+	background-color:#aabcfe;
+}
+.billing_button:active {
+	position:relative;
+	top:1px;
+}
+
+.dropdown {
+	-moz-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	-webkit-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	box-shadow:inset 0px 1px 0px 0px #bbdaf7;
+	background-color:#b9c9fe;
+	-moz-border-radius:6px;
+	-webkit-border-radius:6px;
+	border-radius:6px;
+	border:1px solid #84bbf3;
+	display:inline-block;
+	color:#ffffff;
+	font-family:arial;
+	font-size:12px;
+	font-weight:normal;
+	padding:4px 4px;
+	text-decoration:none;
+	text-shadow:1px 1px 0px #528ecc;
+}
+.dropdown:hover {
+	background-color:#aabcfe;
+}
+
+.checkbox {
+}
+
+.hide_element {
+	display: none;
+}
+
+.bill-list
+{
+	font-family: "Lucida Sans Unicode", "Lucida Grande", Sans-Serif;
+	font-size: 12px;
+	/*margin: 45px;*/
+	width: 100%;
+	text-align: left;
+	border-collapse: collapse;
+}
+.bill-list th
+{
+	font-size: 13px;
+	font-weight: normal;
+	padding: 8px;
+	background: #b9c9fe;
+	border-top: 4px solid #aabcfe;
+	border-bottom: 1px solid #fff;
+	color: #039;
+}
+.bill-list td
+{
+	padding: 8px;
+	background: #e8edff;
+	border-bottom: 1px solid #fff;
+	color: #669;
+	font-weight: normal;
+	border-top: 1px solid transparent;
+}
+.bill-list tr:hover td
+{
+	background: #d0dafd;
+	color: #339;
+	font-weight: normal;
+}
+
+.bill-list .bill.show_bill td
+{
+	background: white;
+}
+
+.bill-list .no-bills
+{
+	background: #e8edff;
+	color: red;
+	font-weight: bold;
+	
+}
+.bill-list tr:hover .no-bills
+{
+	background: #d0dafd;
+	color: red;
+	font-weight: bold;
+}
+
+.bill-list .bill.show_bill
+{
+	display: ;
+}
+
+.bill-list .bill.hide_bill
+{
+	display: none;
+}
+
+.bill-list .bill.hide_bill td.completed
+{
+	display: table-cell;
+}
+.bill-list .completed td
+{
+	color: green;
+	font-weight: bold;
+}
+/* Using [class="completed"]:hover instead of .completed:hover due to firefox 3.6 browser compatibility.
+ * see: http://support.mozilla.org/en-US/questions/746770
+ */
+.bill-list [class="completed"]:hover td
+{
+	color: green;
+	font-weight: bold;
+}
+.bill-list tr.bill.completed td
+{
+	color: #669;
+	font-weight: normal;
+}
+
+.bill-list .bill .extras_container {
+	margin: 5px 0 0 70%;
+	position: absolute;
+}
+.bill-list .bill .extras_container div {
+	float: left;
+	width: 250px;
+}
+
+.bill-list .bill .billing_button.hide_button
+{
+	display: none;
+}
+
+/* Big box with list of options */
+.bill-list .bill .lookup_box {
+	position:absolute;
+	max-width: 600px;
+	min-width: 100px;
+	max-height:250px;
+	overflow:auto;  /* Scrolling features */
+	border:1px solid #317082;
+	background-color:#FFF;
+	text-align:left;
+	font-size:0.9em;
+	z-index:100;
+}
+.bill-list .bill .lookup_box .highlighted {
+	background-color: orange;
+}
+.bill-list .bill .lookup_box ul {
+	list-style-type: none;
+	padding: 0px;
+	margin: 3px;
+}
+.bill-list .bill .lookup_box li {
+	margin:1px;    
+	padding:1px;
+	cursor:pointer;
+	font-size:0.9em;
+}
+.bill-list .bill .lookup_box .optionLi {
+  
+}
+.bill-list .bill .lookup_box li:hover {
+	background-color:#317082;
+	color:#FFF;
+}
+
+
+/* 'more details' style (i.e. billing history and appointment notes) */
+.bill-list .bill .more_details tr td
+{
+	background: white;
+	border: none;
+	vertical-align: text-top;
+}
+.bill-list .bill div.more_details {
+	max-height: 325px;
+	overflow: auto
+}
+.bill-list .bill .more_details.hide
+{
+	display: none;
+}
+
+.bill-list .bill .billing_history tr td
+{
+	background: #e8edff;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #fff;
+	
+	font-size: 11px;
+	padding: 1px;
+	
+	text-align: left;
+}
+.bill-list .bill .billing_history tr td.space
+{
+	background: white;
+	padding: 10px;
+}
+.bill-list .bill .billing_history th
+{
+	background: #b9c9fe;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #fff;
+	
+	font-size: 11px;
+	padding: 3px;
+	
+	text-align: left;
+}
+.bill-list .bill table .billing_history
+{
+	background: white;
+	border: none;
+	border-collapse: collapse;
+}
+
+.bill-list .bill .appointment_notes tr td
+{
+	background: #e8edff;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #fff;
+	
+	font-size: 11px;
+	padding: 8px;
+}
+.bill-list .bill .appointment_notes th
+{
+	background: #b9c9fe;
+	border-top: 1px solid transparent;
+	border-bottom: 1px solid #fff;
+	
+	font-size: 11px;
+	padding: 3px;
+	
+	text-align: left;
+}
+.bill-list .bill table .appointment_notes
+{
+	background: white;
+	border: none;
+	border-collapse: collapse;
+}

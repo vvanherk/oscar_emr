@@ -42,7 +42,15 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Transient;
 
+//import javax.validation.constraints.Min;
+//import javax.validation.constraints.Max;
+//import javax.validation.constraints.Size;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
+
 import org.oscarehr.common.model.AbstractModel;
+
+import oscar.oscarBilling.ca.on.data.BillingDataHlp;
 
 /**
  *
@@ -54,46 +62,108 @@ import org.oscarehr.common.model.AbstractModel;
 public class BillingClaimHeader1 extends AbstractModel<Integer> implements Serializable {
 
     private Integer id;
-    private Integer header_id;
-    private String transc_id;
-    private String rec_id;
+    private Integer header_id = 0;
+    private String transc_id = BillingDataHlp.CLAIMHEADER1_TRANSACTIONIDENTIFIER;
+    private String rec_id = BillingDataHlp.CLAIMHEADER1_REORDIDENTIFICATION;
     private String hin;
     private String ver;
     private String dob;
     private String pay_program;
-    private String payee;
-    private String ref_num;
+    private String payee = BillingDataHlp.CLAIMHEADER1_PAYEE;
+    private String ref_num = "";
     private String facilty_num;
-    private String admission_date;
-    private String ref_lab_num;
-    private String man_review;
+    private String admission_date = "";
+    private String ref_lab_num = "";
+    private String man_review = "";
     private String location;
     private Integer demographic_no;
     private String provider_no;
-    private String appointment_no;
+    private String appointment_no = "0";
     private String demographic_name;
     private String sex;
     private String province;
     private Date billing_date;
     private Date billing_time;
-    private String total;
-    private String paid;
-    private String status;
-    private String comment1;
-    private String visittype;
+    private String total = "";
+    private String paid = "";
+    private String status = "O";
+    private String comment1 = "";
+    private String visittype = "00";
     private String provider_ohip_no;
     private String provider_rma_no;
-    private String apptProvider_no;
-    private String asstProvider_no;
+    private String apptProvider_no = "";
+    private String asstProvider_no = "";
     private String creator;
     private Date timestamp1;
     private String clinic;
 
-    private List<BillingItem>billingItems = new ArrayList<BillingItem>();
+    private List<BillingItem> billingItems = new ArrayList<BillingItem>();
 
     /** Creates a new instance of BillingClaimHeader1 */
     public BillingClaimHeader1() {
-
+        //this.setLocation(properties.getProperty("clinic_no", ""));
+        //this.setFacilty_num( "0000" );
+        //this.setSex("U");
+    }
+    
+    /**
+	 * Method copy
+	 * Performs a deep copy of the given BillingClaimHeader1 and returns the new copy.  The id
+	 * of the given object is not copied.
+	 * 
+	 * @param item The BillingClaimHeader1 object that we want to copy
+	 * 
+	 * @return A new BillingClaimHeader1 object with identical values to the provided BillingClaimHeader1 object (except for the id)
+	 */
+    public static BillingClaimHeader1 copy(BillingClaimHeader1 bill) {
+		BillingClaimHeader1 bill2 = new BillingClaimHeader1();
+		bill2.header_id = new Integer( bill.getHeader_id() );
+		bill2.transc_id = new String( bill.getTransc_id() );
+		bill2.rec_id = new String( bill.getRec_id() );
+		bill2.hin = new String( bill.getHin() );
+		bill2.ver = new String( bill.getVer() );
+		bill2.dob = new String( bill.getDob() );
+		bill2.pay_program = new String( bill.getPay_program() );
+		bill2.payee = new String( bill.getPayee() );
+		bill2.ref_num = new String( bill.getRef_num() );
+		bill2.facilty_num = new String( bill.getFacilty_num() );
+		bill2.admission_date = new String( bill.getAdmission_date() );
+		bill2.ref_lab_num = new String( bill.getRef_lab_num() );
+		bill2.man_review = new String( bill.getMan_review() );
+		
+		bill2.location = new String( bill.getLocation() );
+		bill2.demographic_no = new Integer( bill.getDemographic_no() );
+		bill2.provider_no = new String( bill.getProvider_no() );
+		bill2.appointment_no = new String( bill.getAppointment_no() );
+		
+		bill2.demographic_name = new String( bill.getDemographic_name() );
+		bill2.sex = new String( bill.getSex() );
+		bill2.province = new String( bill.getProvince() );
+		bill2.billing_date = new Date( bill.getBilling_date().getTime() );
+		bill2.billing_time = new Date( bill.getBilling_time().getTime() );
+		bill2.total = new String( bill.getTotal() );
+		bill2.paid = new String( bill.getPaid() );
+		
+		bill2.status = new String( bill.getStatus() );
+		bill2.comment1 = new String( bill.getComment1() );
+		bill2.visittype = new String( bill.getVisittype() );
+		bill2.provider_ohip_no = new String( bill.getProvider_ohip_no() );
+		bill2.provider_rma_no = new String( bill.getProvider_rma_no() );
+		bill2.apptProvider_no = new String( bill.getApptProvider_no() );
+		bill2.asstProvider_no = new String( bill.getAsstProvider_no() );
+		
+		bill2.creator = new String( bill.getCreator() );
+		bill2.timestamp1 = new Date( bill.getTimestamp1().getTime() );
+		bill2.clinic = new String( bill.getClinic() );
+		
+		List<BillingItem> items = bill.getBillingItems();
+		List<BillingItem> billingItems = bill2.getBillingItems();
+		for (BillingItem item : items) {
+			BillingItem newItem = BillingItem.copy(item);
+			billingItems.add(newItem);
+		}
+		
+		return bill2;
     }
 
     @Override
@@ -196,6 +266,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     }
 
     @Column(length=10)
+    @Pattern(regexp = "\\d\\d\\d\\d-\\d\\d-\\d\\d", message="Admission date must be in the format yyyy-mm-dd.")
     public String getAdmission_date() {
         return admission_date;
     }
@@ -231,6 +302,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
         this.location = location;
     }
 
+	@NotNull(message="Demographic No must be specified.")
     public Integer getDemographic_no() {
         return demographic_no;
     }
@@ -274,7 +346,8 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     public void setBilling_time(Date time) {
         this.billing_time = time;
     }
-
+	
+	@Pattern(regexp = "\\d*(\\.|)\\d*", message="Total amount must be a numeric value (i.e. 100.00, 32.6, 50, etc).")
     public String getTotal() {
         return total;
     }
@@ -283,6 +356,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
         this.total = total;
     }
 
+	@Pattern(regexp = "\\d*(\\.|)\\d*", message="Paid amount must be a numeric value (i.e. 100.00, 32.6, 50, etc).")
     public String getPaid() {
         return paid;
     }
@@ -426,6 +500,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     /**
      * @return the provider_no
      */
+	@NotNull(message="Provider No must be specified.")
     public String getProvider_no() {
         return provider_no;
     }
