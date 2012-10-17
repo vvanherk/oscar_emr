@@ -25,6 +25,7 @@
 <%@page import="org.oscarehr.common.model.Provider"%>
 <%@page import="org.oscarehr.common.model.ClinicLocation"%>
 <%@ page import="org.oscarehr.util.SpringUtils"%>
+<%@ page import="oscar.SxmlMisc" %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 <!--
 /*
@@ -565,15 +566,11 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 						<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
 					    <% 
 					    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
-						ArrayList<ClinicNbr> nbrs = cnDao.findAll();
-			            ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
-			            //String providerSearch = apptProvider_no.equalsIgnoreCase("none") ? user_no : apptProvider_no;
-			            //Provider p = providerDao.getProvider(providerSearch);
-			            String providerNbr = providerNo;			            
+						ArrayList<ClinicNbr> nbrs = cnDao.findAll();	            
 	                    for (ClinicNbr clinic : nbrs) {
 							String valueString = String.format("%s | %s", clinic.getNbrValue(), clinic.getNbrString());
 							%>
-					    	<option value="<%=valueString%>" <%=providerNbr.startsWith(clinic.getNbrValue())?"selected":""%>><%=valueString%></option>
+					    	<option value="<%=valueString%>" <%=visitType.startsWith(clinic.getNbrValue())?"selected":""%>><%=valueString%></option>
 					    <%}%>
 					    <% } else { %>
 							<option value="00| Clinic Visit"
@@ -611,8 +608,8 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 						String strLocation = clinicLocation.getClinicLocationNo();
 				%>
 							<option
-								value="<%=clinicLocation.getClinicLocationNo() + "|" + clinicLocation.getClinicLocationName()%>"
-								<%=strLocation.startsWith(selectedVisitLocation)?"selected":""%>>
+								value="<%=clinicLocation.getClinicLocationNo()%>"
+								<%=selectedVisitLocation.length() != 0 && strLocation.startsWith(selectedVisitLocation)?"selected":""%>>
 							<%=clinicLocation.getClinicLocationName()%></option>
 							<%
 				}
