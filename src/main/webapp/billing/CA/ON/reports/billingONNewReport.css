@@ -219,6 +219,13 @@ background-image: url('validation.png');
 	font-weight: normal;
 }
 
+.bill-list tr:hover .encounter_button {
+	text-decoration: underline;
+}
+.bill-list .encounter_button {
+	text-decoration: none;
+}
+
 .bill-list .bill.show_bill td
 {
 	background: white;
@@ -236,6 +243,15 @@ background-image: url('validation.png');
 	background: #d0dafd;
 	color: red;
 	font-weight: bold;
+}
+
+.bill-list tr:hover .no-bills .encounter_button {
+	color: red;
+	text-decoration: underline;
+}
+.bill-list .no-bills .encounter_button {
+	color: red;
+	text-decoration: none;
 }
 
 .bill-list .bill.show_bill
@@ -269,6 +285,15 @@ background-image: url('validation.png');
 {
 	color: #669;
 	font-weight: normal;
+}
+
+.bill-list [class="completed"]:hover td .encounter_button {
+	color: green;
+	text-decoration: underline;
+}
+.bill-list .completed td .encounter_button {
+	color: green;
+	text-decoration: none;
 }
 
 .bill-list .bill .extras_container {
