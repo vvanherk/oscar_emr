@@ -230,14 +230,5 @@ public class OscarProperties extends Properties {
 	
 	public boolean isFaxEnabled() {
 		return faxEnabled() || isRxFaxEnabled() || isConsultationFaxEnabled() || isRichEFormFaxEnabled();
-	}
-	
-	public String getHospitalBillingDefaultVisitType() {
-		return getProperty("hospital_billing_default_visit_type");
-	}
-	
-	public String getHospitalBillingDefaultVisitLocation() {
-		return getProperty("hospital_billing_default_visit_location");
 	}	
-	
 }
