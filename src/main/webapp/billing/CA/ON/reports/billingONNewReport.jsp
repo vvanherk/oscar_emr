@@ -144,6 +144,7 @@ if("unbilled".equals(action)) {
     vecHeader.add("Service Date");
     vecHeader.add("Time");
     vecHeader.add("Patient Name");
+    vecHeader.add("DOB");
     vecHeader.add("Remarks");
     vecHeader.add("Notes");
     vecHeader.add("Service Description");
@@ -152,6 +153,7 @@ if("unbilled".equals(action)) {
 	vecHeaderWidths.add("10%");
 	vecHeaderWidths.add("10%");
 	vecHeaderWidths.add("20%");
+	vecHeaderWidths.add("10%");
 	vecHeaderWidths.add("10%");
 	vecHeaderWidths.add("15%");
 	vecHeaderWidths.add("30%");
@@ -215,11 +217,15 @@ if("unbilled".equals(action)) {
     		if (StringUtils.isNotBlank(location) && !location.equals(request.getParameter("site"))) 
     			continue; 
     	}
+    	
+    	Demographic demo = demographicDao.getDemographic( "" + apt.getDemographicNo() );
 
     	prop = new Properties();
         prop.setProperty( "Service Date", apt.getAppointmentDate().toString() );
-        prop.setProperty( "Time", apt.getStartTime().toString() );
+        prop.setProperty( "Time", apt.getStartTime().toString() );        
         prop.setProperty( "Patient Name", apt.getName() );
+        
+        prop.setProperty( "DOB", demo.getYearOfBirth() + "-" + demo.getMonthOfBirth() + "-" + demo.getDateOfBirth() );
         prop.setProperty( "Service Description", apt.getReason() );
 		prop.setProperty( "Remarks",  apt.getRemarks() );
 		prop.setProperty( "Notes", apt.getNotes() );
@@ -254,12 +260,14 @@ if("billed".equals(action)) {
     vecHeader.add("Service Date");
     vecHeader.add("Time");
     vecHeader.add("Patient Name");
+    vecHeader.add("DOB");
     vecHeader.add("Service Description");
     vecHeader.add("ACCOUNT");
     
     vecHeaderWidths.add("10%");
 	vecHeaderWidths.add("10%");
 	vecHeaderWidths.add("20%");
+	vecHeaderWidths.add("10%");
 	vecHeaderWidths.add("10%");
 	vecHeaderWidths.add("15%");
 	
@@ -286,12 +294,16 @@ if("billed".equals(action)) {
     		if (StringUtils.isNotBlank(clinic) && !clinic.equals(request.getParameter("site"))) 
     			continue; 
     	}
+    	
+    	Demographic demo = demographicDao.getDemographic( "" + bill.getDemographic_no() );
 
 		prop = new Properties();
 		
     	prop.setProperty( "Service Date", bill.getBilling_date().toString() );
-        prop.setProperty( "Time", bill.getBilling_time().toString() );
+        prop.setProperty( "Time", bill.getBilling_time().toString() );        
         prop.setProperty( "Patient Name", bill.getDemographic_name() );
+        
+        prop.setProperty( "DOB", demo.getYearOfBirth() + "-" + demo.getMonthOfBirth() + "-" + demo.getDateOfBirth() );
 
         String apptDoctorNo = bill.getApptProvider_no();
         String userno= bill.getProvider_no();
@@ -811,8 +823,20 @@ if (vecHeader != null && vecHeader.size() > 0) {
 			<tr id="bill<%=i%>" onclick="showBillDetails(<%=i%>);">
 				<td width="10px"> <input type="checkbox" class="checkbox" name="select_bill" id="select_bill<%=i%>" onclick="preventEventPropagation(event);"> </td>
 				<% for (int j=0; j < vecHeader.size(); j++) {
+					String propertyValue = prop.getProperty((String)vecHeader.get(j), "&nbsp;");
+					
+					if (((String)vecHeader.get(j)).equals("Patient Name")) {
+						String  eURL = "../../../oscarEncounter/IncomingEncounter.do?providerNo="+user_no+"&appointmentNo="+vecAppointmentNo.get(i)+"&demographicNo="+vecDemographicNo.get(i)+"&curProviderNo="+user_no+"&providerview=" + user_no;
+				        String windowProperties = "height=710,width=1024,location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,screenX=50,screenY=50,top=0,left=0";
+				        
+				        String mURL = "../../../demographic/demographiccontrol.jsp?demographic_no="+vecDemographicNo.get(i)+"&apptProvider="+vecProviderNo.get(i)+"&appointment="+vecAppointmentNo.get(i)+"&displaymode=edit&dboperation=search_detail";
+				        
+				        propertyValue += " | <a class=\"encounter_button\" href=# onclick=\"window.open('" + eURL + "', '', '"+windowProperties+"');\">E</a>";
+				        propertyValue += " | <a class=\"encounter_button\" href=# onclick=\"window.open('" + mURL + "', '', '"+windowProperties+"');\">M</a>";
+				    }
+				    
 					%>
-					<td <%=style%>><%=prop.getProperty((String)vecHeader.get(j), "&nbsp;") %>&nbsp;</td>
+					<td <%=style%>><%=propertyValue %>&nbsp;</td>
 				<% } %>
 				<td width="10px"> <a class="billing_button" href="" tabindex="-1" onclick="preventEventPropagation(event); return false;">Copy</a> </td>
 			</tr>
