@@ -311,12 +311,5 @@ public class OscarProperties extends Properties {
 		String prop = getProperty("EMERALD_HL7_A04_TRANSPORT_PORT", "3987"); // default to port 3987
 		return Integer.parseInt(prop);
 	}
-
-	public String getHospitalBillingDefaultVisitType() {
-		return getProperty("hospital_billing_default_visit_type");
-	}
 	
-	public String getHospitalBillingDefaultVisitLocation() {
-		return getProperty("hospital_billing_default_visit_location");
-	}
 }

@@ -262,7 +262,7 @@
   //visitType
   paraName = request.getParameter("xml_visittype");
   String defaultVisitType = providerPreference.getBillingVisitTypeDefault();
-  if (defaultVisitType != null)
+  if (defaultVisitType != null && defaultVisitType.length() > 0)
 	paraName = (paraName == null || paraName.length() == 0? defaultVisitType : paraName);
   String xml_visittype = getDefaultValue(paraName, vecHist, "visitType");
   if(!"".equals(xml_visittype)) {
@@ -273,9 +273,8 @@
 
   paraName = request.getParameter("xml_location");
   String defaultVisitLocation = providerPreference.getBillingVisitLocationDefault();
-  if (defaultVisitLocation != null) {
+  if (defaultVisitLocation != null && defaultVisitLocation.length() > 0) {
 	paraName = (paraName == null || paraName.length() == 0? defaultVisitLocation : paraName);
-	MiscUtils.getLogger().info("YES: " + defaultVisitLocation);
 }
   String xml_location = getDefaultValue(paraName, vecHist, "clinic_ref_code");
   if(!"".equals(xml_location)) {
