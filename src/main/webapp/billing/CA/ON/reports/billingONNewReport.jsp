@@ -276,7 +276,14 @@ if("billed".equals(action)) {
     Date startTime = (Date)formatter.parse(xml_vdate);
     Date endTime = (Date)formatter.parse(xml_appointment_date);
 	
-	List<BillingClaimHeader1> bills = billingClaimDAO.getInvoices(providerview, startTime, endTime);
+	totalResults = billingClaimDAO.getInvoicesCount(providerview, startTime, endTime);
+    totalNumberOfPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
+    if (currentPage > totalNumberOfPages)
+		currentPage = totalNumberOfPages;
+		
+	firstResult = currentPage * maxPerPage - maxPerPage;
+	
+	List<BillingClaimHeader1> bills = billingClaimDAO.getBilledInvoices(providerview, startTime, endTime, new Integer(firstResult), new Integer(maxPerPage));
     
     //sql = "select * from billing_on_cheader1 where provider_no='" + providerview + "' and billing_date >='" + xml_vdate 
     //        + "' and billing_date<='" + xml_appointment_date + "' and (status<>'D' and status<>'S' and status<>'B')" 
@@ -284,9 +291,9 @@ if("billed".equals(action)) {
     //rs = dbObj.searchDBRecord(sql);
     
     for (BillingClaimHeader1 bill : bills) {
-		String status = bill.getStatus();
-		if (status.equals("D") || status.equals("S") || status.equals("B"))
-			continue;
+		//String status = bill.getStatus();
+		//if (status.equals("D") || status.equals("S") || status.equals("B"))
+		//	continue;
 		
     	if (bMultisites) {
 			String clinic = bill.getClinic();
@@ -341,11 +348,6 @@ if("billed".equals(action)) {
         vecAppointmentNo.add( "" + bill.getAppointment_no() );
         vecProviderNo.add( "" + bill.getProvider_no() );
     }
-    
-    totalResults = vecBills.size();
-    totalNumberOfPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
-    if (currentPage > totalNumberOfPages)
-		currentPage = totalNumberOfPages;
 }
 
 %>

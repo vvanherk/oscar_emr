@@ -160,7 +160,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 		statusList.add("PS");
 		statusList.add("E");
 		statusList.add("ES");
-		statusList.add("EV");	
+		statusList.add("EV");
 
 		Query query = entityManager.createQuery(sql);
 		query.setParameter("start_time", startTime);
