@@ -21,8 +21,10 @@
 <%@ page import="java.util.*,java.net.*, java.sql.*, oscar.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
 <%@page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@page import="org.oscarehr.common.model.ClinicNbr"%>
 <%@page import="org.oscarehr.common.model.Provider"%>
+<%@page import="org.oscarehr.common.dao.ProviderPreferenceDao"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
 
@@ -30,6 +32,7 @@
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
 <%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.oscarehr.common.model.Billingreferral" %>
 <%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
 
@@ -37,6 +40,9 @@
 
 <%
 	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+	
+	ProviderPreferenceDao providerPreferenceDao = (ProviderPreferenceDao)SpringUtils.getBean("providerPreferenceDao");
+    ProviderPreference providerPreference = providerPreferenceDao.find(user_no);
 %>
 <%
   boolean bHospitalBilling = true;
@@ -72,7 +78,10 @@
 	proOHIPNO = rs.getString("ohip_no");
 	proRMA = rs.getString("rma_no");
   }
-  if(request.getParameter("xml_provider")!=null) providerview = request.getParameter("xml_provider");
+  if(request.getParameter("xml_provider")!=null) 
+    providerview = request.getParameter("xml_provider");
+  else if(session.getAttribute("hospital_billing_previous_provider_no")!=null) 
+    providerview = (String) session.getAttribute("hospital_billing_previous_provider_no");
   // get patient's detail
   String errorFlag = "";
   String warningMsg = "", errorMsg = "";
@@ -252,6 +261,9 @@
 
   //visitType
   paraName = request.getParameter("xml_visittype");
+  String defaultVisitType = providerPreference.getBillingVisitTypeDefault();
+  if (defaultVisitType != null)
+	paraName = (paraName == null || paraName.length() == 0? defaultVisitType : paraName);
   String xml_visittype = getDefaultValue(paraName, vecHist, "visitType");
   if(!"".equals(xml_visittype)) {
     visitType = xml_visittype;
@@ -260,6 +272,11 @@
   }
 
   paraName = request.getParameter("xml_location");
+  String defaultVisitLocation = providerPreference.getBillingVisitLocationDefault();
+  if (defaultVisitLocation != null) {
+	paraName = (paraName == null || paraName.length() == 0? defaultVisitLocation : paraName);
+	MiscUtils.getLogger().info("YES: " + defaultVisitLocation);
+}
   String xml_location = getDefaultValue(paraName, vecHist, "clinic_ref_code");
   if(!"".equals(xml_location)) {
     clinicview = xml_location;
@@ -686,6 +703,14 @@ ctlCount = 0;
 </div>
 
 
+<%
+String billDates = "";
+if (request.getParameter("billDate")!=null)
+	billDates = request.getParameter("billDate");
+else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
+	billDates = (String) session.getAttribute( "hospital_billing_previous_billing_dates");
+%>
+
 <form method="post" name="titlesearch" action="billingShortcutPg2.jsp"
 	onsubmit="return onNext();">
 <table border="0" cellpadding="0" cellspacing="2" width="100%"
@@ -726,7 +751,7 @@ ctlCount = 0;
 					<tr>
 						<td nowrap width="30%" align="center"><a id="trigger"
 							href="#">[<bean:message key="billing.servicedate"/>]</a><br>
-						<textarea name="billDate" cols="11" rows="5" readonly><%=request.getParameter("billDate")!=null?request.getParameter("billDate"):""%></textarea>
+						<textarea name="billDate" cols="11" rows="5" readonly><%=billDates%></textarea>
 						</td>
 						<td nowrap align="center"><bean:message key="billing.billingCorrection.formServiceCode"/> x <bean:message key="billing.billingCorrection.formUnit"/><br>
 						<input type="text" name="serviceDate0" size="5" maxlength="5"

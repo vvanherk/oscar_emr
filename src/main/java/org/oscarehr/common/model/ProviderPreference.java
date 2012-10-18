@@ -81,6 +81,8 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 	private int appointmentScreenLinkNameDisplayLength=3;
 	private int defaultDoNotDeleteBilling=0;
 	private String defaultDxCode=null;
+	private String billingVisitTypeDefault=null;
+	private String billingVisitLocationDefault=null;
 	
 	
 	@CollectionOfElements(targetElement = String.class)
@@ -244,6 +246,22 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 
 	public void setDefaultDxCode(String defaultDxCode) {
 		this.defaultDxCode = defaultDxCode;
+	}
+	
+	public String getBillingVisitTypeDefault() {
+		return billingVisitTypeDefault;
+	}
+
+	public void setBillingVisitTypeDefault(String billingVisitTypeDefault) {
+		this.billingVisitTypeDefault = billingVisitTypeDefault;
+	}
+	
+	public String getBillingVisitLocationDefault() {
+		return billingVisitLocationDefault;
+	}
+
+	public void setBillingVisitLocationDefault(String billingVisitLocationDefault) {
+		this.billingVisitLocationDefault = billingVisitLocationDefault;
 	}
 
 	public Collection<QuickLink> getAppointmentScreenQuickLinks() {
