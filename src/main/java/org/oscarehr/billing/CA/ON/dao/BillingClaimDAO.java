@@ -395,6 +395,47 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         
         return q.getResultList();
     }
+    
+    @SuppressWarnings("unchecked")
+    public List<BillingClaimHeader1> getBilledInvoices(String provider_no, Date startTime, Date endTime, Integer firstResult, Integer maxResults) {
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("D");
+		statusList.add("S");
+		statusList.add("B");
+		
+    	String sql = "select h1 from BillingClaimHeader1 h1 where " +
+                " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status NOT IN (:status_list) " +
+                " order by h1.billing_date, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("prov", provider_no);
+        q.setParameter("startTime", startTime);
+        q.setParameter("endTime", endTime);
+        q.setParameter("status_list", statusList);
+        
+        if (firstResult != null && firstResult.intValue() >= 0)
+			q.setFirstResult(firstResult);
+			
+		if (maxResults != null && maxResults.intValue() > 0)
+			q.setMaxResults(maxResults);
+        
+        return q.getResultList();
+    }
+    
+    @SuppressWarnings("unchecked")
+    public int getInvoicesCount(String provider_no, Date startTime, Date endTime) {
+    	String sql = "select count(h1) from BillingClaimHeader1 h1 where " +
+                " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status != 'D' order by h1.billing_date, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("prov", provider_no);
+        q.setParameter("startTime", startTime);
+        q.setParameter("endTime", endTime);
+        
+        Number numRows = (Number)q.getSingleResult();
+
+		return numRows.intValue();
+    }
 
     /**
      * @return the gstCtontrolDao
