@@ -276,7 +276,7 @@ if("billed".equals(action)) {
     Date startTime = (Date)formatter.parse(xml_vdate);
     Date endTime = (Date)formatter.parse(xml_appointment_date);
 	
-	totalResults = billingClaimDAO.getInvoicesCount(providerview, startTime, endTime);
+	totalResults = billingClaimDAO.getBilledInvoicesCount(providerview, startTime, endTime);
     totalNumberOfPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
     if (currentPage > totalNumberOfPages)
 		currentPage = totalNumberOfPages;
