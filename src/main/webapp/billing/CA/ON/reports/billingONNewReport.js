@@ -345,6 +345,17 @@ function setReferralDoctorId(billId, refDocId) {
 	}
 }
 
+function setProviderDefault() {
+	
+}
+
+function setBillingProvider(providerNo) {
+	providerNo = providerNo || "";
+	
+	$("#billing_provider").val( providerNo ).attr('selected',true);
+
+}
+
 /**
  * function checkIfLastBillingItem
  * 
