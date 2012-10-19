@@ -447,6 +447,7 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         q.setParameter("prov", provider_no);
         q.setParameter("startTime", startTime);
         q.setParameter("endTime", endTime);
+        q.setParameter("status_list", statusList);
         
         Number numRows = (Number)q.getSingleResult();
 
