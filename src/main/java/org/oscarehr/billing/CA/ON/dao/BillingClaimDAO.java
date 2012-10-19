@@ -433,9 +433,15 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
     }
     
     @SuppressWarnings("unchecked")
-    public int getInvoicesCount(String provider_no, Date startTime, Date endTime) {
+    public int getBilledInvoicesCount(String provider_no, Date startTime, Date endTime) {
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("D");
+		statusList.add("S");
+		statusList.add("B");
+		
     	String sql = "select count(h1) from BillingClaimHeader1 h1 where " +
-                " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status != 'D' order by h1.billing_date, h1.billing_time desc";
+                " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status NOT IN (:status_list) " + 
+                " order by h1.billing_date, h1.billing_time desc";
         Query q = entityManager.createQuery(sql);
         
         q.setParameter("prov", provider_no);
