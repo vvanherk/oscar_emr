@@ -82,10 +82,18 @@
     %>
 
     <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>
-    
+   
+<% if (oscar.OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+<div style="float:left; width: 100%; text-align:left; font-size: 12px; color:<%=inverseUserColour%>; background-color:<%=userColour%>" id="encounterHeader">
+<% } else { %>
 <div style="float:left; width: 80%; padding-left:2px; text-align:left; font-size: 12px; color:<%=inverseUserColour%>; background-color:<%=userColour%>" id="encounterHeader">
+<% } %>
     <security:oscarSec roleName="<%=roleName$%>" objectName="_newCasemgmt.doctorName" rights="r">
+<% if (oscar.OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+    <span style="padding-left:2px; border-bottom: medium solid <%=famDocColour%>"><bean:message key="oscarEncounter.Index.msgMRP"/>&nbsp;&nbsp;
+<% } else { %>
     <span style="border-bottom: medium solid <%=famDocColour%>"><bean:message key="oscarEncounter.Index.msgMRP"/>&nbsp;&nbsp;
+<% } %>
     <%=famDocName%> <%=famDocSurname%>  </span>
 	</security:oscarSec>
     <span class="Header" style="color:<%=inverseUserColour%>; background-color:<%=userColour%>">

@@ -24,6 +24,7 @@
 --%>
 <%@page contentType="text/javascript"%>
 <%@page import="org.oscarehr.casemgmt.common.Colour"%>
+<%@page import="oscar.OscarProperties"%>
 
 	var numNotes = 0;   //How many saved notes do we have?
     var ctx;        //url context
@@ -317,7 +318,11 @@ function viewFullChart(displayFullChart) {
                                 evalScripts: true,
                                 onSuccess: function(request) {
                                                 $("notCPP").update(request.responseText);
-												$("notCPP").style.height = "50%";
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+	$("notCPP").style.height = "100%";
+<% } else { %>
+	$("notCPP").style.height = "50%";
+<% } %>
 												if( displayFullChart ) {
 													$("quickChart").innerHTML = quickChartMsg;
 													$("quickChart").onclick = function() {return viewFullChart(false);}
@@ -429,7 +434,9 @@ function navBarLoader() {
     this.load = function() {
 
             var leftNavBar = [
-                  ctx + "/oscarEncounter/displayPrevention.do?hC=" + Colour.prevention,
+<% if (!OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+					ctx + "/oscarEncounter/displayPrevention.do?hC=" + Colour.prevention,
+<% } %>
                   ctx + "/oscarEncounter/displayTickler.do?hC=" + Colour.tickler,
                   ctx + "/oscarEncounter/displayDisease.do?hC=" + Colour.disease,
                   ctx + "/oscarEncounter/displayForms.do?hC=" + Colour.forms,
@@ -439,11 +446,20 @@ function navBarLoader() {
                   ctx + "/oscarEncounter/displayMessages.do?hC=" + Colour.messages,
                   ctx + "/oscarEncounter/displayMeasurements.do?hC=" + Colour.measurements,
                   ctx + "/oscarEncounter/displayConsultation.do?hC=" + Colour.consultation,
-                  ctx + "/oscarEncounter/displayHRM.do?hC=",
-                  ctx + "/oscarEncounter/displayMyOscar.do?hC="                 
+				<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+					ctx + "/oscarEncounter/displayAllergy.do?hC=Colour.allergy",
+					ctx + "/oscarEncounter/displayRx.do?hC=Colour.rx&numToDisplay=12",
+				<% } else { %>
+					ctx + "/oscarEncounter/displayHRM.do?hC=",
+				<% } %>
+					ctx + "/oscarEncounter/displayMyOscar.do?hC="
               ];
-
-            var leftNavBarTitles = [ "preventions", "tickler", "Dx", "forms", "eforms", "docs","labs", "msgs", "measurements", "consultation","HRM","myoscar"];
+	
+			<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+	            var leftNavBarTitles = [ "tickler", "Dx", "forms", "eforms", "docs","labs", "msgs", "measurements", "consultation", "allergies", "Rx", "myoscar"];
+			<% } else { %>
+	            var leftNavBarTitles = [ "preventions", "tickler", "Dx", "forms", "eforms", "docs","labs", "msgs", "measurements", "consultation", "HRM", "myoscar"];
+			<% } %>
 
             var rightNavBar = [
                   ctx + "/oscarEncounter/displayAllergy.do?hC=" + Colour.allergy,
@@ -475,6 +491,7 @@ function navBarLoader() {
 
           }
 
+<% if (!OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
           navbar = "rightNavBar";
           for( var idx = 0; idx < rightNavBar.length; ++idx ) {
                 var div = document.createElement("div");
@@ -487,7 +504,7 @@ function navBarLoader() {
                 this.popColumn(rightNavBar[idx],rightNavBarTitles[idx],rightNavBarTitles[idx], navbar, this);
 
           }
-
+<% } %>
 
 
           /*var URLs = new Array();
@@ -2071,7 +2088,11 @@ function filter(reset) {
                         evalScripts: true,
                         onSuccess: function(request) {
                                                 $("notCPP").update(request.responseText);
-												$("notCPP").style.height = "50%";
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+	$("notCPP").style.height = "100%";
+<% } else { %>
+	$("notCPP").style.height = "50%";
+<% } %>
                                            },
                                 onFailure: function(request) {
                                                 $(div).innerHTML = "<h3>" + div + "</h3>Error: " + request.status;

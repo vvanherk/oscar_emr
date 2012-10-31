@@ -65,8 +65,13 @@
 <% java.util.Properties oscarVariables = OscarProperties.getInstance(); %>
 <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request" />
 
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+	<div id="cppBoxes" style="visibility: hidden; display:none;">
+		<div id="divR1" style="width: 100%; height: 0; margin: 0px; background-color: #FFFFFF;">
+<% } else { %>
 	<div id="cppBoxes">
 		<div id="divR1" style="width: 100%; height: 75px; margin: 0px; background-color: #FFFFFF;">
+<% } %>
 			<!-- social history -->		
 			<div id="divR1I1" class="topBox" 
 				style="float: left; width: 49%; margin-left: 3px; height: inherit;">
@@ -78,7 +83,11 @@
 			</div>
 		</div>
 	
-		<div id="divR2" style="width: 100%; height: 75px; margin-top: 0px; background-color: #FFFFFF;">		
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+		<div id="divR2" style="width: 100%; height: 0; margin-top: 0px; background-color: #FFFFFF;">		
+<% } else { %>
+		<div id="divR2" style="width: 100%; height: 75px; margin-top: 0px; background-color: #FFFFFF;">
+<% } %>
 			<!--Ongoing Concerns cell -->
 			<div id="divR2I1" class="topBox"
 				style="clear: left; float: left; width: 49%; margin-left: 3px; height: inherit;">	
