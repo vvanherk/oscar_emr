@@ -16,9 +16,11 @@ String service_form="", service_name="";
 <%@ page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@ page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
 <%@ page import="org.oscarehr.common.dao.ClinicLocationDao"%>
+<%@ page import="org.oscarehr.billing.dao.BillingDefaultDao"%>
 <%@ page import="org.oscarehr.common.model.ClinicNbr"%>
 <%@ page import="org.oscarehr.common.model.Provider"%>
 <%@ page import="org.oscarehr.common.model.ClinicLocation"%>
+<%@ page import="org.oscarehr.billing.model.BillingDefault"%>
 <%@ include file="../../../admin/dbconnection.jsp"%>
 <jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
 	scope="session" />
@@ -29,6 +31,7 @@ String clinicview = request.getParameter("billingform")==null?oscarVariables.get
 String reportAction=request.getParameter("reportAction")==null?"":request.getParameter("reportAction");
 
 ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("billingDefaultDao");
 %>
 <!--  
 /*
@@ -58,6 +61,7 @@ ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath() %>/js/jquery.js"></script>
 <title><bean:message key="billing.manageBillingform.title" /></title>
 <link rel="stylesheet" href="billing.css">
 
@@ -100,7 +104,70 @@ div.bottom_buttons {
 </style>
 
 <script type="text/javascript"
-	src="../../../share/javascript/prototype.js"></script>
+	src="../../../share/javascript/prototype.js">
+</script>
+
+<script type="text/javascript">
+var billingDefaults = new Object();
+var defaults = new Object();
+
+<%
+	List<BillingDefault> billingDefaults = billingDefaultDao.getAll();
+	for (BillingDefault billingDefault : billingDefaults) {
+%>
+		defaults = new Object();
+		defaults['id']						= <%=billingDefault.getId()%>;
+		defaults['provider_no']				= <%=billingDefault.getproviderNo()%>;
+		defaults['visit_type_no']			= <%=billingDefault.getVisitTypeNo()%>;
+		defaults['location_no']				= <%=billingDefault.getLocationNo()%>;
+		defaults['sli_code']				= <%=billingDefault.getSliCode()%>;
+		defaults['priority']				= <%=billingDefault.getPriority()%>;
+		defaults['sli_only_if_required']	= <%=billingDefault.getSliOnlyIfRequired()%>;
+
+		billingDefaults.push( defaults );
+<%
+	}
+%>
+</script>
+
+
+<script type="text/javascript">
+
+	function setBillingDefaults(defaults) {
+		var elem = $('input[name="billing_default_id"]');
+		elem.val() = defaults['id']
+		
+		elem = $('input[name="provider"]');
+		elem.val( defaults['provider_no'] ).attr('selected',true);
+		
+		elem = $('input[name="location"]');
+		elem.val( defaults['location_no'] ).attr('selected',true);
+		
+		elem = $('input[name="sli_code"]');
+		elem.val( defaults['sli_code'] ).attr('selected',true);
+		
+		elem = $('input[name="visit_type"]');
+		elem.val( defaults['visit_type_no'] ).attr('selected',true);
+		
+		elem = $('input[name="billing_default_order"]');
+		elem.val() = defaults['billing_default_priority']
+		
+		elem = $('input[name="sli_only_if_required"]');
+		elem.attr('checked',true);
+	}
+	
+	function saveBillingDefaults(defaults) {
+		
+	}
+	
+	function resetBillingDefaults() {
+		$('input[name="provider').find('option:first').attr('selected',true);
+		$('input[name="location').find('option:first').attr('selected',true);
+		$('input[name="sli_code').find('option:first').attr('selected',true);
+		$('input[name="visit_type').find('option:first').attr('selected',true);
+	}
+	
+</script>
 
 </head>
 
@@ -119,12 +186,15 @@ div.bottom_buttons {
 	</tr>
 </table>
 
+<input type="hidden" name="billing_default_id">
+<input type="hidden" name="billing_default_order">
+
 <div class="left first">
 <span class="title">
 	Provider:
 </span>
 
-<select name="xml_provider">
+<select name="provider">
 <% //
 List<Provider> providers = providerDao.getProviders();
 
@@ -139,7 +209,7 @@ for (Provider provider : providers) {
 <% } %>
 </select>
 
-<a href="#" onclick="return false;">Reset</a>
+<a href="#" onclick="resetBillingDefaults(); return false;">Reset</a>
 
 
 <br>
@@ -152,7 +222,7 @@ String visitType = "";
 	Visit Type:
 </span>
 
-<select name="xml_visittype">
+<select name="visit_type">
 	<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
 	<% 
 	ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
@@ -167,12 +237,12 @@ String visitType = "";
     	<option value="<%=valueString%>" <%=providerNbr.startsWith(clinic.getNbrValue())?"selected":""%>><%=valueString%></option>
     <%}%>
     <% } else { %>
-    <option value="00| Clinic Visit" <%=visitType.startsWith("00")?"selected":""%>>00 | Clinic Visit</option>
-    <option value="01| Outpatient Visit" <%=visitType.startsWith("01")?"selected":""%>>01 | Outpatient Visit</option>
-    <option value="02| Hospital Visit" <%=visitType.startsWith("02")?"selected":""%>>02 | Hospital Visit</option>
-    <option value="03| ER" <%=visitType.startsWith("03")?"selected":""%>>03 | ER</option>
-    <option value="04| Nursing Home" <%=visitType.startsWith("04")?"selected":""%>>04 | Nursing Home</option>
-    <option value="05| Home Visit" <%=visitType.startsWith("05")?"selected":""%>>05 | Home Visit</option>
+    <option value="00" <%=visitType.startsWith("00")?"selected":""%>>00 | Clinic Visit</option>
+    <option value="01" <%=visitType.startsWith("01")?"selected":""%>>01 | Outpatient Visit</option>
+    <option value="02" <%=visitType.startsWith("02")?"selected":""%>>02 | Hospital Visit</option>
+    <option value="03" <%=visitType.startsWith("03")?"selected":""%>>03 | ER</option>
+    <option value="04" <%=visitType.startsWith("04")?"selected":""%>>04 | Nursing Home</option>
+    <option value="05" <%=visitType.startsWith("05")?"selected":""%>>05 | Home Visit</option>
     <% } %>
 </select>
 
@@ -183,7 +253,7 @@ String visitType = "";
 	Location:
 </span>
 
-<select name="xml_location">
+<select name="location">
 <% //
 ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
 List<ClinicLocation> clinicLocations = clinicLocationDao.getAll();
@@ -214,7 +284,7 @@ String clinicNo = oscarVariables.getProperty("clinic_no", "").trim();
 	SLI Code:
 </span>
 
-<select name="xml_slicode">
+<select name="sli_code">
 	<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
 	<option value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 	<option value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
@@ -234,9 +304,10 @@ String clinicNo = oscarVariables.getProperty("clinic_no", "").trim();
 	
 </span>
 
-<input type="checkbox">
+<input type="checkbox" name="use_sli_if_required">
 <span class="small_comment">
-Only use SLI if required</span>
+	Only use SLI if required
+</span>
 </div>
 
 
