@@ -75,10 +75,7 @@
 	proOHIPNO = rs.getString("ohip_no");
 	proRMA = rs.getString("rma_no");
   }
-  if(request.getParameter("xml_provider")!=null) 
-    providerview = request.getParameter("xml_provider");
-  else if(session.getAttribute("hospital_billing_previous_provider_no")!=null) 
-    providerview = (String) session.getAttribute("hospital_billing_previous_provider_no");
+  if(request.getParameter("xml_provider")!=null) providerview = request.getParameter("xml_provider");
   // get patient's detail
   String errorFlag = "";
   String warningMsg = "", errorMsg = "";
@@ -683,14 +680,6 @@ ctlCount = 0;
 </div>
 
 
-<%
-String billDates = "";
-if (request.getParameter("billDate")!=null)
-	billDates = request.getParameter("billDate");
-else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
-	billDates = (String) session.getAttribute( "hospital_billing_previous_billing_dates");
-%>
-
 <form method="post" name="titlesearch" action="billingShortcutPg2.jsp"
 	onsubmit="return onNext();">
 <table border="0" cellpadding="0" cellspacing="2" width="100%"
@@ -731,7 +720,7 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 					<tr>
 						<td nowrap width="30%" align="center"><a id="trigger"
 							href="#">[<bean:message key="billing.servicedate"/>]</a><br>
-						<textarea name="billDate" cols="11" rows="5" readonly><%=billDates%></textarea>
+						<textarea name="billDate" cols="11" rows="5" readonly><%=request.getParameter("billDate")!=null?request.getParameter("billDate"):""%></textarea>
 						</td>
 						<td nowrap align="center"><bean:message key="billing.billingCorrection.formServiceCode"/> x <bean:message key="billing.billingCorrection.formUnit"/><br>
 						<input type="text" name="serviceDate0" size="5" maxlength="5"
