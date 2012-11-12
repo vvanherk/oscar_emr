@@ -16,7 +16,7 @@ public class BillingDefaultDao extends AbstractDao<BillingDefault> {
 	}
 	
 	public List<BillingDefault> getAll() {
-	   	String sql = "select d from BillingDefault d order by d.providerNo, d.priority";
+	   	String sql = "select d from BillingDefault d order by d.priority";
     	Query query = entityManager.createQuery(sql);
 
         @SuppressWarnings("unchecked")
@@ -24,9 +24,28 @@ public class BillingDefaultDao extends AbstractDao<BillingDefault> {
 
         return results;
 	}
+	
+	public BillingDefault findById(Integer billingDefaultId) {
+	   	String sql = "select d from BillingDefault d where d.id=?1 order by d.priority";
+    	Query query = entityManager.createQuery(sql);
+    	query.setParameter(1,billingDefaultId);
+
+        @SuppressWarnings("unchecked")
+        List<BillingDefault> results = query.getResultList();
+        
+        if (results.size() > 1) {
+			// warning - more than one id
+		}
+		
+		if (results.size() == 0)
+			return null;
+		
+
+        return results.get(0);
+	}
 
 	public List<BillingDefault> findByProviderNo(Integer providerNo) {
-	   	String sql = "select d from BillingDefault d where d.providerNo=?1 order by d.providerNo, d.priority";
+	   	String sql = "select d from BillingDefault d where d.providerNo=?1 order by d.priority";
     	Query query = entityManager.createQuery(sql);
     	query.setParameter(1,providerNo);
 
@@ -38,10 +57,16 @@ public class BillingDefaultDao extends AbstractDao<BillingDefault> {
 	
 	public void saveBillingDefault(BillingDefault billingDefault) {
 		this.persist(billingDefault);
+		
+		// make sure a priority is set
+		if (billingDefault.getPriority() == null) {
+			billingDefault.setPriority( billingDefault.getId() );
+			this.persist(billingDefault);
+		}
 	}
 	
 	public void updateBillingDefault(BillingDefault billingDefault) {
-		this.persist(billingDefault);
+		this.merge(billingDefault);
 	}
 	
 	public void deleteBillingDefault(BillingDefault billingDefault) {

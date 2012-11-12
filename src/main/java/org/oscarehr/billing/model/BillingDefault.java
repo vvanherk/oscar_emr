@@ -20,13 +20,13 @@ public class BillingDefault extends AbstractModel<Integer> {
 	private Integer id;
 
 	@Column(name="provider_no")
-	private Integer providerNo;
+	private String providerNo;
 
 	@Column(name="visit_type_no")
-	private Integer visitTypeNo;
+	private String visitTypeNo;
 
 	@Column(name="location_no")
-	private Integer locationNo;
+	private String locationNo;
 	
 	@Column(name="sli_code")
 	private String sliCode;
@@ -46,27 +46,27 @@ public class BillingDefault extends AbstractModel<Integer> {
     	this.id = id;
     }
 
-	public Integer getproviderNo() {
+	public String getproviderNo() {
     	return providerNo;
     }
 
-	public void setProviderNo(Integer providerNo) {
+	public void setProviderNo(String providerNo) {
     	this.providerNo = providerNo;
     }
 
-	public int getVisitTypeNo() {
+	public String getVisitTypeNo() {
     	return visitTypeNo;
     }
 
-	public void setVisitTypeNo(Integer visitTypeNo) {
+	public void setVisitTypeNo(String visitTypeNo) {
     	this.visitTypeNo = visitTypeNo;
     }
 
-	public Integer getLocationNo() {
+	public String getLocationNo() {
     	return locationNo;
     }
 
-	public void setLocationNo(Integer locationNo) {
+	public void setLocationNo(String locationNo) {
     	this.locationNo = locationNo;
     }
     
