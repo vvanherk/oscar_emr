@@ -346,13 +346,16 @@
     propT.setProperty("serviceSLI", Misc.getStr(rs.getString("sliFlag"), "false"));
 	vecCodeCol2.add(propT);
   }
-  sql = "select service_code,status from ctl_billingservice_premium where ";
-  for(int i=0; i<vecCodeCol2.size(); i++) {
-  	sql += (i==0?"":" or ") + "service_code='" + ((Properties)vecCodeCol2.get(i)).getProperty("serviceCode") + "'";
-  }
-  rs = dbObj.searchDBRecord(sql);
-  while (rs.next()) {
-    propPremium.setProperty(rs.getString("service_code"), "A");
+  
+  if(vecCodeCol2.size() > 0) {
+	sql = "select service_code,status from ctl_billingservice_premium where ";
+	for(int i=0; i<vecCodeCol2.size(); i++) {
+		sql += (i==0?"":" or ") + "service_code='" + ((Properties)vecCodeCol2.get(i)).getProperty("serviceCode") + "'";
+	}
+	rs = dbObj.searchDBRecord(sql);
+	while (rs.next()) {
+		propPremium.setProperty(rs.getString("service_code"), "A");
+	}
   }
 
   sql = "select c.service_group_name, c.service_order,b.service_code, b.description, b.value, b.percentage, b.sliFlag from billingservice b, ctl_billingservice c where c.service_code=b.service_code and c.status='A' and c.servicetype ='"
@@ -368,13 +371,16 @@
     propT.setProperty("serviceSLI", Misc.getStr(rs.getString("sliFlag"), "false"));
 	vecCodeCol3.add(propT);
   }
-  sql = "select service_code,status from ctl_billingservice_premium where ";
-  for(int i=0; i<vecCodeCol3.size(); i++) {
-  	sql += (i==0?"":" or ") + "service_code='" + ((Properties)vecCodeCol3.get(i)).getProperty("serviceCode") + "'";
-  }
-  rs = dbObj.searchDBRecord(sql);
-  while (rs.next()) {
-    propPremium.setProperty(rs.getString("service_code"), "A");
+  
+  if(vecCodeCol3.size() > 0) {
+	sql = "select service_code,status from ctl_billingservice_premium where ";
+	for(int i=0; i<vecCodeCol3.size(); i++) {
+		sql += (i==0?"":" or ") + "service_code='" + ((Properties)vecCodeCol3.get(i)).getProperty("serviceCode") + "'";
+	}
+	rs = dbObj.searchDBRecord(sql);
+	while (rs.next()) {
+		propPremium.setProperty(rs.getString("service_code"), "A");
+	}
   }
 
   // create msg
