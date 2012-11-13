@@ -76,7 +76,7 @@ for (ClinicLocation location : clinicLocations) {
 }
 
 
-List<Provider> providers = providerDao.getProviders();
+List<Provider> providers = providerDao.getActiveProviders();
 Map<String, String> providerHashMap = new LinkedHashMap<String, String>(); 
 
 for (Provider provider : providers) {

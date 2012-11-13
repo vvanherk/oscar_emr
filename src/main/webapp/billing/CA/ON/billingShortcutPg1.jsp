@@ -32,8 +32,12 @@
 <%@page import="org.oscarehr.util.SpringUtils" %>
 <%@page import="org.oscarehr.common.model.Billingreferral" %>
 <%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
+<%@ page import="org.oscarehr.billing.model.BillingDefault"%>
+<%@ page import="org.oscarehr.billing.dao.BillingDefaultDao"%>
 <%
 	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+	
+	BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("billingDefaultDao");
 %>
 <%
   boolean bHospitalBilling = true;
@@ -594,6 +598,117 @@ function onDblClickServiceCode(item) {
 //-->
 
   </script>
+  
+<script type="text/javascript">
+var billingDefaults = new Array();
+var defaults = new Object();
+
+<%
+	List<BillingDefault> billingDefaults = billingDefaultDao.getAll();
+	for (BillingDefault billingDefault : billingDefaults) {
+%>
+		defaults = new Object();
+		defaults['id']						= <%=billingDefault.getId()%>;
+		defaults['provider_no']				= <%=billingDefault.getproviderNo()%>;
+		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
+		defaults['location_no']				= "<%=billingDefault.getLocationNo()%>";
+		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
+		defaults['priority']				= "<%=billingDefault.getPriority()%>";
+		defaults['sli_only_if_required']	= <%=billingDefault.getSliOnlyIfRequired()%>;
+
+		billingDefaults.push( defaults );
+<%
+	}
+%>
+
+var currentBillingDefault = null;
+</script>
+
+  
+<script type="text/javascript">
+
+	/**
+	 * Method onBillingDefaultsDropdownChange
+	 * 
+	 * Change the dropdown values based on the billing defaults and the currently selected option from
+	 * one of the monitored dropdowns (i.e. xml_provider, etc).
+	 */
+	function onBillingDefaultsDropdownChange(element) {
+		if (element.name == 'xml_provider') {
+			var billingDefault = getBillingDefaultByValues( element.value );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+		
+		if (element.name == 'xml_visittype') {
+			var billingDefault = getBillingDefaultByValues( currentBillingDefault['provider_no'], element.value.substring(0,2) );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+		
+		if (element.name == 'xml_location') {
+			var billingDefault = getBillingDefaultByValues( currentBillingDefault['provider_no'], currentBillingDefault['visit_type_no'], element.value.substring(0,4) );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+		
+		if (element.name == 'xml_slicode') {
+			var billingDefault = getBillingDefaultByValues( currentBillingDefault['provider_no'], currentBillingDefault['visit_type_no'], currentBillingDefault['location_no'], element.value );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+	}
+	
+	/**
+	 * Method getBillingDefaultByValues
+	 * 
+	 * Get the default values that have matching provider, visit_type, etc.  If the function finds an undefined parameter,
+	 * it just matches the billing defaults to any preceeding parameters.
+	 * 
+	 * Assumes that the billing default values are ordered by priority in 'descending' order (i.e. highest to lowest priority)
+	 */
+	function getBillingDefaultByValues(provider, visit_type, location, sli_code) {
+		for (var i = 0; i < billingDefaults.length; i++) {
+			if (billingDefaults[i]['provider_no'] == provider) {
+				if (visit_type == undefined) {
+					return billingDefaults[i];
+				} else if (billingDefaults[i]['visit_type_no'] == visit_type) {
+					if (location == undefined) {
+						return billingDefaults[i];
+					} else if (billingDefaults[i]['location_no'] == location) {
+						if (sli_code == undefined) {
+							return billingDefaults[i];
+						} else if (billingDefaults[i]['sli_code'] == sli_code) {
+							return billingDefaults[i];
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Method setBillingDefaults
+	 * 
+	 * Set the dropdown options to the values in the defaults parameter.
+	 */ 
+	function setBillingDefaults(defaults) {
+		currentBillingDefault = defaults;
+		
+		var elem = $('select[name="xml_provider"]');
+		elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
+		
+		elem = $('select[name="xml_location"]');
+		elem.find( 'option[value^="'+defaults['location_no']+'"]' ).attr('selected',true);
+		
+		elem = $('select[name="xml_slicode"]');
+		elem.find( 'option[value^="'+defaults['sli_code']+'"]' ).attr('selected',true);
+		
+		elem = $('select[name="xml_visittype"]');
+		elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+	}
+</script>
+
 </head>
 
 <body onload="setfocus();" topmargin="0">
@@ -777,7 +892,7 @@ ctlCount = 0;
 					<tr>
 						<td nowrap width="30%" align="center"><b><bean:message key="billing.hospitalBilling.frmBillPhysician"/>
 						</b></td>
-						<td width="20%"><select name="xml_provider">
+						<td width="20%"><select name="xml_provider" onChange="onBillingDefaultsDropdownChange(this);">
 							<%
 				if(vecProvider.size()==1) {
 					propT = (Properties) vecProvider.get(0);
@@ -807,7 +922,7 @@ ctlCount = 0;
 					<tr>
 
 						<td width="30%"><b><%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.formVisitType"/> <% } %></b></td>
-						<td width="20%"><select name="xml_visittype">
+						<td width="20%"><select name="xml_visittype" onChange="onBillingDefaultsDropdownChange(this);">
 						<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
 					    <% 
 					    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
@@ -858,7 +973,7 @@ ctlCount = 0;
 					</tr>
 					<tr>
 						<td><b><bean:message key="billing.billingCorrection.msgVisitLocation"/></b></td>
-						<td colspan="3"><select name="xml_location">
+						<td colspan="3"><select name="xml_location" onChange="onBillingDefaultsDropdownChange(this);">
 							<%
 				for(int i=0; i<vecLocation.size(); i++) {
 					propT = (Properties) vecLocation.get(i);
@@ -886,7 +1001,7 @@ ctlCount = 0;
 					<tr>
 						<td><b><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode"/></b></td>
 				   	 	<td colspan="3">
-						<select name="xml_slicode">
+						<select name="xml_slicode" onChange="onBillingDefaultsDropdownChange(this);">
 						
 							<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
 						
