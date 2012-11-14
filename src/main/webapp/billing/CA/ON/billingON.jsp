@@ -1008,7 +1008,10 @@ var currentBillingDefault = null;
 	 */
 	function onBillingDefaultsDropdownChange(element) {
 		if (element.name == 'xml_provider') {
-			var billingDefault = getBillingDefaultByValues( element.value.substring(0,3) );
+			var toIndex = element.value.indexOf("|");
+			if (toIndex < 0)
+				toIndex = element.value.length;
+			var billingDefault = getBillingDefaultByValues( element.value.substring(0,toIndex) );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
@@ -1080,6 +1083,15 @@ var currentBillingDefault = null;
 		elem = jQuery('select[name="xml_visittype"]');
 		elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
 	}
+</script>
+
+<script>
+
+jQuery(document).ready(function(){
+	var elem = jQuery('select[name="xml_provider"]');
+	onBillingDefaultsDropdownChange( elem );
+});
+
 </script>
 
 </head>

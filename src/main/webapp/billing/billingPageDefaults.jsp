@@ -622,9 +622,5 @@ for (Map.Entry<String, String> entry : sliCodeHashMap.entrySet()) {
 
 </form>
 
-<div class="bottom_bar">
-	<%@ include file="zfooterbackclose.jsp"%>
-</div>
-
 </body>
 </html:html>
