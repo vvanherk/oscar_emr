@@ -1087,9 +1087,19 @@ var currentBillingDefault = null;
 
 <script>
 
-jQuery(document).ready(function(){
+jQuery(document).ready(function() {
 	var elem = jQuery('select[name="xml_provider"]');
-	onBillingDefaultsDropdownChange( elem );
+	onBillingDefaultsDropdownChange( elem.get(0) );
+	
+	// if no default was set, establish a 'default' default
+	if (currentBillingDefault == null) {
+		var tempDefault = new Object();
+		tempDefault['provider_no']		= jQuery('select[name="xml_provider"]').val();
+		tempDefault['location_no']		= jQuery('select[name="xml_location"]').val();
+		tempDefault['sli_code']			= jQuery('select[name="xml_slicode"]').val();
+		tempDefault['visit_type_no']	= jQuery('select[name="xml_visittype"]').val();
+		setBillingDefaults(tempDefault);
+	}
 });
 
 </script>
