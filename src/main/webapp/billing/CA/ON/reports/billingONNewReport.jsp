@@ -85,6 +85,7 @@ if(request.getParameter("max_per_page")!=null) {
 	} catch (Exception e) { }
 } 
 String providerview = request.getParameter("providerview")==null?"all":request.getParameter("providerview") ;
+String billingProvider = request.getParameter("billing_provider")==null? providerview : request.getParameter("billing_provider") ;
 %>
 
 <%@ page
@@ -388,7 +389,7 @@ var appointmentNumbers = new Array(<%
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/jquery.validate.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/additional-methods.js"></script>
 <script>
-$(document).ready(function(){	
+$(document).ready(function() {
 	$("#serviceform").validate();
 	$("#submitbillingform").validate({
 		ignore: ":not(:visible)"
@@ -399,6 +400,8 @@ $(document).ready(function(){
 		var re = /^\$?[0-9][0-9\,]*(\.\d{1,2})?$|^\$?[\.]([\d][\d]?)$/;
 		return this.optional(element) || re.test(value); 
 	}, "Must be a valid amount.");
+
+	setBillingProvider( "<%=billingProvider%>" );
 
 });
 </script>
@@ -471,6 +474,8 @@ function calToday(field) {
 			</font>
 		</td>
 		<td width="20%" align="right" nowrap><b>Provider </b>
+
+<% String providerSelectionList = ""; %>		
 <% if (bMultisites) 
 { // multisite start ==========================================
         	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
@@ -491,8 +496,13 @@ var _providers = [];
 	while (iter.hasNext()) {
 		Provider p=iter.next();
 		if (reporters.contains(p.getProviderNo())) {
-	%><option value='<%= p.getProviderNo() %>'><%= p.getLastName() %>, <%= p.getFirstName() %></option><% }} %>";
-<% } %>
+			providerSelectionList += "<option value='"+p.getProviderNo()+"'>"+p.getLastName()+", "+p.getFirstName()+"</option>";
+		}
+	}
+	%> 
+	<%=providerSelectionList%> 	
+	<%
+} %>
 function changeSite(sel) {
 	sel.form.providerview.innerHTML=sel.value=="none"?"":_providers[sel.value];
 	sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
@@ -508,6 +518,7 @@ function changeSite(sel) {
       	<% } %>
       	</select>
       	<select id="providerview" name="providerview" style="width:140px"></select>
+      	
 <% if (request.getParameter("providerview")!=null) { %>
       	<script>
      	changeSite(document.getElementById("site"));
@@ -517,7 +528,7 @@ function changeSite(sel) {
 } else {
 %>
 		<select
-			class="dropdown" name="providerview">
+			class="dropdown" id="providerview" name="providerview" onchange="setBillingProvider( $('#providerview option:selected').val() ); return true;" >
 			<% 
 String proFirst="";
 String proLast="";
@@ -533,13 +544,13 @@ while(rslocal.next()){
 	proFirst = rslocal.getString("first_name");
 	proLast = rslocal.getString("last_name");
 	proOHIP = rslocal.getString("provider_no"); 
-%>
-			<option value="<%=proOHIP%>"
-				<%=providerview.equals(proOHIP)?"selected":""%>><%=proLast%>,
-			<%=proFirst%></option>
-			<%
+	
+	providerSelectionList += "<option value='"+proOHIP+"'" + (providerview.equals(proOHIP)? " selected " : "") + ">";
+	providerSelectionList += proLast+","+proFirst;
+	providerSelectionList += "</option>";
 }      
 %>
+			<%=providerSelectionList%>
 		</select>
 <% } %>
 	</td>
@@ -674,10 +685,15 @@ if (editable) {
 					<option value="OHIP">OHIP</option>
 				</select>
 			</td>
-			<td> <a class="billing_button" href="" tabindex="-1" onclick="setAsProviderDefault(); return false;">Set as Provider Default</a> </td>
+			<td> <a class="billing_button" href="" tabindex="-1" onclick="setProviderDefault(); return false;">Set as Provider Default</a> </td>
 			<%
 			if (editable) {
 			%>
+				<td> Billing Provider &nbsp; 
+					<select class="dropdown" id="billing_provider" name="billing_provider"> 
+						<%=providerSelectionList%>
+					</select>
+				</td>
 				<td>
 					<!-- Stupid hack - need button before actual submit button to prevent enter key from submitting form -->
 					<input type="submit" method="post" class="hide_element" onclick="return false;" name="submit_billing" value="Submit Billing" >
@@ -1379,7 +1395,10 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		} catch (Exception e) {
 			MiscUtils.getLogger().error("Invalid demographic number:", e);
 		}
+		
 		String provNo = request.getParameter("prov_no"+i);
+		provNo = (request.getParameter("billing_provider") == null? provNo : request.getParameter("billing_provider"));
+		
 		boolean isBillSaved = (request.getParameter("bill_saved"+i) != null);
 		String billDate = request.getParameter("bill_date"+i);
 		String billTime = request.getParameter("bill_time"+i);
