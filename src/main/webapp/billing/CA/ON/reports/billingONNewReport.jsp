@@ -401,7 +401,7 @@ $(document).ready(function() {
 		return this.optional(element) || re.test(value); 
 	}, "Must be a valid amount.");
 
-	setBillingProvider( <%=billingProvider%> );
+	setBillingProvider( "<%=billingProvider%>" );
 
 });
 </script>
