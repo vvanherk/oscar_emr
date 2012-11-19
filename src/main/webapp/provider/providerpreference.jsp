@@ -25,6 +25,7 @@
 <%@page import="org.oscarehr.common.model.Provider"%>
 <%@page import="org.oscarehr.common.model.ClinicLocation"%>
 <%@ page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@ page import="oscar.SxmlMisc" %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 <!--
@@ -557,63 +558,26 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 	  
 	  <br>
 	  
-	  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.formVisitType"/> <% } %>:
-	  <select name="default_bill_visit_type">
+	  <%
+	  ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+	  List<Provider> providerList = providerDao.getActiveProviders();
+	  %>
+
+	  Default Provider:
+	  <select name="default_bill_provider">
 			<%
-				String visitType = providerPreference.getBillingVisitTypeDefault();				
+				String billingProvider = providerPreference.getBillingProviderDefault();
 			%>
-	      <option value="" <%=visitType.length()==0?"selected":""%>>-- None --</option>
-						<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
-					    <% 
-					    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
-						ArrayList<ClinicNbr> nbrs = cnDao.findAll();	            
-	                    for (ClinicNbr clinic : nbrs) {
-							String valueString = String.format("%s | %s", clinic.getNbrValue(), clinic.getNbrString());
-							%>
-					    	<option value="<%=valueString%>" <%=visitType.startsWith(clinic.getNbrValue())?"selected":""%>><%=valueString%></option>
-					    <%}%>
-					    <% } else { %>
-							<option value="00| Clinic Visit"
-								<%=visitType.startsWith("00")?"selected":""%>><bean:message key="billing.billingCorrection.formClinicVisit"/>
+	      <option value="" <%=billingProvider.length()==0?"selected":""%>>-- None --</option>
+					    <%
+					    for (Provider p : providerList) {
+					    %>
+							<option value="<%=p.getProviderNo()%>"
+								<%=billingProvider.startsWith(p.getProviderNo())?"selected":""%>><%=p.getFormattedName()%>
 							</option>
-							<option value="01| Outpatient Visit"
-								<%=visitType.startsWith("01")?"selected":""%>><bean:message key="billing.billingCorrection.formOutpatientVisit"/>
-							</option>
-							<option value="02| Hospital Visit"
-								<%=visitType.startsWith("02")?"selected":""%>><bean:message key="billing.billingCorrection.formHospitalVisit"/>
-							</option>
-							<option value="03| ER"
-								<%=visitType.startsWith("03")?"selected":""%>><bean:message key="billing.billingCorrection.formER"/></option>
-							<option value="04| Nursing Home"
-								<%=visitType.startsWith("04")?"selected":""%>><bean:message key="billing.billingCorrection.formNursingHome"/>
-							</option>
-							<option value="05| Home Visit"
-								<%=visitType.startsWith("05")?"selected":""%>><bean:message key="billing.billingCorrection.formHomeVisit"/>
-							</option>
-							<% } %>
-	  </select>
-	  
-	  <br>
-	  
-	  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.msgVisitLocation"/> <% } %>:
-	  <select name="default_bill_visit_location">
-			<%
-				String selectedVisitLocation = providerPreference.getBillingVisitLocationDefault();
-				ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
-				List<ClinicLocation> clinicLocations = clinicLocationDao.findAll();			
-			%>
-	      <option value="" <%=selectedVisitLocation.length()==0?"selected":""%>>-- None --</option>
-				<%	for(int i=0; i<clinicLocations.size(); i++) {
-						ClinicLocation clinicLocation = clinicLocations.get(i);
-						String strLocation = clinicLocation.getClinicLocationNo();
-				%>
-							<option
-								value="<%=clinicLocation.getClinicLocationNo()%>"
-								<%=selectedVisitLocation.length() != 0 && strLocation.startsWith(selectedVisitLocation)?"selected":""%>>
-							<%=clinicLocation.getClinicLocationName()%></option>
-							<%
-				}
-				%>
+						<% 
+						} 
+						%>
 	  </select>
 	  
 	  </div>
