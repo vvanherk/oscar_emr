@@ -23,8 +23,11 @@ String service_form="", service_name="";
 <%@ page import="org.oscarehr.common.model.ClinicLocation"%>
 <%@ page import="org.oscarehr.billing.model.BillingDefault"%>
 <%@ include file="../../../admin/dbconnection.jsp"%>
+
 <jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
 	scope="session" />
+<%@ include file="CA/ON/dbBilling.jspf"%>
+
 
 
 <%
@@ -82,6 +85,15 @@ Map<String, String> providerHashMap = new LinkedHashMap<String, String>();
 for (Provider provider : providers) {
 	providerHashMap.put( provider.getProviderNo(), provider.getFormattedName() );
 }
+
+
+Map<String, String> billingFormHashMap = new LinkedHashMap<String, String>(); 
+ResultSet rslocal = apptMainBean.queryResults("%", "search_ctlbillservice");
+
+billingFormHashMap.put( "no", "Not Applicable" );
+while(rslocal.next()){
+	billingFormHashMap.put( rslocal.getString("servicetype"), rslocal.getString("servicetype_name") );
+}
 %>
 
 
@@ -100,6 +112,7 @@ if (request.getParameter("provider") != null) {
 	String location = request.getParameter("location");
 	String sli_code = request.getParameter("sli_code");
 	String visit_type = request.getParameter("visit_type");
+	String billing_form = request.getParameter("billing_form");
 	String billing_default_priority = request.getParameter("billing_default_priority");
 	
 	if (billing_default_id != null && !billing_default_id.equals("")) {
@@ -117,6 +130,7 @@ if (request.getParameter("provider") != null) {
 			billingDefault.setLocationNo( location );
 			billingDefault.setSliCode( sli_code );
 			billingDefault.setVisitTypeNo( visit_type );
+			billingDefault.setBillingFormServiceType( billing_form );
 			billingDefault.setPriority( new Integer(billing_default_priority) );
 			
 			billingDefaultDao.updateBillingDefault( billingDefault );
@@ -131,6 +145,7 @@ if (request.getParameter("provider") != null) {
 		billingDefault.setLocationNo( location );
 		billingDefault.setSliCode( sli_code );
 		billingDefault.setVisitTypeNo( visit_type );
+		billingDefault.setBillingFormServiceType( billing_form );
 		//billingDefault.setPriority( new Integer(billing_default_priority) );
 		
 		billingDefaultDao.saveBillingDefault( billingDefault );
@@ -285,6 +300,7 @@ var defaults = new Object();
 		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
 		defaults['location_no']				= "<%=billingDefault.getLocationNo()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
+		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
 		defaults['sli_only_if_required']	= <%=billingDefault.getSliOnlyIfRequired()%>;
 
@@ -302,11 +318,10 @@ var defaults = new Object();
 	        if ($(this).is(".up")) {
 	            var id1 = row.find("td").eq(1).html();
 	            var id2 = row.prev().find("td").eq(1).html();
-		        if (id1 != undefined && id2 != undefined) {
+		        if (id1 != undefined && id1 != null && id2 != undefined && id2 != null) {
 		            swapPriorities(id1, id2);            
+		            row.insertBefore(row.prev());
 				}
-				
-	            row.insertBefore(row.prev());
 	        } else {
 	            var id1 = row.find("td").eq(1).html();
 	            var id2 = row.next().find("td").eq(1).html();
@@ -364,6 +379,12 @@ var defaults = new Object();
 		elem = $('select[name="visit_type"]');
 		elem.val( defaults['visit_type_no'] ).attr('selected',true);
 		
+		elem = $('select[name="visit_type"]');
+		elem.val( defaults['visit_type_no'] ).attr('selected',true);
+		
+		elem = $('select[name="billing_form"]');
+		elem.val( defaults['billing_form'] ).attr('selected',true);
+		
 		elem = $('input[name="billing_default_priority"]');
 		elem.val( defaults['priority'] );
 		
@@ -380,6 +401,7 @@ var defaults = new Object();
 		$('select[name="location"]').find('option:first').attr('selected',true);
 		$('select[name="sli_code"]').find('option:first').attr('selected',true);
 		$('select[name="visit_type"]').find('option:first').attr('selected',true);
+		$('select[name="billing_form"]').find('option:first').attr('selected',true);
 		$('input[name="billing_default_id"]').attr('value','');
 		$('input[name="billing_default_priority"]').attr('value','<%=nextPriorityValue%>');
 	}
@@ -537,6 +559,26 @@ for (Map.Entry<String, String> entry : sliCodeHashMap.entrySet()) {
     <%
 }
 %>
+</select>
+
+
+<br>
+
+<span class="title">
+	Billing Form:
+</span>
+
+<select name="billing_form" id="billing_form">
+
+<%
+for (Map.Entry<String, String> entry : billingFormHashMap.entrySet()) {
+    String key = entry.getKey();
+    String value = entry.getValue();
+    %>
+    <option value="<%=key%>"><%=value%></option>
+    <%
+}
+%>
 	
 </select>
 
@@ -596,6 +638,7 @@ for (Map.Entry<String, String> entry : sliCodeHashMap.entrySet()) {
 	<th class="priority_list"> Visit Type </th>
 	<th class="priority_list"> Location </th>
 	<th class="priority_list"> SLI Code </th>
+	<th class="priority_list"> Billing Form </th>
 	<th>  </th>
 	<th>  </th>
 </tr>
@@ -609,7 +652,8 @@ for (Map.Entry<String, String> entry : sliCodeHashMap.entrySet()) {
         <td> <%=visitTypeHashMap.get( billingDefault.getVisitTypeNo() )%> </td>
         <td> <%=locationHashMap.get( billingDefault.getLocationNo() )%></td>
         <td> <%=sliCodeHashMap.get( billingDefault.getSliCode() )%> </td>
-        <td> <%=billingDefault.getPriority()%> </td>
+        <td> <%=billingFormHashMap.get( billingDefault.getBillingFormServiceType() )%> </td>
+        <td class="hidden"> <%=billingDefault.getPriority()%> </td>
         <td>
             <a href="#" class="up">Up</a>
             <a href="#" class="down">Down</a>

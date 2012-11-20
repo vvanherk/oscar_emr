@@ -986,6 +986,7 @@ var defaults = new Object();
 		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
 		defaults['location_no']				= "<%=billingDefault.getLocationNo()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
+		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
 		defaults['sli_only_if_required']	= <%=billingDefault.getSliOnlyIfRequired()%>;
 
@@ -1007,29 +1008,40 @@ var currentBillingDefault = null;
 	 * one of the monitored dropdowns (i.e. xml_provider, etc).
 	 */
 	function onBillingDefaultsDropdownChange(element) {
+		var providerElem = document.getElementsByName("xml_provider")[0];
+		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
+		var locationElem = document.getElementsByName("xml_location")[0];
+		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
+		
+		var toIndex = providerElem.value.indexOf("|");
+		if (toIndex < 0)
+			toIndex = providerElem.value.length;
+			
+		var provider_no = providerElem.value.substring(0, toIndex);
+		var visit_type_no = visitTypeElem.value.substring(0,2);
+		var location_no = locationElem.value.substring(0,4);
+		var sli_code_no = sliCodeElem.value;
+		
 		if (element.name == 'xml_provider') {
-			var toIndex = element.value.indexOf("|");
-			if (toIndex < 0)
-				toIndex = element.value.length;
-			var billingDefault = getBillingDefaultByValues( element.value.substring(0,toIndex) );
+			var billingDefault = getBillingDefaultByValues( provider_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
 		
 		if (element.name == 'xml_visittype') {
-			var billingDefault = getBillingDefaultByValues( currentBillingDefault['provider_no'], element.value.substring(0,2) );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
 		
 		if (element.name == 'xml_location') {
-			var billingDefault = getBillingDefaultByValues( currentBillingDefault['provider_no'], currentBillingDefault['visit_type_no'], element.value.substring(0,4) );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
 		
 		if (element.name == 'xml_slicode') {
-			var billingDefault = getBillingDefaultByValues( currentBillingDefault['provider_no'], currentBillingDefault['visit_type_no'], currentBillingDefault['location_no'], element.value );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
@@ -1045,6 +1057,7 @@ var currentBillingDefault = null;
 	 */
 	function getBillingDefaultByValues(provider, visit_type, location, sli_code) {
 		for (var i = 0; i < billingDefaults.length; i++) {
+			//alert( billingDefaults[i]['provider_no'] + " " + provider);
 			if (billingDefaults[i]['provider_no'] == provider) {
 				if (visit_type == undefined) {
 					return billingDefaults[i];
@@ -1082,6 +1095,9 @@ var currentBillingDefault = null;
 		
 		elem = jQuery('select[name="xml_visittype"]');
 		elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+		
+		toggleDiv(defaults['billing_form'], '','');
+		//showHideLayers('Layer1','','hide');
 	}
 </script>
 

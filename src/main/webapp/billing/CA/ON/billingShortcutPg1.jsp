@@ -44,6 +44,7 @@
   String            clinicview        = bHospitalBilling? oscarVariables.getProperty("clinic_hospital", "") : oscarVariables.getProperty("clinic_view", "");
   String            clinicNo          = oscarVariables.getProperty("clinic_no", "");
   String            visitType         = bHospitalBilling? "02" : oscarVariables.getProperty("visit_type", "");
+  String			sliCode			  = (request.getParameter("xml_slicode") == null? "" : request.getParameter("xml_slicode"));
   String            appt_no           = request.getParameter("appointment_no");
   String            demoname          = request.getParameter("demographic_name");
   String            demo_no           = request.getParameter("demographic_no");
@@ -613,6 +614,7 @@ var defaults = new Object();
 		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
 		defaults['location_no']				= "<%=billingDefault.getLocationNo()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
+		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
 		defaults['sli_only_if_required']	= <%=billingDefault.getSliOnlyIfRequired()%>;
 
@@ -634,26 +636,36 @@ var currentBillingDefault = null;
 	 * one of the monitored dropdowns (i.e. xml_provider, etc).
 	 */
 	function onBillingDefaultsDropdownChange(element) {
+		var providerElem = document.getElementsByName("xml_provider")[0];
+		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
+		var locationElem = document.getElementsByName("xml_location")[0];
+		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
+			
+		var provider_no = providerElem.value.trim();
+		var visit_type_no = visitTypeElem.value.substring(0,2);
+		var location_no = locationElem.value.substring(0,4);
+		var sli_code_no = sliCodeElem.value.trim();
+		
 		if (element.name == 'xml_provider') {
-			var billingDefault = getBillingDefaultByValues( element.value );
+			var billingDefault = getBillingDefaultByValues( provider_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
 		
 		if (element.name == 'xml_visittype') {
-			var billingDefault = getBillingDefaultByValues( currentBillingDefault['provider_no'], element.value.substring(0,2) );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
 		
 		if (element.name == 'xml_location') {
-			var billingDefault = getBillingDefaultByValues( currentBillingDefault['provider_no'], currentBillingDefault['visit_type_no'], element.value.substring(0,4) );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
 		
 		if (element.name == 'xml_slicode') {
-			var billingDefault = getBillingDefaultByValues( currentBillingDefault['provider_no'], currentBillingDefault['visit_type_no'], currentBillingDefault['location_no'], element.value );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
@@ -692,7 +704,7 @@ var currentBillingDefault = null;
 	 * 
 	 * Set the dropdown options to the values in the defaults parameter.
 	 */ 
-	function setBillingDefaults(defaults) {
+	function setBillingDefaults(defaults) {		
 		currentBillingDefault = defaults;
 		
 		var elem = $('select[name="xml_provider"]');
@@ -706,6 +718,18 @@ var currentBillingDefault = null;
 		
 		elem = $('select[name="xml_visittype"]');
 		elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+		
+		var isSameBillingForm = false;
+		if (defaults['billing_form'] == '<%=ctlBillForm%>') {
+			isSameBillingForm = true;
+		}
+		
+		if (!isSameBillingForm) {
+			// reload billing form if it is different from previous one
+			var url = "billingShortcutPg1.jsp?billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
+			var defaults = "xml_visittype=" + defaults['visit_type_no'] + "&xml_location=" + defaults['location_no'] + "&xml_slicode=" + defaults['sli_code'] + "&xml_provider=" + defaults['provider_no'];
+			window.location = url + "&" + defaults;
+		}
 	}
 </script>
 
@@ -1005,49 +1029,49 @@ ctlCount = 0;
 						
 							<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
 						
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HDS")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HDS") || sliCode.equals("HDS")) {%>
 								<option selected value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 							<%} else { %>
 								<option value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HED")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HED") || sliCode.equals("HED")) {%>
 								<option selected value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
 							<%} else { %>
 								<option value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HIP")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HIP") || sliCode.equals("HIP")) {%>
 								<option selected value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
 							<%} else { %>
 								<option value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HOP")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HOP") || sliCode.equals("HOP")) {%>
 								<option selected value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
 							<%} else { %>
 								<option value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HRP")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HRP") || sliCode.equals("HRP")) {%>
 								<option selected value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
 							<%} else { %>
 								<option value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("IHF")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("IHF") || sliCode.equals("IHF")) {%>
 								<option selected value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
 							<%} else { %>
 								<option value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OFF")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OFF") || sliCode.equals("OFF")) {%>
 								<option selected value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
 							<%} else { %>
 								<option value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OTN")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OTN") || sliCode.equals("OTN")) {%>
 								<option selected value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 							<%} else { %>
 								<option value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
@@ -1060,15 +1084,15 @@ ctlCount = 0;
 				    <td><b><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode"/></b></td>
 				    <td colspan="3">
 					<select name="xml_slicode">
-						<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
-						<option value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
-						<option value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
-						<option value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
-						<option value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
-						<option value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
-						<option value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
-						<option value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
-						<option value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+						<option <%=(sliCode.equals(clinicNo) ? "selected" : "")%> value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
+						<option <%=(sliCode.equals("HDS") ? "selected" : "")%> value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+						<option <%=(sliCode.equals("HED") ? "selected" : "")%> value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+						<option <%=(sliCode.equals("HIP") ? "selected" : "")%> value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+						<option <%=(sliCode.equals("HOP") ? "selected" : "")%> value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+						<option <%=(sliCode.equals("HRP") ? "selected" : "")%> value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+						<option <%=(sliCode.equals("IHF") ? "selected" : "")%> value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+						<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+						<option <%=(sliCode.equals("OTN") ? "selected" : "")%> value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 					</select> 
 				    </td>
 				</tr>

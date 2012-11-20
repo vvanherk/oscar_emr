@@ -31,6 +31,9 @@ public class BillingDefault extends AbstractModel<Integer> {
 	@Column(name="sli_code")
 	private String sliCode;
 	
+	@Column(name="billing_form")
+	private String billingFormServiceType;
+	
 	@Column(name="priority")
 	private Integer priority;
 	
@@ -77,6 +80,14 @@ public class BillingDefault extends AbstractModel<Integer> {
 	public void setSliCode(String sliCode) {
     	this.sliCode = sliCode;
     }
+    
+    public String getBillingFormServiceType() {
+		return billingFormServiceType;
+	}
+    
+    public void setBillingFormServiceType(String billingFormServiceType) {
+		this.billingFormServiceType = billingFormServiceType;
+	}
     
     public Integer getPriority() {
     	return priority;
