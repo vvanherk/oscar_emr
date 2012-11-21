@@ -203,13 +203,17 @@ public final class MessageUploader {
 			    	providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type);
 			    }
 			} else {
+				String matchBy = "ohip_no";
 				Integer limit = null;
 				boolean orderByLength = false;
+				
 				if (type.equals("Spire")) {
 					limit = new Integer(1);
 					orderByLength = true;
+					matchBy = "provider_no";
 				}
-				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, "provider_no", limit, orderByLength);
+				
+				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, matchBy, limit, orderByLength);
 			}
 			retVal = h.audit();
 			if(results != null) {
@@ -337,12 +341,13 @@ public final class MessageUploader {
 		
 		if (docNums != null) {
 			for (int i = 0; i < docNums.size(); i++) {
-
 				if (docNums.get(i) != null && !((String) docNums.get(i)).trim().equals("")) {
 					sql = "select provider_no from provider where "+ sqlSearchOn +" = '" + ((String) docNums.get(i)) + "'" + sqlOrderByLength + sqlLimit;
+					logger.info("here 3b: " + sql);
 					pstmt = conn.prepareStatement(sql);
 					ResultSet rs = pstmt.executeQuery();
 					while (rs.next()) {
+						logger.info("here 4: " + oscar.Misc.getString(rs, "provider_no"));
 						providerNums.add(oscar.Misc.getString(rs, "provider_no"));
 					}
 					rs.close();
