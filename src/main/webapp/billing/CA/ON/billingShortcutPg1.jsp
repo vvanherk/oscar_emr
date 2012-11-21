@@ -672,6 +672,44 @@ var currentBillingDefault = null;
 	}
 	
 	/**
+	 * Method setDefaultsOnPageLoad
+	 * 
+	 * Call this on page load so that the billing default gets checked/set once all of the page defaults have been set.
+	 */ 
+	function setDefaultsOnPageLoad() {
+		var providerElem = document.getElementsByName("xml_provider")[0];
+		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
+		var locationElem = document.getElementsByName("xml_location")[0];
+		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
+		
+		var provider_no = providerElem.value.trim();
+		var visit_type_no = visitTypeElem.value.substring(0,2);
+		var location_no = locationElem.value.substring(0,4);
+		var sli_code_no = sliCodeElem.value.trim();
+		
+		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
+		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
+		if (billingDefault != undefined) {
+			setBillingDefaults( billingDefault );
+		} else {
+			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
+			if (billingDefault != undefined) {
+				setBillingDefaults( billingDefault );
+			} else {
+				billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
+				if (billingDefault != undefined) {
+					setBillingDefaults( billingDefault );
+				} else {
+					billingDefault = getBillingDefaultByValues( provider_no );
+					if (billingDefault != undefined) {
+						setBillingDefaults( billingDefault );
+					}
+				}
+			}
+		}
+	}
+	
+	/**
 	 * Method getBillingDefaultByValues
 	 * 
 	 * Get the default values that have matching provider, visit_type, etc.  If the function finds an undefined parameter,
@@ -731,6 +769,12 @@ var currentBillingDefault = null;
 			window.location = url + "&" + defaults;
 		}
 	}
+</script>
+
+<script>
+jQuery(document).ready(function() {
+	setDefaultsOnPageLoad();
+});
 </script>
 
 </head>
