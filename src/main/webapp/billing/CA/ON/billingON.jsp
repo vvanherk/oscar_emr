@@ -972,6 +972,19 @@ function toggleDiv(selectedBillForm, selectedBillFormName,billType)
 //-->
 </script>
 
+
+<%
+
+Map<String, String> billingServiceHashMap = new LinkedHashMap<String, String>(); 
+sql = "select distinct servicetype_name, servicetype from ctl_billingservice where status='A'";
+rs = dbObj.searchDBRecord(sql);
+
+while(rs.next()){
+	billingServiceHashMap.put( rs.getString("servicetype").trim(), rs.getString("servicetype_name") );
+}
+
+%>
+
 <script type="text/javascript">
 var billingDefaults = new Array();
 var defaults = new Object();
@@ -987,6 +1000,7 @@ var defaults = new Object();
 		defaults['location_no']				= "<%=billingDefault.getLocationNo()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
 		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
+		defaults['billing_form_name']		= "<%=billingServiceHashMap.get( billingDefault.getBillingFormServiceType().trim() )%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
 		defaults['sli_only_if_required']	= <%=billingDefault.getSliOnlyIfRequired()%>;
 
@@ -1138,7 +1152,7 @@ var currentBillingDefault = null;
 		elem = jQuery('select[name="xml_visittype"]');
 		elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
 		
-		toggleDiv(defaults['billing_form'], '','');
+		toggleDiv(defaults['billing_form'], defaults['billing_form_name'],'');
 		//showHideLayers('Layer1','','hide');
 	}
 </script>
@@ -1152,10 +1166,12 @@ jQuery(document).ready(function() {
 	// if no default was set, establish a 'default' default
 	if (currentBillingDefault == null) {
 		var tempDefault = new Object();
-		tempDefault['provider_no']		= jQuery('select[name="xml_provider"]').val();
-		tempDefault['location_no']		= jQuery('select[name="xml_location"]').val();
-		tempDefault['sli_code']			= jQuery('select[name="xml_slicode"]').val();
-		tempDefault['visit_type_no']	= jQuery('select[name="xml_visittype"]').val();
+		tempDefault['provider_no']			= jQuery('select[name="xml_provider"]').val();
+		tempDefault['location_no']			= jQuery('select[name="xml_location"]').val();
+		tempDefault['sli_code']				= jQuery('select[name="xml_slicode"]').val();
+		tempDefault['visit_type_no']		= jQuery('select[name="xml_visittype"]').val();
+		//tempDefault['billing_form']			= jQuery('select[name="xml_provider"]').val();
+		tempDefault['billing_form_name']	= jQuery('input[name="billFormName"]').val();
 		setBillingDefaults(tempDefault);
 	}
 	
