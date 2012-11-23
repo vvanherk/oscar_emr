@@ -49,7 +49,8 @@
   String            demoname          = request.getParameter("demographic_name");
   String            demo_no           = request.getParameter("demographic_no");
   String            apptProvider_no   = request.getParameter("apptProvider_no");
-  String ctlBillForm = request.getParameter("billForm");
+  String 			ctlHtmlGetBillForm= request.getParameter("useHtmlGetBillForm");
+  String 			ctlBillForm		  = request.getParameter("billForm");
   String            assgProvider_no   = request.getParameter("assgProvider_no");
   //String            dob               = request.getParameter("dob");
   String            demoSex           = request.getParameter("DemoSex");
@@ -687,22 +688,24 @@ var currentBillingDefault = null;
 		var location_no = locationElem.value.substring(0,4);
 		var sli_code_no = sliCodeElem.value.trim();
 		
+		var billingFormOverride = "<%=(ctlHtmlGetBillForm != null && ctlHtmlGetBillForm.equalsIgnoreCase("yes")) ? ctlBillForm : ""%>";
+		
 		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
 		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
 		if (billingDefault != undefined) {
-			setBillingDefaults( billingDefault );
+			setBillingDefaults( billingDefault, billingFormOverride );
 		} else {
 			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
 			if (billingDefault != undefined) {
-				setBillingDefaults( billingDefault );
+				setBillingDefaults( billingDefault, billingFormOverride );
 			} else {
 				billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
 				if (billingDefault != undefined) {
-					setBillingDefaults( billingDefault );
+					setBillingDefaults( billingDefault, billingFormOverride );
 				} else {
 					billingDefault = getBillingDefaultByValues( provider_no );
 					if (billingDefault != undefined) {
-						setBillingDefaults( billingDefault );
+						setBillingDefaults( billingDefault, billingFormOverride );
 					}
 				}
 			}
@@ -742,7 +745,7 @@ var currentBillingDefault = null;
 	 * 
 	 * Set the dropdown options to the values in the defaults parameter.
 	 */ 
-	function setBillingDefaults(defaults) {		
+	function setBillingDefaults( defaults, billingFormOverride ) {		
 		currentBillingDefault = defaults;
 		
 		var elem = $('select[name="xml_provider"]');
@@ -758,13 +761,13 @@ var currentBillingDefault = null;
 		elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
 		
 		var isSameBillingForm = false;
-		if (defaults['billing_form'] == '<%=ctlBillForm%>') {
+		if (defaults['billing_form'] == '<%=ctlBillForm%>' || billingFormOverride == '<%=ctlBillForm%>') {
 			isSameBillingForm = true;
 		}
 		
 		if (!isSameBillingForm) {
 			// reload billing form if it is different from previous one
-			var url = "billingShortcutPg1.jsp?billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
+			var url = "billingShortcutPg1.jsp?useHtmlGetBillForm=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
 			var defaults = "xml_visittype=" + defaults['visit_type_no'] + "&xml_location=" + defaults['location_no'] + "&xml_slicode=" + defaults['sli_code'] + "&xml_provider=" + defaults['provider_no'];
 			window.location = url + "&" + defaults;
 		}
@@ -805,7 +808,7 @@ int ctlCount = 0;
 %>
 	<tr bgcolor=<%=ctlCount%2==0 ? "#FFFFFF" : "#EEEEFF"%>>
 		<td colspan="2"><b><font size="-2" color="#7A388D"><a
-			href="billingShortcutPg1.jsp?billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1"
+			href="billingShortcutPg1.jsp?useHtmlGetBillForm=yes&billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1"
 			onClick="showHideLayers('Layer1','','hide');"><%=ctlcodename%></a></font></b></td>
 	</tr>
 	<%
