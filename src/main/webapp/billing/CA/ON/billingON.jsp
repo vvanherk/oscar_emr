@@ -274,6 +274,9 @@
 
 			//provider
 			paraName = request.getParameter("xml_provider");
+			if(paraName != null && paraName.indexOf("|")!=-1)
+				paraName = paraName.substring( 0, paraName.indexOf("|") );
+			
 			String defaultProvider = preference.getBillingProviderDefault();
 			if (defaultProvider != null)
 			paraName = (paraName == null || paraName.length() == 0? defaultProvider : paraName);
@@ -1314,7 +1317,7 @@ function changeSite(sel) {
 				} else if ( defaultProvider.length() == 0 && providerview.equals(proOHIP) ) {
 					selected = "selected";
 				}
-				MiscUtils.getLogger().info("OUT: " + propT.getProperty("proOHIP") + " | " + defaultProvider);                    
+				//MiscUtils.getLogger().info("OUT: " + propT.getProperty("proOHIP") + " | " + defaultProvider);
 %>
 					    <option value="<%=propT.getProperty("proOHIP")%>"
 							<%=selected%>><b><%=propT.getProperty("last_name")%>,
