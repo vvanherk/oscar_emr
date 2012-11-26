@@ -44,6 +44,8 @@
   String            clinicview        = bHospitalBilling? oscarVariables.getProperty("clinic_hospital", "") : oscarVariables.getProperty("clinic_view", "");
   String            clinicNo          = oscarVariables.getProperty("clinic_no", "");
   String            visitType         = bHospitalBilling? "02" : oscarVariables.getProperty("visit_type", "");
+  String 			ctlHtmlGetSliCode = request.getParameter("useHtmlGetSliCode");
+  String 			ctlHtmlGetValues  = request.getParameter("useHtmlGetValues");
   String			sliCode			  = (request.getParameter("xml_slicode") == null? "" : request.getParameter("xml_slicode"));
   String            appt_no           = request.getParameter("appointment_no");
   String            demoname          = request.getParameter("demographic_name");
@@ -630,6 +632,22 @@ var currentBillingDefault = null;
   
 <script type="text/javascript">
 
+	function getParsedDropdownValues() {
+		var providerElem = document.getElementsByName("xml_provider")[0];
+		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
+		var locationElem = document.getElementsByName("xml_location")[0];
+		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
+		
+		var values = new Object();
+		
+		values['provider_no']	= providerElem.value.trim();
+		values['visit_type_no']	= visitTypeElem.value.substring(0,2);
+		values['location_no']	= locationElem.value.substring(0,4);
+		values['sli_code_no']	= sliCodeElem.value.trim();
+		
+		return values;
+	}
+
 	/**
 	 * Method onBillingDefaultsDropdownChange
 	 * 
@@ -637,15 +655,12 @@ var currentBillingDefault = null;
 	 * one of the monitored dropdowns (i.e. xml_provider, etc).
 	 */
 	function onBillingDefaultsDropdownChange(element) {
-		var providerElem = document.getElementsByName("xml_provider")[0];
-		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
-		var locationElem = document.getElementsByName("xml_location")[0];
-		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
+		var currentValues = getParsedDropdownValues();
 			
-		var provider_no = providerElem.value.trim();
-		var visit_type_no = visitTypeElem.value.substring(0,2);
-		var location_no = locationElem.value.substring(0,4);
-		var sli_code_no = sliCodeElem.value.trim();
+		var provider_no		= currentValues['provider_no'];
+		var visit_type_no	= currentValues['visit_type_no'];
+		var location_no		= currentValues['location_no'];
+		var sli_code_no		= currentValues['sli_code_no'];
 		
 		if (element.name == 'xml_provider') {
 			var billingDefault = getBillingDefaultByValues( provider_no );
@@ -678,34 +693,43 @@ var currentBillingDefault = null;
 	 * Call this on page load so that the billing default gets checked/set once all of the page defaults have been set.
 	 */ 
 	function setDefaultsOnPageLoad() {
-		var providerElem = document.getElementsByName("xml_provider")[0];
-		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
-		var locationElem = document.getElementsByName("xml_location")[0];
-		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
+		var currentValues = getParsedDropdownValues();
+			
+		var provider_no		= currentValues['provider_no'];
+		var visit_type_no	= currentValues['visit_type_no'];
+		var location_no		= currentValues['location_no'];
+		var sli_code_no		= currentValues['sli_code_no'];
 		
-		var provider_no = providerElem.value.trim();
-		var visit_type_no = visitTypeElem.value.substring(0,2);
-		var location_no = locationElem.value.substring(0,4);
-		var sli_code_no = sliCodeElem.value.trim();
-		
-		var billingFormOverride = "<%=(ctlHtmlGetBillForm != null && ctlHtmlGetBillForm.equalsIgnoreCase("yes")) ? ctlBillForm : ""%>";
+		var billingDefaultsOverride = new Object();
+		<% if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes")) { %>
+		billingDefaultsOverride['provider_no'] = provider_no;
+		billingDefaultsOverride['visit_type_no'] = visit_type_no;
+		billingDefaultsOverride['location_no'] = location_no;
+		billingDefaultsOverride['sli_code'] = sli_code_no;
+		<% } %>
+		<% if (ctlHtmlGetSliCode != null && ctlHtmlGetSliCode.equalsIgnoreCase("yes")) { %>
+		billingDefaultsOverride['sli_code'] = sli_code_no;
+		<% } %>
+		<% if (ctlHtmlGetBillForm != null && ctlHtmlGetBillForm.equalsIgnoreCase("yes")) { %>
+		billingDefaultsOverride['billing_form'] = "<%=ctlBillForm%>";
+		<% } %>
 		
 		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
 		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
 		if (billingDefault != undefined) {
-			setBillingDefaults( billingDefault, billingFormOverride );
+			setBillingDefaults( billingDefault, billingDefaultsOverride );
 		} else {
 			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
 			if (billingDefault != undefined) {
-				setBillingDefaults( billingDefault, billingFormOverride );
+				setBillingDefaults( billingDefault, billingDefaultsOverride );
 			} else {
 				billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
 				if (billingDefault != undefined) {
-					setBillingDefaults( billingDefault, billingFormOverride );
+					setBillingDefaults( billingDefault, billingDefaultsOverride );
 				} else {
 					billingDefault = getBillingDefaultByValues( provider_no );
 					if (billingDefault != undefined) {
-						setBillingDefaults( billingDefault, billingFormOverride );
+						setBillingDefaults( billingDefault, billingDefaultsOverride );
 					}
 				}
 			}
@@ -745,29 +769,48 @@ var currentBillingDefault = null;
 	 * 
 	 * Set the dropdown options to the values in the defaults parameter.
 	 */ 
-	function setBillingDefaults( defaults, billingFormOverride ) {		
+	function setBillingDefaults( defaults, billingDefaultsOverride ) {
+		billingDefaultsOverride = billingDefaultsOverride || new Object();
+		
 		currentBillingDefault = defaults;
 		
+		
 		var elem = $('select[name="xml_provider"]');
-		elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['visit_type_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		} else {
+			elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
+		}
 		
 		elem = $('select[name="xml_location"]');
-		elem.find( 'option[value^="'+defaults['location_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['visit_type_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		} else {
+			elem.find( 'option[value^="'+defaults['location_no']+'"]' ).attr('selected',true);
+		}
 		
 		elem = $('select[name="xml_slicode"]');
-		elem.find( 'option[value^="'+defaults['sli_code']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['sli_code'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['sli_code']+'"]' ).attr('selected',true);
+		} else {
+			elem.find( 'option[value^="'+defaults['sli_code']+'"]' ).attr('selected',true);
+		}
 		
 		elem = $('select[name="xml_visittype"]');
-		elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['visit_type_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		} else {
+			elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+		}
 		
 		var isSameBillingForm = false;
-		if (defaults['billing_form'] == '<%=ctlBillForm%>' || billingFormOverride == '<%=ctlBillForm%>') {
+		if (defaults['billing_form'] == '<%=ctlBillForm%>' || billingDefaultsOverride['billing_form'] == '<%=ctlBillForm%>') {
 			isSameBillingForm = true;
 		}
 		
 		if (!isSameBillingForm) {
 			// reload billing form if it is different from previous one
-			var url = "billingShortcutPg1.jsp?useHtmlGetBillForm=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
+			var url = "billingShortcutPg1.jsp?useHtmlGetBillForm=yes&useHtmlGetSliCode=yes&useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
 			var defaults = "xml_visittype=" + defaults['visit_type_no'] + "&xml_location=" + defaults['location_no'] + "&xml_slicode=" + defaults['sli_code'] + "&xml_provider=" + defaults['provider_no'];
 			window.location = url + "&" + defaults;
 		}
@@ -776,6 +819,20 @@ var currentBillingDefault = null;
 
 <script>
 jQuery(document).ready(function() {
+	// if no default was set, establish a 'default' default
+	if (currentBillingDefault == null) {
+		var currentValues = getParsedDropdownValues();
+		
+		var tempDefault = new Object();
+		tempDefault['provider_no']			= currentValues['provider_no'];
+		tempDefault['location_no']			= currentValues['location_no'];
+		tempDefault['sli_code']				= currentValues['sli_code_no'];
+		tempDefault['visit_type_no']		= currentValues['visit_type_no'];
+		tempDefault['billing_form']			= "<%=ctlBillForm%>";
+		//tempDefault['billing_form_name']	= jQuery('input[name="billFormName"]').val();
+		setBillingDefaults(tempDefault);
+	}
+	
 	setDefaultsOnPageLoad();
 });
 </script>
@@ -808,8 +865,8 @@ int ctlCount = 0;
 %>
 	<tr bgcolor=<%=ctlCount%2==0 ? "#FFFFFF" : "#EEEEFF"%>>
 		<td colspan="2"><b><font size="-2" color="#7A388D"><a
-			href="billingShortcutPg1.jsp?useHtmlGetBillForm=yes&billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1"
-			onClick="showHideLayers('Layer1','','hide');"><%=ctlcodename%></a></font></b></td>
+			href="#"
+			onClick="showHideLayers('Layer1','','hide');  window.location='billingShortcutPg1.jsp?useHtmlGetBillForm=yes&useHtmlGetSliCode=yes&useHtmlGetValues=yes&billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1&xml_visittype=' + getParsedDropdownValues()['visit_type_no'] + '&xml_location=' + getParsedDropdownValues()['location_no'] + '&xml_slicode=' + getParsedDropdownValues()['sli_code_no'] + '&xml_provider=' + getParsedDropdownValues()['provider_no'];"><%=ctlcodename%></a></font></b></td>
 	</tr>
 	<%
 }
@@ -1357,6 +1414,9 @@ ctlCount = 0;
 	<input type="hidden" name="assgProvider_no"
 		value="<%=assgProvider_no%>" />
 	<input type="hidden" name="billForm" value="<%=ctlBillForm%>" />
+	<input type="hidden" name="useHtmlGetBillForm" value="<%=ctlHtmlGetBillForm%>" />
+	<input type="hidden" name="useHtmlGetSliCode" value="<%=ctlHtmlGetSliCode%>" />
+	<input type="hidden" name="useHtmlGetValues" value="<%=ctlHtmlGetValues%>" />
 
 </table>
 </form>
