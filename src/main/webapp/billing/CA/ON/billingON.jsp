@@ -84,13 +84,24 @@
 			//String dob = request.getParameter("dob");
 			String demoSex = request.getParameter("DemoSex");
 			String m_review = request.getParameter("m_review")!=null ? request.getParameter("m_review") : "";
-			String ctlBillForm = request.getParameter("billForm");
+			String[] ctlBillForms = request.getParameterValues("billForm");
 			String curBillForm = request.getParameter("curBillForm");
+			
+			
+			String ctlBillForm = null;
+			// search for a set billForm and set it if found
+			if (ctlBillForms != null) {
+				for (int i=0; i < ctlBillForms.length; i++) {
+					MiscUtils.getLogger().info("blah: " + ctlBillForms[i]);
+					if (ctlBillForms[i] != null && !ctlBillForms[i].equalsIgnoreCase("undefined"))
+						ctlBillForm = ctlBillForms[i];
+				}
+			}
 			
 			String ctlHtmlGetValues = request.getParameter("useHtmlGetValues");
 			
 			// if override is set, we want to set form selection with the form that was sent as a GET parameter
-			if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes"))
+			if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes") && ctlBillForm != null)
 				curBillForm = ctlBillForm;
 			
 			String provider_no;
