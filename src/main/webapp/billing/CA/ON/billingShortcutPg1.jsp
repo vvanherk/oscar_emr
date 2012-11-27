@@ -767,17 +767,19 @@ var currentBillingDefault = null;
 		
 		currentBillingDefault = defaults;
 		
+		alert(defaults['']);
+		
 		
 		var elem = $('select[name="xml_provider"]');
-		if (billingDefaultsOverride['visit_type_no'] != undefined) {
-			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['provider_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['provider_no']+'"]' ).attr('selected',true);
 		} else {
 			elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
 		}
 		
 		elem = $('select[name="xml_location"]');
-		if (billingDefaultsOverride['visit_type_no'] != undefined) {
-			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['location_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['location_no']+'"]' ).attr('selected',true);
 		} else {
 			elem.find( 'option[value^="'+defaults['location_no']+'"]' ).attr('selected',true);
 		}
