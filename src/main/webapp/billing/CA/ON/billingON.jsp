@@ -87,6 +87,12 @@
 			String ctlBillForm = request.getParameter("billForm");
 			String curBillForm = request.getParameter("curBillForm");
 			
+			String ctlHtmlGetValues = request.getParameter("useHtmlGetValues");
+			
+			// if override is set, we want to set form selection with the form that was sent as a GET parameter
+			if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes"))
+				curBillForm = ctlBillForm;
+			
 			String provider_no;
             if( apptProvider_no.equalsIgnoreCase("none") ) {
                      provider_no = user_no;
@@ -1015,6 +1021,26 @@ var currentBillingDefault = null;
   
 <script type="text/javascript">
 
+	function getParsedDropdownValues() {
+		var providerElem = document.getElementsByName("xml_provider")[0];
+		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
+		var locationElem = document.getElementsByName("xml_location")[0];
+		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
+		
+		var values = new Object();
+		
+		var toIndex = providerElem.value.indexOf("|");
+		if (toIndex < 0)
+			toIndex = providerElem.value.length;		
+		
+		values['provider_no']	= providerElem.value.substring(0, toIndex).trim();
+		values['visit_type_no']	= visitTypeElem.value.substring(0,2);
+		values['location_no']	= locationElem.value.substring(0,4);
+		values['sli_code_no']	= sliCodeElem.value.trim();
+		
+		return values;
+	}
+
 	/**
 	 * Method onBillingDefaultsDropdownChange
 	 * 
@@ -1067,36 +1093,40 @@ var currentBillingDefault = null;
 	 * Call this on page load so that the billing default gets checked/set once all of the page defaults have been set.
 	 */ 
 	function setDefaultsOnPageLoad() {
-		var providerElem = document.getElementsByName("xml_provider")[0];
-		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
-		var locationElem = document.getElementsByName("xml_location")[0];
-		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
-		
-		var toIndex = providerElem.value.indexOf("|");
-		if (toIndex < 0)
-			toIndex = providerElem.value.length;
+		var currentValues = getParsedDropdownValues();
 			
-		var provider_no = providerElem.value.substring(0, toIndex);
-		var visit_type_no = visitTypeElem.value.substring(0,2);
-		var location_no = locationElem.value.substring(0,4);
-		var sli_code_no = sliCodeElem.value.trim();
+		var provider_no		= currentValues['provider_no'];
+		var visit_type_no	= currentValues['visit_type_no'];
+		var location_no		= currentValues['location_no'];
+		var sli_code_no		= currentValues['sli_code_no'];
+		
+		var billingDefaultsOverride = new Object();
+		<% if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes")) { %>
+		billingDefaultsOverride['provider_no']			= provider_no;
+		billingDefaultsOverride['visit_type_no']		= visit_type_no;
+		billingDefaultsOverride['location_no']			= location_no;
+		billingDefaultsOverride['sli_code']				= sli_code_no;
+		billingDefaultsOverride['billing_form']			= "<%=ctlBillForm%>";
+		billingDefaultsOverride['billing_form_name']	= "<%=billingServiceHashMap.get( ctlBillForm )%>";
+		alert("<%=ctlBillForm%>" + " " + "<%=billingServiceHashMap.get( ctlBillForm )%>");
+		<% } %>
 		
 		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
 		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
 		if (billingDefault != undefined) {
-			setBillingDefaults( billingDefault );
+			setBillingDefaults( billingDefault, billingDefaultsOverride );
 		} else {
 			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
 			if (billingDefault != undefined) {
-				setBillingDefaults( billingDefault );
+				setBillingDefaults( billingDefault, billingDefaultsOverride );
 			} else {
 				billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
 				if (billingDefault != undefined) {
-					setBillingDefaults( billingDefault );
+					setBillingDefaults( billingDefault, billingDefaultsOverride );
 				} else {
 					billingDefault = getBillingDefaultByValues( provider_no );
 					if (billingDefault != undefined) {
-						setBillingDefaults( billingDefault );
+						setBillingDefaults( billingDefault, billingDefaultsOverride );
 					}
 				}
 			}
@@ -1136,25 +1166,47 @@ var currentBillingDefault = null;
 	 * Method setBillingDefaults
 	 * 
 	 * Set the dropdown options to the values in the defaults parameter.
-	 */ 
-	function setBillingDefaults(defaults) {
+	 */ 	
+	function setBillingDefaults( defaults, billingDefaultsOverride ) {
+		billingDefaultsOverride = billingDefaultsOverride || new Object();
+		
 		currentBillingDefault = defaults;
 		
 		var elem = jQuery('select[name="xml_provider"]');
-		elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['visit_type_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		} else {
+			elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
+		}
 		
 		elem = jQuery('select[name="xml_location"]');
-		elem.find( 'option[value^="'+defaults['location_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['visit_type_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		} else {
+			elem.find( 'option[value^="'+defaults['location_no']+'"]' ).attr('selected',true);
+		}
 		
 		elem = jQuery('select[name="xml_slicode"]');
-		elem.find( 'option[value^="'+defaults['sli_code']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['sli_code'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['sli_code']+'"]' ).attr('selected',true);
+		} else {
+			elem.find( 'option[value^="'+defaults['sli_code']+'"]' ).attr('selected',true);
+		}
 		
 		elem = jQuery('select[name="xml_visittype"]');
-		elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['visit_type_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		} else {
+			elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+		}
 		
-		toggleDiv(defaults['billing_form'], defaults['billing_form_name'],'');
-		//showHideLayers('Layer1','','hide');
+		if (billingDefaultsOverride['billing_form'] != undefined) {
+			toggleDiv(billingDefaultsOverride['billing_form'], billingDefaultsOverride['billing_form_name'],'');
+		} else {
+			toggleDiv(defaults['billing_form'], defaults['billing_form_name'],'');
+		}
 	}
+	
 </script>
 
 <script>
@@ -1165,12 +1217,14 @@ jQuery(document).ready(function() {
 	
 	// if no default was set, establish a 'default' default
 	if (currentBillingDefault == null) {
+		var currentValues = getParsedDropdownValues();
+		
 		var tempDefault = new Object();
-		tempDefault['provider_no']			= jQuery('select[name="xml_provider"]').val();
-		tempDefault['location_no']			= jQuery('select[name="xml_location"]').val();
-		tempDefault['sli_code']				= jQuery('select[name="xml_slicode"]').val();
-		tempDefault['visit_type_no']		= jQuery('select[name="xml_visittype"]').val();
-		//tempDefault['billing_form']			= jQuery('select[name="xml_provider"]').val();
+		tempDefault['provider_no']			= currentValues['provider_no'];
+		tempDefault['location_no']			= currentValues['location_no'];
+		tempDefault['sli_code']				= currentValues['sli_code_no'];
+		tempDefault['visit_type_no']		= currentValues['visit_type_no'];
+		//tempDefault['billing_form']		= "<%=ctlBillForm%>";
 		tempDefault['billing_form_name']	= jQuery('input[name="billFormName"]').val();
 		setBillingDefaults(tempDefault);
 	}
@@ -1894,6 +1948,7 @@ function changeSite(sel) {
     <input type="hidden" name="url_back">
 	<input type="hidden" name="billNo_old" id="billNo_old" value="<%=request.getParameter("billNo_old")%>" />
 	<input type="hidden" name="billStatus_old" id="billStatus_old" value="<%=request.getParameter("billStatus_old")%>" />
+	<input type="hidden" name="useHtmlGetValues" value="<%=(ctlHtmlGetValues != null && ctlHtmlGetValues.length() > 0 ? ctlHtmlGetValues : "yes")%>" />
 	
 </table>
 

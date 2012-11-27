@@ -44,14 +44,12 @@
   String            clinicview        = bHospitalBilling? oscarVariables.getProperty("clinic_hospital", "") : oscarVariables.getProperty("clinic_view", "");
   String            clinicNo          = oscarVariables.getProperty("clinic_no", "");
   String            visitType         = bHospitalBilling? "02" : oscarVariables.getProperty("visit_type", "");
-  String 			ctlHtmlGetSliCode = request.getParameter("useHtmlGetSliCode");
   String 			ctlHtmlGetValues  = request.getParameter("useHtmlGetValues");
   String			sliCode			  = (request.getParameter("xml_slicode") == null? "" : request.getParameter("xml_slicode"));
   String            appt_no           = request.getParameter("appointment_no");
   String            demoname          = request.getParameter("demographic_name");
   String            demo_no           = request.getParameter("demographic_no");
   String            apptProvider_no   = request.getParameter("apptProvider_no");
-  String 			ctlHtmlGetBillForm= request.getParameter("useHtmlGetBillForm");
   String 			ctlBillForm		  = request.getParameter("billForm");
   String            assgProvider_no   = request.getParameter("assgProvider_no");
   //String            dob               = request.getParameter("dob");
@@ -706,11 +704,6 @@ var currentBillingDefault = null;
 		billingDefaultsOverride['visit_type_no'] = visit_type_no;
 		billingDefaultsOverride['location_no'] = location_no;
 		billingDefaultsOverride['sli_code'] = sli_code_no;
-		<% } %>
-		<% if (ctlHtmlGetSliCode != null && ctlHtmlGetSliCode.equalsIgnoreCase("yes")) { %>
-		billingDefaultsOverride['sli_code'] = sli_code_no;
-		<% } %>
-		<% if (ctlHtmlGetBillForm != null && ctlHtmlGetBillForm.equalsIgnoreCase("yes")) { %>
 		billingDefaultsOverride['billing_form'] = "<%=ctlBillForm%>";
 		<% } %>
 		
@@ -810,7 +803,7 @@ var currentBillingDefault = null;
 		
 		if (!isSameBillingForm) {
 			// reload billing form if it is different from previous one
-			var url = "billingShortcutPg1.jsp?useHtmlGetBillForm=yes&useHtmlGetSliCode=yes&useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
+			var url = "billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
 			var defaults = "xml_visittype=" + defaults['visit_type_no'] + "&xml_location=" + defaults['location_no'] + "&xml_slicode=" + defaults['sli_code'] + "&xml_provider=" + defaults['provider_no'];
 			window.location = url + "&" + defaults;
 		}
@@ -866,7 +859,7 @@ int ctlCount = 0;
 	<tr bgcolor=<%=ctlCount%2==0 ? "#FFFFFF" : "#EEEEFF"%>>
 		<td colspan="2"><b><font size="-2" color="#7A388D"><a
 			href="#"
-			onClick="showHideLayers('Layer1','','hide');  window.location='billingShortcutPg1.jsp?useHtmlGetBillForm=yes&useHtmlGetSliCode=yes&useHtmlGetValues=yes&billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1&xml_visittype=' + getParsedDropdownValues()['visit_type_no'] + '&xml_location=' + getParsedDropdownValues()['location_no'] + '&xml_slicode=' + getParsedDropdownValues()['sli_code_no'] + '&xml_provider=' + getParsedDropdownValues()['provider_no'];"><%=ctlcodename%></a></font></b></td>
+			onClick="showHideLayers('Layer1','','hide');  window.location='billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1&xml_visittype=' + getParsedDropdownValues()['visit_type_no'] + '&xml_location=' + getParsedDropdownValues()['location_no'] + '&xml_slicode=' + getParsedDropdownValues()['sli_code_no'] + '&xml_provider=' + getParsedDropdownValues()['provider_no'];"><%=ctlcodename%></a></font></b></td>
 	</tr>
 	<%
 }
@@ -1414,8 +1407,6 @@ ctlCount = 0;
 	<input type="hidden" name="assgProvider_no"
 		value="<%=assgProvider_no%>" />
 	<input type="hidden" name="billForm" value="<%=ctlBillForm%>" />
-	<input type="hidden" name="useHtmlGetBillForm" value="<%=ctlHtmlGetBillForm%>" />
-	<input type="hidden" name="useHtmlGetSliCode" value="<%=ctlHtmlGetSliCode%>" />
 	<input type="hidden" name="useHtmlGetValues" value="<%=ctlHtmlGetValues%>" />
 
 </table>
