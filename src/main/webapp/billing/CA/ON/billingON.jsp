@@ -92,7 +92,6 @@
 			// search for a set billForm and set it if found
 			if (ctlBillForms != null) {
 				for (int i=0; i < ctlBillForms.length; i++) {
-					MiscUtils.getLogger().info("blah: " + ctlBillForms[i]);
 					if (ctlBillForms[i] != null && !ctlBillForms[i].equalsIgnoreCase("undefined"))
 						ctlBillForm = ctlBillForms[i];
 				}
