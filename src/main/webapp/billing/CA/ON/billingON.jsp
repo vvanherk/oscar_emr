@@ -1108,7 +1108,6 @@ var currentBillingDefault = null;
 		billingDefaultsOverride['sli_code']				= sli_code_no;
 		billingDefaultsOverride['billing_form']			= "<%=ctlBillForm%>";
 		billingDefaultsOverride['billing_form_name']	= "<%=billingServiceHashMap.get( ctlBillForm )%>";
-		alert("<%=ctlBillForm%>" + " " + "<%=billingServiceHashMap.get( ctlBillForm )%>");
 		<% } %>
 		
 		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
