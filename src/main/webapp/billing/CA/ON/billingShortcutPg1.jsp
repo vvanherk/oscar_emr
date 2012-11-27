@@ -767,8 +767,6 @@ var currentBillingDefault = null;
 		
 		currentBillingDefault = defaults;
 		
-		alert(defaults['']);
-		
 		
 		var elem = $('select[name="xml_provider"]');
 		if (billingDefaultsOverride['provider_no'] != undefined) {
