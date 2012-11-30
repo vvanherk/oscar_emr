@@ -81,7 +81,7 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 	private int appointmentScreenLinkNameDisplayLength=3;
 	private int defaultDoNotDeleteBilling=0;
 	private String defaultDxCode=null;
-	private String billingProviderDefault=null;
+	private String billingProviderDefault="";
 	
 	
 	@CollectionOfElements(targetElement = String.class)
