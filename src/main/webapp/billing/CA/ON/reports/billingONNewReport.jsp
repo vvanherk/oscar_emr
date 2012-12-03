@@ -124,6 +124,7 @@ String sql = null;
 boolean editable = true;
 
 boolean billsSubmitted = request.getParameter("submit_billing") != null;
+boolean showBillSaveStatus = false;
 int numBillsSaved = 0;
 int numBillsSubmitted = 0;
 int numBills = 0;
@@ -135,8 +136,31 @@ if (billsSubmitted) {
 	numBills = results[0];
 	numBillsSubmitted = results[1];
 	numBillsSaved = results[2];
+	
+	response.sendRedirect("reports/billingONNewReport.jsp?numBills=" + numBills + "&numBillsSubmitted=" + numBillsSubmitted + "&numBillsSaved=" + numBillsSaved);
+} else {
+	try {
+		if (request.getParameter("numBills") != null) {
+			numBills = Integer.parseInt(request.getParameter("numBills"));
+			showBillSaveStatus = true;
+		}
+		if (request.getParameter("numBillsSubmitted") != null) {
+			numBillsSubmitted = Integer.parseInt(request.getParameter("numBillsSubmitted"));
+			showBillSaveStatus = true;
+		}
+		if (request.getParameter("numBillsSaved") != null) {
+			numBillsSaved = Integer.parseInt(request.getParameter("numBillsSaved"));
+			showBillSaveStatus = true;
+		}
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("Unable to parse bills submitted GET parameters", e);
+	}
 }
 
+%>
+
+
+<%
 
 String action = request.getParameter("reportAction") == null ? "" : request.getParameter("reportAction");
 
@@ -232,7 +256,7 @@ if("unbilled".equals(action)) {
 		prop.setProperty( "Notes", apt.getNotes() );
         
         
-        String tempStr = "<a href=# onClick='popupPage(700,1000, \"billingOB.jsp?billForm=" 
+        String tempStr = "<a href=# onClick='preventEventPropagation(event); popupPage(700,1000, \"billingOB.jsp?billForm=" 
                 + URLEncoder.encode(oscarVariables.getProperty("default_view")) + "&hotclick=&appointment_no="
                 + apt.getId() + "&demographic_name=" + URLEncoder.encode(apt.getName())
 				+ "&demographic_no=" + apt.getDemographicNo() + "&user_no=" + apt.getProviderNo() 
@@ -359,6 +383,7 @@ if("billed".equals(action)) {
 <%@page import="org.oscarehr.common.model.Site"%>
 <%@page import="org.oscarehr.common.model.Provider"%>
 <%@page import="org.apache.commons.lang.StringUtils"%><html>
+
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
 <!-- totalNumberOfBills and incrementingId are required for the billingONNewReport.js script -->
@@ -383,7 +408,7 @@ var appointmentNumbers = new Array(<%
 %>);
 
 </script>
-<script type="text/javascript" src="reports/billingONNewReport.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/billing/CA/ON/reports/billingONNewReport.js"></script>
 
 <script src="<%= request.getContextPath() %>/js/jquery-1.7.1.min.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/jquery.validate.js"></script>
@@ -407,18 +432,18 @@ $(document).ready(function() {
 </script>
 
 <title>ON Billing Report</title>
-<link rel="stylesheet" href="../../web.css" >
-<link rel="stylesheet" type="text/css" media="all" href="../share/css/extractedFromPages.css"  >
-<link rel="stylesheet" type="text/css" media="all" href="reports/billingONNewReport.css"  >
+<!-- <link rel="stylesheet" href="<%= request.getContextPath() %>/web.css" > -->
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/share/css/extractedFromPages.css"  >
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/billing/CA/ON/reports/billingONNewReport.css"  >
 <!-- calendar stylesheet -->
-<link rel="stylesheet" type="text/css" media="all" href="../../../share/calendar/calendar.css" title="win2k-cold-1" >
+<link rel="stylesheet" type="text/css" media="all" href="<%= request.getContextPath() %>/share/calendar/calendar.css" title="win2k-cold-1" >
 <!-- main calendar program -->
-<script type="text/javascript" src="../../../share/calendar/calendar.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/share/calendar/calendar.js"></script>
 <!-- language for the calendar -->
-<script type="text/javascript" src="../../../share/calendar/lang/calendar-en.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/share/calendar/lang/calendar-en.js"></script>
 <!-- the following script defines the Calendar.setup helper function, which makes
        adding a calendar a matter of 1 or 2 lines of code. -->
-<script type="text/javascript" src="../../../share/calendar/calendar-setup.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/share/calendar/calendar-setup.js"></script>
 <script type="text/javascript">
 <!--
 
@@ -566,11 +591,11 @@ if ((maxPerPage != 0 && maxPerPage != 25 && maxPerPage != 50 && maxPerPage != 75
 			<input type="text" name="xml_vdate" id="xml_vdate" class="required date" size="10" value="<%=xml_vdate%>"> 
 			
 			<font size="1"> 				
-				<img src="../../../images/cal.gif" alt="" id="xml_vdate_cal"> To:
+				<img src="<%= request.getContextPath() %>/images/cal.gif" alt="" id="xml_vdate_cal"> To:
 			</font> 
 			
 			<input type="text" name="xml_appointment_date" id="xml_appointment_date" class="required date" onDblClick="calToday(this)" size="10" value="<%=xml_appointment_date%>"> 
-			<img src="../../../images/cal.gif" alt="" id="xml_appointment_date_cal">
+			<img src="<%= request.getContextPath() %>/images/cal.gif" alt="" id="xml_appointment_date_cal">
 		</td>
 		<td align="center">
 			<span style="font-size: small;">Results per page:</span>
@@ -591,7 +616,7 @@ if ((maxPerPage != 0 && maxPerPage != 25 && maxPerPage != 50 && maxPerPage != 75
 </form>
 
 <%
-if (billsSubmitted) {
+if (showBillSaveStatus) {
 	String message = "No bills submitted!";
 	String className = "oscar_warning";
 	
@@ -709,11 +734,11 @@ if (editable) {
 <%
 if (vecHeader != null && vecHeader.size() > 0) {
 %>
-<table>
+<table width="80%">
 	<tbody>
 	<tr>
-		<td> <a class="billing_button" href="" tabindex="-1" onclick="">Paste to selected</a> </td>
-		<td> <a class="billing_button" href="" tabindex="-1" onclick="">Print selected</a> </td>
+		<td class="hide_element"> <a class="billing_button" href="" tabindex="-1" onclick="return false;">Paste to selected</a> </td>
+		<td class="hide_element"> <a class="billing_button" href="" tabindex="-1" onclick="return false;">Print selected</a> </td>
 		<td width="80%">
 			<!-- Pagination -->
 			<%
@@ -849,14 +874,14 @@ if (vecHeader != null && vecHeader.size() > 0) {
 				        
 				        String mURL = "../../../demographic/demographiccontrol.jsp?demographic_no="+vecDemographicNo.get(i)+"&apptProvider="+vecProviderNo.get(i)+"&appointment="+vecAppointmentNo.get(i)+"&displaymode=edit&dboperation=search_detail";
 				        
-				        propertyValue += " | <a class=\"encounter_button\" href=# onclick=\"window.open('" + eURL + "', '', '"+windowProperties+"');\">E</a>";
-				        propertyValue += " | <a class=\"encounter_button\" href=# onclick=\"window.open('" + mURL + "', '', '"+windowProperties+"');\">M</a>";
+				        propertyValue += " | <a class=\"encounter_button\" href=# onclick=\"preventEventPropagation(event); window.open('" + eURL + "', '', '"+windowProperties+"');\">E</a>";
+				        propertyValue += " | <a class=\"encounter_button\" href=# onclick=\"preventEventPropagation(event); window.open('" + mURL + "', '', '"+windowProperties+"');\">M</a>";
 				    }
 				    
 					%>
 					<td <%=style%>><%=propertyValue %>&nbsp;</td>
 				<% } %>
-				<td width="10px"> <a class="billing_button" href="" tabindex="-1" onclick="preventEventPropagation(event); return false;">Copy</a> </td>
+				<td width="10px"> <a class="billing_button hide_element" href="" tabindex="-1" onclick="preventEventPropagation(event); return false;">Copy</a> </td>
 			</tr>
 			<tr id="bill_details<%=i%>" class="bill hide_bill">
 				<td colspan="5">
@@ -918,12 +943,12 @@ if (vecHeader != null && vecHeader.size() > 0) {
 					if (editable) {
 					%>
 						<a class="billing_button" href="" tabindex="-1" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
-						<select name="super_code<%=i%>" class="dropdown" onchange="">
+						<select name="super_code<%=i%>" class="dropdown hide_element" onchange="">
 							<option>1</option>
 							<option>2</option>
 							<option>3</option>
 						</select>
-						<a class="billing_button" href="" tabindex="-1" onclick="">Add Super Code</a>
+						<a class="billing_button hide_element" href="" tabindex="-1" onclick="return false;">Add Super Code</a>
 						
 						SLI Code:
 						<select class="dropdown" name="sli_code<%=i%>" onchange="">
@@ -940,7 +965,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						
 						Admission date:
 						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
-						<img src="../../../images/cal.gif" alt="" id="admission_date<%=i%>_cal">
+						<img src="<%= request.getContextPath() %>/images/cal.gif" alt="" id="admission_date<%=i%>_cal">
 						<script>
 							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y-%m-%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1,
 								onUpdate: 
@@ -1121,12 +1146,12 @@ if (vecHeader != null && vecHeader.size() > 0) {
 	<tr>
 		<td>
 			<a href=# onClick="javascript:history.go(-1);return false;">
-				<img src="images/leftarrow.gif" alt="" border="0" width="25" height="20" align="absmiddle"> Back 
+				<img src="<%= request.getContextPath() %>/images/leftarrow.gif" alt="" border="0" width="25" height="20" align="absmiddle"> Back 
 			</a>
 		</td>
 		<td align="right">
 			<a href="" onClick="self.close();">
-				Close the Window <img src="images/rightarrow.gif" alt="" border="0" width="25" height="20" align="absmiddle">
+				Close the Window <img src="<%= request.getContextPath() %>/images/rightarrow.gif" alt="" border="0" width="25" height="20" align="absmiddle">
 			</a>
 		</td>
 	</tr>
