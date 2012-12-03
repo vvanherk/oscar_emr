@@ -69,7 +69,7 @@ String user_no = (String) session.getAttribute("user");
 
 int nItems=0;
 int firstResult = 0;
-int maxPerPage = -1;
+int maxPerPage = 25;
 int maxPaginationListSize = 10;
 int totalResults = 0;
 int currentPage = 1;
@@ -280,6 +280,8 @@ if("unbilled".equals(action)) {
 
 // handle loading of billed items
 if("billed".equals(action)) {
+	response.sendRedirect("billingONNewReport.jsp?reportAction=" + action + "&providerview=" + providerview + "&xml_vdate=" + xml_vdate + "&xml_appointment_date=" + xml_appointment_date);
+	
 	editable = false;
 	
     vecHeader.add("Service Date");
