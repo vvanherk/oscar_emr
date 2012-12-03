@@ -277,7 +277,9 @@
 			if(paraName != null && paraName.indexOf("|")!=-1)
 				paraName = paraName.substring( 0, paraName.indexOf("|") );
 			
-			String defaultProvider = preference.getBillingProviderDefault();
+			String defaultProvider = null;
+			if (preference != null)
+				defaultProvider = preference.getBillingProviderDefault();
 			if (defaultProvider != null)
 			paraName = (paraName == null || paraName.length() == 0? defaultProvider : paraName);
 			String xml_provider = getDefaultValue(paraName, vecHist, "defaultProvider");
