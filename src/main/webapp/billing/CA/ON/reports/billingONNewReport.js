@@ -7,6 +7,10 @@
  * Setup our hotkeys for the page
  */ 
 document.onkeydown = function(evt) {
+	// fix for Internet Explorer
+	if (!evt)
+		evt = event;
+		
 	if (isShowMoreDetails(evt)) {
 	}
 	
@@ -231,11 +235,13 @@ function isAltKey(evt) {
 }
 
 function isBackspaceKey(evt) {
-	return (evt.keyCode == 8);
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	return (keynum == 8);
 }
 
 function isDeleteKey(evt) {
-	return (evt.keyCode == 46);
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	return (keynum == 46);
 }
 
 /**
@@ -249,35 +255,40 @@ function isShiftKey(evt) {
  * 
  */ 
 function isEnterKey(evt) {
-	return (evt.keyCode == 13);
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	return (keynum == 13);
 }
 
 /**
  * 
  */ 
 function isUpArrowKey(evt) {
-	return (evt.keyCode == 38);
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	return (keynum == 38);
 }
 
 /**
  * 
  */ 
 function isDownArrowKey(evt) {
-	return (evt.keyCode == 40);
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	return (keynum == 40);
 }
 
 /**
  * 
  */ 
 function isTabKey(evt) {
-	return (evt.keyCode == 9 && !evt.shiftKey);
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	return (keynum == 9 && !evt.shiftKey);
 }
 
 /**
  * 
  */ 
 function isEscapeKey(evt) {
-	return (evt.keyCode == 27);
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	return (keynum == 27);
 }
 
 /**
@@ -1359,7 +1370,8 @@ function toggleMoreDetails(billId, demographicNo, appointmentNo) {
  * 
  */ 
 function isShowMoreDetails(evt) {
-	return (evt.keyCode == 113);
+	keynum = (evt.which) ? evt.which : evt.keyCode;	
+	return (keynum == 113);
 }
 
 function showBillNotes(billId) {
