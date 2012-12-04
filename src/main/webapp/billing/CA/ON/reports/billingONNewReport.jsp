@@ -107,6 +107,10 @@ String xml_appointment_date = request.getParameter("xml_appointment_date") == nu
 %>
 
 <%
+String action = request.getParameter("reportAction") == null ? "" : request.getParameter("reportAction");
+%>
+
+<%
 // action
 ArrayList<String> vecHeader = new ArrayList<String>();
 ArrayList<String> vecHeaderWidths = new ArrayList<String>();
@@ -137,7 +141,11 @@ if (billsSubmitted) {
 	numBillsSubmitted = results[1];
 	numBillsSaved = results[2];
 	
-	response.sendRedirect("reports/billingONNewReport.jsp?numBills=" + numBills + "&numBillsSubmitted=" + numBillsSubmitted + "&numBillsSaved=" + numBillsSaved);
+	String getVariables = "?numBills=" + numBills + "&numBillsSubmitted=" + numBillsSubmitted + "&numBillsSaved=" + numBillsSaved;
+	getVariables += "&reportAction=" + action + "&providerview=" + providerview + "&xml_vdate=" + xml_vdate + "&xml_appointment_date=" + xml_appointment_date;
+	getVariables += "&current_page=" + currentPage + "&max_per_page=" + maxPerPage + "&billing_provider=" + billingProvider;
+		
+	response.sendRedirect("reports/billingONNewReport.jsp" + getVariables);
 } else {
 	try {
 		if (request.getParameter("numBills") != null) {
@@ -161,8 +169,6 @@ if (billsSubmitted) {
 
 
 <%
-
-String action = request.getParameter("reportAction") == null ? "" : request.getParameter("reportAction");
 
 // handle loading of unbilled items
 if("unbilled".equals(action)) {
@@ -408,6 +414,8 @@ var appointmentNumbers = new Array(<%
 		%> "<%=vecAppointmentNo.get(i)%>" <%
 	}
 %>);
+
+var fullContextPath = "<%= request.getContextPath() %>/billing/CA/ON/reports";
 
 </script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/billing/CA/ON/reports/billingONNewReport.js"></script>

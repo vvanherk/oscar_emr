@@ -1,6 +1,6 @@
 /**
  * 
- * totalNumberOfBills (int), incrementingId (int), demographicNumbers (Array), and appointmentNumbers (Array) are required for this script.
+ * totalNumberOfBills (int), incrementingId (int), demographicNumbers (Array), appointmentNumbers (Array), and fullContextPath (String) are required for this script.
  */ 
 
 /**
@@ -1884,7 +1884,7 @@ function extractDiagnosticDescription(item){
 function getReferralDoctors(billId, referralDocName) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getReferralDoctorsHandler(billId);
-	AJAX.open("GET", "reports/getReferralDoctors.jsp?full_name="+referralDocName);
+	AJAX.open("GET", fullContextPath + "/getReferralDoctors.jsp?full_name="+referralDocName);
 	AJAX.send("");
 }
 /**
@@ -1893,7 +1893,7 @@ function getReferralDoctors(billId, referralDocName) {
 function getBillsForDemographic(billId, demographicNo) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getBillsHandler(billId);
-	AJAX.open("GET", "reports/getBills.jsp?demographicNo="+demographicNo);
+	AJAX.open("GET", fullContextPath + "/getBills.jsp?demographicNo="+demographicNo);
 	AJAX.send("");
 }
 
@@ -1903,7 +1903,7 @@ function getBillsForDemographic(billId, demographicNo) {
 function getAppointmentNotes(billId, appointmentNo) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getAppointmentNotesHandler(billId);
-	AJAX.open("GET", "reports/getAppointmentNotes.jsp?appointmentNo="+appointmentNo);
+	AJAX.open("GET", fullContextPath + "/getAppointmentNotes.jsp?appointmentNo="+appointmentNo);
 	AJAX.send("");
 }
 
@@ -1913,7 +1913,7 @@ function getAppointmentNotes(billId, appointmentNo) {
 function getBillingCodes(billId, billingItemId, serviceCode) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getBillingCodesHandler(billId, billingItemId);
-	AJAX.open("GET", "reports/getBillingCodes.jsp?serviceCode="+serviceCode);
+	AJAX.open("GET", fullContextPath + "/getBillingCodes.jsp?serviceCode="+serviceCode);
 	AJAX.send("");
 }
 
@@ -1923,6 +1923,6 @@ function getBillingCodes(billId, billingItemId, serviceCode) {
 function getDiagnosticCodes(billId, billingItemId, diagnosticCode, description) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getDiagnosticCodeHandler(billId, billingItemId, diagnosticCode, description);
-	AJAX.open("GET", "reports/getDiagnosticCodes.jsp?diagnosticCode="+diagnosticCode+"&diagnosticDescription="+description);
+	AJAX.open("GET", fullContextPath + "/getDiagnosticCodes.jsp?diagnosticCode="+diagnosticCode+"&diagnosticDescription="+description);
 	AJAX.send("");
 }
