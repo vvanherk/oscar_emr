@@ -491,7 +491,7 @@ function calToday(field) {
 	</tr>
 </table>
 
-<form id="serviceform" name="serviceform" method="post" action="billingONReport.jsp">
+<form id="serviceform" name="serviceform" method="post" action="<%= request.getContextPath() %>/billing/CA/ON/billingONReport.jsp">
 <table width="100%" border="0" bgcolor="#EEEEFF">
 	<tr>
 		<td width="30%" align="center">
@@ -651,7 +651,7 @@ if (showBillSaveStatus) {
 <%
 if (editable) {
 %>
-<form id="submitbillingform" name="submitbillingform" method="post" action="billingONReport.jsp" onsubmit="">
+<form id="submitbillingform" name="submitbillingform" method="post" action="<%= request.getContextPath() %>/billing/CA/ON/billingONReport.jsp" onsubmit="">
 <%
 
 	if (request.getParameter("reportAction") != null) {
