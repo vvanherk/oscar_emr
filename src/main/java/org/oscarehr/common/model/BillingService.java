@@ -34,7 +34,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
@@ -79,8 +78,8 @@ public class BillingService extends AbstractModel<Integer> implements Serializab
 
 	private Boolean gstFlag;
 	private Boolean sliFlag;
-	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
-	@JoinColumn(name="service_code", referencedColumnName="service_code")
+	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER, mappedBy="service_code")
+	//@JoinColumn(name="service_code", referencedColumnName="service_code")
 	@OrderBy("effective_date DESC")
 	private List<BillingPercLimit> billingPercLimit;
 
