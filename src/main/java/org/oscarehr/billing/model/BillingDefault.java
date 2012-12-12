@@ -7,8 +7,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.hibernate.annotations.Type;
-
 import org.oscarehr.common.model.AbstractModel;
 
 @Entity
@@ -25,8 +23,8 @@ public class BillingDefault extends AbstractModel<Integer> {
 	@Column(name="visit_type_no")
 	private String visitTypeNo;
 
-	@Column(name="location_no")
-	private String locationNo;
+	@Column(name="location_id")
+	private Integer locationId;
 	
 	@Column(name="sli_code")
 	private String sliCode;
@@ -36,10 +34,6 @@ public class BillingDefault extends AbstractModel<Integer> {
 	
 	@Column(name="priority")
 	private Integer priority;
-	
-	@Column(name="sli_only_if_required")
-	@Type(type="yes_no")
-	private boolean sliOnlyIfRequired;
 
 	public Integer getId() {
     	return id;
@@ -65,12 +59,12 @@ public class BillingDefault extends AbstractModel<Integer> {
     	this.visitTypeNo = visitTypeNo;
     }
 
-	public String getLocationNo() {
-    	return locationNo;
+	public Integer getLocationId() {
+    	return locationId;
     }
 
-	public void setLocationNo(String locationNo) {
-    	this.locationNo = locationNo;
+	public void setLocationId(Integer locationId) {
+    	this.locationId = locationId;
     }
     
     public String getSliCode() {
@@ -95,14 +89,6 @@ public class BillingDefault extends AbstractModel<Integer> {
 
 	public void setPriority(Integer priority) {
     	this.priority = priority;
-    }
-    
-    public boolean getSliOnlyIfRequired() {
-    	return sliOnlyIfRequired;
-    }
-
-	public void setSliOnlyIfRequired(boolean sliOnlyIfRequired) {
-    	this.sliOnlyIfRequired = sliOnlyIfRequired;
     }
 
 

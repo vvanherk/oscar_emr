@@ -70,12 +70,10 @@ sliCodeHashMap.put( "OTN", bundle.getString("oscar.billing.CA.ON.billingON.OB.SL
 
 ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
 List<ClinicLocation> clinicLocations = clinicLocationDao.getAll();
-String billLocationNo="";
-String billLocation="";
 
-Map<String, String> locationHashMap = new LinkedHashMap<String, String>(); 
+Map<Integer, String> locationHashMap = new LinkedHashMap<Integer, String>(); 
 for (ClinicLocation location : clinicLocations) {
-	locationHashMap.put( location.getClinicLocationNo(), location.getClinicLocationName() );
+	locationHashMap.put( location.getId(), location.getClinicLocationName() );
 }
 
 
@@ -109,7 +107,8 @@ if (request.getParameter("provider") != null) {
 	String billing_default_id = request.getParameter("billing_default_id");
 	Integer billingDefaultId = new Integer( -1 );
 	String provider = request.getParameter("provider");
-	String location = request.getParameter("location");
+	String location_id_as_string = request.getParameter("location");
+	Integer location = new Integer( -1 );
 	String sli_code = request.getParameter("sli_code");
 	String visit_type = request.getParameter("visit_type");
 	String billing_form = request.getParameter("billing_form");
@@ -123,11 +122,19 @@ if (request.getParameter("provider") != null) {
 		}
 	}
 	
+	if (location_id_as_string != null && !location_id_as_string.equals("")) {
+		try {
+			location = new Integer( location_id_as_string );
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Error", e);
+		}
+	}
+	
 	if (billingDefaultId.intValue() != -1) {
 		BillingDefault billingDefault = billingDefaultDao.findById( billingDefaultId );
 		try {
 			billingDefault.setProviderNo( provider );
-			billingDefault.setLocationNo( location );
+			billingDefault.setLocationId( location );
 			billingDefault.setSliCode( sli_code );
 			billingDefault.setVisitTypeNo( visit_type );
 			billingDefault.setBillingFormServiceType( billing_form );
@@ -142,7 +149,7 @@ if (request.getParameter("provider") != null) {
 	} else {
 		BillingDefault billingDefault = new BillingDefault();
 		billingDefault.setProviderNo( provider );
-		billingDefault.setLocationNo( location );
+		billingDefault.setLocationId( location );
 		billingDefault.setSliCode( sli_code );
 		billingDefault.setVisitTypeNo( visit_type );
 		billingDefault.setBillingFormServiceType( billing_form );
@@ -298,11 +305,10 @@ var defaults = new Object();
 		defaults['id']						= <%=billingDefault.getId()%>;
 		defaults['provider_no']				= <%=billingDefault.getproviderNo()%>;
 		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
-		defaults['location_no']				= "<%=billingDefault.getLocationNo()%>";
+		defaults['location_id']				= "<%=billingDefault.getLocationId()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
 		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
-		defaults['sli_only_if_required']	= <%=billingDefault.getSliOnlyIfRequired()%>;
 
 		billingDefaults.push( defaults );
 <%
@@ -371,7 +377,7 @@ var defaults = new Object();
 		elem.val( defaults['provider_no'] ).attr('selected',true);
 		
 		elem = $('select[name="location"]');
-		elem.val( defaults['location_no'] ).attr('selected',true);
+		elem.val( defaults['location_id'] ).attr('selected',true);
 		
 		elem = $('select[name="sli_code"]');
 		elem.val( defaults['sli_code'] ).attr('selected',true);
@@ -387,9 +393,6 @@ var defaults = new Object();
 		
 		elem = $('input[name="billing_default_priority"]');
 		elem.val( defaults['priority'] );
-		
-		elem = $('input[name="sli_only_if_required"]');
-		elem.attr('checked',true);
 	}
 	
 	function saveBillingDefaults(defaults) {
@@ -530,12 +533,12 @@ String visitType = "";
 
 <select name="location" id="location">
 <%
-for (Map.Entry<String, String> entry : locationHashMap.entrySet()) {
-    String key = entry.getKey();
+for (Map.Entry<Integer, String> entry : locationHashMap.entrySet()) {
+    int key = entry.getKey();
     String value = entry.getValue();
 	String strLocation = request.getParameter("xml_location") != null ? request.getParameter("xml_location") : clinicview;
 %>
-	<option value="<%=key%>" <%=strLocation.startsWith(key)?"selected":""%>>
+	<option value="<%=key%>" <%=strLocation.indexOf("|" + key + "|") >= 0?"selected":""%>>
 		<%=value%>
 	</option>
 <% } %>
@@ -581,21 +584,6 @@ for (Map.Entry<String, String> entry : billingFormHashMap.entrySet()) {
 %>
 	
 </select>
-
-
-<br>
-
-<!--
-<span class="title">
-	
-</span>
-
-<input type="checkbox" name="use_sli_if_required" id="use_sli_if_required">
-<span class="small_comment">
-	Only use SLI if required
-</span>
--->
-
 
 </div>
 
@@ -650,7 +638,7 @@ for (Map.Entry<String, String> entry : billingFormHashMap.entrySet()) {
 		<td class="hidden"> <%=billingDefault.getId()%> </td>
         <td> <%=providerHashMap.get( billingDefault.getproviderNo() )%> </td>
         <td> <%=visitTypeHashMap.get( billingDefault.getVisitTypeNo() )%> </td>
-        <td> <%=locationHashMap.get( billingDefault.getLocationNo() )%></td>
+        <td> <%=locationHashMap.get( billingDefault.getLocationId() )%></td>
         <td> <%=sliCodeHashMap.get( billingDefault.getSliCode() )%> </td>
         <td> <%=billingFormHashMap.get( billingDefault.getBillingFormServiceType() )%> </td>
         <td class="hidden"> <%=billingDefault.getPriority()%> </td>

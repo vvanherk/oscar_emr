@@ -38,6 +38,8 @@
 <%@page import="org.oscarehr.decisionSupport.model.DSConsequence" %>
 <%@ page import="org.oscarehr.billing.model.BillingDefault"%>
 <%@ page import="org.oscarehr.billing.dao.BillingDefaultDao"%>
+<%@ page import="org.oscarehr.common.model.ClinicLocation"%>
+<%@ page import="org.oscarehr.common.dao.ClinicLocationDao"%>
 <%
 	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
 	
@@ -68,7 +70,7 @@
 			String clinicNo = oscarVariables.getProperty("clinic_no", "").trim();
 			String visitType = bHospitalBilling ? "02" : oscarVariables.getProperty("visit_type", "");
 
-			if (visitType.startsWith("00") || visitType.equals(""))	clinicview = "0000";
+			if (visitType.startsWith("00") || visitType.equals(""))	clinicview = "0";
 			String appt_no = request.getParameter("appointment_no");
                         String billReferenceDate;
                         if( appt_no != null && appt_no.compareTo("0") == 0 ) {
@@ -308,11 +310,27 @@
                         
 			paraName = request.getParameter("xml_location");
 			String xml_location = getDefaultValue(paraName, vecHist, "clinic_ref_code");
-			xml_location = paraName != null && !"".equals(paraName)? paraName : "0000";                   
+			xml_location = paraName != null && !"".equals(paraName)? paraName : "0";
+			
 			if (!"".equals(xml_location)) {
 				clinicview = xml_location;
 			} else {
 				clinicview = clinicview == null ? "" : clinicview;
+			}
+			
+			// parse the clinic view value to extract the id of the location
+			if (xml_location.indexOf("|") >= 0) {
+				int fromIndex = xml_location.indexOf("|");
+				if (fromIndex < 0)
+					fromIndex = 0;
+				else
+					fromIndex++;
+				
+				int toIndex = xml_location.substring(fromIndex, xml_location.length()).indexOf("|");
+				if (toIndex < 0)
+					toIndex = 2;
+				
+				xml_location = xml_location.substring(fromIndex, fromIndex+toIndex);
 			}
 
 			//Read default clinic_view from oscar.properties file
@@ -1013,12 +1031,11 @@ var defaults = new Object();
 		defaults['id']						= <%=billingDefault.getId()%>;
 		defaults['provider_no']				= <%=billingDefault.getproviderNo()%>;
 		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
-		defaults['location_no']				= "<%=billingDefault.getLocationNo()%>";
+		defaults['location_id']				= "<%=billingDefault.getLocationId()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
 		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
 		defaults['billing_form_name']		= "<%=billingServiceHashMap.get( billingDefault.getBillingFormServiceType().trim() )%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
-		defaults['sli_only_if_required']	= <%=billingDefault.getSliOnlyIfRequired()%>;
 
 		billingDefaults.push( defaults );
 <%
@@ -1044,8 +1061,19 @@ var currentBillingDefault = null;
 			toIndex = providerElem.value.length;		
 		
 		values['provider_no']	= providerElem.value.substring(0, toIndex).trim();
+		
+		
+		var fromIndex = locationElem.value.indexOf("|");
+		if (fromIndex < 0)
+			fromIndex = 0;	
+		toIndex = locationElem.value.substring(fromIndex+1, locationElem.value.length).indexOf("|");
+		if (toIndex < 0)
+			toIndex = 2;
+		
+		values['location_id']	= locationElem.value.substring(fromIndex, toIndex);
+		
+		
 		values['visit_type_no']	= visitTypeElem.value.substring(0,2);
-		values['location_no']	= locationElem.value.substring(0,4);
 		values['sli_code_no']	= sliCodeElem.value.trim();
 		
 		return values;
@@ -1058,19 +1086,12 @@ var currentBillingDefault = null;
 	 * one of the monitored dropdowns (i.e. xml_provider, etc).
 	 */
 	function onBillingDefaultsDropdownChange(element) {
-		var providerElem = document.getElementsByName("xml_provider")[0];
-		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
-		var locationElem = document.getElementsByName("xml_location")[0];
-		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
-		
-		var toIndex = providerElem.value.indexOf("|");
-		if (toIndex < 0)
-			toIndex = providerElem.value.length;
+		var currentValues = getParsedDropdownValues();
 			
-		var provider_no = providerElem.value.substring(0, toIndex);
-		var visit_type_no = visitTypeElem.value.substring(0,2);
-		var location_no = locationElem.value.substring(0,4);
-		var sli_code_no = sliCodeElem.value.trim();
+		var provider_no		= currentValues['provider_no'];
+		var visit_type_no	= currentValues['visit_type_no'];
+		var location_id		= currentValues['location_id'];
+		var sli_code_no		= currentValues['sli_code_no'];
 		
 		if (element.name == 'xml_provider') {
 			var billingDefault = getBillingDefaultByValues( provider_no );
@@ -1085,13 +1106,13 @@ var currentBillingDefault = null;
 		}
 		
 		if (element.name == 'xml_location') {
-			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
 		
 		if (element.name == 'xml_slicode') {
-			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id, sli_code_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
@@ -1107,25 +1128,25 @@ var currentBillingDefault = null;
 			
 		var provider_no		= currentValues['provider_no'];
 		var visit_type_no	= currentValues['visit_type_no'];
-		var location_no		= currentValues['location_no'];
+		var location_id		= currentValues['location_id'];
 		var sli_code_no		= currentValues['sli_code_no'];
 		
 		var billingDefaultsOverride = new Object();
 		<% if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes")) { %>
 		billingDefaultsOverride['provider_no']			= provider_no;
 		billingDefaultsOverride['visit_type_no']		= visit_type_no;
-		billingDefaultsOverride['location_no']			= location_no;
+		billingDefaultsOverride['location_id']			= location_id;
 		billingDefaultsOverride['sli_code']				= sli_code_no;
 		billingDefaultsOverride['billing_form']			= "<%=ctlBillForm%>";
 		billingDefaultsOverride['billing_form_name']	= "<%=billingServiceHashMap.get( ctlBillForm )%>";
 		<% } %>
 		
 		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
-		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
+		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id, sli_code_no );
 		if (billingDefault != undefined) {
 			setBillingDefaults( billingDefault, billingDefaultsOverride );
 		} else {
-			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
+			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id );
 			if (billingDefault != undefined) {
 				setBillingDefaults( billingDefault, billingDefaultsOverride );
 			} else {
@@ -1159,7 +1180,7 @@ var currentBillingDefault = null;
 				} else if (billingDefaults[i]['visit_type_no'] == visit_type) {
 					if (location == undefined) {
 						return billingDefaults[i];
-					} else if (billingDefaults[i]['location_no'] == location) {
+					} else if (billingDefaults[i]['location_id'] == location) {
 						if (sli_code == undefined) {
 							return billingDefaults[i];
 						} else if (billingDefaults[i]['sli_code'] == sli_code) {
@@ -1189,10 +1210,10 @@ var currentBillingDefault = null;
 		}
 		
 		elem = jQuery('select[name="xml_location"]');
-		if (billingDefaultsOverride['location_no'] != undefined) {
-			elem.find( 'option[value^="'+billingDefaultsOverride['location_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['location_id'] != undefined) {
+			elem.find( 'option[value*="|'+billingDefaultsOverride['location_id']+'|"]' ).attr('selected',true);
 		} else {
-			elem.find( 'option[value^="'+defaults['location_no']+'"]' ).attr('selected',true);
+			elem.find( 'option[value*="|'+defaults['location_id']+'|"]' ).attr('selected',true);
 		}
 		
 		elem = jQuery('select[name="xml_slicode"]');
@@ -1230,7 +1251,7 @@ jQuery(document).ready(function() {
 		
 		var tempDefault = new Object();
 		tempDefault['provider_no']			= currentValues['provider_no'];
-		tempDefault['location_no']			= currentValues['location_no'];
+		tempDefault['location_id']			= currentValues['location_id'];
 		tempDefault['sli_code']				= currentValues['sli_code_no'];
 		tempDefault['visit_type_no']		= currentValues['visit_type_no'];
 		//tempDefault['billing_form']		= "<%=ctlBillForm%>";
@@ -1644,19 +1665,21 @@ function changeSite(sel) {
 				    <td><b>Visit Location</b></td>
 				    <td colspan="3">
 					<select name="xml_location"  onChange="onBillingDefaultsDropdownChange(this);">
-<% //
-	    String billLocationNo="", billLocation="";
-	    List lLocation = tdbObj.getFacilty_num();
-	    for (int i = 0; i < lLocation.size(); i = i + 2) {
-		billLocationNo = (String) lLocation.get(i);
-		billLocation = (String) lLocation.get(i + 1);
-		String strLocation = request.getParameter("xml_location") != null ? request.getParameter("xml_location") : clinicview;
+<%
+		ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
+		List<ClinicLocation> clinicLocations = clinicLocationDao.getAll();
+		String strLocation = (xml_location != null? xml_location : clinicview);
+		
+		for (ClinicLocation location : clinicLocations) {
 %>
-					    <option value="<%=billLocationNo + "|" + billLocation%>"
-						    <%=strLocation.startsWith(billLocationNo)?"selected":""%>>
-						<%=billLocation%>
-					    </option>
-<%	    } %>
+						    <option value="<%=location.getClinicLocationNo() + "|" + location.getId() + "|" + location.getClinicLocationName()%>"
+							    <%=strLocation.indexOf(location.getId().intValue() + "") >= 0?"selected":""%>>
+							<%=location.getClinicLocationName()%>
+						    </option>
+<%
+		}
+		
+%>
 					</select> 
 					Manual: <input type="checkbox" name="m_review" value="Y" <%=m_review.equals("Y")?"checked":""%>>
 				    </td>

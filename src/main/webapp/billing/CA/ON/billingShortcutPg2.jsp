@@ -19,6 +19,7 @@
 <%@ page errorPage="errorpage.jsp"
 	import="java.util.*,java.math.*,java.net.*,
                                             java.sql.*, oscar.util.*, oscar.*"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.BillingONDataHelp"%>
 <%@ page import="oscar.oscarBilling.ca.on.pageUtil.*"%>
 <%@ page import="org.apache.commons.lang.StringEscapeUtils"%>
@@ -482,6 +483,25 @@
 				</td>
 				<td valign="top">
 
+<%
+				String xml_location = request.getParameter("xml_location");
+				if (xml_location.indexOf("|") >= 0) {
+					int fromIndex = xml_location.indexOf("|");
+					if (fromIndex < 0)
+						fromIndex = 0;
+					else
+						fromIndex++;
+					
+					fromIndex += xml_location.substring(fromIndex).indexOf("|");
+					if (fromIndex < 0)
+						fromIndex = 0;
+					else
+						fromIndex++;
+					
+					xml_location = xml_location.substring(fromIndex);
+				}
+%>
+
 				<table border="1" cellspacing="2" cellpadding="0" width="100%"
 					bordercolorlight="#99A005" bordercolordark="#FFFFFF"
 					bgcolor="#EEEEFF">
@@ -504,7 +524,7 @@
 					</tr>
 					<tr>
 						<td><b>Visit Location</b></td>
-						<td colspan="3"><%=request.getParameter("xml_location").substring(request.getParameter("xml_location").indexOf("|")+1)%></td>
+						<td colspan="3"><%=xml_location%></td>
 					</tr>
 					<tr>
 					<td><b>SLI Code</b></td>

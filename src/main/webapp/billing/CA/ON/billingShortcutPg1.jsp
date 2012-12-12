@@ -25,6 +25,8 @@
 <%@page import="org.oscarehr.common.model.Provider"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+<%@ page import="org.oscarehr.common.model.ClinicLocation"%>
+<%@ page import="org.oscarehr.common.dao.ClinicLocationDao"%>
 
 <% java.util.Properties oscarVariables = OscarProperties.getInstance(); %>
 <jsp:useBean id="providerBean" class="java.util.Properties"
@@ -258,6 +260,21 @@
   } else {
     clinicview = clinicview==null? "":clinicview;
   }
+  
+  // parse the clinic view value to extract the id of the location
+if (xml_location.indexOf("|") >= 0) {
+	int fromIndex = xml_location.indexOf("|");
+	if (fromIndex < 0)
+		fromIndex = 0;
+	else
+		fromIndex++;
+	
+	int toIndex = xml_location.substring(fromIndex, xml_location.length()).indexOf("|");
+	if (toIndex < 0)
+		toIndex = 2;
+	
+	xml_location = xml_location.substring(fromIndex, fromIndex+toIndex);
+}
 
   String visitdate = null;
   paraName = request.getParameter("xml_vdate");
@@ -613,11 +630,10 @@ var defaults = new Object();
 		defaults['id']						= <%=billingDefault.getId()%>;
 		defaults['provider_no']				= <%=billingDefault.getproviderNo()%>;
 		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
-		defaults['location_no']				= "<%=billingDefault.getLocationNo()%>";
+		defaults['location_id']				= "<%=billingDefault.getLocationId()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
 		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
-		defaults['sli_only_if_required']	= <%=billingDefault.getSliOnlyIfRequired()%>;
 
 		billingDefaults.push( defaults );
 <%
@@ -638,9 +654,17 @@ var currentBillingDefault = null;
 		
 		var values = new Object();
 		
+		var fromIndex = locationElem.value.indexOf("|");
+		if (fromIndex < 0)
+			fromIndex = 0;	
+		toIndex = locationElem.value.substring(fromIndex+1, locationElem.value.length).indexOf("|");
+		if (toIndex < 0)
+			toIndex = 2;
+		
+		values['location_id']	= locationElem.value.substring(fromIndex, toIndex);
+		
 		values['provider_no']	= providerElem.value.trim();
 		values['visit_type_no']	= visitTypeElem.value.substring(0,2);
-		values['location_no']	= locationElem.value.substring(0,4);
 		values['sli_code_no']	= sliCodeElem.value.trim();
 		
 		return values;
@@ -657,7 +681,7 @@ var currentBillingDefault = null;
 			
 		var provider_no		= currentValues['provider_no'];
 		var visit_type_no	= currentValues['visit_type_no'];
-		var location_no		= currentValues['location_no'];
+		var location_id		= currentValues['location_id'];
 		var sli_code_no		= currentValues['sli_code_no'];
 		
 		if (element.name == 'xml_provider') {
@@ -673,13 +697,13 @@ var currentBillingDefault = null;
 		}
 		
 		if (element.name == 'xml_location') {
-			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
 		
 		if (element.name == 'xml_slicode') {
-			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id, sli_code_no );
 			if (billingDefault != undefined)
 				setBillingDefaults( billingDefault );
 		}
@@ -695,24 +719,24 @@ var currentBillingDefault = null;
 			
 		var provider_no		= currentValues['provider_no'];
 		var visit_type_no	= currentValues['visit_type_no'];
-		var location_no		= currentValues['location_no'];
+		var location_id		= currentValues['location_id'];
 		var sli_code_no		= currentValues['sli_code_no'];
 		
 		var billingDefaultsOverride = new Object();
 		<% if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes")) { %>
 		billingDefaultsOverride['provider_no'] = provider_no;
 		billingDefaultsOverride['visit_type_no'] = visit_type_no;
-		billingDefaultsOverride['location_no'] = location_no;
+		billingDefaultsOverride['location_id'] = location_id;
 		billingDefaultsOverride['sli_code'] = sli_code_no;
 		billingDefaultsOverride['billing_form'] = "<%=ctlBillForm%>";
 		<% } %>
 		
 		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
-		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no, sli_code_no );
+		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id, sli_code_no );
 		if (billingDefault != undefined) {
 			setBillingDefaults( billingDefault, billingDefaultsOverride );
 		} else {
-			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_no );
+			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id );
 			if (billingDefault != undefined) {
 				setBillingDefaults( billingDefault, billingDefaultsOverride );
 			} else {
@@ -745,7 +769,7 @@ var currentBillingDefault = null;
 				} else if (billingDefaults[i]['visit_type_no'] == visit_type) {
 					if (location == undefined) {
 						return billingDefaults[i];
-					} else if (billingDefaults[i]['location_no'] == location) {
+					} else if (billingDefaults[i]['location_id'] == location) {
 						if (sli_code == undefined) {
 							return billingDefaults[i];
 						} else if (billingDefaults[i]['sli_code'] == sli_code) {
@@ -776,10 +800,10 @@ var currentBillingDefault = null;
 		}
 		
 		elem = $('select[name="xml_location"]');
-		if (billingDefaultsOverride['location_no'] != undefined) {
-			elem.find( 'option[value^="'+billingDefaultsOverride['location_no']+'"]' ).attr('selected',true);
+		if (billingDefaultsOverride['location_id'] != undefined) {
+			elem.find( 'option[value*="|'+billingDefaultsOverride['location_id']+'|"]' ).attr('selected',true);
 		} else {
-			elem.find( 'option[value^="'+defaults['location_no']+'"]' ).attr('selected',true);
+			elem.find( 'option[value*="|'+defaults['location_id']+'|"]' ).attr('selected',true);
 		}
 		
 		elem = $('select[name="xml_slicode"]');
@@ -804,7 +828,7 @@ var currentBillingDefault = null;
 		if (!isSameBillingForm) {
 			// reload billing form if it is different from previous one
 			var url = "billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
-			var defaults = "xml_visittype=" + defaults['visit_type_no'] + "&xml_location=" + defaults['location_no'] + "&xml_slicode=" + defaults['sli_code'] + "&xml_provider=" + defaults['provider_no'];
+			var defaults = "xml_visittype=" + defaults['visit_type_no'] + "&xml_location=" + defaults['location_id'] + "&xml_slicode=" + defaults['sli_code'] + "&xml_provider=" + defaults['provider_no'];
 			window.location = url + "&" + defaults;
 		}
 	}
@@ -818,7 +842,7 @@ jQuery(document).ready(function() {
 		
 		var tempDefault = new Object();
 		tempDefault['provider_no']			= currentValues['provider_no'];
-		tempDefault['location_no']			= currentValues['location_no'];
+		tempDefault['location_id']			= currentValues['location_id'];
 		tempDefault['sli_code']				= currentValues['sli_code_no'];
 		tempDefault['visit_type_no']		= currentValues['visit_type_no'];
 		tempDefault['billing_form']			= "<%=ctlBillForm%>";
@@ -859,7 +883,7 @@ int ctlCount = 0;
 	<tr bgcolor=<%=ctlCount%2==0 ? "#FFFFFF" : "#EEEEFF"%>>
 		<td colspan="2"><b><font size="-2" color="#7A388D"><a
 			href="#"
-			onClick="showHideLayers('Layer1','','hide');  window.location='billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1&xml_visittype=' + getParsedDropdownValues()['visit_type_no'] + '&xml_location=' + getParsedDropdownValues()['location_no'] + '&xml_slicode=' + getParsedDropdownValues()['sli_code_no'] + '&xml_provider=' + getParsedDropdownValues()['provider_no'];"><%=ctlcodename%></a></font></b></td>
+			onClick="showHideLayers('Layer1','','hide');  window.location='billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1&xml_visittype=' + getParsedDropdownValues()['visit_type_no'] + '&xml_location=' + getParsedDropdownValues()['location_id'] + '&xml_slicode=' + getParsedDropdownValues()['sli_code_no'] + '&xml_provider=' + getParsedDropdownValues()['provider_no'];"><%=ctlcodename%></a></font></b></td>
 	</tr>
 	<%
 }
@@ -1095,18 +1119,23 @@ ctlCount = 0;
 					<tr>
 						<td><b><bean:message key="billing.billingCorrection.msgVisitLocation"/></b></td>
 						<td colspan="3"><select name="xml_location" onChange="onBillingDefaultsDropdownChange(this);">
-							<%
-				for(int i=0; i<vecLocation.size(); i++) {
-					propT = (Properties) vecLocation.get(i);
-					String strLocation = request.getParameter("xml_location")!=null? request.getParameter("xml_location"):clinicview;
-				%>
-							<option
-								value="<%=propT.getProperty("clinic_location_no") + "|" + propT.getProperty("clinic_location_name")%>"
-								<%=strLocation.startsWith(propT.getProperty("clinic_location_no"))?"selected":""%>>
-							<%=propT.getProperty("clinic_location_name")%></option>
-							<%
+							
+<%
+				ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
+				List<ClinicLocation> clinicLocations = clinicLocationDao.getAll();
+				String strLocation = (xml_location != null? xml_location : clinicview);
+				
+				for (ClinicLocation location : clinicLocations) {
+%>
+						    <option value="<%=location.getClinicLocationNo() + "|" + location.getId() + "|" + location.getClinicLocationName()%>"
+							    <%=strLocation.indexOf(location.getId().intValue() + "") >= 0?"selected":""%>>
+							<%=location.getClinicLocationName()%>
+						    </option>
+<%
 				}
-				%>
+		
+%>
+							
 						</select></td>
 					</tr>
 						<%

@@ -425,6 +425,25 @@ window.onload=function(){
 				</td>
 				<td valign="top">
 
+<%
+				String xml_location = request.getParameter("xml_location");
+				if (xml_location.indexOf("|") >= 0) {
+					int fromIndex = xml_location.indexOf("|");
+					if (fromIndex < 0)
+						fromIndex = 0;
+					else
+						fromIndex++;
+					
+					fromIndex += xml_location.substring(fromIndex).indexOf("|");
+					if (fromIndex < 0)
+						fromIndex = 0;
+					else
+						fromIndex++;
+					
+					xml_location = xml_location.substring(fromIndex);
+				}
+%>
+
 				<table border="1" cellspacing="2" cellpadding="0" width="100%" bordercolorlight="#99A005" bordercolordark="#FFFFFF"
 					 class="myGreen">
 					<tr>
@@ -447,8 +466,7 @@ window.onload=function(){
 					</tr>
 					<tr>
 						<td><b>Visit Location</b></td>
-						<td><%=request.getParameter("xml_location").substring(
-							request.getParameter("xml_location").indexOf("|") + 1)%> &nbsp;
+						<td><%=xml_location%> &nbsp;
 							<% if(request.getParameter("m_review")!=null) { out.println("<b>Manual: Y</b>"); } %>
 							</td>
 					
