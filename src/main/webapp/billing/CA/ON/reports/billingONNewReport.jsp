@@ -485,9 +485,9 @@ function calToday(field) {
 </script>
 </head>
 
-<body bgcolor="#FFFFFF" text="#000000" style="margin: 0 0 0">
+<body text="#000000" style="margin: 0 0 0">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
-	<tr bgcolor="#CCCCFF">
+	<tr bgcolor="#aabcfe">
 		<td width="5%"></td>
 		<td width="80%" align="left">
 		<p><b><font face="Verdana, Arial" color="#FFFFFF" size="3"><a
@@ -500,7 +500,7 @@ function calToday(field) {
 </table>
 
 <form id="serviceform" name="serviceform" method="post" action="<%= request.getContextPath() %>/billing/CA/ON/billingONReport.jsp">
-<table width="100%" border="0" bgcolor="#EEEEFF">
+<table width="100%" border="0" bgcolor="#b9c9fe">
 	<tr>
 		<td width="30%" align="center">
 			<font size="2"> 

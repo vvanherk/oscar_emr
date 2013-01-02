@@ -110,6 +110,10 @@ background-image: url('validation.png');
 
 
 
+body {
+	
+}
+
 .clear {
 	clear: both;
 }
@@ -132,11 +136,11 @@ background-image: url('validation.png');
 	-moz-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
 	-webkit-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
 	box-shadow:inset 0px 1px 0px 0px #bbdaf7;
-	background-color:#b9c9fe;
+	background-color:#5077BE;
 	-moz-border-radius:6px;
 	-webkit-border-radius:6px;
 	border-radius:6px;
-	border:1px solid #84bbf3;
+	border:1px solid #5077BE;
 	display:inline-block;
 	color:#ffffff;
 	font-family:arial;
@@ -148,7 +152,7 @@ background-image: url('validation.png');
 	cursor:pointer;
 }
 .billing_button:hover {
-	background-color:#aabcfe;
+	background-color:#6495ED;
 }
 .billing_button:active {
 	position:relative;
@@ -159,11 +163,11 @@ background-image: url('validation.png');
 	-moz-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
 	-webkit-box-shadow:inset 0px 1px 0px 0px #bbdaf7;
 	box-shadow:inset 0px 1px 0px 0px #bbdaf7;
-	background-color:#b9c9fe;
+	background-color:#5077BE;
 	-moz-border-radius:6px;
 	-webkit-border-radius:6px;
 	border-radius:6px;
-	border:1px solid #84bbf3;
+	border:1px solid #5077BE;
 	display:inline-block;
 	color:#ffffff;
 	font-family:arial;
@@ -174,7 +178,7 @@ background-image: url('validation.png');
 	text-shadow:1px 1px 0px #528ecc;
 }
 .dropdown:hover {
-	background-color:#aabcfe;
+	background-color:#5077BE;
 }
 
 .checkbox {
