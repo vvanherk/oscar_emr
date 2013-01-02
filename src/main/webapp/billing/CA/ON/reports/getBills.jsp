@@ -56,10 +56,10 @@ if (!isValidId(appointmentNo)) {
 
 	Date startDate = calendar.getTime();
 	
-	MiscUtils.getLogger().info("startDate: " + startDate);
-	MiscUtils.getLogger().info("endDate: " + endDate);
+	//MiscUtils.getLogger().info("startDate: " + startDate);
+	//MiscUtils.getLogger().info("endDate: " + endDate);
 	
-	bills = billingClaimDAO.getInvoices(demographicNo, startDate, endDate);
+	bills = billingClaimDAO.getInvoicesByDemographic(demographicNo, startDate, endDate);
 } else {
 	bills = billingClaimDAO.getInvoices(demographicNo, appointmentNo);
 }
