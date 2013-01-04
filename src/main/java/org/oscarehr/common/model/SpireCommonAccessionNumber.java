@@ -4,17 +4,23 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 
 @Entity
 @Table(name="spireCommonAccessionNumber")
 public class SpireCommonAccessionNumber extends AbstractModel<Integer> {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 	@Column(name="caccn")
 	private String caccn;
-	@Column(name="uaccn_id")
-	private Integer uaccn_id;
+	@ManyToOne
+    @JoinColumn(name="uaccn_id", referencedColumnName="uaccn")
+	private SpireAccessionNumberMap accnMap;
 
 	//@Override
 	public Integer getId() {
@@ -33,12 +39,13 @@ public class SpireCommonAccessionNumber extends AbstractModel<Integer> {
 		this.caccn = caccn;
 	}
 	
+	
 	public Integer getUniqueAccessionId() {
-	    return uaccn_id;
+	    return accnMap.getUniqueAccessionNumber();
     }
 
-	public void setUniqueAccessionId(Integer uaccn_id) {
-		this.uaccn_id = uaccn_id;
+	public void setSpireAccessionNumberMap(SpireAccessionNumberMap accnMap) {
+		this.accnMap = accnMap;
 	}
 
 

@@ -12,19 +12,30 @@ import javax.persistence.PostPersist;
 import javax.persistence.JoinColumn;
 import javax.persistence.CascadeType;
 import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 
 @Entity
 @Table(name="spireAccessionNumberMap")
 public class SpireAccessionNumberMap extends AbstractModel<Integer> {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
 	@Column(name="uaccn")
-	private String uaccn;
+	private Integer uaccn;
 	
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
     @JoinColumn(name="uaccn_id", referencedColumnName="id")
 	private List<SpireCommonAccessionNumber> commonAccessionNumbers;
+
+	public SpireAccessionNumberMap() {
+	}
+	
+	public SpireAccessionNumberMap(Integer uniqueAccn) {
+		this.uaccn = uniqueAccn;
+	}
+	
 
 	//@Override
 	public Integer getId() {
@@ -35,11 +46,11 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
     	this.id = id;
     }	
 	
-	public String getUniqueAccessionNumber() {
+	public Integer getUniqueAccessionNumber() {
 	    return uaccn;
     }
 
-	public void setUniqueAccessionNumber(String uaccn) {
+	public void setUniqueAccessionNumber(Integer uaccn) {
 		this.uaccn = uaccn;
 	}
 	
@@ -48,12 +59,12 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
     }
     
     @PostPersist
-    public void postPersist() {        
+    public void postPersist() {
         Iterator<SpireCommonAccessionNumber> i = this.commonAccessionNumbers.iterator();
         SpireCommonAccessionNumber commonAccessionNumber;
         while(i.hasNext()) {
             commonAccessionNumber = i.next();
-            commonAccessionNumber.setUniqueAccessionId(id);         
+            commonAccessionNumber.setSpireAccessionNumberMap(this);         
         }
     }
 

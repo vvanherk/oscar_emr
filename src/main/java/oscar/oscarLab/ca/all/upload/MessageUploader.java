@@ -196,11 +196,18 @@ public final class MessageUploader {
 				
 				if (isSpire) {
 					// we need to add a mapping from the 'common' accession number to the 'unique' accession number for spire labs
-					String uniqueAccn = ((SpireHandler)h).getUniqueAccessionNum();
+					String uniqueAccnAsString = ((SpireHandler)h).getUniqueAccessionNum();
 					String accn = h.getAccessionNum();
 					
-					SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
-					accnDao.add( uniqueAccn, accn );
+					logger.info("unique: " + uniqueAccnAsString + " 'normal': " + accn);
+					
+					try {
+						Integer uniqueAccn = Integer.parseInt(uniqueAccnAsString);
+						SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
+						accnDao.add( uniqueAccn, accn );
+					} catch (Exception e) {
+						logger.error("Unable to parse Spire Unique Accession number from String to int.", e);
+					}
 				}
 			}
 

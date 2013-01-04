@@ -629,22 +629,25 @@ public class DmsInboxManageAction extends DispatchAction {
 		
 		// get accession number mappings for spire labs
 		SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
-		List<SpireAccessionNumberMap> accnsMap = accnDao.getFromCommonAccessionNumbers(accns);
+		List<Integer> uaccns = accnDao.getUniqueAccessionNumbers(accns);
+		List<SpireAccessionNumberMap> accnsMap = accnDao.getFromUniqueAccessionNumbers(uaccns);
 		
 		// add non-spire labs to the collapsed lab list
 		for (LabResultData data : labdocs) {
 			boolean found = false;
-			for (SpireAccessionNumberMap map : accnsMap) {
-				List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
-				for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
-					if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
-						found = true;
-						break;
+			if (accnsMap != null) {
+				for (SpireAccessionNumberMap map : accnsMap) {
+					List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+					for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+						if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+							found = true;
+							break;
+						}
 					}
+					
+					if (found)
+						break;
 				}
-				
-				if (found)
-					break;
 			}
 			
 			// Add the Lab Result to the collapsed list if it isn't a spire lab
@@ -653,21 +656,23 @@ public class DmsInboxManageAction extends DispatchAction {
 			}	
 		}
 		
-		// Add only a single Spire lab to the collapsed lab list for any given unique spire accession number
-		for (SpireAccessionNumberMap map : accnsMap) {
-			List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
-			
-			LabResultData addedData = null;
-			// Only add one spire lab 'LabResultData' for each unique accession number
-			for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
-				for (LabResultData data : labdocs) {
-					if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
-						if (addedData == null) {
-							collapsedLabdocs.add(data);
-							addedData = data;
-						} else {
-							if (data.isAbnormal())
-								addedData.setIsAbnormal(true);
+		if (accnsMap != null) {
+			// Add only a single Spire lab to the collapsed lab list for any given unique spire accession number
+			for (SpireAccessionNumberMap map : accnsMap) {
+				List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+				
+				LabResultData addedData = null;
+				// Only add one spire lab 'LabResultData' for each unique accession number
+				for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+					for (LabResultData data : labdocs) {
+						if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+							if (addedData == null) {
+								collapsedLabdocs.add(data);
+								addedData = data;
+							} else {
+								if (data.isAbnormal())
+									addedData.setIsAbnormal(true);
+							}
 						}
 					}
 				}

@@ -238,6 +238,7 @@ class Lines {
 public class SpireHandler implements MessageHandler {
     
     ORU_R01 msg = null;
+    String originalMessage = null;
     Logger logger = Logger.getLogger(SpireHandler.class);
     
     /** Creates a new instance of SpireHandler */
@@ -250,6 +251,8 @@ public class SpireHandler implements MessageHandler {
         ModelClassFactory cmf = new CustomModelClassFactory("oscar.oscarLab.ca.all.spireHapiExt");
 		PipeParser p = new PipeParser(cmf);
         p.setValidationContext(new NoValidation());
+        
+        originalMessage = hl7Body;
         
         msg = (ORU_R01) p.parse(hl7Body.replaceAll( "\n", "\r\n" ));
     }
@@ -851,11 +854,14 @@ public class SpireHandler implements MessageHandler {
 			} 
 			// otherwise, parse by extracting the accession number using the message string
 			else {
-				String messageAsString = msg.toString();
+				String messageAsString = originalMessage.toString();
 				int accnIndex1 = messageAsString.indexOf("^HNA_ACCN~");
 				int accnIndex2 = messageAsString.indexOf("^HNA_", Math.max(accnIndex1+1, 0));
 				
+				logger.info("parsing1: " + accnIndex1 + " " + accnIndex2);
+				
 				if (accnIndex1 < 0 || accnIndex2 <= 0) {
+					logger.info("parsing2 (NUTS): " + messageAsString);
 					// if we can't pull out the unique accession number, just use the regular one
 					uniqueAccn = getAccessionNum();
 				}
