@@ -204,7 +204,7 @@ public final class MessageUploader {
 					try {
 						Integer uniqueAccn = Integer.parseInt(uniqueAccnAsString);
 						SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
-						accnDao.add( uniqueAccn, accn );
+						accnDao.add( uniqueAccn, accn, hl7TextInfo.getLabNumber() );
 					} catch (Exception e) {
 						logger.error("Unable to parse Spire Unique Accession number from String to int.", e);
 					}

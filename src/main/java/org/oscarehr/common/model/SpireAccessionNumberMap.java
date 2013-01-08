@@ -1,6 +1,7 @@
 package org.oscarehr.common.model;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import javax.persistence.Column;
@@ -8,7 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.OneToMany;
-import javax.persistence.PostPersist;
+import javax.persistence.PrePersist;
 import javax.persistence.JoinColumn;
 import javax.persistence.CascadeType;
 import javax.persistence.FetchType;
@@ -22,12 +23,13 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
+	
 	@Column(name="uaccn")
 	private Integer uaccn;
 	
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
-    @JoinColumn(name="uaccn_id", referencedColumnName="id")
-	private List<SpireCommonAccessionNumber> commonAccessionNumbers;
+    @JoinColumn(name="map_id", referencedColumnName="id")
+	private List<SpireCommonAccessionNumber> commonAccessionNumbers = new ArrayList<SpireCommonAccessionNumber>();
 
 	public SpireAccessionNumberMap() {
 	}
@@ -35,7 +37,6 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
 	public SpireAccessionNumberMap(Integer uniqueAccn) {
 		this.uaccn = uniqueAccn;
 	}
-	
 
 	//@Override
 	public Integer getId() {
@@ -58,13 +59,13 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
 	    return commonAccessionNumbers;
     }
     
-    @PostPersist
-    public void postPersist() {
+    @PrePersist
+    public void prePersist() {
         Iterator<SpireCommonAccessionNumber> i = this.commonAccessionNumbers.iterator();
         SpireCommonAccessionNumber commonAccessionNumber;
         while(i.hasNext()) {
             commonAccessionNumber = i.next();
-            commonAccessionNumber.setSpireAccessionNumberMap(this);         
+            commonAccessionNumber.setAccessionNumberMap(this);         
         }
     }
 

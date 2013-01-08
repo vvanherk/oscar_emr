@@ -16,11 +16,19 @@ public class SpireCommonAccessionNumber extends AbstractModel<Integer> {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Integer id;
+	
 	@Column(name="caccn")
 	private String caccn;
+	
+	@Column(name="lab_no")
+	private Integer lab_no;
+	
 	@ManyToOne
-    @JoinColumn(name="uaccn_id", referencedColumnName="uaccn")
-	private SpireAccessionNumberMap accnMap;
+    @JoinColumn(name="map_id", referencedColumnName="id")
+	private SpireAccessionNumberMap map;
+	
+	
+	
 
 	//@Override
 	public Integer getId() {
@@ -39,14 +47,19 @@ public class SpireCommonAccessionNumber extends AbstractModel<Integer> {
 		this.caccn = caccn;
 	}
 	
-	
-	public Integer getUniqueAccessionId() {
-	    return accnMap.getUniqueAccessionNumber();
+	public Integer getLabNo() {
+	    return lab_no;
     }
 
-	public void setSpireAccessionNumberMap(SpireAccessionNumberMap accnMap) {
-		this.accnMap = accnMap;
+	public void setLabNo(Integer lab_no) {
+		this.lab_no = lab_no;
 	}
-
-
+	
+	public Integer getUniqueAccessionId() {
+	    return map.getUniqueAccessionNumber();
+    }
+    
+    public void setAccessionNumberMap(SpireAccessionNumberMap map) {
+	    this.map = map;
+    }
 }

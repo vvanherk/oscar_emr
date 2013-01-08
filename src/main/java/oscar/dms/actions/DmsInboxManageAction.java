@@ -629,8 +629,9 @@ public class DmsInboxManageAction extends DispatchAction {
 		
 		// get accession number mappings for spire labs
 		SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
-		List<Integer> uaccns = accnDao.getUniqueAccessionNumbers(accns);
-		List<SpireAccessionNumberMap> accnsMap = accnDao.getFromUniqueAccessionNumbers(uaccns);
+		//List<Integer> accnMapIds = accnDao.getAccessionNumberMapIds(accns);
+		//List<SpireAccessionNumberMap> accnsMap = accnDao.getFromAccessionNumberMapIds(accnMapIds);
+		List<SpireAccessionNumberMap> accnsMap = accnDao.getFromCommonAccessionNumbers(accns);
 		
 		// add non-spire labs to the collapsed lab list
 		for (LabResultData data : labdocs) {
