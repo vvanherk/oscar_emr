@@ -30,16 +30,28 @@ import org.apache.log4j.Logger;
 
 import oscar.util.UtilDateUtilities;
 
+import oscar.SxmlMisc;
+
 public class JdbcBillingRAImpl {
 	private static final Logger _logger = Logger.getLogger(JdbcBillingRAImpl.class);
 	BillingONDataHelp dbObj = new BillingONDataHelp();
 
 	public int addOneRADtRecord(BillingRAData val) {
 		int retval = 0;
-		String sql = "insert into radetail values(\\N, " + " " + val.raheader_no + " ," + "'" + val.providerohip_no
-				+ "'," + "'" + val.billing_no + "'," + "'" + val.service_code + "'," + "'" + val.service_count + "',"
-				+ "'" + val.hin + "'," + "'" + val.amountclaim + "'," + "'" + val.amountpay + "'," + "'"
-				+ val.service_date + "'," + "'" + val.error_code + "'," + "'" + val.billtype + "','" + val.claim_no + "')";
+		String sql = "insert into radetail values(\\N, " 
+				+ " " + val.raheader_no + " ," 
+				+ "'" + val.providerohip_no + "'," 
+				+ "'" + val.billing_no + "'," 
+				+ "'" + val.provider_group_billing_no + "'," 
+				+ "'" + val.service_code + "'," 
+				+ "'" + val.service_count + "',"
+				+ "'" + val.hin + "'," 
+				+ "'" + val.amountclaim + "'," 
+				+ "'" + val.amountpay + "'," 
+				+ "'" + val.service_date + "'," 
+				+ "'" + val.error_code + "'," 
+				+ "'" + val.billtype + "'," 
+				+ "'" + val.claim_no + "')";
 		_logger.info("addOneRADtRecord(sql = " + sql + ")");
 		retval = dbObj.saveBillingRecord(sql);
 
@@ -71,7 +83,7 @@ public class JdbcBillingRAImpl {
 
 	public boolean importRAFile(String filePathName) throws Exception {
 		String filename = "", header = "", headerCount = "", total = "", paymentdate = "", payable = "", totalStatus = "", deposit = "";
-		String transactiontype = "", providerno = "", specialty = "", account = "", patient_last = "", patient_first = "", newhin = "", hin = "", ver = "", billtype = "", location = "";
+		String transactiontype = "", providerno = "", specialty = "", account = "", groupBillingNo="", patient_last = "", patient_first = "", newhin = "", hin = "", ver = "", billtype = "", location = "";
 		String servicedate = "", serviceno = "", servicecode = "", amountsubmit = "", amountpay = "", amountpaysign = "", explain = "";
 		String balancefwd = "", abf_ca = "", abf_ad = "", abf_re = "", abf_de = "";
 		String transaction = "", trans_code = "", cheque_indicator = "", trans_date = "", trans_amount = "", trans_message = "";
@@ -104,6 +116,7 @@ public class JdbcBillingRAImpl {
 				headerCount = nextline.substring(2, 3);
 
 				if (headerCount.compareTo("1") == 0) {
+					groupBillingNo = nextline.substring(7,11);
 					paymentdate = nextline.substring(21, 29);
 					payable = nextline.substring(29, 59);
 					total = nextline.substring(59, 68);
@@ -161,8 +174,12 @@ public class JdbcBillingRAImpl {
 						// param[6] = "N";
 						// param[7] = nowDate;
 						// param[8] = "<xml_cheque>" + total + "</xml_cheque>";
-						sql = "insert into raheader values('\\N','" + filename + "','" + paymentdate + "','"
-								+ StringEscapeUtils.escapeSql(payable) + "','" + total + "','0','0','N', '"
+						sql = "insert into raheader values("
+								+ "'\\N','"
+								+ filename + "','" 
+								+ paymentdate + "','"
+								+ StringEscapeUtils.escapeSql(payable) + "','" 
+								+ total + "','0','0','N', '"
 								+ UtilDateUtilities.DateToString(UtilDateUtilities.now(), "yyyy/MM/dd") + "','"
 								+ "<xml_cheque>" + total + "</xml_cheque>" + "')";
 						raNo = "" + dbObj.saveBillingRecord(sql);
@@ -274,9 +291,20 @@ public class JdbcBillingRAImpl {
 						// param4[8] = servicedate;
 						// param4[9] = explain;
 						// param4[10] = billtype;
-						sql = "insert into radetail values('\\N'," + raNo + ",'" + providerno + "'," + account + ",'"
-								+ servicecode + "','" + serviceno + "','" + newhin + "','" + amountsubmit + "','"
-								+ amountpaysign + amountpay + "','" + servicedate + "','" + explain + "','" + billtype + "','" + claimno
+						sql = "insert into radetail values('\\N'," 
+								+ raNo + ",'" 
+								+ providerno + "'," 
+								+ account + ",'"
+								+ groupBillingNo + "','"
+								+ servicecode + "','" 
+								+ serviceno + "','" 
+								+ newhin + "','" 
+								+ amountsubmit + "','"
+								+ amountpaysign + amountpay + "','" 
+								+ servicedate + "','" 
+								+ explain + "','" 
+								+ billtype + "','" 
+								+ claimno
 								+ "')";
 						int rowsAffected3 = dbObj.saveBillingRecord(sql);
 						// {"save_radt", "insert into radetail
@@ -471,13 +499,42 @@ public class JdbcBillingRAImpl {
 
 	public List getProviderListFromRAReport(String id) {
 		List ret = new Vector();
-		String sql = "select r.providerohip_no, p.last_name,p.first_name from radetail r, provider p "
-				+ "where p.ohip_no=r.providerohip_no and r.raheader_no=" + id + " group by r.providerohip_no";
+		String sql = "select p.provider_no, r.providerohip_no, p.last_name,p.first_name, p.comments from radetail r, provider p "
+				+ "where p.ohip_no=r.providerohip_no "
+				+ "and ExtractValue(p.comments, '/xml_p_billinggroup_no')=r.provider_group_billing_no and r.raheader_no=" + id + " "
+				+ "group by p.provider_no";
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
 		try {
 			while (rsdemo.next()) {
 				Properties prop = new Properties();
+				prop.setProperty("provider_no", rsdemo.getString("provider_no"));
 				prop.setProperty("providerohip_no", rsdemo.getString("providerohip_no"));
+				prop.setProperty("providergroup_billing_no", SxmlMisc.getXmlContent(rsdemo.getString("comments"),"<xml_p_billinggroup_no>","</xml_p_billinggroup_no>"));
+				prop.setProperty("last_name", rsdemo.getString("last_name"));
+				prop.setProperty("first_name", rsdemo.getString("first_name"));
+				ret.add(prop);
+			}
+			rsdemo.close();
+		} catch (SQLException e) {
+			_logger.error("getProviderListFromRAReport(sql = " + sql + ")");
+		}
+		return ret;
+	}
+	
+	public List getProviderListFromRAErrorReport(String id) {
+		List ret = new Vector();
+		String sql = "select p.provider_no, r.providerohip_no, p.last_name,p.first_name, p.comments from radetail r, provider p "
+				+ "where p.ohip_no=r.providerohip_no "
+				+ "and ExtractValue(p.comments, '/xml_p_billinggroup_no')=r.provider_group_billing_no and r.raheader_no=" + id + " "
+				+ "and error_code<>'' and error_code not in('I2') "
+				+ "group by p.provider_no";
+		ResultSet rsdemo = dbObj.searchDBRecord(sql);
+		try {
+			while (rsdemo.next()) {
+				Properties prop = new Properties();
+				prop.setProperty("provider_no", rsdemo.getString("provider_no"));
+				prop.setProperty("providerohip_no", rsdemo.getString("providerohip_no"));
+				prop.setProperty("providergroup_billing_no", SxmlMisc.getXmlContent(rsdemo.getString("comments"),"<xml_p_billinggroup_no>","</xml_p_billinggroup_no>"));
 				prop.setProperty("last_name", rsdemo.getString("last_name"));
 				prop.setProperty("first_name", rsdemo.getString("first_name"));
 				ret.add(prop);
@@ -489,11 +546,16 @@ public class JdbcBillingRAImpl {
 		return ret;
 	}
 
-	public List getRAErrorReport(String raNo, String providerOhipNo, String notErrorCode) {
+	public List getRAErrorReport(String raNo, String providerOhipNo, String providerGroupBillingNo, String notErrorCode) {
+		String providerGroupBillingConditional = "";
+		if (providerGroupBillingNo != null)
+			providerGroupBillingConditional = " and provider_group_billing_no = '" + providerGroupBillingNo + "'";
+		
 		List ret = new Vector();
-		String sql = "select * from radetail where raheader_no=" + raNo + " and providerohip_no='" + providerOhipNo
-				+ "' and error_code<>'' and error_code not in(" + notErrorCode + ") ";
-		// _logger.info("getRAErrorReport(sql = " + sql + ")");
+		String sql = "select * from radetail where raheader_no=" + raNo + " and providerohip_no='" + providerOhipNo + "'"
+				+ providerGroupBillingConditional
+				+ " and error_code<>'' and error_code not in(" + notErrorCode + ") ";
+		 _logger.info("getRAErrorReport(sql = " + sql + ")");
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
 		try {
 			while (rsdemo.next()) {
@@ -612,11 +674,15 @@ public class JdbcBillingRAImpl {
 		return ret;
 	}
 
-	public List getRASummary(String id, String providerOhipNo) {
+	public List getRASummary(String id, String providerOhipNo, String providerGroupBillingNo) {
+		String providerGroupBillingConditional = "";
+		if (providerGroupBillingNo != null)
+			providerGroupBillingConditional = " and provider_group_billing_no = '" + providerGroupBillingNo + "'";
+		
 		List ret = new Vector();
 		String sql = "select billing_no, service_count, error_code, amountclaim, service_code,service_date, "
 				+ "providerohip_no, amountpay, hin from radetail where raheader_no= " + id + " and providerohip_no ="
-				+ providerOhipNo;
+				+ providerOhipNo + providerGroupBillingConditional;
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
 		try {
 			while (rsdemo.next()) {
@@ -688,10 +754,15 @@ public class JdbcBillingRAImpl {
 		return ret;
 	}
 
-	public List getRAError35(String id, String providerOhipNo, String codes) {
+	public List getRAError35(String id, String providerOhipNo, String providerGroupBillingNo, String codes) {
+		String providerGroupBillingConditional = "";
+		if (providerGroupBillingNo != null)
+			providerGroupBillingConditional = " and provider_group_billing_no = '" + providerGroupBillingNo + "'";
+		
 		List ret = new Vector();
 		String sql = "select distinct billing_no from radetail where raheader_no=" + id + " and providerohip_no='"
-				+ providerOhipNo + "' and error_code not in (" + codes + ")";
+				+ providerOhipNo + "' " + providerGroupBillingConditional
+				+ " and error_code not in (" + codes + ")";
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
 		try {
 			while (rsdemo.next()) {
@@ -704,10 +775,15 @@ public class JdbcBillingRAImpl {
 		return ret;
 	}
 
-	public List getRANoError35(String id, String providerOhipNo, String codes) {
+	public List getRANoError35(String id, String providerOhipNo, String providerGroupBillingNo, String codes) {
+		String providerGroupBillingConditional = "";
+		if (providerGroupBillingNo != null)
+			providerGroupBillingConditional = " and provider_group_billing_no = '" + providerGroupBillingNo + "'";
+		
 		List ret = new Vector();
 		String sql = "select distinct billing_no from radetail where raheader_no=" + id + " and providerohip_no='"
-				+ providerOhipNo + "' and error_code in (" + codes + ")";
+				+ providerOhipNo + "' " + providerGroupBillingConditional
+				+ " and error_code in (" + codes + ")";
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
 		try {
 			while (rsdemo.next()) {

@@ -35,9 +35,14 @@ public class BillingRAPrep {
 		List ret = dbObj.getProviderListFromRAReport(raNo);
 		return ret;
 	}
+	
+	public List getProviderListFromRAErrorReport(String raNo) {
+		List ret = dbObj.getProviderListFromRAErrorReport(raNo);
+		return ret;
+	}
 
-	public List getRAErrorReport(String raNo, String providerOhipNo, String notErrorCode) {
-		List ret = dbObj.getRAErrorReport(raNo, providerOhipNo, notErrorCode);
+	public List getRAErrorReport(String raNo, String providerOhipNo, String providerGroupBillingNo, String notErrorCode) {
+		List ret = dbObj.getRAErrorReport(raNo, providerOhipNo, providerGroupBillingNo, notErrorCode);
 		return ret;
 	}
 
@@ -46,13 +51,13 @@ public class BillingRAPrep {
 		return ret;
 	}
 
-        public List getRASummary(String raNo, String providerOhipNo, List OBbilling_no, List CObilling_no) {
-	   return getRASummary(raNo, providerOhipNo, OBbilling_no, CObilling_no,null); 
+        public List getRASummary(String raNo, String providerOhipNo, String providerGroupBillingNo, List OBbilling_no, List CObilling_no) {
+	   return getRASummary(raNo, providerOhipNo, providerGroupBillingNo, OBbilling_no, CObilling_no,null); 
         }
         
-	public List getRASummary(String raNo, String providerOhipNo, List OBbilling_no, List CObilling_no,Map map) {
+	public List getRASummary(String raNo, String providerOhipNo, String providerGroupBillingNo, List OBbilling_no, List CObilling_no,Map map) {
 		List rett = new Vector();
-		List ret = dbObj.getRASummary(raNo, providerOhipNo);
+		List ret = dbObj.getRASummary(raNo, providerOhipNo, providerGroupBillingNo);
 		double dCFee = 0.0;
 		double dPFee = 0.0;
 		BigDecimal BigCTotal = new BigDecimal(0.).setScale(2, BigDecimal.ROUND_HALF_UP);
@@ -195,11 +200,11 @@ public class BillingRAPrep {
 		return rett;
 	}
 
-	public List getRANoErrorBill(String raNo, String providerOhipNo, String noErrorCodes, String errorCodes) {
+	public List getRANoErrorBill(String raNo, String providerOhipNo, String providerGroupBillingNo, String noErrorCodes, String errorCodes) {
 		List ret = new Vector();
-		List errorBill = dbObj.getRAError35(raNo, providerOhipNo, errorCodes); // !=i2,
+		List errorBill = dbObj.getRAError35(raNo, providerOhipNo, providerGroupBillingNo, errorCodes); // !=i2,
 																				// ...
-		List noErrorBill = dbObj.getRAError35(raNo, providerOhipNo, noErrorCodes); // =
+		List noErrorBill = dbObj.getRAError35(raNo, providerOhipNo, providerGroupBillingNo, noErrorCodes); // =
 																					// I2,
 																					// ...
 		for (int i = 0; i < noErrorBill.size(); i++) {

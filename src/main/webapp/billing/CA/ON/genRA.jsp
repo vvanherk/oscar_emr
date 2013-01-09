@@ -57,7 +57,7 @@ Properties propRt = new Properties();
 String nowDate = UtilDateUtilities.DateToString(UtilDateUtilities.now(), "yyyy/MM/dd"); 
 
 String filepath="", filename = "", header="", headerCount="", total="", paymentdate="", payable="", totalStatus="", deposit=""; //request.getParameter("filename");
-String transactiontype="", providerno="", specialty="", account="", patient_last="", patient_first="", provincecode="", newhin="", hin="", ver="", billtype="", location="";
+String transactiontype="", providerno="", specialty="", account="", groupBillingNo="", patient_last="", patient_first="", provincecode="", newhin="", hin="", ver="", billtype="", location="";
 String servicedate="", serviceno="", servicecode="", amountsubmit="", amountpay="", amountpaysign="", explain="", error="";
 String proFirst="", proLast="", demoFirst="", demoLast="", apptDate="", apptTime="", checkAccount="", strcount="", strtCount="";
 String balancefwd="",abf_ca="", abf_ad="",abf_re="",abf_de="";
@@ -86,6 +86,7 @@ if(!filename.equals("")) {
 			headerCount = nextline.substring(2,3);
 	
 			if (headerCount.compareTo("1") == 0){
+				groupBillingNo = nextline.substring(7,11);
 				paymentdate = nextline.substring(21,29);
 				payable = nextline.substring(29,59);
 				total = nextline.substring(59,68);
@@ -233,6 +234,7 @@ if(!filename.equals("")) {
 					dObj.setRaheader_no(raNo);
 					dObj.setProviderohip_no(providerno);
 					dObj.setBilling_no(account);
+					dObj.setProvidergroupbilling_no(groupBillingNo);
 					dObj.setService_code(servicecode);
 					dObj.setService_count(serviceno);
 					dObj.setHin(newhin);
