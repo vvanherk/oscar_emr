@@ -613,6 +613,9 @@ public class DmsInboxManageAction extends DispatchAction {
 	 * Returns a list of Lab Results that include all non-spire labs, and include only a single spire
 	 * lab for any given unique spire accession number.
 	 * 
+	 * Furthermore, for spire labs that share the same 'common' accession number, the newest lab will be
+	 * included.
+	 * 
 	 * To elaborate, Spire labs have a 'regular' accession number, and also a 'unique' accession number.
 	 * The unique accession number identifies seperate spire labs that are actually part of a single lab, but
 	 * were sent as seperate HL7 files.  
@@ -656,6 +659,7 @@ public class DmsInboxManageAction extends DispatchAction {
 				collapsedLabdocs.add(data);
 			}	
 		}
+		
 		
 		if (accnsMap != null) {
 			// Add only a single Spire lab to the collapsed lab list for any given unique spire accession number

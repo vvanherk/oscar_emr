@@ -56,8 +56,16 @@ else {
 	ackLabFunc = "getComment('ackLab');";
 }
 
+int segmentIDAsInt = 0;
+try {
+	segmentIDAsInt = Integer.parseInt(segmentID);
+} catch (Exception e) {
+	MiscUtils.getLogger().error("Unable to parse segmentID to integer: " + segmentID);
+}
+
 //Need date lab was received by OSCAR
 Hl7TextMessageDao hl7TxtMsgDao = (Hl7TextMessageDao)SpringUtils.getBean("hl7TextMessageDao");
+Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
 MeasurementMapDao measurementMapDao = (MeasurementMapDao) SpringUtils.getBean("measurementMapDao");
 Hl7TextMessage hl7TextMessage = hl7TxtMsgDao.find(Integer.parseInt(segmentID));
 java.util.Date date = hl7TextMessage.getCreated();
@@ -66,11 +74,22 @@ String dateLabReceived = UtilDateUtilities.DateToString(date, stringFormat);
 
 boolean isLinkedToDemographic=false;
 ArrayList<ReportStatus> ackList=null;
-String multiLabId = null;
+String multiLabId = "";
+List<Hl7TextInfo> olderLabs = hl7TextInfoDao.getMatchingLabsByLabId( Integer.valueOf(segmentID) );
 List<MessageHandler> handlers = new ArrayList<MessageHandler>();
 String hl7 = null;
 String reqID = null, reqTableID = null;
 String remoteFacilityIdQueryString="";
+
+
+Hl7TextInfo f = olderLabs.get(0);
+for (Hl7TextInfo info : olderLabs) {
+	if (f == info) continue;
+	
+	if (multiLabId.length() > 0)
+		multiLabId += ", ";
+	multiLabId += info.getLabNumber();
+}
 
 if (remoteFacilityIdString==null) // local lab
 {
@@ -96,17 +115,19 @@ if (remoteFacilityIdString==null) // local lab
 	}
 	
 	ackList = AcknowledgementData.getAcknowledgements(segmentID);
-	multiLabId = Hl7textResultsData.getMatchingLabs(segmentID);
-	handlers.add( Factory.getHandler(segmentID) );
+	//multiLabId = Hl7textResultsData.getMatchingLabs(segmentID);
+	//multiLabId = hl7TextInfoDao.getMatchingLabsByLabId(segmentID);
+	
+	MessageHandler h = Factory.getHandler(segmentID);
+	
 	hl7 = Factory.getHL7Body(segmentID);
-	if (handlers.get(0) instanceof OLISHL7Handler) { 
+	if (h instanceof OLISHL7Handler) { 
 		%>
 		<jsp:forward page="labDisplayOLIS.jsp" />
 		<%
 	}
 	// get info for spire lab
-	else if (handlers.get(0) instanceof SpireHandler) {
-		Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao) SpringUtils.getBean("hl7TextInfoDao");
+	else if (h instanceof SpireHandler) {
 		int lab_no = Integer.parseInt(segmentID);
 		Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
 	
@@ -117,10 +138,20 @@ if (remoteFacilityIdString==null) // local lab
 		
 		if (map != null) {
 			List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+			
+			MiscUtils.getLogger().info("size1: " + cAccns.size());
+			
+			// filter out older versions of labs
+			removeDuplicates(cAccns, hl7TextInfoDao);
+			
+			MiscUtils.getLogger().info("size2: " + cAccns.size());
+			
 			for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 				handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
 			}
 		}
+	} else {
+		handlers.add( h );
 	}
 }
 else // remote lab
@@ -134,7 +165,7 @@ else // remote lab
 	Document cachedDemographicLabResultXmlData=LabDisplayHelper.getXmlDocument(remoteLabResult);
 	
 	ackList=LabDisplayHelper.getReportStatus(cachedDemographicLabResultXmlData);
-	multiLabId=LabDisplayHelper.getMultiLabId(cachedDemographicLabResultXmlData);
+	//multiLabId=LabDisplayHelper.getMultiLabId(cachedDemographicLabResultXmlData);
 	handlers.add( LabDisplayHelper.getMessageHandler(cachedDemographicLabResultXmlData) );
 	hl7=LabDisplayHelper.getHl7Body(cachedDemographicLabResultXmlData);
 	
@@ -162,7 +193,6 @@ if (ackList != null){
     }
 }
 
-Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao) SpringUtils.getBean("hl7TextInfoDao");
 int lab_no = Integer.parseInt(segmentID);
 Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
 String label = "";
@@ -984,7 +1014,40 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 		                      	 </tr>
 	                     	 </table>
 	                     <% } else {
-	                  
+							
+								// show spire lab version number
+								if (handler.getMsgType().equals("Spire")) {
+									List<Hl7TextInfo> textInfoList = hl7TextInfoDao.getMatchingLabsByAccessionNumber( handler.getAccessionNum() );
+		                            if (textInfoList != null && textInfoList.size() > 1) {
+	                                    %>
+	                                    <tr>
+	                                        <td class="Cell" colspan="2" align="middle">
+	                                            <div class="Field2">
+	                                                Version:&#160;&#160;
+	                                                <%
+													for (Hl7TextInfo info : textInfoList) {
+	                                                    if (info.getLabNumber() == segmentIDAsInt) {
+	                                                        %>v<%= i+1 %>&#160;<%
+	                                                    } else {
+	                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= i+1 %></a>&#160;<%
+	                                                        }else{
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>">v<%= i+1 %></a>&#160;<%
+	                                                        }
+	                                                    }
+	                                                }
+	                                                %>
+	                                            </div>
+	                                        </td>
+	                                    </tr>
+	                                    <%
+	                                }
+	                            %>
+							 
+	                     
+	                     
+	                     <% }
+							
 	                      for(i=0;i<headers.size();i++){
 	                           linenum=0;
 	                       %>
@@ -995,7 +1058,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 	                           <tr>
 	                               <td bgcolor="#FFCC00" width="300" valign="bottom">
 	                                   <div class="Title2">
-	                                       <%=headers.get(i)%>
+	                                       <%=headers.get(i)%> NEW
 	                                   </div>
 	                               </td>
 	                               <%--<td align="right" bgcolor="#FFCC00" width="100">&nbsp;</td>--%>
@@ -1421,3 +1484,32 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
     XPN Extended Person Number
     XTN Extended Telecommunications Number
  --%>
+ 
+ <%!
+
+public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInfoDao hl7TextInfoDao) {
+	for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+		List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId(commonAccessionNumber.getLabNo().intValue());
+		
+		if (vers.size() > 1) {
+			Hl7TextInfo f = vers.get(0);
+			for (Hl7TextInfo ver : vers) {
+				if (f == ver) continue;
+				
+				removeFromSCANList(ver, cAccns);
+			}
+		}
+		
+	}
+}
+
+public void removeFromSCANList(Hl7TextInfo ver, List<SpireCommonAccessionNumber> cAccns) {
+	for (SpireCommonAccessionNumber cAccn : cAccns) {
+		if (ver.getLabNumber() == cAccn.getLabNo().intValue()) {
+			cAccns.remove(cAccn);
+			return;
+		}
+	}
+}
+ 
+ %>
