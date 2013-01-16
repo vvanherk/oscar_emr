@@ -27,10 +27,10 @@ public class SpireCommonAccessionNumber extends AbstractModel<Integer> {
     @JoinColumn(name="map_id", referencedColumnName="id")
 	private SpireAccessionNumberMap map;
 	
-	
+	@Column(name="order_index")
+	private Integer orderIndex;
 	
 
-	//@Override
 	public Integer getId() {
     	return id;
     }
@@ -61,5 +61,13 @@ public class SpireCommonAccessionNumber extends AbstractModel<Integer> {
     
     public void setAccessionNumberMap(SpireAccessionNumberMap map) {
 	    this.map = map;
+    }
+    
+    public Integer getOrderIndex() {
+    	return orderIndex;
+    }
+
+	public void setOrderIndex(Integer orderIndex) {
+    	this.orderIndex = orderIndex;
     }
 }

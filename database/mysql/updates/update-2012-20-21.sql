@@ -9,5 +9,6 @@ CREATE TABLE spireCommonAccessionNumber (
 	caccn varchar(20) NOT NULL,
 	lab_no int(10),
 	map_id int(10),
+	order_index int(4),
 	PRIMARY KEY (id)
 );

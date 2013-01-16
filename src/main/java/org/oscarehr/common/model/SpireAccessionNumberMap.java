@@ -9,6 +9,7 @@ import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.PrePersist;
 import javax.persistence.JoinColumn;
 import javax.persistence.CascadeType;
@@ -27,6 +28,7 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
 	@Column(name="uaccn")
 	private Integer uaccn;
 	
+	@OrderBy("orderIndex ASC")
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
     @JoinColumn(name="map_id", referencedColumnName="id")
 	private List<SpireCommonAccessionNumber> commonAccessionNumbers = new ArrayList<SpireCommonAccessionNumber>();
@@ -68,5 +70,37 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
             commonAccessionNumber.setAccessionNumberMap(this);         
         }
     }
+    
+    public SpireCommonAccessionNumber getCommonAccessionNumberMatchingAccessionNumber(String accessionNumber) {
+		if (accessionNumber == null)
+			return null;
+		
+		for (SpireCommonAccessionNumber accn : commonAccessionNumbers) {
+			if (accn.getCommonAccessionNumber().equals(accessionNumber))
+				return accn;
+		}
+		
+		return null;
+	}
+    
+    public int getNumberOfUniqueLabs() {
+		List<SpireCommonAccessionNumber> l = new ArrayList<SpireCommonAccessionNumber>();
+		
+		for (SpireCommonAccessionNumber accn : commonAccessionNumbers) {
+			if (!doesListContainAccn(l, accn))
+				l.add(accn);
+		}
+		
+		return l.size();
+	}
+	
+	private boolean doesListContainAccn(List<SpireCommonAccessionNumber> list, SpireCommonAccessionNumber accn) {
+		for (SpireCommonAccessionNumber c : list) {
+			if (c.getCommonAccessionNumber().equals(accn.getCommonAccessionNumber()))
+				return true;
+		}
+		
+		return false;
+	}
 
 }

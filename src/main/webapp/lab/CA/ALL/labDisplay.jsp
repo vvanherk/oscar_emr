@@ -141,10 +141,21 @@ if (remoteFacilityIdString==null) // local lab
 			
 			MiscUtils.getLogger().info("size1: " + cAccns.size());
 			
+			for (SpireCommonAccessionNumber cAccn : cAccns) {
+				MiscUtils.getLogger().info("labId: " + cAccn.getLabNo() + " " + cAccn.getCommonAccessionNumber());
+			}
+			
 			// filter out older versions of labs
-			removeDuplicates(cAccns, hl7TextInfoDao);
+			removeDuplicates(cAccns, hl7TextInfoDao, accn, lab_no);
+			
+			// Re-order the remaining labs based on their order number
+			//reorderLabs(cAccns);
 			
 			MiscUtils.getLogger().info("size2: " + cAccns.size());
+			
+			for (SpireCommonAccessionNumber cAccn : cAccns) {
+				MiscUtils.getLogger().info("labId: " + cAccn.getLabNo());
+			}
 			
 			for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 				handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
@@ -1020,26 +1031,27 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 									List<Hl7TextInfo> textInfoList = hl7TextInfoDao.getMatchingLabsByAccessionNumber( handler.getAccessionNum() );
 		                            if (textInfoList != null && textInfoList.size() > 1) {
 	                                    %>
-	                                    <tr>
-	                                        <td class="Cell" colspan="2" align="middle">
-	                                            <div class="Field2">
+	                                    
+	                                            <div class="Cell Field2" style="text-align:center">
 	                                                Version:&#160;&#160;
 	                                                <%
+	                                                int version = 1;
 													for (Hl7TextInfo info : textInfoList) {
 	                                                    if (info.getLabNumber() == segmentIDAsInt) {
-	                                                        %>v<%= i+1 %>&#160;<%
+	                                                        %>v<%= version %>&#160;<%
 	                                                    } else {
 	                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
-	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= i+1 %></a>&#160;<%
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= version %></a>&#160;<%
 	                                                        }else{
-	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>">v<%= i+1 %></a>&#160;<%
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>">v<%= version %></a>&#160;<%
 	                                                        }
 	                                                    }
+	                                                    
+	                                                    version++;
 	                                                }
 	                                                %>
 	                                            </div>
-	                                        </td>
-	                                    </tr>
+	                                    
 	                                    <%
 	                                }
 	                            %>
@@ -1487,26 +1499,43 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
  
  <%!
 
-public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInfoDao hl7TextInfoDao) {
+public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInfoDao hl7TextInfoDao, String currentAccn, int currentLabNo) {
+	List<SpireCommonAccessionNumber> removeList = new ArrayList<SpireCommonAccessionNumber>();
+	
 	for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
-		List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId(commonAccessionNumber.getLabNo().intValue());
+		int labNo = commonAccessionNumber.getLabNo().intValue();
+		List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId(labNo);
 		
 		if (vers.size() > 1) {
-			Hl7TextInfo f = vers.get(0);
+			Hl7TextInfo first = vers.get(0);
 			for (Hl7TextInfo ver : vers) {
-				if (f == ver) continue;
 				
-				removeFromSCANList(ver, cAccns);
+				MiscUtils.getLogger().info("accn: " + currentAccn + " " + ver.getAccessionNumber());
+				MiscUtils.getLogger().info("labid: " + currentLabNo + " " + ver.getLabNumber());
+				
+				// Generally, we want to keep the first (i.e. newest) version of a lab
+				if (first == ver) {
+					// Unless newest lab is NOT the version the user wants to see
+					if (!currentAccn.equals(ver.getAccessionNumber())) {
+						continue;
+					}
+				}
+				
+				// Don't remove the version of the current lab
+				if (currentLabNo == ver.getLabNumber()) continue;
+				
+				addToSCANRemoveList(ver, cAccns, removeList);
 			}
 		}
-		
 	}
+	
+	cAccns.removeAll(removeList);
 }
 
-public void removeFromSCANList(Hl7TextInfo ver, List<SpireCommonAccessionNumber> cAccns) {
-	for (SpireCommonAccessionNumber cAccn : cAccns) {
-		if (ver.getLabNumber() == cAccn.getLabNo().intValue()) {
-			cAccns.remove(cAccn);
+public void addToSCANRemoveList(Hl7TextInfo ver, List<SpireCommonAccessionNumber> cAccns, List<SpireCommonAccessionNumber> removeList) {
+	for (int i=0; i < cAccns.size(); i++) {
+		if (ver.getLabNumber() == cAccns.get(i).getLabNo().intValue()) {
+			removeList.add(cAccns.get(i));
 			return;
 		}
 	}

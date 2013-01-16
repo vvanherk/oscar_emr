@@ -117,9 +117,19 @@ public class SpireAccessionNumberMapDao extends AbstractDao<SpireAccessionNumber
 			map = getFromUniqueAccessionNumber(uniqueAccn);
 		}
 		
+		int orderIndex = 0;
+		
+		SpireCommonAccessionNumber tempAccn = map.getCommonAccessionNumberMatchingAccessionNumber(accn);
+		
+		if (tempAccn != null)
+			orderIndex = tempAccn.getOrderIndex();
+		else
+			orderIndex = map.getNumberOfUniqueLabs();
+		
 		SpireCommonAccessionNumber commonAccn = new SpireCommonAccessionNumber();
 		commonAccn.setCommonAccessionNumber(accn);
 		commonAccn.setLabNo(labNo);
+		commonAccn.setOrderIndex(orderIndex);
 
         map.getCommonAccessionNumbers().add(commonAccn);
         

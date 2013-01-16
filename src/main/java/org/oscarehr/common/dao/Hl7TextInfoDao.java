@@ -132,7 +132,7 @@ public class Hl7TextInfoDao extends AbstractDao<Hl7TextInfo> {
     }
     
     public List<Hl7TextInfo> getMatchingLabsByAccessionNumber(String accessionNumber) {
-		String sql = "SELECT a FROM Hl7TextInfo a, Hl7TextInfo b WHERE a.accessionNumber !='' AND a.accessionNumber=b.accessionNumber AND b.accessionNumber=? ORDER BY a.obrDate, a.finalResultCount, a.labNumber";
+		String sql = "SELECT a FROM Hl7TextInfo a WHERE a.accessionNumber != '' AND a.accessionNumber=? ORDER BY a.obrDate, a.finalResultCount, a.labNumber";
         
     	Query query = entityManager.createQuery(sql);
         query.setParameter(1, accessionNumber);

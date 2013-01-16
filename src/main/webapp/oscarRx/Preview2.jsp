@@ -346,6 +346,7 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
                                             {
                                             rx = bean.getStashItem(i);
                                                                     String fullOutLine=rx.getFullOutLine().replaceAll(";","<br />");
+                                                                    fullOutLine += "<br>End Date: " + rx.getEndDate().toString();
 
                                                                     if (fullOutLine==null || fullOutLine.length()<=6)
                                                                     {
