@@ -46,6 +46,36 @@ public class SpireAccessionNumberMapDao extends AbstractDao<SpireAccessionNumber
 		return null;
 	}
 	
+	public List<SpireAccessionNumberMap> getFromLabNumbers(List<Integer> labNumbers) {
+		if (labNumbers == null || labNumbers.size() == 0)
+			return null;
+		
+		Query query = entityManager.createQuery("select c.map from SpireCommonAccessionNumber c where c.lab_no in (:labNumbers)");
+		query.setParameter("labNumbers", labNumbers);
+		
+		@SuppressWarnings("unchecked")
+		List<SpireAccessionNumberMap> results = query.getResultList();
+		
+		return results;
+	}
+	
+	public SpireAccessionNumberMap getFromLabNumber(Integer labNumber) {
+		if (labNumber == null)
+			return null;
+		
+		Query query = entityManager.createQuery("select c.map from SpireCommonAccessionNumber c where c.lab_no = ?");
+		query.setParameter(1, labNumber);
+		
+		@SuppressWarnings("unchecked")
+		List<SpireAccessionNumberMap> results = query.getResultList();
+		
+		if (results.size() > 0) {
+			return results.get(0);
+		}
+		
+		return null;
+	}
+	
 	public List<Integer> getAccessionNumberMapIds(List<String> accns) {
 		if (accns == null || accns.size() == 0)
 			return null;

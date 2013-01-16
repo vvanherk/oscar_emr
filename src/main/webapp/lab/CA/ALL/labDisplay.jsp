@@ -9,6 +9,7 @@
 <%@page errorPage="../../../provider/errorpage.jsp" %>
 <%@ page import="java.util.*,
 		 java.sql.*,
+		 java.text.SimpleDateFormat,
 		 oscar.oscarDB.*, oscar.oscarLab.FileUploadCheck, oscar.util.UtilDateUtilities,
 		 oscar.oscarLab.ca.all.*,
 		 oscar.oscarLab.ca.all.util.*,
@@ -44,6 +45,10 @@ String demographicID = request.getParameter("demographicId");
 UserPropertyDAO userPropertyDAO = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
 UserProperty uProp = userPropertyDAO.getProp(providerNo, UserProperty.LAB_ACK_COMMENT);
 boolean skipComment = false;
+
+if (segmentID != null)
+	segmentID = segmentID.trim();
+
 if( uProp != null && uProp.getValue().equalsIgnoreCase("yes")) {
 	skipComment = true;
 }
@@ -84,7 +89,7 @@ String remoteFacilityIdQueryString="";
 
 Hl7TextInfo f = olderLabs.get(0);
 for (Hl7TextInfo info : olderLabs) {
-	if (f == info) continue;
+	//if (f == info) continue;
 	
 	if (multiLabId.length() > 0)
 		multiLabId += ", ";
@@ -188,21 +193,60 @@ else // remote lab
 }
 
 
+
 boolean notBeenAcked = ackList.size() == 0;
 boolean ackFlag = false;
 String labStatus = "";
-if (ackList != null){
-    for (int i=0; i < ackList.size(); i++){
-        ReportStatus reportStatus = ackList.get(i);
-        if (reportStatus.getProviderNo().equals(providerNo) ) {
-        	labStatus = reportStatus.getStatus();
-        	if( labStatus.equals("A") ){        
-            	ackFlag = true;//lab has been ack by this provider.
-            	break;
-        	}
-        }
-    }
+
+Map<String, ReportStatus> acknowledgmentInfo = new HashMap<String, ReportStatus>();
+
+// Compile list of report status' that have a single entry per provider and that use
+// reports that are unacknowledged/unfiled over ones that have been acknowledged/filed
+// Note: This algorithm will capture the most recent ReportStatus object for an Acknowledged/Filed report
+if (ackList != null) {
+	for (int i=0; i < ackList.size(); i++) {
+		ReportStatus report = (ReportStatus) ackList.get(i);
+		ReportStatus r = acknowledgmentInfo.get( report.getProviderName() );
+		
+		if (r == null) {
+			acknowledgmentInfo.put(report.getProviderName(), report);
+		} else {
+			// Reports that are unacknowledged/unfiled should be used over ones that have been acknowledged/filed
+			MiscUtils.getLogger().info("ack: " + report.getProviderName() + " " + r.getStatus() + " " + report.getStatus());
+			if (!report.getStatus().equals("A") && !report.getStatus().equals("F") && (r.getStatus().equals("A") || r.getStatus().equals("F"))) {
+				acknowledgmentInfo.put(report.getProviderName(), report);
+			} else if (r.getStatus().equals("A") || r.getStatus().equals("F")) {
+				// Use the most recent date for an Acknowledged/Filed report
+				String t1 = report.getTimestamp();
+				String t2 = r.getTimestamp();
+				
+				SimpleDateFormat df = new SimpleDateFormat("yyyy-MMM-dd HH:mm", Locale.ENGLISH);
+				java.util.Date date1 = df.parse(t1);
+				java.util.Date date2 = df.parse(t2);
+				
+				if (date1.getTime() > date2.getTime())
+					acknowledgmentInfo.put(report.getProviderName(), report);
+			}
+			
+			
+		}
+	}
 }
+
+// Determine whether this lab (and all its parts) has been acknowledged
+for (Map.Entry<String, ReportStatus> entry : acknowledgmentInfo.entrySet()) {
+	ReportStatus report = entry.getValue();
+	if (report.getProviderNo().equals(providerNo) ) {
+		String ackStatus = report.getStatus();
+		
+		if( ackStatus.equals("A") ){        
+			ackFlag = true; //lab has been ack by this provider.
+			break;
+		}
+	}
+    
+}
+
 
 int lab_no = Integer.parseInt(segmentID);
 Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
@@ -912,8 +956,9 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                     ReportStatus report;          
                                     boolean startFlag = false;
                                     for (int j=multiID.length-1; j >=0; j--){
-                                        ackList = AcknowledgementData.getAcknowledgements(multiID[j]);                                        
-                                        if (multiID[j].equals(segmentID))
+                                        ackList = AcknowledgementData.getAcknowledgements(multiID[j].trim());
+                                        MiscUtils.getLogger().info("BLAH: " + multiID[j] + " " + segmentID);
+                                        if (multiID[j].trim().equals(segmentID))
                                             startFlag = true;                                                              
                                         if (startFlag) {
                                             //if (ackList.size() > 0){{%>
@@ -931,25 +976,34 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                         <% } %>
                                                             <div class="FieldData">
                                                                 <!--center-->          
-                                                                    <% for (int i=0; i < ackList.size(); i++) { 
-                                                                        report = (ReportStatus) ackList.get(i); %>
-                                                                        <%= report.getProviderName() %> :
-
-                                                                        <% String ackStatus = report.getStatus(); 
-                                                                            if(ackStatus.equals("A")){
+                                                                    <%	                                                                        
+                                                                        for (Map.Entry<String, ReportStatus> entry : acknowledgmentInfo.entrySet()) {
+																	        String providerName = entry.getKey();
+																		    report = entry.getValue();
+																		    String ackStatus = report.getStatus();
+																		%>
+																			<%= providerName %> :
+																			
+																		<%	
+                                                                            if (ackStatus.equals("A")) {
                                                                                 ackStatus = "Acknowledged"; 
-                                                                            }else if(ackStatus.equals("F")){
+                                                                            } else if (ackStatus.equals("F")) {
                                                                                 ackStatus = "Filed but not Acknowledged";
-                                                                            }else{
+                                                                            } else {
                                                                                 ackStatus = "Not Acknowledged";
                                                                             }                                                                             
                                                                         %>
-                                                                        <font color="red"><%= ackStatus %></font>
-                                                                        <% if ( ackStatus.equals("Acknowledged") ) { %>
-                                                                            <%= report.getTimestamp() %>,                                                                             
-                                                                        <% } %>
-                                                                        <span id="<%=report.getProviderNo()%>commentLabel"><%=report.getComment().equals("") ? "no comment" : "comment : "%></span><span id="<%=report.getProviderNo()%>commentText"><%=report.getComment()%></span>
-                                                                        <br>
+																			<font color="red"><%= ackStatus %></font>
+	                                                                        <% if ( ackStatus.equals("Acknowledged") ) { %>
+	                                                                            <%= report.getTimestamp() %>,                                                                             
+	                                                                        <% } %>
+	                                                                        <span id="<%=report.getProviderNo()%>commentLabel"><%=report.getComment().equals("") ? "no comment" : "comment : "%></span><span id="<%=report.getProviderNo()%>commentText"><%=report.getComment()%></span>
+	                                                                        <br>
+																			
+																		<%
+																	    
+                                                                        %>
+
                                                                     <% } 
                                                                     if (ackList.size() == 0){
                                                                         %><font color="red">N/A</font><%
@@ -1036,14 +1090,27 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 	                                                Version:&#160;&#160;
 	                                                <%
 	                                                int version = 1;
+	                                                String newLabText = "";
 													for (Hl7TextInfo info : textInfoList) {
+														newLabText = "";
+														
+														for (int m=0; m < ackList.size(); m++) {
+															report = (ReportStatus) ackList.get(m);
+															int segId = Integer.parseInt(report.getSegmentID().trim());
+															String ackStatus = report.getStatus(); 
+															MiscUtils.getLogger().info("status: " + ackStatus + " " + segId);
+															if (segId == info.getLabNumber() && !ackStatus.equals("A") && !ackStatus.equals("F") && report.getProviderNo().equals(providerNo)) {
+																newLabText = "<span style='color:red;'> NEW </span>";
+															}
+														}
+														
 	                                                    if (info.getLabNumber() == segmentIDAsInt) {
-	                                                        %>v<%= version %>&#160;<%
+	                                                        %>v<%= version %><%=newLabText%>&#160;<%
 	                                                    } else {
 	                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
-	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= version %></a>&#160;<%
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= version %></a><%=newLabText%>&#160;<%
 	                                                        }else{
-	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>">v<%= version %></a>&#160;<%
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>">v<%= version %></a><%=newLabText%>&#160;<%
 	                                                        }
 	                                                    }
 	                                                    
@@ -1070,7 +1137,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 	                           <tr>
 	                               <td bgcolor="#FFCC00" width="300" valign="bottom">
 	                                   <div class="Title2">
-	                                       <%=headers.get(i)%> NEW
+	                                       <%=headers.get(i)%>
 	                                   </div>
 	                               </td>
 	                               <%--<td align="right" bgcolor="#FFCC00" width="100">&nbsp;</td>--%>
