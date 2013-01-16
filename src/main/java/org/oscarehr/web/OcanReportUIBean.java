@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.web;
 
 import java.io.ByteArrayOutputStream;
@@ -404,7 +427,14 @@ public class OcanReportUIBean implements CallbackHandler {
 		for(OCANv2SubmissionRecord submissionRecord:submissionRecords) {
 
 			String assessmentId = submissionRecord.getAssessmentID();
-			OcanStaffForm staffForm = ocanStaffFormDao.findLatestByAssessmentId(LoggedInInfo.loggedInInfo.get().currentFacility.getId(),Integer.parseInt(assessmentId));
+
+			String assessmentId_noPrefix = assessmentId;
+			String idPrefix = OscarProperties.getInstance().getProperty("ocan.iar.idPrefix");
+			if(!StringUtils.isBlank(idPrefix)) {
+				assessmentId_noPrefix = assessmentId.replace(idPrefix,"");
+			}
+			
+			OcanStaffForm staffForm = ocanStaffFormDao.findLatestByAssessmentId(LoggedInInfo.loggedInInfo.get().currentFacility.getId(),Integer.parseInt(assessmentId_noPrefix));
 
 			ConsentDirective cd = cs.addNewConsentDirective();
 			cd.setId(assessmentId);
@@ -452,7 +482,10 @@ public class OcanReportUIBean implements CallbackHandler {
 		}
 
 		Text t2 = new Text();
-		t2.setValue("<ConsentSubmission xsi:schemaLocation=\"http://www.ehealthontario.ca/CCIMConsentSubmission-1.0.xsd\" xmlns=\"http://www.ehealthontario.ca/CCIM\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" + cs.toString() + "</ConsentSubmission>");
+		String cs1 = cs.toString().replace("<xml-fragment xmlns:ccim=\"http://www.ehealthontario.ca/CCIM\">", "");
+		String cs2 = cs1.replace("</xml-fragment>", "");
+	        String cs3 = cs2.replaceAll("ccim:","");
+		t2.setValue("<ConsentSubmission xsi:schemaLocation=\"http://www.ehealthontario.ca/CCIMConsentSubmission-1.0.xsd\" xmlns=\"http://www.ehealthontario.ca/CCIM\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\">" + cs3 + "</ConsentSubmission>");
 		consent.setText(t2);
 
 		SubmissionContent sc = new SubmissionContent();
@@ -512,7 +545,13 @@ public class OcanReportUIBean implements CallbackHandler {
 				String id = subRec.getAssessmentID();
 				//OcanStaffForm staffForm = ocanStaffFormDao.find(Integer.parseInt(id));
 				// assessment ID is not form ID.
-				OcanStaffForm staffForm = ocanStaffFormDao.findLatestByAssessmentId(LoggedInInfo.loggedInInfo.get().currentFacility.getId(), Integer.valueOf(id));
+				String assessmentId_noPrefix = id;
+				String idPrefix = OscarProperties.getInstance().getProperty("ocan.iar.idPrefix");
+				if(!StringUtils.isBlank(idPrefix)) {
+					assessmentId_noPrefix = id.replace(idPrefix,"");
+				}
+				
+				OcanStaffForm staffForm = ocanStaffFormDao.findLatestByAssessmentId(LoggedInInfo.loggedInInfo.get().currentFacility.getId(), Integer.valueOf(assessmentId_noPrefix));
 
 				staffForm.setSubmissionId(log.getId());
 				ocanStaffFormDao.merge(staffForm);
@@ -644,7 +683,12 @@ public class OcanReportUIBean implements CallbackHandler {
 				String id = subRec.getAssessmentID();
 				//OcanStaffForm staffForm = ocanStaffFormDao.find(Integer.parseInt(id));
 				// attention: assessment ID is not form ID.
-				OcanStaffForm staffForm = ocanStaffFormDao.findLatestByAssessmentId(LoggedInInfo.loggedInInfo.get().currentFacility.getId(), Integer.valueOf(id));
+				String assessmentId_noPrefix = id;
+				String idPrefix = OscarProperties.getInstance().getProperty("ocan.iar.idPrefix");
+				if(!StringUtils.isBlank(idPrefix)) {
+					assessmentId_noPrefix = id.replace(idPrefix,"");
+				}
+				OcanStaffForm staffForm = ocanStaffFormDao.findLatestByAssessmentId(LoggedInInfo.loggedInInfo.get().currentFacility.getId(), Integer.valueOf(assessmentId_noPrefix));
 
 				staffForm.setSubmissionId(log.getId());
 				ocanStaffFormDao.merge(staffForm);
@@ -780,7 +824,21 @@ public class OcanReportUIBean implements CallbackHandler {
 		OCANv2SubmissionRecord ocanSubmissionRecord = OCANv2SubmissionRecord.Factory.newInstance();
 
 		ocanSubmissionRecord.setOCANType(OCANv2SubmissionRecord.OCANType.Enum.forString(ocanStaffForm.getOcanType()));
-		ocanSubmissionRecord.setAssessmentID(String.valueOf(ocanStaffForm.getAssessmentId()));
+
+		//ocanSubmissionRecord.setAssessmentID(String.valueOf(ocanStaffForm.getAssessmentId()));
+		//If the IAR submission is being done by two organizations to CCIM under the organization ID of one of the organizations. 
+		//They don't want clients to accidentally have the same ID from the two organizations. 
+		//So they want to add the prefix "TWC" to the ID's of one of The Working Centre submission.
+		//The prefix should be stored in the oscar property file so that in the future other organizations can change that property and do a similar thing if needed,
+		String idPrefix = OscarProperties.getInstance().getProperty("ocan.iar.idPrefix");
+		if(StringUtils.isBlank(idPrefix)) {
+			ocanSubmissionRecord.setAssessmentID(String.valueOf(ocanStaffForm.getAssessmentId()));
+		}
+		else {
+			idPrefix = idPrefix.concat(String.valueOf(ocanStaffForm.getAssessmentId()));
+			ocanSubmissionRecord.setAssessmentID(idPrefix);
+		}
+			
 		ocanSubmissionRecord.setAssessmentRevision("1");
 
 		ocanSubmissionRecord.setStartDate(convertToOcanXmlDate(OcanForm.getAssessmentStartDate(ocanStaffForm.getStartDate(),ocanStaffForm.getClientStartDate())));
@@ -1735,7 +1793,14 @@ public class OcanReportUIBean implements CallbackHandler {
 
 	public static ClientID convertClientID(OcanStaffForm ocanStaffForm, List<OcanStaffFormData> ocanStaffFormData) {
 		ClientID clientId = ClientID.Factory.newInstance();
-		clientId.setOrgClientID(String.valueOf(ocanStaffForm.getClientId()));
+		String idPrefix = OscarProperties.getInstance().getProperty("ocan.iar.idPrefix");
+		if(StringUtils.isBlank(idPrefix)) {
+			clientId.setOrgClientID(String.valueOf(ocanStaffForm.getClientId()));
+		}
+		else {
+			idPrefix = idPrefix.concat(String.valueOf(ocanStaffForm.getClientId()));
+			clientId.setOrgClientID(idPrefix);
+		}
 		return clientId;
 	}
 
@@ -2108,7 +2173,7 @@ public class OcanReportUIBean implements CallbackHandler {
 		int hour = cal.get(GregorianCalendar.HOUR_OF_DAY);
 		int min = cal.get(GregorianCalendar.MINUTE);
 
-		return "OCAN" +  year + ( (month<10)?("0"+month):(month) )+ ((date<10)?("0"+date):(date)) + ((hour<10)?("0"+hour):(hour))+ ((min<10)?("0"+min):(min))+loggedInInfo.loggedInInfo.get().currentFacility.getOcanServiceOrgNumber() +  ( (increment<10)?(".00"+increment):(increment) ) + ".xml";
+		return "OCAN" +  year + ( (month<10)?("0"+month):(month) )+ ((date<10)?("0"+date):(date)) + ((hour<10)?("0"+hour):(hour))+ ((min<10)?("0"+min):(min))+LoggedInInfo.loggedInInfo.get().currentFacility.getOcanServiceOrgNumber() +  ( (increment<10)?(".00"+increment):(increment) ) + ".xml";
 	}
 
 	private static Date getStartDate(int year, int month) {

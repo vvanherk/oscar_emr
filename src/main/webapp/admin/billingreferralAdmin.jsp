@@ -92,7 +92,7 @@
     <nested:submit style="border:1px solid #666666;" onclick="this.form.method.value='add'">Add</nested:submit>
 </nested:form>
 
-<display:table name="referrals" id="referral" class="its" pagesize="15" style="border:1px solid #666666; width:99%;margin-top:2px;">
+<display:table name="referrals" id="referral" class="its" pagesize="15" style="border:1px solid #666666; width:99%;margin-top:2px;" requestURI="/admin/ManageBillingReferral.do">
     <display:column property="referralNo" title="Referral No" href="ManageBillingReferral.do?method=edit" paramId="referralNo"/>
     <display:column property="firstName" title="First Name" />
     <display:column property="lastName" title="Last Name" />
