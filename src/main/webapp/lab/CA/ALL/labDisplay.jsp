@@ -92,7 +92,7 @@ for (Hl7TextInfo info : olderLabs) {
 	//if (f == info) continue;
 	
 	if (multiLabId.length() > 0)
-		multiLabId += ", ";
+		multiLabId += ",";
 	multiLabId += info.getLabNumber();
 }
 
@@ -679,31 +679,34 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                         <table width="100%" border="1" cellspacing="0" cellpadding="3" bgcolor="#9999CC" bordercolordark="#bfcbe3">
                             <%
                             if (multiLabId != null){
-                                String[] multiID = multiLabId.split(",");
-                                if (multiID.length > 1){
-                                    %>
-                                    <tr>
-                                        <td class="Cell" colspan="2" align="middle">
-                                            <div class="Field2">
-                                                Version:&#160;&#160;
-                                                <%
-                                                for (int i=0; i < multiID.length; i++){
-                                                    if (multiID[i].equals(segmentID)){
-                                                        %>v<%= i+1 %>&#160;<%
-                                                    }else{
-                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
-                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= i+1 %></a>&#160;<%
-                                                        }else{
-                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>">v<%= i+1 %></a>&#160;<%
-                                                        }
-                                                    }
-                                                }
-                                                %>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <%
-                                }
+								// Only print the top version information if the lab is not a spire lab or it has only 1 lab
+								if (handlers.size() == 1 || !(handlers.get(0) instanceof SpireHandler)) {
+	                                String[] multiID = multiLabId.split(",");
+	                                if (multiID.length > 1){
+	                                    %>
+	                                    <tr>
+	                                        <td class="Cell" colspan="2" align="middle">
+	                                            <div class="Field2">
+	                                                Version:&#160;&#160;
+	                                                <%
+	                                                for (int i=0; i < multiID.length; i++){
+	                                                    if (multiID[i].equals(segmentID)){
+	                                                        %>v<%= i+1 %>&#160;<%
+	                                                    }else{
+	                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= i+1 %></a>&#160;<%
+	                                                        }else{
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>">v<%= i+1 %></a>&#160;<%
+	                                                        }
+	                                                    }
+	                                                }
+	                                                %>
+	                                            </div>
+	                                        </td>
+	                                    </tr>
+	                                    <%
+									}
+								}
                             }
                             %>
                             <tr>
