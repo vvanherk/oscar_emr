@@ -119,9 +119,21 @@ if (remoteFacilityIdString==null) // local lab
 	    LogAction.addLog((String) session.getAttribute("user"), LogConst.READ, LogConst.CON_HL7_LAB, segmentID, request.getRemoteAddr());
 	}
 	
-	ackList = AcknowledgementData.getAcknowledgements(segmentID);
+	
+	
+	List<String> multiIdList = new ArrayList<String>();
+	multiIdList.add(segmentID);
+	
+	String[] multiID = multiLabId.split(",");
+	for (int j=multiID.length-1; j >=0; j--) {
+		multiIdList.add( multiID[j].trim() );
+	}
+	
+	ackList = AcknowledgementData.getAcknowledgements(multiIdList);
 	//multiLabId = Hl7textResultsData.getMatchingLabs(segmentID);
 	//multiLabId = hl7TextInfoDao.getMatchingLabsByLabId(segmentID);
+	
+	MiscUtils.getLogger().info("elements: " + ackList.size());
 	
 	MessageHandler h = Factory.getHandler(segmentID);
 	
@@ -902,7 +914,14 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                             </td>
                                             <td>
                                                 <div class="FieldData" nowrap="nowrap">
-                                                    <%= ((SpireHandler)handlers.get(0)).getUniqueAccessionNum()%>                                        
+													<%
+													String listedAccessionNumber = "";
+													if (handlers.get(0) instanceof SpireHandler)
+														listedAccessionNumber = ((SpireHandler)handlers.get(0)).getUniqueAccessionNum();
+													else
+														listedAccessionNumber = handlers.get(0).getAccessionNum();
+													%>
+                                                    <%= listedAccessionNumber %>                                        
                                                 </div>
                                             </td>
                                         </tr>

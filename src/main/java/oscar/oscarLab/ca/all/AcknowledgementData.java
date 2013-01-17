@@ -31,23 +31,47 @@ public class AcknowledgementData {
 	private AcknowledgementData() {
 		// don't instantiate
 	}
+	
+	public static ArrayList<ReportStatus> getAcknowledgements(List<String> idList) {
+		return getAcknowledgements(null, idList);
+	}
 
 	public static ArrayList<ReportStatus> getAcknowledgements(String segmentID) {
 		return getAcknowledgements(null, segmentID);
 	}
 
 	public static ArrayList<ReportStatus> getAcknowledgements(String docType, String segmentID) {
+		List<String> list = new ArrayList<String>();
+		list.add(segmentID);
+		
+		return getAcknowledgements(docType, list);
+	}
+	
+	public static ArrayList<ReportStatus> getAcknowledgements(String docType, List<String> idList) {
 		String docTypeTest = "";
 		if (docType != null)
 			docTypeTest = "and providerLabRouting.lab_type='" + docType + "'";
 			
+		if (idList == null) {
+			logger.error("The list of lab ids was null", new IllegalArgumentException("'idList' cannot be null"));
+			return null;
+		}
 		
-		// get all spire lab ids attached to this segment
-		List<String> labIds = getSpireLabIds(segmentID);
-		labIds.add(segmentID);
+		List<String> labIds = new ArrayList<String>();
 		
+		// Get all spire lab ids attached to this segment
+		for (String id : idList) {
+			labIds.addAll( getSpireLabIds(id) );
+		}
+		
+		// Add other lab ids to the list
+		for (String id : idList) {
+			labIds.add(id);
+		}
+		
+		
+		// Turn the list into a String
 		String labIdsAsString = "";
-		
 		for (String labNo : labIds) {
 			if (labIdsAsString.length() > 0)
 				labIdsAsString += ", ";
