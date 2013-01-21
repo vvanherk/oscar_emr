@@ -36,6 +36,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import javax.validation.constraints.NotNull;
+
 import org.oscarehr.common.model.AbstractModel;
 
 /**
@@ -59,6 +61,38 @@ public class BillingItem  extends AbstractModel<Integer> implements Serializable
     private String dx2;
     private String status;
     private Date timestamp;
+
+	public BillingItem() {
+		
+	}
+
+	/**
+	 * Method copy
+	 * Performs a deep copy of the given BillingItem and returns the new copy.  The id
+	 * of the given object is not copied.
+	 * 
+	 * @param item The BillingItem object object that we want to copy
+	 * 
+	 * @return A new BillingItem object with identical values to the provided BillingItem object (except for the id)
+	 */
+	public static BillingItem copy(BillingItem item) {
+		BillingItem item2 = new BillingItem();
+		
+		item2.ch1_id = new Integer( item.getCh1_id() );
+		item2.transc_id = new String( item.getTransc_id() );
+		item2.rec_id = new String( item.getRec_id() );
+		item2.service_code = new String( item.getService_code() );
+		item2.fee = new String( item.getFee() );
+		item2.ser_num = new String( item.getSer_num() );
+		item2.service_date = new Date( item.getService_date().getTime() );
+		item2.dx = new String( item.getDx() );
+		item2.dx1 = new String( item.getDx1() );
+		item2.dx2 = new String( item.getDx2() );
+		item2.status = new String( item.getStatus() );
+		item2.timestamp = new Date( item.getTimestamp().getTime() );
+		
+		return item2;
+	}
 
     @Override
     @Id()
@@ -104,6 +138,7 @@ public class BillingItem  extends AbstractModel<Integer> implements Serializable
     /**
      * @return the service_code
      */
+    @NotNull(message="Service Code must be specified.")
     public String getService_code() {
         return service_code;
     }

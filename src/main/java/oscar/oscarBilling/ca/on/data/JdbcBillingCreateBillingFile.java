@@ -549,6 +549,9 @@ public class JdbcBillingCreateBillingFile {
 							errorPartMsg = "Service code '"+itemObj.getService_code()+"' requires an SLI code. <br/>";
 						}
 					}
+					
+					if (fee == null || fee.length() == 0)
+						fee = "0.0";
 
 					dFee = Double.parseDouble(fee);
 					bdFee = new BigDecimal(dFee).setScale(2, BigDecimal.ROUND_HALF_UP);
