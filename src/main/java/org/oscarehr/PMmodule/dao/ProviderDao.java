@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -344,6 +345,44 @@ public class ProviderDao extends HibernateDaoSupport {
 		return null;
 	}
 	
+	public List<Provider> getProvidersByOhipNo(List<String> ohipNumbers) {
+		if (ohipNumbers == null || ohipNumbers.size() <= 0) {
+			throw new IllegalArgumentException();
+		}
+		
+		String ohipNumbersAsString = "'" + StringUtils.join(ohipNumbers,"','") + "'";
+		
+		logger.info("ohipNumbersAsString: " + ohipNumbersAsString);
+
+		List<Provider> providerList = getHibernateTemplate().find("From Provider p where p.OhipNo in (" + ohipNumbersAsString + ")");
+
+		return providerList;
+	}
+	
+	public List<Provider> getProvidersByOhipNo(String ohipNo) {
+		if (ohipNo == null || ohipNo.length() <= 0) {
+			throw new IllegalArgumentException();
+		}
+
+		List<Provider> providerList = getHibernateTemplate().find("From Provider p where p.OhipNo=?",new Object[]{ohipNo});
+
+		return providerList;
+	}
+	
+	public List<Provider> getProvidersByProviderNo(List<String> providerNumbers) {
+		if (providerNumbers == null || providerNumbers.size() <= 0) {
+			return null;
+		}
+		
+		String providerNumbersAsString = "'" + StringUtils.join(providerNumbers,"','") + "'";
+		
+		logger.info("providerNumbersAsString: " + providerNumbersAsString);
+
+		List<Provider> providerList = getHibernateTemplate().find("From Provider p where p.ProviderNo in (" + providerNumbersAsString + ")");
+
+		return providerList;
+	}
+
 	public Provider getProviderBySpireId(String spireId) {
 		if (spireId == null || spireId.length() <= 0) {
 			throw new IllegalArgumentException();
