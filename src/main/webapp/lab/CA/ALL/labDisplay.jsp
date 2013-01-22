@@ -1586,7 +1586,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
     XTN Extended Telecommunications Number
  --%>
  
- <%!
+<%!
 
 public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInfoDao hl7TextInfoDao, String currentAccn, int currentLabNo) {
 	List<SpireCommonAccessionNumber> removeList = new ArrayList<SpireCommonAccessionNumber>();
@@ -1630,4 +1630,4 @@ public void addToSCANRemoveList(Hl7TextInfo ver, List<SpireCommonAccessionNumber
 	}
 }
  
- %>
+%>
