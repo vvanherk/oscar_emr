@@ -96,9 +96,7 @@ public final class ProviderPreferencesUIBean {
 		if (temp != null) providerPreference.setDefaultServiceType(temp);
 		
 		temp = StringUtils.trimToNull(request.getParameter("default_bill_provider"));
-		if (temp == null) 
-			temp = "";
-		providerPreference.setBillingProviderDefault(temp);
+		if (temp != null) providerPreference.setBillingProviderDefault(temp);
 
 		temp = StringUtils.trimToNull(request.getParameter("color_template"));
 		if (temp != null) providerPreference.setColourTemplate(temp);
