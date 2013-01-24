@@ -1502,6 +1502,7 @@ function getReferralDoctorsHandler(billId) {
 				for (var i = 0; i < json.length; i++) { 			    
 				    referralDocsString+= "<li "+onclick+">";
                     referralDocsString+= "<b><span>" + json[i]['last_name'] + ", " + json[i]['first_name'] + " - " + json[i]['referral_no'] + "</span></b>";
+				    referralDocsString+= "<span style=\"display:none;\">" + json[i]['last_name'  ] + ", " + json[i]['first_name'] + "</span>";
 				    referralDocsString+= "<span style=\"display:none;\">" + json[i]['referral_no'] + "</span>";
 				    referralDocsString+= "</li>";
 				}
@@ -1532,7 +1533,7 @@ function extractReferralDoctorName(item){
 	var spanElements = item.getElementsByTagName("span");
 	
 	if (spanElements != null && spanElements.length > 0) {
-		return spanElements[0].innerHTML;
+		return spanElements[1].innerHTML;
 	}
 	
 	return "";
@@ -1548,7 +1549,7 @@ function extractReferralDoctorId(item){
 	var spanElements = item.getElementsByTagName("span");
 	
 	if (spanElements != null && spanElements.length > 0) {
-		return spanElements[1].innerHTML;
+		return spanElements[2].innerHTML;
 	}
 	
 	return "";

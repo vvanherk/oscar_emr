@@ -147,6 +147,38 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 
 		return numRows.intValue();
 	}
+
+
+    public List<Appointment> getFirstAndLastUnbilledAppointments( ) {
+		String sql1 = "SELECT a FROM Appointment a WHERE a.demographicNo != 0 and a.status IN (:status_list1) ORDER BY appointmentDate";
+        String sql2 = "SELECT a FROM Appointment a WHERE a.demographicNo != 0 and a.status IN (:status_list2) ORDER BY appointmentDate DESC";
+        //sql       += " ORDER BY appointmentDate";
+        //System.out.println( sql );
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("P");
+		statusList.add("H");
+		statusList.add("HS");
+		statusList.add("PV");
+		statusList.add("PS");
+		statusList.add("E");
+		statusList.add("ES");
+		statusList.add("EV");
+
+		Query query1 = entityManager.createQuery(sql1);
+		Query query2 = entityManager.createQuery(sql2);
+		query1.setParameter("status_list1", statusList);
+		query2.setParameter("status_list2", statusList);
+        query1.setMaxResults(1);
+        query2.setMaxResults(1);
+		
+		@SuppressWarnings("unchecked")
+		List<Appointment> rs1 = query1.getResultList();
+		List<Appointment> rs2 = query2.getResultList();
+        
+        rs1.addAll( rs2 );
+		return rs1;
+	}
 	
 	public List<Appointment> getUnbilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
 		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate <= :end_time and providerNo = :provider_no";

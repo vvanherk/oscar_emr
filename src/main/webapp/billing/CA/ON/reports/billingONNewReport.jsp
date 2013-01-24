@@ -102,8 +102,10 @@ int curYear = now.get(Calendar.YEAR);
 int curMonth = (now.get(Calendar.MONTH)+1);
 int curDay = now.get(Calendar.DAY_OF_MONTH);
 
-String xml_vdate = request.getParameter("xml_vdate") == null ? "" : request.getParameter("xml_vdate");
-String xml_appointment_date = request.getParameter("xml_appointment_date") == null? "" : request.getParameter("xml_appointment_date");
+List<Appointment> date_appts = appointmentDao.getFirstAndLastUnbilledAppointments( );                                                                                    
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+String xml_vdate            = request.getParameter("xml_vdate"           ) == null ? sdf.format( date_appts.get( 0 ).getAppointmentDate( ) ) : request.getParameter("xml_vdate"           );
+String xml_appointment_date = request.getParameter("xml_appointment_date") == null ? sdf.format( date_appts.get( 1 ).getAppointmentDate( ) ) : request.getParameter("xml_appointment_date");
 %>
 
 <%
@@ -505,12 +507,17 @@ function calToday(field) {
 </table>
 
 <form id="serviceform" name="serviceform" method="post" action="<%= request.getContextPath() %>/billing/CA/ON/billingONReport.jsp">
+<%
+    //if action is not set (first time on page), default to unbilled
+    if (action == ""){ action = "unbilled"; }
+%>
 <table width="100%" border="0" bgcolor="#b9c9fe">
     <tr>
         <td width="30%" align="center">
             <font size="2"> 
                 <input type="radio" name="reportAction" value="unbilled" <%="unbilled".equals(action)? "checked" : "" %>>Unbilled 
                 <input type="radio" name="reportAction" value="billed" <%="billed".equals(action)? "checked" : "" %>>Billed 
+                <input type="radio" name="reportAction" value="offsite" <%="offsite".equals(action)? "checked" : "" %> disabled>Offsite 
             </font>
         </td>
         <td width="20%" align="right" nowrap><b>Provider </b>
@@ -946,14 +953,12 @@ if (vecHeader != null && vecHeader.size() > 0) {
                                 <br>
                                 Specialty: <input type="text" id="referral_specialty<%=i%>" name="referral_specialty<%=i%>"> -->
                                 
-                                Enter OHIP Number:<br> <input type="text" id="referral_doc_no<%=i%>" name="referral_doc_no<%=i%>" value="<%=prop.getProperty( "rdocn", "" )%>">
-                                <br>
-                                <i>or</i>
-                                <br>
                                 Search by name:<br> <input type="text" id="referral_full_name<%=i%>" name="referral_full_name<%=i%>" value="<%=prop.getProperty( "rdocc", "" )%>" autocomplete="off" <%=onkeydown%> <%=onkeyup%>>
+                                <br>
+                                Provider number:<br> <input type="text" id="referral_doc_no<%=i%>" name="referral_doc_no<%=i%>" value="<%=prop.getProperty( "rdocn", "" )%>" disabled>
                                 <div id='referral_doc_lookup<%=i%>' class='lookup_box' style='display:none;'></div>
                                 <br>
-                                Format is <i>'lastname, firstname'</i>
+                                Search format is <i>'lastname, firstname'</i>
                             </div>
                         </div>
                     <% } %>
@@ -983,7 +988,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
                         </select>
                         
                         Admission date:
-                        <input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
+                        <input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" disabled> 
                         <img src="<%= request.getContextPath() %>/images/cal.gif" alt="" id="admission_date<%=i%>_cal">
                         <script>
                             Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y-%m-%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1,
