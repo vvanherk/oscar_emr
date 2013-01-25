@@ -124,10 +124,6 @@ for (int j=multiLabIdAsStrings.length-1; j >=0; j--) {
 }
 
 ackList = AcknowledgementData.getAcknowledgements(multiIdList);
-//multiLabId = Hl7textResultsData.getMatchingLabs(segmentID);
-//multiLabId = hl7TextInfoDao.getMatchingLabsByLabId(segmentID);
-
-MiscUtils.getLogger().info("elements: " + ackList.size());
 
 MessageHandler h = Factory.getHandler(segmentID);
 
@@ -149,23 +145,8 @@ else if (h instanceof SpireHandler) {
 	if (map != null) {
 		List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
 		
-		MiscUtils.getLogger().info("size1: " + cAccns.size());
-		
-		for (SpireCommonAccessionNumber cAccn : cAccns) {
-			MiscUtils.getLogger().info("labId: " + cAccn.getLabNo() + " " + cAccn.getCommonAccessionNumber());
-		}
-		
 		// filter out older versions of labs
 		removeDuplicates(cAccns, hl7TextInfoDao, accn, lab_no);
-		
-		// Re-order the remaining labs based on their order number
-		//reorderLabs(cAccns);
-		
-		MiscUtils.getLogger().info("size2: " + cAccns.size());
-		
-		for (SpireCommonAccessionNumber cAccn : cAccns) {
-			MiscUtils.getLogger().info("labId: " + cAccn.getLabNo());
-		}
 		
 		for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 			handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
@@ -197,7 +178,6 @@ if (ackList != null) {
 			acknowledgmentInfo.put(report.getProviderName(), report);
 		} else {
 			// Reports that are unacknowledged/unfiled should be used over ones that have been acknowledged/filed
-			MiscUtils.getLogger().info("ack: " + report.getProviderName() + " " + r.getStatus() + " " + report.getStatus());
 			if (!report.getStatus().equals("A") && !report.getStatus().equals("F") && (r.getStatus().equals("A") || r.getStatus().equals("F"))) {
 				acknowledgmentInfo.put(report.getProviderName(), report);
 			} else if (r.getStatus().equals("A") || r.getStatus().equals("F")) {
@@ -717,7 +697,6 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
                                     boolean startFlag = false;
                                     for (int j=multiID.length-1; j >=0; j--){
                                         ackList = AcknowledgementData.getAcknowledgements(multiID[j].trim());
-                                        MiscUtils.getLogger().info("BLAH: " + multiID[j] + " " + segmentID);
                                         if (multiID[j].trim().equals(segmentID))
                                             startFlag = true;                                                              
                                         if (startFlag) {
@@ -850,7 +829,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 															report = (ReportStatus) ackList.get(m);
 															int segId = Integer.parseInt(report.getSegmentID().trim());
 															String ackStatus = report.getStatus(); 
-															MiscUtils.getLogger().info("status: " + ackStatus + " " + segId);
+															
 															if (segId == info.getLabNumber() && !ackStatus.equals("A") && !ackStatus.equals("F") && report.getProviderNo().equals(providerNo)) {
 																newLabText = "<span style='color:red;'> NEW </span>";
 															}
@@ -1190,11 +1169,7 @@ public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInf
 		
 		if (vers.size() > 1) {
 			Hl7TextInfo first = vers.get(0);
-			for (Hl7TextInfo ver : vers) {
-				
-				MiscUtils.getLogger().info("accn: " + currentAccn + " " + ver.getAccessionNumber());
-				MiscUtils.getLogger().info("labid: " + currentLabNo + " " + ver.getLabNumber());
-				
+			for (Hl7TextInfo ver : vers) {				
 				// Generally, we want to keep the first (i.e. newest) version of a lab
 				if (first == ver) {
 					// Unless newest lab is NOT the version the user wants to see

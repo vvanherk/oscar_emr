@@ -625,7 +625,7 @@ public class DmsInboxManageAction extends DispatchAction {
 		
 		List<String> accns = new ArrayList<String>();
 		
-		// get accession numbers for all labs
+		// Get accession numbers for all labs
 		for (LabResultData data : labdocs) {
 			accns.add(data.getAccessionNum());
 		}
