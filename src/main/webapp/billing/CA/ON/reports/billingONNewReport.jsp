@@ -864,11 +864,13 @@ if (vecHeader != null && vecHeader.size() > 0) {
 			double billTotal = 0.0;
 			String style = "";
 			String billId = "";
+			BillingClaimHeader1 currentBill = null;
 			if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
 				hasBills = false;
 				style = "class=\"no-bills\"";
 			} else {
-				billId = ((BillingClaimHeader1)vecBills.get(i).get(0)).getId().toString();
+				currentBill = (BillingClaimHeader1)vecBills.get(i).get(0);
+				billId = currentBill.getId().toString();
 			}
 			String appointmentNo = "-1";
 			prop = (Properties)vecValue.get(i);
@@ -951,30 +953,32 @@ if (vecHeader != null && vecHeader.size() > 0) {
 				
 					<%
 					if (editable) {
+						String sliCode = (currentBill == null ? "" : currentBill.getLocation());
+						String admissionDate = (currentBill == null ? "" : currentBill.getAdmission_date());
 					%>
 						<a class="billing_button" href="" tabindex="-1" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
-						<select name="super_code<%=i%>" class="dropdown hide_element" onchange="">
+						<select id="super_code<%=i%>" name="super_code<%=i%>" class="dropdown" onchange="">
 							<option>1</option>
 							<option>2</option>
 							<option>3</option>
 						</select>
-						<a class="billing_button hide_element" href="" tabindex="-1" onclick="return false;">Add Super Code</a>
+						<a class="billing_button" href="" tabindex="-1" onclick="return false;">Add Super Code</a>
 						
-						SLI Code:
+						<b>SLI Code</b>:
 						<select class="dropdown" name="sli_code<%=i%>" onchange="">
 							<option value="<%=OscarProperties.getInstance().getProperty("clinic_no", "")%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
-                                <option value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
-                                <option value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
-                                <option value="HIP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
-                                <option value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
-                                <option value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
-                                <option value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
-                                <option value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
-                                <option value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+                                <option value="HDS" <%=sliCode.equals("HDS") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+                                <option value="HED" <%=sliCode.equals("HED") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+                                <option value="HIP" <%=sliCode.equals("HIP") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+                                <option value="HOP" <%=sliCode.equals("HOP") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+                                <option value="HRP" <%=sliCode.equals("HRP") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+                                <option value="IHF" <%=sliCode.equals("IHF") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+                                <option value="OFF" <%=sliCode.equals("OFF") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+                                <option value="OTN" <%=sliCode.equals("OTN") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 						</select>
 						
-						Admission date:
-						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
+						<b>Admission date</b>:
+						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=admissionDate%>"<%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" > 
 						<img src="<%= request.getContextPath() %>/images/cal.gif" alt="" id="admission_date<%=i%>_cal">
 						<script>
 							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y-%m-%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1,
@@ -989,9 +993,10 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							} );
 						</script>
 						
-						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" onclick="/*toggleBillNotesVisible(<%=i%>);*/" > <span class="input_element_label">Manual</span>
-						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="toggleReferralDoctorVisible(<%=i%>); if (this.checked) setFocusOnReferralDoctorInput(<%=i%>);" > <span class="input_element_label">Referral Doctor</span>
+						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" value="yes" onclick="return !isElementReadOnly(this);" onkeydown="return !isElementReadOnly(this);"> <span class="input_element_label">Manual</span>
+						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="if (isElementReadOnly(this)) { return false; } toggleReferralDoctorVisible(<%=i%>); if (this.checked) setFocusOnReferralDoctorInput(<%=i%>);" onkeydown="return !isElementReadOnly(this);" > <span class="input_element_label">Referral Doctor</span>
 						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" >
+						<input type="hidden" name="manual_checkbox<%=i%>" value="yes" >
 						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" >
 						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" >
 						<input type="hidden" name="demo_name<%=i%>" value="<%=prop.getProperty("Patient Name", "")%>" >
@@ -1438,6 +1443,7 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		String billDate = request.getParameter("bill_date"+i);
 		String billTime = request.getParameter("bill_time"+i);
 		String admissionDate = request.getParameter("admission_date"+i);
+		
 		boolean isManuallyReviewed = (request.getParameter("manual_checkbox"+i) != null);
 		String billNotes = request.getParameter("bill_notes"+i);
 		String demoName = request.getParameter("demo_name"+i);
@@ -1482,7 +1488,7 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 			formatPercents(percents);
 			String total = formatAndCalculateTotal(totals);
 						
-			
+			MiscUtils.getLogger().info("HERE MANUEL: " + request.getParameter("manual_checkbox"+i));
 			if (billId.equals("")) {
 				Demographic demo = demographicDao.getDemographic(demoNo.toString());
 				Provider prov = providerDao.getProvider(provNo);
@@ -1532,7 +1538,11 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				newBill.setBilling_date(billDateAsDate);
 				newBill.setBilling_time(billTimeAsDate);
 				newBill.setDemographic_name(demoName);
+				newBill.setLocation(sliCode);
 				newBill.setStatus("W");
+				
+				if (admissionDate.length() > 0)
+					newBill.setAdmission_date(admissionDate);
 				
 				//newBill.setApptProvider_no(apptProvNo);
 				
@@ -1651,6 +1661,7 @@ void validate(BillingClaimHeader1 newBill, BillingServiceDao billingServiceDao, 
     // Validate
     Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
     Set<ConstraintViolation<BillingClaimHeader1>>  constraintViolations = validator.validate(newBill);
+    MiscUtils.getLogger().info("adm date: " + newBill.getAdmission_date());
     
     // if there are validation errors, throw exception
     if (constraintViolations.size() > 0) {
