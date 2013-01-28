@@ -154,7 +154,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
 		
 		bill2.creator = new String( bill.getCreator() );
 		bill2.timestamp1 = new Date( bill.getTimestamp1().getTime() );
-		bill2.clinic = new String( bill.getClinic() );
+		bill2.clinic = new String( bill.getClinic() == null ? "" : bill.getClinic() );
 		
 		List<BillingItem> items = bill.getBillingItems();
 		List<BillingItem> billingItems = bill2.getBillingItems();
@@ -266,7 +266,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     }
 
     @Column(length=10)
-    @Pattern(regexp = "\\d\\d\\d\\d-\\d\\d-\\d\\d", message="Admission date must be in the format yyyy-mm-dd.")
+    @Pattern(regexp = "(\\d\\d\\d\\d-\\d\\d-\\d\\d|)", message="Admission date must be in the format yyyy-mm-dd.")
     public String getAdmission_date() {
         return admission_date;
     }
