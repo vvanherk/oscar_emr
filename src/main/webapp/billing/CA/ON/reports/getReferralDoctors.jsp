@@ -21,7 +21,7 @@ String tokenize(String input) {
 	if (input == null)
 		input = "";
 		
-	return input;
+	return input.trim();
 }
 %>
 

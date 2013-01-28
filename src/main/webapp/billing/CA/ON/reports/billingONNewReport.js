@@ -1,6 +1,6 @@
 /**
  * 
- * totalNumberOfBills (int), incrementingId (int), demographicNumbers (Array), and appointmentNumbers (Array) are required for this script.
+ * totalNumberOfBills (int), incrementingId (int), demographicNumbers (Array), appointmentNumbers (Array), and fullContextPath (String) are required for this script.
  */ 
 
 /**
@@ -31,6 +31,16 @@ function  preventEventPropagation(event) {
    } else if(window.event){
       window.event.cancelBubble = true;
    }
+}
+
+
+
+/** Some helper functions **/
+function isElementReadOnly(elem) {
+	if ( $(elem).is('[readonly=readonly]') ) 
+		return true;
+	
+	return false;
 }
 
 
@@ -356,6 +366,17 @@ function setReferralDoctorId(billId, refDocId) {
 	}
 }
 
+function setProviderDefault() {
+	
+}
+
+function setBillingProvider(providerNo) {
+	providerNo = providerNo || "";
+	
+	$("#billing_provider").val( providerNo ).attr('selected',true);
+
+}
+
 /**
  * function checkIfLastBillingItem
  * 
@@ -577,62 +598,92 @@ function validateAdmissionTime(billId) {
 function saveBill(billId) {
 	if (!validateBill(billId)) {
 		return false;
-	}	
+	}
 	
-	var elem = document.getElementById("bill_details"+billId);
-	removeClass('incompleted', elem);
-	addClass('completed', elem);
+	var elem = $('#bill_details' + billId);
+	elem.removeClass('incompleted');
+	elem.addClass('completed');
 	
-	// convert input elements to span elements (i.e. uneditable text)
-	var rows = elem.getElementsByTagName("tr");
-	for (var i=0; i < rows.length; i++) {
-		var cells = rows[i].getElementsByTagName("td");
-		for (var j=0; j < cells.length; j++) {
+	// Convert input elements to span elements (i.e. uneditable text)
+	$( elem ).each(function() {
+		var cells = $(this).find('input:not(type="hidden")[id]');
+		$( cells ).each(function() {
+			//console.log( $(this).prop('id') );
+			$(this).addClass('hide_element');
+			
+			// Special case: Don't create span for referral doctor number
+			if ($(this).attr('id').indexOf('referral_doc_no') != -1)
+				return true;
+			
 			var replacementElement = document.createElement("span");
 			replacementElement.className = "saved_element";
 			
-			if (cells[j] == undefined)
-				continue;
+			replacementElement.innerHTML = $(this).val();
+			$(this).after( $(replacementElement) );
+		});
+		
+		// Hide any text areas (where id is not empty/null)
+		cells = $(this).find('textarea[id]');
+		$( cells ).each(function() {
+			$(this).addClass('hide_element');
 			
-			var inputElement = cells[j].getElementsByTagName("input")[0];
-			if (inputElement == null)
-				continue;
-				
-			replacementElement.innerHTML = inputElement.value;
-			inputElement.style.visibility = "hidden";
-			inputElement.style.display = "none";
-			//cells[j].removeChild(inputElement);
-			cells[j].appendChild(replacementElement);
-		}
-	}
+			var replacementElement = document.createElement("span");
+			replacementElement.className = "saved_element";
+			
+			replacementElement.innerHTML = $(this).val();
+			$(this).after( $(replacementElement) );
+		});
+		
+		// Hide any dropdowns
+		rows = elem.find('.dropdown');
+		rows.each( function() {
+			$(this).addClass('hide_element');
+			
+			// Special case: Don't create span for super code dropdown
+			if ($(this).is('[id^=super_code]'))
+				return true;
+			
+			var replacementElement = document.createElement("span");
+			replacementElement.className = "saved_element";
+			
+			replacementElement.innerHTML = $(this).find(":selected").val();
+			$(this).after( $(replacementElement) );
+		});
+		
+		// Hide our images
+		cells = $(this).find('img');
+		$( cells ).each(function() {
+			$(this).addClass('hide_element');
+		});
+	});
 	
-	elem = document.getElementById("bill"+billId);
-	removeClass('no-bills', elem);
-	addClass('completed', elem);
+	elem = $('#bill' + billId);
+	elem.removeClass('no-bills');
+	elem.addClass('completed');
 	
 	var inputElement = document.createElement("input");
 	inputElement.type = "hidden";
 	inputElement.name = "bill_saved"+billId;
 	inputElement.className = "bill_saved";
-	elem.appendChild(inputElement);
+	elem.append(inputElement);
+	
+	elem = $('#bill_details' + billId).find('*');
 	
 	// hide all input and input related elements
-	var rows = elem.getElementsByClassName("billing_button");
-	for (var i=0; i < rows.length; i++) {
-		addClass('hide_element', rows[i]);
-	}
-	var rows = elem.getElementsByClassName("dropdown");
-	for (var i=0; i < rows.length; i++) {
-		addClass('hide_element', rows[i]);
-	}
-	var rows = elem.getElementsByClassName("checkbox");
-	for (var i=0; i < rows.length; i++) {
-		addClass('hide_element', rows[i]);
-	}
-	var rows = elem.getElementsByClassName("input_element_label");
-	for (var i=0; i < rows.length; i++) {
-		addClass('hide_element', rows[i]);
-	}	
+	var rows = elem.find('.billing_button');
+	rows.each(function( index ) {
+		$(this).addClass('hide_element');
+	});
+	
+	rows = elem.find('.checkbox');
+	rows.each(function( index ) {
+		$(this).attr('readonly', 'readonly');
+	});
+	
+	//rows = elem.find('.input_element_label');
+	//rows.each(function( index ) {
+	//	$(this).addClass('hide_element');
+	//});
 	
 	// hide the 'more details' table
 	hideMoreDetails(billId, demographicNumbers[billId], appointmentNumbers[billId]);
@@ -649,33 +700,37 @@ function saveBill(billId) {
  * 
  */ 
 function unsaveBill(billId) {
-	var elem = document.getElementById("bill_details"+billId);
-	removeClass('completed', elem);
-	//addClass('incompleted', elem);
+	var elem = $('#bill_details' + billId);
+	elem.removeClass('completed');
 	
 	// delete elements of class 'saved_element' and show input elements
-	var rows = elem.getElementsByTagName("tr");
-	for (var i=0; i < rows.length; i++) {
-		var cells = rows[i].getElementsByTagName("td");
-		for (var j=0; j < cells.length; j++) {
-			if (cells[j] == undefined)
-				continue;
+	$( elem ).each(function() {
+		// Re-display our input elements
+		cells = $(this).find('input[id]');
+		$( cells ).each(function() {
+			//console.log( $(this).text() );			
+			$(this).removeClass('hide_element');
+		});
+		
+		// Re-display any text areas
+		cells = $(this).find('textarea[id]');
+		$( cells ).each(function() {
+			$(this).removeClass('hide_element');			
+		});
+		
+		// Re-display our images
+		cells = $(this).find('img');
+		$( cells ).each(function() {
+			$(this).removeClass('hide_element');
 			
-			var replacementElement = cells[j].getElementsByClassName("saved_element")[0];
-			if (replacementElement == null)
-				continue;
-				
-			var inputElement = cells[j].getElementsByTagName("input")[0];
-			if (inputElement == null)
-				continue;
-
-			inputElement.style.visibility = "visible";
-			inputElement.style.display = "";
-			//cells[j].removeChild(inputElement);
-			//cells[j].appendChild(replacementElement);
-			cells[j].removeChild(replacementElement);
-		}
-	}
+		});
+		
+		// Remove our 'read only' elements
+		cells = $(this).find('.saved_element');
+		$( cells ).each(function() {				
+			$(this).remove();
+		});
+	});
 	
 	elem = document.getElementById("bill"+billId);
 	removeClass('no-bills', elem);
@@ -685,23 +740,28 @@ function unsaveBill(billId) {
 	if (inputElement != undefined)
 		elem.removeChild(inputElement);
 	
+	elem = $('#bill_details' + billId).find('*');
+	
 	// hide all input and input related elements
-	var rows = elem.getElementsByClassName("billing_button");
-	for (var i=0; i < rows.length; i++) {
-		removeClass('hide_element', rows[i]);
-	}
-	var rows = elem.getElementsByClassName("dropdown");
-	for (var i=0; i < rows.length; i++) {
-		removeClass('hide_element', rows[i]);
-	}
-	var rows = elem.getElementsByClassName("checkbox");
-	for (var i=0; i < rows.length; i++) {
-		removeClass('hide_element', rows[i]);
-	}
-	var rows = elem.getElementsByClassName("input_element_label");
-	for (var i=0; i < rows.length; i++) {
-		removeClass('hide_element', rows[i]);
-	}
+	var rows = elem.find('.billing_button');
+	rows.each(function( index ) {
+		$(this).removeClass('hide_element');
+	});
+	
+	rows = elem.find('.dropdown');
+	rows.each(function( index ) {
+		$(this).removeClass('hide_element');
+	});
+	
+	rows = elem.find('.checkbox');
+	rows.each(function( index ) {
+		$(this).removeAttr('readonly');
+	});
+	
+	rows = elem.find('.input_element_label');
+	rows.each(function( index ) {
+		$(this).removeClass('hide_element');
+	});
 	
 	// hide the 'more details' table
 	//hideMoreDetails(billId, demographicNumbers[billId], appointmentNumbers[billId]);
@@ -1494,16 +1554,15 @@ function getReferralDoctorsHandler(billId) {
 			if (json.length != 0) {	
 				var referralDocsString = "<ul>";
 				var onclick = "onclick=\"";
-				onclick += "setReferralDoctorName("+billId+", extractReferralDoctorName(this));";
+				onclick += "setReferralDoctorName("+billId+", extractReferralDoctorName(this) + ' (' + extractReferralDoctorId(this) + ')');";
 				onclick += "setReferralDoctorId("+billId+", extractReferralDoctorId(this));";
 				onclick += "hideReferralDoctorsLookup("+billId+");";
 				//onclick += "setFocusOnInputField("+billId+", "+billingItemId+", 2);";
 				onclick += "\"";
 				for (var i = 0; i < json.length; i++) { 			    
 				    referralDocsString+= "<li "+onclick+">";
-                    referralDocsString+= "<b><span>" + json[i]['last_name'] + ", " + json[i]['first_name'] + " - " + json[i]['referral_no'] + "</span></b>";
-				    referralDocsString+= "<span style=\"display:none;\">" + json[i]['last_name'  ] + ", " + json[i]['first_name'] + "</span>";
-				    referralDocsString+= "<span style=\"display:none;\">" + json[i]['referral_no'] + "</span>";
+				    referralDocsString+= "<b><span>" + json[i]['last_name'] + ", " + json[i]['first_name'] + "</span></b>";
+				    referralDocsString+= " (<span>" + json[i]['referral_no'] + "</span>)";
 				    referralDocsString+= "</li>";
 				}
 				referralDocsString += "</ul>";
@@ -1533,7 +1592,7 @@ function extractReferralDoctorName(item){
 	var spanElements = item.getElementsByTagName("span");
 	
 	if (spanElements != null && spanElements.length > 0) {
-		return spanElements[1].innerHTML;
+		return spanElements[0].innerHTML;
 	}
 	
 	return "";
@@ -1549,7 +1608,7 @@ function extractReferralDoctorId(item){
 	var spanElements = item.getElementsByTagName("span");
 	
 	if (spanElements != null && spanElements.length > 0) {
-		return spanElements[2].innerHTML;
+		return spanElements[1].innerHTML;
 	}
 	
 	return "";
@@ -1874,7 +1933,7 @@ function extractDiagnosticDescription(item){
 function getReferralDoctors(billId, referralDocName) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getReferralDoctorsHandler(billId);
-	AJAX.open("GET", "reports/getReferralDoctors.jsp?full_name="+referralDocName);
+	AJAX.open("GET", fullContextPath + "/getReferralDoctors.jsp?full_name="+referralDocName);
 	AJAX.send("");
 }
 /**
@@ -1883,7 +1942,7 @@ function getReferralDoctors(billId, referralDocName) {
 function getBillsForDemographic(billId, demographicNo) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getBillsHandler(billId);
-	AJAX.open("GET", "reports/getBills.jsp?demographicNo="+demographicNo);
+	AJAX.open("GET", fullContextPath + "/getBills.jsp?demographicNo="+demographicNo);
 	AJAX.send("");
 }
 
@@ -1893,7 +1952,7 @@ function getBillsForDemographic(billId, demographicNo) {
 function getAppointmentNotes(billId, appointmentNo) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getAppointmentNotesHandler(billId);
-	AJAX.open("GET", "reports/getAppointmentNotes.jsp?appointmentNo="+appointmentNo);
+	AJAX.open("GET", fullContextPath + "/getAppointmentNotes.jsp?appointmentNo="+appointmentNo);
 	AJAX.send("");
 }
 
@@ -1903,7 +1962,7 @@ function getAppointmentNotes(billId, appointmentNo) {
 function getBillingCodes(billId, billingItemId, serviceCode) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getBillingCodesHandler(billId, billingItemId);
-	AJAX.open("GET", "reports/getBillingCodes.jsp?serviceCode="+serviceCode);
+	AJAX.open("GET", fullContextPath + "/getBillingCodes.jsp?serviceCode="+serviceCode);
 	AJAX.send("");
 }
 
@@ -1913,6 +1972,6 @@ function getBillingCodes(billId, billingItemId, serviceCode) {
 function getDiagnosticCodes(billId, billingItemId, diagnosticCode, description) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getDiagnosticCodeHandler(billId, billingItemId, diagnosticCode, description);
-	AJAX.open("GET", "reports/getDiagnosticCodes.jsp?diagnosticCode="+diagnosticCode+"&diagnosticDescription="+description);
+	AJAX.open("GET", fullContextPath + "/getDiagnosticCodes.jsp?diagnosticCode="+diagnosticCode+"&diagnosticDescription="+description);
 	AJAX.send("");
 }
