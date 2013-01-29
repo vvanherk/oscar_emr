@@ -901,10 +901,10 @@ if (vecHeader != null && vecHeader.size() > 0) {
 					if (editable) {
 						
 						String onkeydown = "onkeydown=\"";
-						onkeydown+= "if (isTabKey(event)) {";
-						onkeydown+= "	hideAllLookups("+i+"); ";
-						onkeydown+= "	return true; ";
-						onkeydown+= "}";
+						//onkeydown+= "if (isTabKey(event)) {";
+						//onkeydown+= "	hideAllLookups("+i+"); ";
+						//onkeydown+= "	return true; ";
+						//onkeydown+= "}";
 						onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
 						onkeydown+= "if (lookupIsOpen) {";
 						onkeydown+= "	if (isMoveBetweenLookupItems(event)) {";
@@ -912,6 +912,8 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						onkeydown+= "	}";
 						onkeydown+= "	if (isSelectLookupItem(event)) {";
 						onkeydown+= "		selectLookupItem("+i+");";
+						onkeydown+= "		if (isTabKey(event))";
+						onkeydown+= "			return false;";
 						onkeydown+= "	}";
 						onkeydown+= "	if (isEscapeKey(event)) {";
 						onkeydown+= "		hideAllLookups("+i+");";
@@ -1213,10 +1215,10 @@ String getFormatDateStr(String str) {
 
 String getAdmissionDateOnKeydownString(int i, String demoNo, String apptNo) {
 	String onkeydown = "onkeydown=\"";
-	onkeydown+= "if (isTabKey(event)) {";
-	onkeydown+= "	hideAllLookups("+i+"); ";
-	onkeydown+= "	return true; ";
-	onkeydown+= "}";
+	//onkeydown+= "if (isTabKey(event)) {";
+	//onkeydown+= "	hideAllLookups("+i+"); ";
+	//onkeydown+= "	return true; ";
+	//onkeydown+= "}";
 	onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
 	onkeydown+= "if (!lookupIsOpen) {";
 	onkeydown+= "	if (isMoveBetweenBills(event) && isCtrlKey(event)) {";
@@ -1240,10 +1242,10 @@ String getAdmissionDateOnKeydownString(int i, String demoNo, String apptNo) {
 
 String getOnKeydownString(int i, String demoNo, String apptNo) {
 	String onkeydown = "onkeydown=\"";
-	onkeydown+= "if (isTabKey(event)) {";
-	onkeydown+= "	hideAllLookups("+i+"); ";
-	onkeydown+= "	return true; ";
-	onkeydown+= "}";
+	//onkeydown+= "if (isTabKey(event)) {";
+	//onkeydown+= "	hideAllLookups("+i+"); ";
+	//onkeydown+= "	return true; ";
+	//onkeydown+= "}";
 	onkeydown+= "if (isDeleteBillingItemKey(event)) {";
 	//onkeydown+= "	deleteBillingItem("+i+", "+uniqueId+");";
 	onkeydown+= "";
@@ -1264,6 +1266,8 @@ String getOnKeydownString(int i, String demoNo, String apptNo) {
 	onkeydown+= "	}";
 	onkeydown+= "	if (isSelectLookupItem(event)) {";
 	onkeydown+= "		selectLookupItem("+i+");";
+	onkeydown+= "		if (isTabKey(event))";
+	onkeydown+= "			return false;";
 	onkeydown+= "	}";
 	onkeydown+= "	if (isEscapeKey(event)) {";
 	onkeydown+= "		hideAllLookups("+i+");";

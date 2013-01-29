@@ -26,11 +26,20 @@ document.onkeydown = function(evt) {
  * Why do this? Some elements don't want to allow events to propogate up (i.e. clicking a checkbox on a bill shouldn't open the bill)
  */ 
 function  preventEventPropagation(event) {
+   var keynum = (event.which) ? event.which : event.keyCode;	
+   
    if (event.stopPropagation){
        event.stopPropagation();
+       console.log("good " + keynum);
    } else if(window.event){
       window.event.cancelBubble = true;
+      console.log("good " + keynum);
+   } else if (event.preventDefault) {
+	   event.preventDefault();
    }
+   
+   
+   console.log( "crap " + keynum);
 }
 
 
@@ -786,10 +795,10 @@ function addBillingItem(id) {
 	//element.setAttribute("id", "billing_item"+id+"_"+billingItemId);
 	
 	var onkeydown = "onkeydown=\"";
-	onkeydown+= "if (isTabKey(event)) {";
-	onkeydown+= "	hideAllLookups("+id+"); ";
-	onkeydown+= "	return true; ";
-	onkeydown+= "}";
+	//onkeydown+= "if (isTabKey(event)) {";
+	//onkeydown+= "	hideAllLookups("+id+"); ";
+	//onkeydown+= "	return true; ";
+	//onkeydown+= "}";
 	onkeydown+= "var lookupIsOpen = isLookupOpen("+id+");";
 	onkeydown+= "if (!lookupIsOpen) {";
 	onkeydown+= "	if (isSaveBill(event)) {";
@@ -806,6 +815,8 @@ function addBillingItem(id) {
 	onkeydown+= "	}";
 	onkeydown+= "	if (isSelectLookupItem(event)) {";
 	onkeydown+= "		selectLookupItem("+id+");";
+	onkeydown+= "		if (isTabKey(event))";
+	onkeydown+= "			return false;";
 	onkeydown+= "	}";
 	onkeydown+= "	if (isEscapeKey(event)) {";
 	onkeydown+= "		hideAllLookups("+id+");";
@@ -986,8 +997,10 @@ function setFocusOnInputField(billId, billingItemId, inputIndex) {
 	if (billingItemId < 0) {
 		var firstBillingItem = document.getElementById("billing_items"+billId).getElementsByTagName("tr")[0];
 		var inputField = firstBillingItem.getElementsByTagName("input")[inputIndex];
-		if (inputField != undefined)
+		if (inputField != undefined) {
 			inputField.focus();
+			inputField.select();
+		}
 		return;
 	}
 	
@@ -995,6 +1008,7 @@ function setFocusOnInputField(billId, billingItemId, inputIndex) {
 	
 	if (billingItem != null && billingItem != undefined) {
 		billingItem.getElementsByTagName("input")[inputIndex].focus();
+		billingItem.getElementsByTagName("input")[inputIndex].select();
 	}
 }
 
@@ -1231,7 +1245,7 @@ function isMoveBetweenLookupItems(evt) {
 }
 
 function isSelectLookupItem(evt) {
-	return isEnterKey(evt);
+	return isEnterKey(evt) || isTabKey(evt);
 }
 
 /**
