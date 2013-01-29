@@ -64,6 +64,15 @@
 
 <%    
 if(session.getAttribute("user") == null) response.sendRedirect("../logout.jsp");
+
+boolean hasEChartPermission = false;
+%>
+
+<security:oscarSec objectName="_eChart" roleName="<%=roleName$%>" rights="r" reverse="false">
+	<% hasEChartPermission = true; %>
+</security:oscarSec>
+
+<%
 String user_no = (String) session.getAttribute("user");
 
 
@@ -1126,9 +1135,19 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							</td>
 							<td>
 								<div class="more_details">
-									<table class="appointment_notes" id="appointment_notes<%=i%>" >
-										<tbody><tr><td>Loading...Please wait.</td></tr></tbody>
-									</table>
+									<%
+									if (hasEChartPermission) {
+									%>
+										<table class="appointment_notes" id="appointment_notes<%=i%>" >
+											<tbody><tr><td>Loading...Please wait.</td></tr></tbody>
+										</table>
+									<%
+									} else {
+									%>
+										<div>You do not have sufficient priveleges to view the encounter notes.</div>
+									<%
+									}
+									%>
 								</div>
 							</td>
 						</tr>
