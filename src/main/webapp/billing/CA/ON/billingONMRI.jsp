@@ -19,6 +19,10 @@
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%@ page import="oscar.login.DBHelp"%>
 
+<%@page import="org.oscarehr.common.model.ProviderBillCenter" %>
+<%@page import="org.oscarehr.common.dao.ProviderBillCenterDao" %>
+<%@page import="org.oscarehr.util.SpringUtils" %>
+
 <%
 	if(session.getAttribute("user") == null ) response.sendRedirect("../logout.jsp");
 	String curProvider_no = (String) session.getAttribute("user");
@@ -157,6 +161,38 @@ obj.visibility=v; }
 }
 //-->
 </script>
+
+<script>
+var providerBillCenterMap = new Object();
+<%
+ProviderBillCenterDao providerBillCenterDao = (ProviderBillCenterDao)SpringUtils.getBean("providerBillCenterDao");
+
+ResultSet rsProviders = apptMainBean.queryResults("%", "search_provider_dt");
+while(rsProviders.next()) {
+	String providerNo = rsProviders.getString("provider_no");
+	ProviderBillCenter pbc = providerBillCenterDao.find(providerNo);
+	%>
+	providerBillCenterMap['<%=providerNo%>'] = '<%=pbc.getBillCenterCode()%>';
+	<%
+}
+%>
+
+function setBillingCenter( providerNo ) {
+	var bcDropdown = document.getElementById("billcenter");
+	
+	var textToFind = providerBillCenterMap[providerNo];
+	
+	if (bcDropdown) {
+		for (var i = 0; i < bcDropdown.options.length; i++) {
+	    if (bcDropdown.options[i].value === textToFind) {
+	        bcDropdown.selectedIndex = i;
+	        break;
+	    }
+	}
+	}
+}
+</script>
+
 </head>
 
 <body bgcolor="#FFFFFF" text="#000000" onLoad="setfocus()" topmargin="0"
@@ -202,7 +238,7 @@ obj.visibility=v; }
 		<td width="220"><a href="#"
 			onClick="showHideLayers('Layer2','','show')">Show Archive</a></td>
 		<td width="220">Select Provider</td>
-		<td width="254"><select name="provider">
+		<td width="254"><select name="provider" onchange = "setBillingCenter(this.value);">
 			<%
 			List providerStr; 
 			
@@ -236,7 +272,7 @@ obj.visibility=v; }
 			%>
 		</select></td>
 		<td width="200">Billing Center</td>
-		<td width="254"><select name="billcenter">
+		<td width="254"><select name="billcenter" id="billcenter">
 
 			<%for (Enumeration e = BillingDataHlp.propBillingCenter.propertyNames(); e.hasMoreElements();) {
 				String centerCode = (String) e.nextElement();
