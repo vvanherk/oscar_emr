@@ -1381,25 +1381,25 @@ function moveToPreviousLookupItem(billId) {
 function showMoreDetails(billId, demographicNo, appointmentNo) {
 	// load details if not already loaded
 	var element = document.getElementById("billing_history"+billId);
-	var billDetailsElement = element;
-	
-	element = document.getElementById("appointment_notes"+billId);
-	var appointmentNotesElement = element;
-	
-	var contents = (billDetailsElement.innerHTML.trim) ? billDetailsElement.innerHTML.trim() : billDetailsElement.innerHTML.replace(/^\s+/,'');
-	if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
-		//billDetailsElement.innerHTML = formatBills( getBillsForDemographic(billId, demographicNo) );
-		getBillsForDemographic(billId, demographicNo);
+	if (element) {
+		var billDetailsElement = element;
+			
+		var contents = (billDetailsElement.innerHTML.trim) ? billDetailsElement.innerHTML.trim() : billDetailsElement.innerHTML.replace(/^\s+/,'');
+		if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
+			getBillsForDemographic(billId, demographicNo);
+		}
 	}
 	
-	contents = (appointmentNotesElement.innerHTML.trim) ? appointmentNotesElement.innerHTML.trim() : appointmentNotesElement.innerHTML.replace(/^\s+/,'');
-	if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
-		//appointmentNotesElement.innerHTML = formatAppointmentNotes( getAppointmentNotes(billId, appointmentNo) );
-		getAppointmentNotes(billId, appointmentNo);
+	element = document.getElementById("appointment_notes"+billId);
+	if (element) {
+		var appointmentNotesElement = element;
+		var contents = (appointmentNotesElement.innerHTML.trim) ? appointmentNotesElement.innerHTML.trim() : appointmentNotesElement.innerHTML.replace(/^\s+/,'');
+		if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
+			getAppointmentNotes(billId, appointmentNo);
+		}
 	}
 	
 	// show the details
-	//document.getElementById("more_details"+billId).style.display = "";
 	removeClass("hide", document.getElementById("more_details"+billId));
 	document.getElementById("more_details_button"+billId).onclick = function() { hideMoreDetails(billId, demographicNo, appointmentNo); return false; }
 	document.getElementById("more_details_button"+billId).innerHTML = "less";
@@ -1719,14 +1719,16 @@ function getBillsHandler(billId) {
 			}
 			
 			var element = document.getElementById("billing_history"+billId);
-			element.innerHTML = billString;
+			if (element)
+				element.innerHTML = billString;
 	
 			
 			//alert('Success. Result: ' + json);
 		}else if (this.readyState == 4 && this.status != 200) {
 			//alert('Something went wrong...');
 			var element = document.getElementById("billing_history"+billId);
-			element.innerHTML = "<tbody><tr><td>An error occured.</td></tr></tbody>";
+			if (element)
+				element.innerHTML = "<tbody><tr><td>An error occured.</td></tr></tbody>";
 		}
 	};
 }
