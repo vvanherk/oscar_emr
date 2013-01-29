@@ -64,6 +64,15 @@
 
 <%    
 if(session.getAttribute("user") == null) response.sendRedirect("../logout.jsp");
+
+boolean hasEChartPermission = false;
+%>
+
+<security:oscarSec objectName="_eChart" roleName="<%=roleName$%>" rights="r" reverse="false">
+	<% hasEChartPermission = true; %>
+</security:oscarSec>
+
+<%
 String user_no = (String) session.getAttribute("user");
 
 
@@ -901,10 +910,10 @@ if (vecHeader != null && vecHeader.size() > 0) {
 					if (editable) {
 						
 						String onkeydown = "onkeydown=\"";
-						onkeydown+= "if (isTabKey(event)) {";
-						onkeydown+= "	hideAllLookups("+i+"); ";
-						onkeydown+= "	return true; ";
-						onkeydown+= "}";
+						//onkeydown+= "if (isTabKey(event)) {";
+						//onkeydown+= "	hideAllLookups("+i+"); ";
+						//onkeydown+= "	return true; ";
+						//onkeydown+= "}";
 						onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
 						onkeydown+= "if (lookupIsOpen) {";
 						onkeydown+= "	if (isMoveBetweenLookupItems(event)) {";
@@ -912,6 +921,8 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						onkeydown+= "	}";
 						onkeydown+= "	if (isSelectLookupItem(event)) {";
 						onkeydown+= "		selectLookupItem("+i+");";
+						onkeydown+= "		if (isTabKey(event))";
+						onkeydown+= "			return false;";
 						onkeydown+= "	}";
 						onkeydown+= "	if (isEscapeKey(event)) {";
 						onkeydown+= "		hideAllLookups("+i+");";
@@ -1129,9 +1140,19 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							</td>
 							<td>
 								<div class="more_details">
-									<table class="appointment_notes" id="appointment_notes<%=i%>" >
-										<tbody><tr><td>Loading...Please wait.</td></tr></tbody>
-									</table>
+									<%
+									if (hasEChartPermission) {
+									%>
+										<table class="appointment_notes" id="appointment_notes<%=i%>" >
+											<tbody><tr><td>Loading...Please wait.</td></tr></tbody>
+										</table>
+									<%
+									} else {
+									%>
+										<div>You do not have sufficient priveleges to view the encounter notes.</div>
+									<%
+									}
+									%>
 								</div>
 							</td>
 						</tr>
@@ -1213,10 +1234,10 @@ String getFormatDateStr(String str) {
 
 String getAdmissionDateOnKeydownString(int i, String demoNo, String apptNo) {
 	String onkeydown = "onkeydown=\"";
-	onkeydown+= "if (isTabKey(event)) {";
-	onkeydown+= "	hideAllLookups("+i+"); ";
-	onkeydown+= "	return true; ";
-	onkeydown+= "}";
+	//onkeydown+= "if (isTabKey(event)) {";
+	//onkeydown+= "	hideAllLookups("+i+"); ";
+	//onkeydown+= "	return true; ";
+	//onkeydown+= "}";
 	onkeydown+= "var lookupIsOpen = isLookupOpen("+i+");";
 	onkeydown+= "if (!lookupIsOpen) {";
 	onkeydown+= "	if (isMoveBetweenBills(event) && isCtrlKey(event)) {";
@@ -1240,10 +1261,10 @@ String getAdmissionDateOnKeydownString(int i, String demoNo, String apptNo) {
 
 String getOnKeydownString(int i, String demoNo, String apptNo) {
 	String onkeydown = "onkeydown=\"";
-	onkeydown+= "if (isTabKey(event)) {";
-	onkeydown+= "	hideAllLookups("+i+"); ";
-	onkeydown+= "	return true; ";
-	onkeydown+= "}";
+	//onkeydown+= "if (isTabKey(event)) {";
+	//onkeydown+= "	hideAllLookups("+i+"); ";
+	//onkeydown+= "	return true; ";
+	//onkeydown+= "}";
 	onkeydown+= "if (isDeleteBillingItemKey(event)) {";
 	//onkeydown+= "	deleteBillingItem("+i+", "+uniqueId+");";
 	onkeydown+= "";
@@ -1264,6 +1285,8 @@ String getOnKeydownString(int i, String demoNo, String apptNo) {
 	onkeydown+= "	}";
 	onkeydown+= "	if (isSelectLookupItem(event)) {";
 	onkeydown+= "		selectLookupItem("+i+");";
+	onkeydown+= "		if (isTabKey(event))";
+	onkeydown+= "			return false;";
 	onkeydown+= "	}";
 	onkeydown+= "	if (isEscapeKey(event)) {";
 	onkeydown+= "		hideAllLookups("+i+");";

@@ -26,11 +26,20 @@ document.onkeydown = function(evt) {
  * Why do this? Some elements don't want to allow events to propogate up (i.e. clicking a checkbox on a bill shouldn't open the bill)
  */ 
 function  preventEventPropagation(event) {
+   var keynum = (event.which) ? event.which : event.keyCode;	
+   
    if (event.stopPropagation){
        event.stopPropagation();
+       console.log("good " + keynum);
    } else if(window.event){
       window.event.cancelBubble = true;
+      console.log("good " + keynum);
+   } else if (event.preventDefault) {
+	   event.preventDefault();
    }
+   
+   
+   console.log( "crap " + keynum);
 }
 
 
@@ -786,10 +795,10 @@ function addBillingItem(id) {
 	//element.setAttribute("id", "billing_item"+id+"_"+billingItemId);
 	
 	var onkeydown = "onkeydown=\"";
-	onkeydown+= "if (isTabKey(event)) {";
-	onkeydown+= "	hideAllLookups("+id+"); ";
-	onkeydown+= "	return true; ";
-	onkeydown+= "}";
+	//onkeydown+= "if (isTabKey(event)) {";
+	//onkeydown+= "	hideAllLookups("+id+"); ";
+	//onkeydown+= "	return true; ";
+	//onkeydown+= "}";
 	onkeydown+= "var lookupIsOpen = isLookupOpen("+id+");";
 	onkeydown+= "if (!lookupIsOpen) {";
 	onkeydown+= "	if (isSaveBill(event)) {";
@@ -806,6 +815,8 @@ function addBillingItem(id) {
 	onkeydown+= "	}";
 	onkeydown+= "	if (isSelectLookupItem(event)) {";
 	onkeydown+= "		selectLookupItem("+id+");";
+	onkeydown+= "		if (isTabKey(event))";
+	onkeydown+= "			return false;";
 	onkeydown+= "	}";
 	onkeydown+= "	if (isEscapeKey(event)) {";
 	onkeydown+= "		hideAllLookups("+id+");";
@@ -986,8 +997,10 @@ function setFocusOnInputField(billId, billingItemId, inputIndex) {
 	if (billingItemId < 0) {
 		var firstBillingItem = document.getElementById("billing_items"+billId).getElementsByTagName("tr")[0];
 		var inputField = firstBillingItem.getElementsByTagName("input")[inputIndex];
-		if (inputField != undefined)
+		if (inputField != undefined) {
 			inputField.focus();
+			inputField.select();
+		}
 		return;
 	}
 	
@@ -995,6 +1008,7 @@ function setFocusOnInputField(billId, billingItemId, inputIndex) {
 	
 	if (billingItem != null && billingItem != undefined) {
 		billingItem.getElementsByTagName("input")[inputIndex].focus();
+		billingItem.getElementsByTagName("input")[inputIndex].select();
 	}
 }
 
@@ -1231,7 +1245,7 @@ function isMoveBetweenLookupItems(evt) {
 }
 
 function isSelectLookupItem(evt) {
-	return isEnterKey(evt);
+	return isEnterKey(evt) || isTabKey(evt);
 }
 
 /**
@@ -1367,25 +1381,25 @@ function moveToPreviousLookupItem(billId) {
 function showMoreDetails(billId, demographicNo, appointmentNo) {
 	// load details if not already loaded
 	var element = document.getElementById("billing_history"+billId);
-	var billDetailsElement = element;
-	
-	element = document.getElementById("appointment_notes"+billId);
-	var appointmentNotesElement = element;
-	
-	var contents = (billDetailsElement.innerHTML.trim) ? billDetailsElement.innerHTML.trim() : billDetailsElement.innerHTML.replace(/^\s+/,'');
-	if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
-		//billDetailsElement.innerHTML = formatBills( getBillsForDemographic(billId, demographicNo) );
-		getBillsForDemographic(billId, demographicNo);
+	if (element) {
+		var billDetailsElement = element;
+			
+		var contents = (billDetailsElement.innerHTML.trim) ? billDetailsElement.innerHTML.trim() : billDetailsElement.innerHTML.replace(/^\s+/,'');
+		if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
+			getBillsForDemographic(billId, demographicNo);
+		}
 	}
 	
-	contents = (appointmentNotesElement.innerHTML.trim) ? appointmentNotesElement.innerHTML.trim() : appointmentNotesElement.innerHTML.replace(/^\s+/,'');
-	if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
-		//appointmentNotesElement.innerHTML = formatAppointmentNotes( getAppointmentNotes(billId, appointmentNo) );
-		getAppointmentNotes(billId, appointmentNo);
+	element = document.getElementById("appointment_notes"+billId);
+	if (element) {
+		var appointmentNotesElement = element;
+		var contents = (appointmentNotesElement.innerHTML.trim) ? appointmentNotesElement.innerHTML.trim() : appointmentNotesElement.innerHTML.replace(/^\s+/,'');
+		if (contents == "" || contents.toLowerCase().indexOf("loading") != -1) {
+			getAppointmentNotes(billId, appointmentNo);
+		}
 	}
 	
 	// show the details
-	//document.getElementById("more_details"+billId).style.display = "";
 	removeClass("hide", document.getElementById("more_details"+billId));
 	document.getElementById("more_details_button"+billId).onclick = function() { hideMoreDetails(billId, demographicNo, appointmentNo); return false; }
 	document.getElementById("more_details_button"+billId).innerHTML = "less";
@@ -1705,14 +1719,16 @@ function getBillsHandler(billId) {
 			}
 			
 			var element = document.getElementById("billing_history"+billId);
-			element.innerHTML = billString;
+			if (element)
+				element.innerHTML = billString;
 	
 			
 			//alert('Success. Result: ' + json);
 		}else if (this.readyState == 4 && this.status != 200) {
 			//alert('Something went wrong...');
 			var element = document.getElementById("billing_history"+billId);
-			element.innerHTML = "<tbody><tr><td>An error occured.</td></tr></tbody>";
+			if (element)
+				element.innerHTML = "<tbody><tr><td>An error occured.</td></tr></tbody>";
 		}
 	};
 }
