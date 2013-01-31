@@ -30,16 +30,11 @@ function  preventEventPropagation(event) {
    
    if (event.stopPropagation){
        event.stopPropagation();
-       console.log("good " + keynum);
    } else if(window.event){
       window.event.cancelBubble = true;
-      console.log("good " + keynum);
    } else if (event.preventDefault) {
 	   event.preventDefault();
    }
-   
-   
-   console.log( "crap " + keynum);
 }
 
 

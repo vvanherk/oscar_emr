@@ -34,7 +34,6 @@ import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-//import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
@@ -286,7 +285,7 @@ public class BillingService extends AbstractModel<Integer> implements Serializab
     public void setGstFlag(Boolean gstFlag) {
         this.gstFlag = gstFlag;
     }
-	
+
 	public Integer getDisplayStyle() {
 	    return displayStyle;
     }
@@ -294,7 +293,7 @@ public class BillingService extends AbstractModel<Integer> implements Serializab
 	public void setDisplayStyle(Integer displayStyle) {
 	    this.displayStyle = displayStyle;
 	}
-	
+
 	public Boolean getSliFlag() {
 	    return sliFlag;
     }

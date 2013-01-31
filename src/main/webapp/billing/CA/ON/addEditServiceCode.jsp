@@ -146,12 +146,12 @@
             if( !servicecodeStyle.startsWith("-1")) {
             	tmp = servicecodeStyle.split(",");
             	styleId = tmp[0];
-            	sql += "," + styleId + "";
+            	sql += ",'" + styleId + "'";
             }
             else {
             	sql += ",NULL";
             }
-            sql += "'," + "true".equals(request.getParameter("sliFlag")) + ")";
+            sql += "," + "true".equals(request.getParameter("sliFlag")) + ")";
             
 			if(request.getParameter("percentage").length()>1 && request.getParameter("min").length()>1 && request.getParameter("max").length()>1) {
 				String sqlMinMax = "insert into billingperclimit (service_code, min, max, effective_date) values('";

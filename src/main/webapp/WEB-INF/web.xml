@@ -75,7 +75,7 @@
 		</init-param>
 		<init-param>
 			<param-name>hibernate.connection.pool_size</param-name>
-			<param-value>10</param-value>
+			<param-value>100</param-value>
 		</init-param>
 		<init-param>
 			<param-name>hibernate.connection.autocommit</param-name>

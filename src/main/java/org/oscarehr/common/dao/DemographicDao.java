@@ -64,8 +64,11 @@ import org.oscarehr.util.DbConnectionFilter;
 import org.oscarehr.util.MiscUtils;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
+import oscar.OscarProperties;
 import oscar.MyDateFormat;
 import oscar.util.SqlUtils;
+
+import org.oscarehr.integration.hl7.generators.HL7A04Generator;
 
 /**
  */
@@ -212,6 +215,12 @@ public class DemographicDao extends HibernateDaoSupport {
         List rs = getHibernateTemplate().find(q, new Object[] { demoNo });
         return rs;
     }
+    
+    public List getDemoProgramCurrent(Integer demoNo) {
+        String q = "Select a.ProgramId From Admission a Where a.ClientId=? and a.AdmissionStatus='current'";
+        List rs = getHibernateTemplate().find(q, new Object[] { demoNo });
+        return rs;
+    }
 
     public static List<Integer> getDemographicIdsAdmittedIntoFacility(int facilityId) {
         Connection c = null;
@@ -281,8 +290,28 @@ public class DemographicDao extends HibernateDaoSupport {
      }
 
      public void save(Demographic demographic){
-    	 this.getHibernateTemplate().saveOrUpdate(demographic);
+		if (demographic == null)
+			return;
+		  		
+ 		boolean objExists = false;
+		if (demographic.getDemographicNo() != null)
+			objExists = clientExistsThenEvict(demographic.getDemographicNo());
+
+ 		this.getHibernateTemplate().saveOrUpdate(demographic);
+ 		
+ 		if (OscarProperties.getInstance().isHL7A04GenerationEnabled() && isDemographicNew(objExists, demographic))
+			(new HL7A04Generator()).generateHL7A04(demographic);
      }
+	 
+	 /**
+	  * Helper method.
+	  * 
+	  * Checker whether this demographic already exists and if it is new (i.e. new and not imported, etc).
+	  */ 
+	 private boolean isDemographicNew(boolean exists, Demographic demo) {
+		 return !exists && 
+			((demo.getDemoType() & demo.DEMO_TYPE_NEW) != 0 || (demo.getDemoType() & demo.DEMO_TYPE_UNKNOWN) != 0);
+	 }
 
      public static List<Integer> getDemographicIdsOpenedSinceTime(String value) {
     	 Connection c = null;
@@ -323,6 +352,27 @@ public class DemographicDao extends HibernateDaoSupport {
 
  		return exists;
  	}
+ 	
+ 	/**
+	 * Helper method.
+	 * 
+	 * Not using 'clientExists' because it doesn't 'evict' the demographic, which causes errors when 'saveOrUpdate' is called
+	 * and the demographic already exists in the Hibernate cache.
+	 */ 
+	public boolean clientExistsThenEvict(Integer demographicNo) {
+		boolean exists = false;
+
+		Demographic existingDemo = this.getClientByDemographicNo( demographicNo );
+			
+		exists = (existingDemo != null);
+
+		if (exists)
+			this.getHibernateTemplate().evict(existingDemo);
+			
+		log.debug("exists (then evict): " + exists);
+		
+		return exists;
+	}
 
  	public Demographic getClientByDemographicNo(Integer demographicNo) {
 
@@ -659,14 +709,20 @@ public class DemographicDao extends HibernateDaoSupport {
  		if (client == null) {
  			throw new IllegalArgumentException();
  		}
+ 		
+ 		boolean objExists = false;
+		if (client.getDemographicNo() != null)
+			objExists = clientExistsThenEvict(client.getDemographicNo());
 
  		this.getHibernateTemplate().saveOrUpdate(client);
+ 		
+ 		if (OscarProperties.getInstance().isHL7A04GenerationEnabled() && isDemographicNew(objExists, client))
+			(new HL7A04Generator()).generateHL7A04(client);
 
  		if (log.isDebugEnabled()) {
  			log.debug("saveClient: id=" + client.getDemographicNo());
  		}
  	}
-
 
  	public DemographicExt getDemographicExt(Integer id) {
 

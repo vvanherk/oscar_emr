@@ -756,7 +756,58 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 				                                        <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
 				                                     </tr>  
 				                                <%} 
-	                                       
+				                                
+				                                
+	                                       } else if ((!handler.getOBXResultStatus(j, k).equals("TDIS") && handler.getMsgType().equals("Spire")) )  { %>
+											<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+                                           <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>                                         
+                                           &nbsp; </td>
+                                           <% 	if (handler.getOBXResult( j, k).length() > 20) {
+													%>
+													
+													<td align="left" colspan="4"><%= handler.getOBXResult( j, k) %></td>
+                                          
+													<% 	String abnormalFlag = handler.getOBXAbnormalFlag(j, k);
+														if (abnormalFlag != null && abnormalFlag.length() > 0) {
+													 %>
+		                                           <td align="center">
+		                                                   <%= abnormalFlag%>
+		                                           </td>
+		                                           <% } %>
+		                                           
+		                                           <% 	String refRange = handler.getOBXReferenceRange(j, k);
+														if (refRange != null && refRange.length() > 0) {
+													 %>
+		                                           <td align="left"><%=refRange%></td>
+		                                           <% } %>
+		                                           
+		                                           <% 	String units = handler.getOBXUnits(j, k);
+														if (units != null && units.length() > 0) {
+													 %>
+		                                           <td align="left"><%=units %></td>
+		                                           <% } %>
+												<%
+												} else {
+												%>
+												   <td align="right" colspan="1"><%= handler.getOBXResult( j, k) %></td>                                          
+		                                           <td align="center"> <%= handler.getOBXAbnormalFlag(j, k)%> </td>
+		                                           <td align="left"> <%=handler.getOBXReferenceRange(j, k)%> </td>
+		                                           <td align="left"> <%=handler.getOBXUnits(j, k) %> </td>													
+												<% 
+												} 
+												%>
+                                           
+                                           <td align="center"><%= handler.getTimeStamp(j, k) %></td>
+                                           <td align="center"><%= handler.getOBXResultStatus(j, k) %></td>
+                                       </tr> 
+                                     
+                                       <%for (l=0; l < handler.getOBXCommentCount(j, k); l++){%>
+                                            <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
+                                               <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
+                                            </tr>  
+                                       <%}  
+                                      			
+
                                       } else  if (!handler.getOBXResultStatus(j, k).equals("TDIS") && !handler.getMsgType().equals("EPSILON")) { %>
                                         <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
                                             <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a></td>
@@ -819,7 +870,40 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
                              } // end for if (PFHT)
                             }
                           } // end for handler.getMsgType().equals("MEDVUE")
+                          
+                          if (handler.getMsgType().equals("Spire")) {
+								
+								int numZDS = ((SpireHandler)handler).getNumZDSSegments();
+								String lineClass = "NormalRes";
+								int lineNumber = 0;
+								
+								if (numZDS > 0) { %>
+									<tr class="Field2">
+		                               <td width="25%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formTestName"/></td>
+		                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formResult"/></td>
+		                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formProvider"/></td>
+		                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formDateTimeCompleted"/></td>
+		                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formNew"/></td>
+		                            </tr>
+								<% 
+								}
+								
+								for (int m=0; m < numZDS; m++) { 
+									%>
+									<tr bgcolor="<%=(lineNumber % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+										<td valign="top" align="left"> <%=((SpireHandler)handler).getZDSName(m)%> </td>
+										<td align="right"><%= ((SpireHandler)handler).getZDSResult(m) %></td>
+										<td align="center"><%= ((SpireHandler)handler).getZDSProvider(m) %></td>
+										<td align="center"><%= ((SpireHandler)handler).getZDSTimeStamp(m) %></td>
+										<td align="center"><%= ((SpireHandler)handler).getZDSResultStatus(m) %></td>
+									</tr> 
+									<%
+									lineNumber++;
+								}
+							}
                             %>
+                            
+                            
                         </table>
                         <% // end for headers
                         }  // for i=0... (headers) 

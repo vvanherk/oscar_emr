@@ -41,6 +41,7 @@ import oscar.OscarProperties;
 import oscar.oscarLab.ca.all.Hl7textResultsData;
 import oscar.oscarLab.ca.all.parsers.Factory;
 import oscar.oscarLab.ca.all.parsers.MessageHandler;
+import oscar.oscarLab.ca.all.parsers.SpireHandler;
 
 import org.oscarehr.common.dao.Hl7TextMessageDao;
 import org.oscarehr.common.model.Hl7TextMessage;
@@ -191,6 +192,7 @@ public class LabPDFCreator extends PdfPageEventHelper{
         PdfPTable table = new PdfPTable(mainTableWidths);
         table.setHeaderRows(3);
         table.setWidthPercentage(100);
+        table.setSplitLate(false);
         
         PdfPCell cell = new PdfPCell();
         // category name
@@ -264,17 +266,30 @@ public class LabPDFCreator extends PdfPageEventHelper{
                     cell.setHorizontalAlignment(cell.ALIGN_LEFT);
                     cell.setPhrase(new Phrase( (obrFlag ? "   " : "")+obxName, lineFont ));
                     table.addCell(cell);
-                    cell.setPhrase(new Phrase(handler.getOBXResult(j, k).replaceAll("<br\\s*/*>", "\n"), lineFont));
-                    cell.setHorizontalAlignment(cell.ALIGN_RIGHT);
-                    table.addCell(cell);
-                    cell.setHorizontalAlignment(cell.ALIGN_CENTER);
-                    cell.setPhrase(new Phrase((handler.isOBXAbnormal(j, k) ? handler.getOBXAbnormalFlag(j, k) : "N"), lineFont));
-                    table.addCell(cell);
-                    cell.setHorizontalAlignment(cell.ALIGN_LEFT);
-                    cell.setPhrase(new Phrase(handler.getOBXReferenceRange(j, k), lineFont));
-                    table.addCell(cell);
-                    cell.setPhrase(new Phrase(handler.getOBXUnits(j, k), lineFont));
-                    table.addCell(cell);
+                    
+                    
+                    if (handler.getMsgType().equals("Spire") && handler.getOBXResult(j, k).length() > 20) {
+						cell.setPhrase(new Phrase(handler.getOBXResult(j, k).replaceAll("<br\\s*/*>", "\n"), lineFont));
+						cell.setColspan(4);
+	                    cell.setHorizontalAlignment(cell.ALIGN_LEFT);
+	                    table.addCell(cell);
+	                    //table.completeRow();
+	                } else {
+						cell.setPhrase(new Phrase(handler.getOBXResult(j, k).replaceAll("<br\\s*/*>", "\n"), lineFont));
+						cell.setHorizontalAlignment(cell.ALIGN_RIGHT);
+	                    table.addCell(cell);
+						cell.setHorizontalAlignment(cell.ALIGN_CENTER);
+	                    cell.setPhrase(new Phrase((handler.isOBXAbnormal(j, k) ? handler.getOBXAbnormalFlag(j, k) : "N"), lineFont));
+	                    table.addCell(cell);
+	                    cell.setHorizontalAlignment(cell.ALIGN_LEFT);
+	                    cell.setPhrase(new Phrase(handler.getOBXReferenceRange(j, k), lineFont));
+	                    table.addCell(cell);
+	                    cell.setPhrase(new Phrase(handler.getOBXUnits(j, k), lineFont));
+	                    table.addCell(cell);
+					}
+                    
+                    
+                    cell.setColspan(1);
                     cell.setHorizontalAlignment(cell.ALIGN_CENTER);
                     cell.setPhrase(new Phrase(handler.getTimeStamp(j, k), lineFont));
                     table.addCell(cell);
@@ -327,6 +342,66 @@ public class LabPDFCreator extends PdfPageEventHelper{
                 }
                 cell.setColspan(1);
             }
+            
+            // add Spire ZDS segmets
+			if (handler.getMsgType().equals("Spire")) {	
+				int numZDS = ((SpireHandler)handler).getNumZDSSegments();
+				
+				if (numZDS > 0) {
+					cell.setColspan(1);
+			        cell.setBorder(15);
+			        cell.setHorizontalAlignment(cell.ALIGN_CENTER);
+			        cell.setBackgroundColor(new Color(210, 212, 255));
+			        
+			        cell.setPhrase(new Phrase("Test Name(s)", boldFont));
+			        cell.setColspan(1);
+			        table.addCell(cell);
+			        cell.setPhrase(new Phrase("Result", boldFont));
+			        cell.setColspan(1);
+			        table.addCell(cell);
+			        cell.setPhrase(new Phrase("Provider", boldFont));
+			        cell.setColspan(2);
+			        table.addCell(cell);
+			        cell.setPhrase(new Phrase("Date/Time Completed", boldFont));
+			        cell.setColspan(2);
+			        table.addCell(cell);
+			        cell.setPhrase(new Phrase("Status", boldFont));
+			        cell.setColspan(1);
+			        table.addCell(cell);
+				}
+				
+				for (int m=0; m < numZDS; m++) { 
+					cell.setBackgroundColor(getHighlightColor(linenum));
+                    linenum++;
+                    
+                    cell.setPhrase(new Phrase( ((SpireHandler)handler).getZDSName(m).replaceAll("<br\\s*/*>", "\n"), font ));
+					cell.setHorizontalAlignment(cell.ALIGN_LEFT);
+					cell.setColspan(1);
+                    table.addCell(cell);
+                    
+                    cell.setPhrase(new Phrase( ((SpireHandler)handler).getZDSResult(m).replaceAll("<br\\s*/*>", "\n"), font ));
+					cell.setHorizontalAlignment(cell.ALIGN_CENTER);
+					cell.setColspan(1);
+                    table.addCell(cell);
+                    
+                    cell.setPhrase(new Phrase( ((SpireHandler)handler).getZDSProvider(m).replaceAll("<br\\s*/*>", "\n"), font ));
+					cell.setHorizontalAlignment(cell.ALIGN_CENTER);
+					cell.setColspan(2);
+                    table.addCell(cell);
+                    
+                    cell.setPhrase(new Phrase( ((SpireHandler)handler).getZDSTimeStamp(m).replaceAll("<br\\s*/*>", "\n"), font ));
+					cell.setHorizontalAlignment(cell.ALIGN_CENTER);
+					cell.setColspan(2);
+                    table.addCell(cell);
+                    
+                    cell.setPhrase(new Phrase( ((SpireHandler)handler).getZDSResultStatus(m).replaceAll("<br\\s*/*>", "\n"), font ));
+					cell.setHorizontalAlignment(cell.ALIGN_CENTER);
+					cell.setColspan(1);
+                    table.addCell(cell);
+                    
+                    //table.completeRow();
+				}
+			}
         }
         document.add(table);
         
