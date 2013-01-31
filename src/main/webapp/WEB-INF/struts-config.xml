@@ -2405,7 +2405,7 @@
 		<action path="/caseload/CaseloadContent" scope="request" type="org.oscarehr.caseload.CaseloadContentAction" parameter="method" />
 
 	</action-mappings>
-	<controller processorClass="org.apache.struts.tiles.TilesRequestProcessor" maxFileSize="25M" />
+	<controller processorClass="org.apache.struts.tiles.TilesRequestProcessor" maxFileSize="100M" />
 	<message-resources parameter="oscarResources" null="false" />
 	<message-resources parameter="HelpResources" key="help" null="false" />
 	<message-resources parameter="MessageResources_program" key="pmm" null="false" />

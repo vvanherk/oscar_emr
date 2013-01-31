@@ -2,6 +2,7 @@ package org.oscarehr.common.dao;
 
 import java.util.Date;
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.persistence.Query;
 
@@ -69,7 +70,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 
 	public List<Appointment> findByDateRange(Date startTime, Date endTime) {
-		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate < ?";
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate <= ?";
 
 		Query query = entityManager.createQuery(sql);
 		query.setParameter(1, startTime);
@@ -81,17 +82,190 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 	}
 
 	public List<Appointment> findByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
-		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate < ? and providerNo = ?";
+		
+		return findByDateRangeAndProvider(startTime, endTime, providerNo, null, null);
+	}
+	
+	public List<Appointment> findByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate <= ? and providerNo = ?";
 
 		Query query = entityManager.createQuery(sql);
 		query.setParameter(1, startTime);
 		query.setParameter(2, endTime);
 		query.setParameter(3, providerNo);
+		
+		if (firstResult != null && firstResult.intValue() >= 0)
+			query.setFirstResult(firstResult);
+			
+		if (maxResults != null && maxResults.intValue() > 0)
+			query.setMaxResults(maxResults);
+		
 
 		@SuppressWarnings("unchecked")
 		List<Appointment> rs = query.getResultList();
 
 		return rs;
+	}
+	
+	public int getCountByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
+		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >=? and a.appointmentDate <= ? and providerNo = ?";
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter(1, startTime);
+		query.setParameter(2, endTime);
+		query.setParameter(3, providerNo);
+		
+
+		@SuppressWarnings("unchecked")
+		
+		Number numRows = (Number)query.getSingleResult();
+		
+
+		return numRows.intValue();
+	}
+
+
+    public List<Appointment> getFirstAndLastUnbilledAppointments( ) {
+		String sql1 = "SELECT a FROM Appointment a WHERE a.demographicNo != 0 and a.status IN (:status_list1) ORDER BY appointmentDate";
+        String sql2 = "SELECT a FROM Appointment a WHERE a.demographicNo != 0 and a.status IN (:status_list2) ORDER BY appointmentDate DESC";
+        //sql       += " ORDER BY appointmentDate";
+        //System.out.println( sql );
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("P");
+		statusList.add("H");
+		statusList.add("HS");
+		statusList.add("PV");
+		statusList.add("PS");
+		statusList.add("E");
+		statusList.add("ES");
+		statusList.add("EV");
+
+		Query query1 = entityManager.createQuery(sql1);
+		Query query2 = entityManager.createQuery(sql2);
+		query1.setParameter("status_list1", statusList);
+		query2.setParameter("status_list2", statusList);
+        query1.setMaxResults(1);
+        query2.setMaxResults(1);
+		
+		@SuppressWarnings("unchecked")
+		List<Appointment> rs1 = query1.getResultList();
+		List<Appointment> rs2 = query2.getResultList();
+        
+        rs1.addAll( rs2 );
+		return rs1;
+	}
+	
+	public List<Appointment> getUnbilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate <= :end_time and providerNo = :provider_no";
+		sql += " and a.demographicNo != 0 and a.status IN (:status_list)";
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("P");
+		statusList.add("H");
+		statusList.add("HS");
+		statusList.add("PV");
+		statusList.add("PS");
+		statusList.add("E");
+		statusList.add("ES");
+		statusList.add("EV");
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("start_time", startTime);
+		query.setParameter("end_time", endTime);
+		query.setParameter("provider_no", providerNo);
+		query.setParameter("status_list", statusList);
+		
+		if (firstResult != null && firstResult.intValue() >= 0)
+			query.setFirstResult(firstResult);
+			
+		if (maxResults != null && maxResults.intValue() > 0)
+			query.setMaxResults(maxResults);
+		
+		
+		@SuppressWarnings("unchecked")
+		List<Appointment> rs = query.getResultList();
+
+		return rs;
+	}
+	
+	public List<Appointment> getBilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo, Integer firstResult, Integer maxResults) {
+		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate <= :end_time and providerNo = :provider_no";
+		sql += " and a.demographicNo != 0 and a.status NOT IN (:status_list)";
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("D");
+		statusList.add("S");
+		statusList.add("B");
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("start_time", startTime);
+		query.setParameter("end_time", endTime);
+		query.setParameter("provider_no", providerNo);
+		query.setParameter("status_list", statusList);
+		
+		if (firstResult != null && firstResult.intValue() >= 0)
+			query.setFirstResult(firstResult);
+			
+		if (maxResults != null && maxResults.intValue() > 0)
+			query.setMaxResults(maxResults);
+		
+		
+		@SuppressWarnings("unchecked")
+		List<Appointment> rs = query.getResultList();
+
+		return rs;
+	}
+	
+	public int getCountUnbilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
+		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate <= :end_time and providerNo = :provider_no";
+		sql += " and a.demographicNo != 0 and a.status IN (:status_list)";
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("P");
+		statusList.add("H");
+		statusList.add("HS");
+		statusList.add("PV");
+		statusList.add("PS");
+		statusList.add("E");
+		statusList.add("ES");
+		statusList.add("EV");
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("start_time", startTime);
+		query.setParameter("end_time", endTime);
+		query.setParameter("provider_no", providerNo);
+		query.setParameter("status_list", statusList);
+		
+
+		@SuppressWarnings("unchecked")
+		
+		Number numRows = (Number)query.getSingleResult();
+		
+		return numRows.intValue();
+	}
+	
+	public int getCountBilledByDateRangeAndProvider(Date startTime, Date endTime, String providerNo) {
+		String sql = "SELECT COUNT(a) FROM Appointment a WHERE a.appointmentDate >= :start_time and a.appointmentDate <= :end_time and providerNo = :provider_no";
+		sql += " and a.demographicNo != 0 and a.status NOT IN (:status_list)";
+
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("D");
+		statusList.add("S");
+		statusList.add("B");
+
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("start_time", startTime);
+		query.setParameter("end_time", endTime);
+		query.setParameter("provider_no", providerNo);
+		query.setParameter("status_list", statusList);
+		
+
+		@SuppressWarnings("unchecked")
+		
+		Number numRows = (Number)query.getSingleResult();
+		
+		return numRows.intValue();
 	}
 
 	public List<Appointment> getByProviderAndDay(Date date, String providerNo) {
@@ -138,6 +312,21 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 		List<Appointment> rs = query.getResultList();
 
 		return rs;
+	}
+	
+	public Appointment getAppointment(Integer appointmentNo) {
+
+		String sql = "SELECT a FROM Appointment a WHERE a.id = ?";
+		Query query = entityManager.createQuery(sql);
+		query.setParameter(1, appointmentNo);
+
+		@SuppressWarnings("unchecked")
+		List<Appointment> rs = query.getResultList();
+		
+		if (rs == null || rs.size() == 0)
+			return null;
+
+		return rs.get(0);
 	}
 
 	public List<Appointment> find(Date date, String providerNo,Date startTime, Date endTime, String name,
@@ -190,4 +379,8 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 
 		return rs;
 	}
+	
+	public void updateAppointment( Appointment a ) {
+        this.merge(a);
+    }
 }

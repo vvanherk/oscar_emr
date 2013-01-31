@@ -24,10 +24,25 @@
  */
 -->
 
+<%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
+
 <%    
 if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
 if(((String)session.getAttribute("userrole")).indexOf("admin") >=0 ||
-        ((String)session.getAttribute("userrole")).indexOf("doctor") >=0) response.sendRedirect("billingONReport.jsp");
+        ((String)session.getAttribute("userrole")).indexOf("doctor") >=0) {
+	response.sendRedirect("billingONReport.jsp");
+}
+
+String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
+%>
+
+<!-- If user has billing read/write access, they can see the new billing page/report -->
+<security:oscarSec objectName="_billing" roleName="<%=roleName$%>" rights="rw" reverse="false">
+<% response.sendRedirect("billingONReport.jsp"); %>
+</security:oscarSec>
+
+<%
+
 String user_no = (String) session.getAttribute("user");
 int  nItems=0;
 String strLimit1="0";
