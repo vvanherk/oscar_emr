@@ -30,16 +30,11 @@ function  preventEventPropagation(event) {
    
    if (event.stopPropagation){
        event.stopPropagation();
-       console.log("good " + keynum);
    } else if(window.event){
       window.event.cancelBubble = true;
-      console.log("good " + keynum);
    } else if (event.preventDefault) {
 	   event.preventDefault();
    }
-   
-   
-   console.log( "crap " + keynum);
 }
 
 
@@ -974,7 +969,7 @@ var toggleSelectAllBills = (function () {
 }());
 
 function setFocusOnReferralDoctorInput(billId) {
-	var refDocInput = document.getElementById("referral_full_name"+billId);
+	var refDocInput = document.getElementById("referral_lookup_data"+billId);
 	refDocInput.focus();
 }
 
@@ -1130,8 +1125,8 @@ function getPreviousBillId(id) {
 	return previousBillId;	
 }
 
-function showAvailableReferralDoctors(billId, name) {
-	getReferralDoctors(billId, name);
+function showAvailableReferralDoctors(billId, lookupData) {
+	getReferralDoctors(billId, lookupData);
 	var elem = document.getElementById("referral_doc_lookup"+billId);
 	elem.style.display = "";
 }
@@ -1946,10 +1941,10 @@ function extractDiagnosticDescription(item){
 }
 
 
-function getReferralDoctors(billId, referralDocName) {
+function getReferralDoctors(billId, referralDocLookupData) {
 	var AJAX = createXMLHttpRequest();
 	AJAX.onreadystatechange = getReferralDoctorsHandler(billId);
-	AJAX.open("GET", fullContextPath + "/getReferralDoctors.jsp?full_name="+referralDocName);
+	AJAX.open("GET", fullContextPath + "/getReferralDoctors.jsp?lookup_data="+referralDocLookupData);
 	AJAX.send("");
 }
 /**
