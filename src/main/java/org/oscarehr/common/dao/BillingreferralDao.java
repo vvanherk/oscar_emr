@@ -62,6 +62,31 @@ public class BillingreferralDao extends HibernateDaoSupport {
             return null;
         }
     }
+    
+    public List<Billingreferral> getBillingreferral(String referral_no, boolean findLike) {
+		// Use the standard 'getBillingreferral' method to search for exact equivalence of referral numbers
+		if (!findLike)
+			return getBillingreferral( referral_no );
+			
+        List cList = null;
+        Session session = null;
+        try {
+            session = getSession();
+            cList = session.createCriteria(Billingreferral.class).add(Expression.like("referralNo", "%" + referral_no + "%")).addOrder(Order.asc("referralNo")).list();
+        } catch (Exception e) {
+            MiscUtils.getLogger().error("Error", e);
+        } finally {
+            if (session != null) {
+                releaseSession(session);
+            }
+        }
+
+        if (cList != null) {
+            return cList;
+        } else {
+            return null;
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public List<Billingreferral> getBillingreferral(String last_name, String first_name) {
