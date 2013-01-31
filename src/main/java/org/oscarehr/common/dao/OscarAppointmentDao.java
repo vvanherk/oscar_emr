@@ -153,7 +153,6 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 		String sql1 = "SELECT a FROM Appointment a WHERE a.demographicNo != 0 and a.status IN (:status_list1) ORDER BY appointmentDate";
         String sql2 = "SELECT a FROM Appointment a WHERE a.demographicNo != 0 and a.status IN (:status_list2) ORDER BY appointmentDate DESC";
         //sql       += " ORDER BY appointmentDate";
-        //System.out.println( sql );
 
 		List<String> statusList = new ArrayList<String>();
 		statusList.add("P");

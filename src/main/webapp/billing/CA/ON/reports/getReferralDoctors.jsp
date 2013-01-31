@@ -17,11 +17,38 @@ boolean isValidStringInput(String input) {
 	return input != null && !input.equals("");
 }
 
+boolean isValidNumericInput(String input) {
+	if (input == null)
+		return false;
+		
+	return input.matches("^\\d*$");
+}
+
 String tokenize(String input) {
 	if (input == null)
 		input = "";
 		
 	return input.trim();
+}
+
+String[] parseFullName(String lookupData) {
+	if (lookupData == null)
+		return null;
+	
+	String[] flName = lookupData.split(",");
+	String[] retValue = new String[2];
+	
+	if (flName != null) {
+		if (flName.length == 1) {
+			retValue[1] = "";
+			retValue[0] = flName[0];
+		} else if (flName.length == 2) {
+			retValue[1] = flName[1];
+			retValue[0] = flName[0];
+		}
+	}
+	
+	return retValue;
 }
 %>
 
@@ -29,47 +56,44 @@ String tokenize(String input) {
 
 BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
 
-String referralNo = request.getParameter("referral_no");
-String firstName = request.getParameter("first_name");
-String lastName = request.getParameter("last_name");
 String specialty = request.getParameter("specialty");
-// fullName in the format 'lastname, firstname'
-String fullName = request.getParameter("full_name");
+// lookupData in the format 'lastname, firstname' OR as digits (for a referral number)
+String lookupData = request.getParameter("lookup_data");
 
-// parse fullName
-if (isValidStringInput(fullName)) {
-	String[] flName = fullName.split(",");
-	
-	if (flName != null) {
-		if (flName.length == 1) {
-			firstName = "";
-			lastName = flName[0];
-		} else if (flName.length == 2) {
-			firstName = flName[1];
-			lastName = flName[0];
-		}
-	}
-}
+String firstName = "";
+String lastName = "";
 
-MiscUtils.getLogger().info("firstName: " + firstName);
-MiscUtils.getLogger().info("lastName: " + lastName);
-MiscUtils.getLogger().info("fullName: " + fullName);
+MiscUtils.getLogger().info("lookupData: " + lookupData);
 
-// query for the referral doctors
 List<Billingreferral> billingReferrals = null;
-if ( isValidStringInput(referralNo) ) {
-	Billingreferral billingReferral = billingReferralDao.getByReferralNo(referralNo);
-	billingReferrals = new ArrayList<Billingreferral>();
-	billingReferrals.add(billingReferral);
-} else if ( isValidStringInput(firstName)  || isValidStringInput(lastName) ) {
-	billingReferrals = billingReferralDao.getBillingreferral( tokenize(lastName), tokenize(firstName) );
+
+if (isValidStringInput(lookupData)) {
+	if (isValidNumericInput(lookupData)) {
+		// Query for referral doctor by referral number
+		List<Billingreferral> billingReferral = billingReferralDao.getBillingreferral(lookupData, true);
+		billingReferrals = new ArrayList<Billingreferral>();
+		if (billingReferral != null)
+			billingReferrals.addAll(billingReferral);
+	} else {
+		// Query for referral doctor by referral first and last name
+		String[] flName = parseFullName( lookupData );
+		firstName = flName[1];
+		lastName = flName[0];
+
+		MiscUtils.getLogger().info("firstName: " + firstName);
+		MiscUtils.getLogger().info("lastName: " + lastName);
+	
+		if ( isValidStringInput(firstName)  || isValidStringInput(lastName) )
+			billingReferrals = billingReferralDao.getBillingreferral( tokenize(lastName), tokenize(firstName) );
+	}
 } else if (isValidStringInput(specialty)) {
+	// Query for referral doctor by specialty
 	billingReferrals = billingReferralDao.getBillingreferralBySpecialty(specialty);
 }
 
 
 // return empty json array if no data
-if (billingReferrals == null) {
+if (billingReferrals == null || billingReferrals.size() == 0) {
 	response.setContentType("application/json");
 	response.getWriter().write( (new JSONArray()).toString() );
 	return;

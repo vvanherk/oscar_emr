@@ -111,8 +111,10 @@ int curYear = now.get(Calendar.YEAR);
 int curMonth = (now.get(Calendar.MONTH)+1);
 int curDay = now.get(Calendar.DAY_OF_MONTH);
 
-String xml_vdate = request.getParameter("xml_vdate") == null ? "" : request.getParameter("xml_vdate");
-String xml_appointment_date = request.getParameter("xml_appointment_date") == null? "" : request.getParameter("xml_appointment_date");
+List<Appointment> date_appts = appointmentDao.getFirstAndLastUnbilledAppointments( );                                                                                    
+SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+String xml_vdate            = request.getParameter("xml_vdate"           ) == null ? sdf.format( date_appts.get( 0 ).getAppointmentDate( ) ) : request.getParameter("xml_vdate"           );
+String xml_appointment_date = request.getParameter("xml_appointment_date") == null ? sdf.format( date_appts.get( 1 ).getAppointmentDate( ) ) : request.getParameter("xml_appointment_date");
 %>
 
 <%
@@ -267,9 +269,14 @@ if("unbilled".equals(action)) {
         
         prop.setProperty( "DOB", demo.getYearOfBirth() + "-" + demo.getMonthOfBirth() + "-" + demo.getDateOfBirth() );
         prop.setProperty( "Service Description", apt.getReason() );
-		prop.setProperty( "Remarks",  apt.getRemarks() );
-		prop.setProperty( "Notes", apt.getNotes() );
-        
+        prop.setProperty( "Remarks",  apt.getRemarks() );
+        prop.setProperty( "Notes", apt.getNotes() );
+        String family_doctor = demo.getFamilyDoctor( );
+        String r_doctor      = SxmlMisc.getXmlContent( family_doctor, "rd"     ) == null ? "" : SxmlMisc.getXmlContent(family_doctor, "rd"     );
+        String r_doctor_ohip = SxmlMisc.getXmlContent( family_doctor, "rdohip" ) == null ? "" : SxmlMisc.getXmlContent(family_doctor, "rdohip" );
+        prop.setProperty( "rdocn", r_doctor_ohip );
+        prop.setProperty( "rdocc", r_doctor      );
+
         
         String tempStr = "<a href=# onClick='preventEventPropagation(event); popupPage(700,1000, \"billingOB.jsp?billForm=" 
                 + URLEncoder.encode(oscarVariables.getProperty("default_view")) + "&hotclick=&appointment_no="
@@ -509,15 +516,20 @@ function calToday(field) {
 </table>
 
 <form id="serviceform" name="serviceform" method="post" action="<%= request.getContextPath() %>/billing/CA/ON/billingONReport.jsp">
+<%
+    //if action is not set (first time on page), default to unbilled
+    if (action == ""){ action = "unbilled"; }
+%>
 <table width="100%" border="0" bgcolor="#b9c9fe">
-	<tr>
-		<td width="30%" align="center">
-			<font size="2"> 
-				<input type="radio" name="reportAction" value="unbilled" <%="unbilled".equals(action)? "checked" : "" %>>Unbilled 
-				<input type="radio" name="reportAction" value="billed" <%="billed".equals(action)? "checked" : "" %>>Billed 
-			</font>
-		</td>
-		<td width="20%" align="right" nowrap><b>Provider </b>
+    <tr>
+        <td width="30%" align="center">
+            <font size="2"> 
+                <input type="radio" name="reportAction" value="unbilled" <%="unbilled".equals(action)? "checked" : "" %>>Unbilled 
+                <input type="radio" name="reportAction" value="billed" <%="billed".equals(action)? "checked" : "" %>>Billed 
+                <input type="radio" name="reportAction" value="offsite" <%="offsite".equals(action)? "checked" : "" %> disabled>Offsite 
+            </font>
+        </td>
+        <td width="20%" align="right" nowrap><b>Provider </b>
 
 <% String providerSelectionList = ""; %>		
 <% if (bMultisites) 
@@ -873,11 +885,13 @@ if (vecHeader != null && vecHeader.size() > 0) {
 			double billTotal = 0.0;
 			String style = "";
 			String billId = "";
+			BillingClaimHeader1 currentBill = null;
 			if ( vecBills.get(i) == null || vecBills.get(i).size() == 0 ) {
 				hasBills = false;
 				style = "class=\"no-bills\"";
 			} else {
-				billId = ((BillingClaimHeader1)vecBills.get(i).get(0)).getId().toString();
+				currentBill = (BillingClaimHeader1)vecBills.get(i).get(0);
+				billId = currentBill.getId().toString();
 			}
 			String appointmentNo = "-1";
 			prop = (Properties)vecValue.get(i);
@@ -945,14 +959,8 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							</div>
 							<div id="referral_doc_container<%=i%>" class="hide_element">
 								Referral Doctor:<br>
-								<!-- No: <input type="text" id="referral_no<%=i%>" name="referral_no<%=i%>">
-								<br>
-								First name: <input type="text" id="referral_first_name<%=i%>" name="referral_first_name<%=i%>">
-								Last name: <input type="text" id="referral_last_name<%=i%>" name="referral_last_name<%=i%>">
-								<br>
-								Specialty: <input type="text" id="referral_specialty<%=i%>" name="referral_specialty<%=i%>"> -->
-								
-								Name: <input type="text" id="referral_full_name<%=i%>" name="referral_full_name<%=i%>" autocomplete="off" <%=onkeydown%> <%=onkeyup%>>
+																
+								Name: <input type="text" id="referral_lookup_data<%=i%>" name="referral_lookup_data<%=i%>" value="<%=prop.getProperty( "rdocc", "" )%>" autocomplete="off" <%=onkeydown%> <%=onkeyup%>>
 								<div id='referral_doc_lookup<%=i%>' class='lookup_box' style='display:none;'></div>
 								<br>
 								Format is <i>'lastname, firstname'</i>
@@ -962,16 +970,18 @@ if (vecHeader != null && vecHeader.size() > 0) {
 				
 					<%
 					if (editable) {
+						String sliCode = (currentBill == null ? "" : currentBill.getLocation());
+						String admissionDate = (currentBill == null ? "" : currentBill.getAdmission_date());
 					%>
 						<a class="billing_button" href="" tabindex="-1" onclick="addBillingItem(<%=i%>); return false;">Add Item</a>
-						<select name="super_code<%=i%>" class="dropdown hide_element" onchange="">
+						<select id="super_code<%=i%>" name="super_code<%=i%>" class="dropdown" onchange="">
 							<option>1</option>
 							<option>2</option>
 							<option>3</option>
 						</select>
-						<a class="billing_button hide_element" href="" tabindex="-1" onclick="return false;">Add Super Code</a>
+						<a class="billing_button" href="" tabindex="-1" onclick="return false;">Add Super Code</a>
 						
-						SLI Code:
+						<b>SLI Code</b>:
 						<select class="dropdown" name="sli_code<%=i%>" onchange="">
 							<option value="<%=OscarProperties.getInstance().getProperty("clinic_no", "")%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
                                 <option value="HDS" <%=sliCode.equals("HDS") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
@@ -984,9 +994,10 @@ if (vecHeader != null && vecHeader.size() > 0) {
                                 <option value="OTN" <%=sliCode.equals("OTN") ? "selected" : ""%> ><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 						</select>
 						
-						Admission date:
-						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=prop.getProperty("Service Date", "")%>" <%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" value="" > 
+						<b>Admission date</b>:
+						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=admissionDate%>"<%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" > 
 						<img src="<%= request.getContextPath() %>/images/cal.gif" alt="" id="admission_date<%=i%>_cal">
+						<!-- Disable calendar functionality for admission date (at least for now)
 						<script>
 							Calendar.setup( { inputField : "admission_date<%=i%>", ifFormat : "%Y-%m-%d", showsTime :false, button : "admission_date<%=i%>_cal", singleClick : true, step : 1,
 								onUpdate: 
@@ -999,17 +1010,18 @@ if (vecHeader != null && vecHeader.size() > 0) {
 										}
 							} );
 						</script>
-						
-						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" onclick="/*toggleBillNotesVisible(<%=i%>);*/" > <span class="input_element_label">Manual</span>
-						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="toggleReferralDoctorVisible(<%=i%>); if (this.checked) setFocusOnReferralDoctorInput(<%=i%>);" > <span class="input_element_label">Referral Doctor</span>
+						-->
+						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" value="yes" onclick="return !isElementReadOnly(this);" onkeydown="return !isElementReadOnly(this);"> <span class="input_element_label">Manual</span>
+						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="if (isElementReadOnly(this)) { return false; } toggleReferralDoctorVisible(<%=i%>); if (this.checked) setFocusOnReferralDoctorInput(<%=i%>);" onkeydown="return !isElementReadOnly(this);" > <span class="input_element_label">Referral Doctor</span>
 						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" >
+						<input type="hidden" name="manual_checkbox<%=i%>" value="yes" >
 						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" >
 						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" >
 						<input type="hidden" name="demo_name<%=i%>" value="<%=prop.getProperty("Patient Name", "")%>" >
 						<input type="hidden" name="appt_no<%=i%>" value="<%=vecAppointmentNo.get(i)%>" >
 						<input type="hidden" name="demo_no<%=i%>" value="<%=vecDemographicNo.get(i)%>" >
 						<input type="hidden" name="prov_no<%=i%>" value="<%=vecProviderNo.get(i)%>" >
-						<input type="hidden" id="referral_doc_no<%=i%>" name="referral_doc_no<%=i%>" value="" >
+						<input type="hidden" id="referral_doc_no<%=i%>" name="referral_doc_no<%=i%>" value="<%=prop.getProperty( "rdocn", "" )%>" >
 					<%
 					}
 					%>
@@ -1461,6 +1473,10 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		String billDate = request.getParameter("bill_date"+i);
 		String billTime = request.getParameter("bill_time"+i);
 		String admissionDate = request.getParameter("admission_date"+i);
+		
+		if (admissionDate == null)
+			admissionDate = "";
+		
 		boolean isManuallyReviewed = (request.getParameter("manual_checkbox"+i) != null);
 		String billNotes = request.getParameter("bill_notes"+i);
 		String demoName = request.getParameter("demo_name"+i);
@@ -1475,7 +1491,6 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 		String[] dxDescs = request.getParameterValues("dx_desc"+i);
 		String[] totals = request.getParameterValues("total"+i);
 		//String[] sliCodes = request.getParameterValues("sli_code"+i);
-		
 		
 		if (billId != null && isBillSaved) {
 			numBillsSubmitted++;
@@ -1505,7 +1520,6 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 			formatPercents(percents);
 			String total = formatAndCalculateTotal(totals);
 						
-			
 			if (billId.equals("")) {
 				Demographic demo = demographicDao.getDemographic(demoNo.toString());
 				Provider prov = providerDao.getProvider(provNo);
@@ -1555,7 +1569,11 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				newBill.setBilling_date(billDateAsDate);
 				newBill.setBilling_time(billTimeAsDate);
 				newBill.setDemographic_name(demoName);
+				newBill.setLocation(sliCode);
 				newBill.setStatus("W");
+				
+				if (admissionDate.length() > 0)
+					newBill.setAdmission_date(admissionDate);
 				
 				//newBill.setApptProvider_no(apptProvNo);
 				
@@ -1674,7 +1692,6 @@ void validate(BillingClaimHeader1 newBill, BillingServiceDao billingServiceDao, 
     // Validate
     Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
     Set<ConstraintViolation<BillingClaimHeader1>>  constraintViolations = validator.validate(newBill);
-    MiscUtils.getLogger().info("adm date: " + newBill.getAdmission_date());
     
     // if there are validation errors, throw exception
     if (constraintViolations.size() > 0) {
