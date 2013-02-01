@@ -311,6 +311,8 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
                           break;
                   }
           }
+  } else if (loc.nodeName == "INPUT") {
+	  document.forms['EDITAPPT'].location.value = locSel;
   }
 }
 
@@ -501,11 +503,8 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
                                         ? ApptUtil.getColorFromLocation(sites, loc)
                                         : bMoreAddr? ApptUtil.getColorFromLocation(props.getProperty("scheduleSiteID", ""), props.getProperty("scheduleSiteColor", ""),loc) : "white";
             %>
-                        <% if (bMultisites) { %>
-                                <INPUT TYPE="button" NAME="typeButton" VALUE="<bean:message key="Appointment.formType"/>" onClick="openTypePopup()">
-                        <% } else { %>
-                                <bean:message key="Appointment.formType"/>
-                        <% } %>
+            
+				<INPUT TYPE="button" NAME="typeButton" VALUE="<bean:message key="Appointment.formType"/>" onClick="openTypePopup()">
 
             </div>
 
