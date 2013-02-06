@@ -214,8 +214,6 @@ for(int i=0; i<aL.size(); i++) {
 	String pgrpbillno = prop.getProperty("providergroup_billing_no", "");
 	plast = prop.getProperty("last_name", "");
 	pfirst = prop.getProperty("first_name", "");
-	MiscUtils.getLogger().info("here2! " + providerNo + " " + proNo);
-	MiscUtils.getLogger().info("here2! " + pgrpbillno + " " + proGrpBillingNo);
 %>
 			<option value="<%=providerNo%>" <%=proNo.equals(providerNo) && proGrpBillingNo.equals(pgrpbillno)?"selected":""%>><%=plast%>,<%=pfirst%></option>
 			<%
@@ -261,6 +259,8 @@ if (proNo == null || proNo.compareTo("") == 0){
 			String groupBillingNo = "";
 			String comments = p.getComments();
 			groupBillingNo = SxmlMisc.getXmlContent(comments,"<xml_p_billinggroup_no>","</xml_p_billinggroup_no>");
+			// Default to null if group billing number is empty - this will skip the group billing number condition in the sql
+			groupBillingNo = (groupBillingNo.length() == 0? null : groupBillingNo);
 			
 			aL = obj.getRASummary(raNo, p.getOhipNo(), groupBillingNo, OBbilling_no, CObilling_no,map);
 			
