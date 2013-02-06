@@ -501,7 +501,14 @@ public class JdbcBillingRAImpl {
 		List ret = new Vector();
 		String sql = "select p.provider_no, r.providerohip_no, p.last_name,p.first_name, p.comments from radetail r, provider p "
 				+ "where p.ohip_no=r.providerohip_no "
-				+ "and ExtractValue(p.comments, '/xml_p_billinggroup_no')=r.provider_group_billing_no and r.raheader_no=" + id + " "
+				+ "and ( "
+				+ "		ExtractValue(p.comments, '/xml_p_billinggroup_no') = r.provider_group_billing_no "
+				+ "		or ( "
+				+ "			ExtractValue(p.comments, '/xml_p_billinggroup_no') = '' "
+				+ "			and r.provider_group_billing_no = '0000' "
+				+ "		) "
+				+ ") "
+				+ "and r.raheader_no=" + id + " "
 				+ "group by p.provider_no";
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
 		try {
@@ -525,7 +532,14 @@ public class JdbcBillingRAImpl {
 		List ret = new Vector();
 		String sql = "select p.provider_no, r.providerohip_no, p.last_name,p.first_name, p.comments from radetail r, provider p "
 				+ "where p.ohip_no=r.providerohip_no "
-				+ "and ExtractValue(p.comments, '/xml_p_billinggroup_no')=r.provider_group_billing_no and r.raheader_no=" + id + " "
+				+ "and ( "
+				+ "		ExtractValue(p.comments, '/xml_p_billinggroup_no') = r.provider_group_billing_no "
+				+ "		or ( "
+				+ "			ExtractValue(p.comments, '/xml_p_billinggroup_no') = '' "
+				+ "			and r.provider_group_billing_no = '0000' "
+				+ "		) "
+				+ ") "
+				+ "and r.raheader_no=" + id + " "
 				+ "and error_code<>'' and error_code not in('I2') "
 				+ "group by p.provider_no";
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
@@ -691,7 +705,14 @@ public class JdbcBillingRAImpl {
 		}
 		return ret;
 	}
-
+	
+	/**
+	 * Get a list of Property objects that contain bill information for the RA Summary report.
+	 * 
+	 * This function will find the bill information using the ra number (id), provider ohip number,
+	 * and the provider group billing number.  If the provider group billing number is null, it will
+	 * collect bill information containing any group billing number.
+	 */ 
 	public List getRASummary(String id, String providerOhipNo, String providerGroupBillingNo) {
 		String providerGroupBillingConditional = "";
 		if (providerGroupBillingNo != null)
