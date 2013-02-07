@@ -370,7 +370,7 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
     }
     
     @SuppressWarnings("unchecked")
-    public BillingClaimHeader1 getInvoice(String id) {    	
+    public BillingClaimHeader1 getInvoice(Integer id) {    	
     	String sql = "select h1 from BillingClaimHeader1 h1 where h1.id = :id";
         Query q = entityManager.createQuery(sql);
         

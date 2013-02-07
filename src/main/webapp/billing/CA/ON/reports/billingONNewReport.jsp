@@ -239,8 +239,6 @@ if("unbilled".equals(action)) {
     if (currentPage > totalNumberOfPages)
 		currentPage = totalNumberOfPages;
 	
-	MiscUtils.getLogger().info("NUM: " + totalResults);
-	
     firstResult = currentPage * maxPerPage - maxPerPage;
     
     List<Appointment> appointments = appointmentDao.getUnbilledByDateRangeAndProvider(startTime, endTime, providerview, new Integer(firstResult), new Integer(maxPerPage));    
@@ -450,7 +448,7 @@ $(document).ready(function() {
 	});
 	
 	$.validator.addMethod("currency", function(value, element) { 
-		var re = new RegExp("^\$?[0-9][0-9\,]*(\.\d{1,2})?$|^\$?[\.]([\d][\d]?)$");
+		var re = /^\\$?[0-9][0-9\,]*(\.\d{1,2})?$|^\\$?[\.]([\d][\d]?)$/;
 		return this.optional(element) || re.test(value); 
 	}, "Must be a valid amount.");
 
@@ -1517,7 +1515,6 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				billTimeAsDate = (Date)formatter.parse(billTime);
 			} catch (Exception e) {}
 			
-			
 			formatAmounts(amounts);
 			formatPercents(percents);
 			String total = formatAndCalculateTotal(totals);
@@ -1558,7 +1555,16 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				newBill.setCreator( (String) request.getSession().getAttribute("user") );
 				newBill.setTotal(total);
 			} else {
-				oldBill = billingClaimDAO.getInvoice(billId);
+				Integer billIdAsInteger = null;
+			
+				try {
+					billIdAsInteger = Integer.parseInt(billId);
+				} catch (Exception e) {
+					MiscUtils.getLogger().error("Error while parsing bill Id.", e);
+					continue;
+				}
+				
+				oldBill = billingClaimDAO.getInvoice(billIdAsInteger);
 				newBill = BillingClaimHeader1.copy(oldBill);
 				
 				//String apptProvNo = newBill.getApptProvider_no();
