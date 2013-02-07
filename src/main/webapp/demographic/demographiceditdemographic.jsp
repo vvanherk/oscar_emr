@@ -2593,7 +2593,7 @@ document.updatedelete.r_doctor_ohip.value = refNo;
                                   }
                                   %>
                                 <input type="hidden" name="initial_rosterstatus" value="<%=rosterStatus%>"/>
-								<select id="roster_status" name="roster_status" style="width: 120" <%=getDisabled("roster_status")%> onchange="checkRosterStatus()">
+								<select id="roster_status" name="roster_status" style="width: 120px" <%=getDisabled("roster_status")%> onchange="checkRosterStatus()">
 									<option value=""></option>
 									<option value="RO"
 										<%=rosterStatus.equals("RO")?" selected":""%>>
@@ -2698,7 +2698,7 @@ document.updatedelete.r_doctor_ohip.value = refNo;
                                   	 <input type="text" name="patient_status" value="<%=pacStatus%>"> <% } else {
                                 String patientStatus = demographic.getPatientStatus(); %>
                                 <input type="hidden" name="initial_patientstatus" value="<%=patientStatus%>">
-								<select name="patient_status" style="width: 120" <%=getDisabled("patient_status")%>>
+								<select name="patient_status" style="width: 120px" <%=getDisabled("patient_status")%>>
 									<option value="AC"
 										<%=patientStatus.equals("AC")?" selected":""%>>
 									<bean:message key="demographic.demographiceditdemographic.optActive"/></option>
