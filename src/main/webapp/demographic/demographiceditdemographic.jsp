@@ -558,6 +558,16 @@ function removeAccents(s){
 
 </script>
 <script language="JavaScript">
+
+function showEdit(){
+    document.getElementById('editDemographic').style.display = 'block';
+    document.getElementById('viewDemographics2').style.display = 'none';
+    document.getElementById('updateButton').style.display = 'block';
+    document.getElementById('swipeButton').style.display = 'block';
+    document.getElementById('editBtn').style.display = 'none';
+    document.getElementById('closeBtn').style.display = 'inline';
+}
+
 function showHideDetail(){
     showHideItem('editDemographic');
     showHideItem('viewDemographics2');
