@@ -145,6 +145,7 @@
 <link rel="stylesheet" type="text/css" media="all"
 	href="../share/calendar/calendar.css" title="win2k-cold-1" />
 
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
 <% if (OscarProperties.getInstance().getBooleanProperty("workflow_enhance", "true")) { %>
 <script language="javascript" src="<%=request.getContextPath() %>/hcHandler/hcHandler.js"></script>
 <script language="javascript" src="<%=request.getContextPath() %>/hcHandler/hcHandlerUpdateDemographic.js"></script>
@@ -184,7 +185,6 @@
 <script src="<c:out value="${ctx}"/>/share/javascript/menutility.js"
 	type="text/javascript"></script>
 <script type="text/javascript" src="../share/javascript/prototype.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
    <script>
      jQuery.noConflict();
    </script>
