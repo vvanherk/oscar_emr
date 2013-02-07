@@ -737,7 +737,7 @@ div.demographicSection h3 {
    background-color: #ccccff;
    font-size: 8pt;
    font-variant:small-caps;
-   font:bold;
+   font-weight:bold;
    margin-top:0px;
    padding-top:0px;
    margin-bottom:0px;
@@ -776,7 +776,7 @@ div.demographicWrapper {
     position: absolute;
     visibility: hidden;
     background-color: #6699cc;
-    layer-background-color: #6699cc;
+    /*layer-background-color: #6699cc;*/
     color: white;
     border-left: 1px solid black;
     border-top: 1px solid black;
