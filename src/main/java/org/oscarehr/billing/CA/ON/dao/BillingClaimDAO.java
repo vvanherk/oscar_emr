@@ -370,6 +370,21 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
     }
     
     @SuppressWarnings("unchecked")
+    public BillingClaimHeader1 getInvoice(String id) {    	
+    	String sql = "select h1 from BillingClaimHeader1 h1 where h1.id = :id";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("id", id);
+        
+        List<BillingClaimHeader1> results = q.getResultList();
+        
+        if (results == null || results.size() < 1)
+			return null;
+			
+		return results.get(0);
+    }
+    
+    @SuppressWarnings("unchecked")
     public List<BillingClaimHeader1> getInvoicesByIds(List<Integer> ids) {
     	if(ids.size()==0) return new ArrayList<BillingClaimHeader1>();
     	
