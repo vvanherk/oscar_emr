@@ -388,7 +388,6 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         Query q = entityManager.createQuery(sql);
         
         q.setParameter("demo", new Integer(demographic_no));
-        q.setParameter("apt", appointment_no);
         
         return q.getResultList();
     }
