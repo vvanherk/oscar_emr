@@ -78,7 +78,7 @@ var _hc_apptScreenHandler = function(args) {
 			
 		(function(win, hcArgs) {
 			jQuery.ajax({
-				url: ctx + "/indivica/HCSearch.do",
+				url: "../indivica/HCSearch.do",
 				data: "hin=" + hcArgs["hin"] + "&ver=" + hcArgs["hinVer"] + "&issueDate=" + hcArgs["issueDate"] + "&hinExp=" + hcArgs["hinExp"],
 				type: "POST",
 				dataType: "json",
@@ -128,7 +128,7 @@ var _hc_apptScreenHandler = function(args) {
 						
 						(function(appointmentNo) {
 							jQuery(win).find("#_hc_action_present").click(function() {
-								document.location.href = ctx + "/provider/providercontrol.jsp?appointment_no=" + appointmentNo + "&year=" + getURLParameter("year") + "&month=" + getURLParameter("month") + "&day=" + getURLParameter("day") + "&status=&statusch=H&displaymode=addstatus&dboperation=updateapptstatus";
+								document.location.href = window.pageContext + "/provider/providercontrol.jsp?appointment_no=" + appointmentNo + "&year=" + getURLParameter("year") + "&month=" + getURLParameter("month") + "&day=" + getURLParameter("day") + "&status=&statusch=H&displaymode=addstatus&dboperation=updateapptstatus";
 								jQuery(win).hide();
 							});
 						})(jQuery("td[demo_no=" + data.demoNo + "]").first().attr("appointment_no"));
@@ -152,7 +152,7 @@ var _hc_apptScreenHandler = function(args) {
 }
 
 jQuery(document).ready(function() {
-	jQuery("#_hc_window #_hc_matchSearch img").attr("src", ctx + "/images/DMSLoader.gif");
+	jQuery("#_hc_window #_hc_matchSearch img").attr("src", window.pageContext + "/images/DMSLoader.gif");
 
 	jQuery("#_hc_window #_hc_closeBtn").click(function() {
 		jQuery("#_hc_window").hide();
