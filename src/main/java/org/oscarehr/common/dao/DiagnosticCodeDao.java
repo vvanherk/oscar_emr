@@ -113,7 +113,7 @@ public class DiagnosticCodeDao extends AbstractDao<DiagnosticCode>{
     }
 
 	public List<DiagnosticCode> findDiagnosticCodesByCode(String code) {
-		Query query = entityManager.createQuery("select dc from DiagnosticCode dc where dc.diagnostic_code like (:diagnostic_code) order by dc.diagnostic_code");
+		Query query = entityManager.createQuery("select dc from DiagnosticCode dc where dc.diagnosticCode like (:diagnostic_code) order by dc.diagnosticCode");
 		query.setParameter("diagnostic_code", code + "%");
 
 		@SuppressWarnings("unchecked")

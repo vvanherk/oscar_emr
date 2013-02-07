@@ -238,7 +238,9 @@ if("unbilled".equals(action)) {
     totalNumberOfPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
     if (currentPage > totalNumberOfPages)
 		currentPage = totalNumberOfPages;
-		
+	
+	MiscUtils.getLogger().info("NUM: " + totalResults);
+	
     firstResult = currentPage * maxPerPage - maxPerPage;
     
     List<Appointment> appointments = appointmentDao.getUnbilledByDateRangeAndProvider(startTime, endTime, providerview, new Integer(firstResult), new Integer(maxPerPage));    
@@ -448,7 +450,7 @@ $(document).ready(function() {
 	});
 	
 	$.validator.addMethod("currency", function(value, element) { 
-		var re = /^\$?[0-9][0-9\,]*(\.\d{1,2})?$|^\$?[\.]([\d][\d]?)$/;
+		var re = new RegExp("^\$?[0-9][0-9\,]*(\.\d{1,2})?$|^\$?[\.]([\d][\d]?)$");
 		return this.optional(element) || re.test(value); 
 	}, "Must be a valid amount.");
 
