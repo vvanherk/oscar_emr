@@ -23,6 +23,7 @@ import org.oscarehr.common.OtherIdManager;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.Hl7TextInfoDao;
 import org.oscarehr.common.dao.Hl7TextMessageDao;
+import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.Hl7TextInfo;
 import org.oscarehr.common.model.Hl7TextMessage;
@@ -95,10 +96,12 @@ public final class MessageUploader {
             	}
             }
             
+            boolean isSpire = (h instanceof SpireHandler);
+            
             // get actual ohip numbers based on doctor first and last name for spire lab
-            if(h instanceof SpireHandler) {
+            if(isSpire) {
 				List<String> docSpireNums = ((SpireHandler)h).getAllDocNums();
-				//logger.debug("docNames:");
+				
 	            for (int i=0; i < docSpireNums.size(); i++) {
 					logger.info(i + " " + docSpireNums.get(i));
 				}
@@ -190,6 +193,22 @@ public final class MessageUploader {
 				hl7TextInfo.setReportStatus(reportStatus);
 				hl7TextInfo.setAccessionNumber(accessionNum);
 				hl7TextInfoDao.persist(hl7TextInfo);
+				
+				if (isSpire) {
+					// we need to add a mapping from the 'common' accession number to the 'unique' accession number for spire labs
+					String uniqueAccnAsString = ((SpireHandler)h).getUniqueAccessionNum();
+					String accn = h.getAccessionNum();
+					
+					logger.info("unique: " + uniqueAccnAsString + " 'normal': " + accn);
+					
+					try {
+						Integer uniqueAccn = Integer.parseInt(uniqueAccnAsString);
+						SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
+						accnDao.add( uniqueAccn, accn, hl7TextInfo.getLabNumber() );
+					} catch (Exception e) {
+						logger.error("Unable to parse Spire Unique Accession number from String to int.", e);
+					}
+				}
 			}
 
 			String demProviderNo = patientRouteReport(insertID, lastName, firstName, sex, dob, hin, DbConnectionFilter.getThreadLocalDbConnection());
