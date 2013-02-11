@@ -80,51 +80,51 @@ var _hc_newDemographicHandler = function(args) {
 		jQuery("input[name='keyword']").val("");
         jQuery("select[name='hc_type']").val("ON");
         if (jQuery("select[name='hc_type']").val() != "ON"){
-            jQuery("input[name='hc_type']").css({'background-color' : 'red'});
+            jQuery("input[name='hc_type']").css({'background-color' : 'yellow'});
             jQuery("input[name='hc_type']").val("ON");
         }
         if (jQuery("input[name='last_name']").val() != args["lastName"]){  
-            jQuery("input[name='last_name']").css({'background-color' : 'red'});
+            jQuery("input[name='last_name']").css({'background-color' : 'yellow'});
             jQuery("input[name='last_name']").val(args["lastName"]);
         }
         if (jQuery("input[name='first_name']").val() != args["firstName"]){
-            jQuery("input[name='first_name']").css({'background-color' : 'red'});
+            jQuery("input[name='first_name']").css({'background-color' : 'yellow'});
             jQuery("input[name='first_name']").val(args["firstName"]);
         }
         if (jQuery("input[name='hin']").val() != args["hin"]){
-            jQuery("input[name='hin']").css({'background-color' : 'red'});
+            jQuery("input[name='hin']").css({'background-color' : 'yellow'});
             jQuery("input[name='hin']").val(args["hin"]);
         }
         if (jQuery("input[name='year_of_birth']").val() != args["dob"].substring(0,4)){
-            jQuery("input[name='year_of_birth']").css({'background-color' : 'red'});
+            jQuery("input[name='year_of_birth']").css({'background-color' : 'yellow'});
             jQuery("input[name='year_of_birth']").val(args["dob"].substring(0,4));
         }
         if (jQuery("input[name='month_of_birth']").val() != args["dob"].substring(4,6)){
-            jQuery("input[name='month_of_birth']").css({'background-color' : 'red'});
+            jQuery("input[name='month_of_birth']").css({'background-color' : 'yellow'});
             jQuery("input[name='month_of_birth']").val(args["dob"].substring(4,6));
         }
         if (jQuery("input[name='date_of_birth']").val() != args["dob"].substring(6,8)){
-            jQuery("input[name='date_of_birth']").css({'background-color' : 'red'});
+            jQuery("input[name='date_of_birth']").css({'background-color' : 'yellow'});
             jQuery("input[name='date_of_birth']").val(args["dob"].substring(6,8));
         }
         if (jQuery("input[name='ver']").val() != args["hinVer"]){
-            jQuery("input[name='ver']").css({'background-color' : 'red'});
+            jQuery("input[name='ver']").css({'background-color' : 'yellow'});
             jQuery("input[name='ver']").val(args["hinVer"]);
         }
         if (jQuery("input[name='sex']").val() != (args["sex"] == "1" ? "M" : (args["sex"] == "2" ? "F" : ""))){
-            jQuery("input[name='sex']").css({'background-color' : 'red'});
+            jQuery("input[name='sex']").css({'background-color' : 'yellow'});
             jQuery("input[name='sex']").val((args["sex"] == "1" ? "M" : (args["sex"] == "2" ? "F" : "")));
         }
         if (jQuery("input[name='eff_date_year']").val() != issueDate.substring(0,4)){
-            jQuery("input[name='eff_date_year']").css({'background-color' : 'red'});
+            jQuery("input[name='eff_date_year']").css({'background-color' : 'yellow'});
             jQuery("input[name='eff_date_year']").val(issueDate.substring(0,4));
         }
         if (jQuery("input[name='eff_date_year']").val() != issueDate.substring(0,4)){
-            jQuery("input[name='eff_date_year']").css({'background-color' : 'red'});
+            jQuery("input[name='eff_date_year']").css({'background-color' : 'yellow'});
             jQuery("input[name='eff_date_year']").val(issueDate.substring(0,4));
         }
         if (jQuery("input[name='eff_date_year']").val() != issueDate.substring(0,4)){
-            jQuery("input[name='eff_date_year']").css({'background-color' : 'red'});
+            jQuery("input[name='eff_date_year']").css({'background-color' : 'yellow'});
             jQuery("input[name='eff_date_year']").val(issueDate.substring(0,4));
         }
    	 	showEdit();
