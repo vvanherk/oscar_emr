@@ -114,7 +114,6 @@ var _hc_apptScreenHandler = function(args) {
 						if (error)
 							jQuery(win).find("#_hc_action_present").hide();
 						else {
-							jQuery(win).find("#_hc_action_update").hide();
 							jQuery(win).find("#_hc_action_present").show();
 							jQuery("td[demo_no=" + data.demoNo + "]").addClass("_hc_appointmentMatch");
 						}
