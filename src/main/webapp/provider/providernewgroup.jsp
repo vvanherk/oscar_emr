@@ -138,9 +138,7 @@ function checkForm() {
 		<TD align="center"><input type="hidden" name="Submit"
 			value=" Save "> <input type="submit"
 			value="<bean:message key="provider.providernewgroup.btnSave"/>">
-		<INPUT TYPE="RESET"
-			VALUE="<bean:message key="provider.providernewgroup.btnExit"/>"
-			onClick="window.close();"></TD>
+		</TD>
 	</tr>
 </TABLE>
 
