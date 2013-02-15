@@ -56,20 +56,20 @@ public class BillingService extends AbstractModel<Integer> implements Serializab
 	private String serviceCompositecode;
 	@Column(name = "service_code")
 	private String serviceCode;
-	// @Column(name = "description")
+	@Column(name = "description")
 	private String description;
-	// @Column(name = "value")
+	@Column(name = "value")
 	private String value;
-	// @Column(name = "percentage")
+	@Column(name = "percentage")
 	private String percentage;
 	@Column(name = "billingservice_date")
 	@Temporal(value = javax.persistence.TemporalType.DATE)
 	private Date billingserviceDate;
-	// @Column(name = "specialty")
+	@Column(name = "specialty")
 	private String specialty;
-	// @Column(name = "region")
+	@Column(name = "region")
 	private String region;
-	// @Column(name = "anaesthesia")
+	@Column(name = "anaesthesia")
 	private String anaesthesia;
 	@Column(name = "termination_date")
 	@Temporal(value = javax.persistence.TemporalType.DATE)
@@ -78,9 +78,12 @@ public class BillingService extends AbstractModel<Integer> implements Serializab
 	@Column(name = "displaystyle")
 	private Integer displayStyle;
 
-	private Boolean gstFlag;
+	@Column(name = "sliFlag")
 	private Boolean sliFlag;
-	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER, mappedBy="service_code")	
+	@Column(name = "gstFlag")
+	private Boolean gstFlag;
+	
+	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER, mappedBy="service_code")
 	@OrderBy("effective_date DESC")
 	private List<BillingPercLimit> billingPercLimit;
 

@@ -63,6 +63,17 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 		List<BillingService> list = query.getResultList();
 		return list;
 	}
+	
+	public List<BillingService> findBillingCodesByCode(List<String> codes, String region) {
+		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.serviceCode in (:code) and region = (:region) order by bs.billingserviceDate");
+		
+		query.setParameter("code", codes);
+		query.setParameter("region", region);
+
+		@SuppressWarnings("unchecked")		
+		List<BillingService> list = query.getResultList();
+		return list;
+	}
 
 	public List<BillingService> findByServiceCode(String code) {
 		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.serviceCode = ? order by bs.billingserviceDate desc");
@@ -79,7 +90,7 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 	public List<BillingService> findBillingCodesByCode(String code, String region, Date billingDate, int order) {
 		String orderByClause = order == 1 ? "desc" : "";
 		Query query = entityManager
-		        .createQuery("select bs  from BillingService bs where bs.region = (:region) and bs.serviceCode like (:code) and bs.billingserviceDate = (select max(b2.billingserviceDate) from BillingService b2 where b2.serviceCode = bs.serviceCode and b2.billingserviceDate <= (:billDate))  order by bs.serviceCode "
+		        .createQuery("select bs  from BillingService bs where (bs.region = (:region) or bs.region is null) and bs.serviceCode like (:code) and bs.billingserviceDate = (select max(b2.billingserviceDate) from BillingService b2 where b2.serviceCode = bs.serviceCode and b2.billingserviceDate <= (:billDate))  order by bs.serviceCode "
 		                + orderByClause);// (:order) ");
 		query.setParameter("region", region);
 		query.setParameter("code", code + "%");

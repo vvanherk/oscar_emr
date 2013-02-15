@@ -151,6 +151,10 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         
         return total;
     }
+    
+    public void updateBill(BillingClaimHeader1 h1) {		
+		this.merge(h1);
+	}
 
     private BillingClaimHeader1 assembleHeader1(Provider prov, String demographic, String clinic_ref_code, Date serviceDate, String total, String cursuser, OscarProperties properties) {
         Demographic demo;
@@ -341,6 +345,18 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         
         return q.getResultList();
     }
+
+	@SuppressWarnings("unchecked")
+    public List<BillingClaimHeader1> getInvoices(String demographic_no, String appointment_no) {
+    	String sql = "select h1 from BillingClaimHeader1 h1 where " +
+                " h1.demographic_no = :demo and h1.appointment_no = :apt and h1.status != 'D' order by h1.billing_date desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("demo", new Integer(demographic_no));
+        q.setParameter("apt", appointment_no);
+        
+        return q.getResultList();
+    }
     
     @SuppressWarnings("unchecked")
     public List<BillingClaimHeader1> getInvoices(String demographic_no) {
@@ -351,6 +367,21 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         q.setParameter("demo", new Integer(demographic_no));
         
         return q.getResultList();
+    }
+    
+    @SuppressWarnings("unchecked")
+    public BillingClaimHeader1 getInvoice(Integer id) {    	
+    	String sql = "select h1 from BillingClaimHeader1 h1 where h1.id = :id";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("id", id);
+        
+        List<BillingClaimHeader1> results = q.getResultList();
+        
+        if (results == null || results.size() < 1)
+			return null;
+			
+		return results.get(0);
     }
     
     @SuppressWarnings("unchecked")
@@ -375,6 +406,82 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         
         return q.getResultList();
     }
+
+	@SuppressWarnings("unchecked")
+    public List<BillingClaimHeader1> getInvoices(String provider_no, Date startTime, Date endTime) {
+    	String sql = "select h1 from BillingClaimHeader1 h1 where " +
+                " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status != 'D' order by h1.billing_date desc, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("prov", provider_no);
+        q.setParameter("startTime", startTime);
+        q.setParameter("endTime", endTime);
+        
+        return q.getResultList();
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<BillingClaimHeader1> getBilledInvoices(String provider_no, Date startTime, Date endTime, Integer firstResult, Integer maxResults) {
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("D");
+		statusList.add("S");
+		statusList.add("B");
+		
+    	String sql = "select h1 from BillingClaimHeader1 h1 where " +
+                " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status NOT IN (:status_list) " +
+                " order by h1.billing_date, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("prov", provider_no);
+        q.setParameter("startTime", startTime);
+        q.setParameter("endTime", endTime);
+        q.setParameter("status_list", statusList);
+        
+        if (firstResult != null && firstResult.intValue() >= 0)
+			q.setFirstResult(firstResult);
+			
+		if (maxResults != null && maxResults.intValue() > 0)
+			q.setMaxResults(maxResults);
+        
+        return q.getResultList();
+    }
+    
+    @SuppressWarnings("unchecked")
+    public int getBilledInvoicesCount(String provider_no, Date startTime, Date endTime) {
+		List<String> statusList = new ArrayList<String>();
+		statusList.add("D");
+		statusList.add("S");
+		statusList.add("B");
+		
+    	String sql = "select count(h1) from BillingClaimHeader1 h1 where " +
+                " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status NOT IN (:status_list) " + 
+                " order by h1.billing_date, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("prov", provider_no);
+        q.setParameter("startTime", startTime);
+        q.setParameter("endTime", endTime);
+        q.setParameter("status_list", statusList);
+        
+        Number numRows = (Number)q.getSingleResult();
+
+		return numRows.intValue();
+    }
+
+	@SuppressWarnings("unchecked")
+    public List<BillingClaimHeader1> getInvoicesByDemographic(String demographic_no, Date startDate, Date endDate) {
+    	String sql = "select h1 from BillingClaimHeader1 h1 where " +
+                " h1.demographic_no = :demo and h1.billing_date >= (:startDate) and h1.billing_date <= (:endDate) and h1.status != 'D' order by h1.billing_date, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("demo", new Integer(demographic_no));
+        q.setParameter("startDate", startDate);
+        q.setParameter("endDate", endDate);
+        
+        return q.getResultList();
+    }
+
+	
 
     /**
      * @return the gstCtontrolDao

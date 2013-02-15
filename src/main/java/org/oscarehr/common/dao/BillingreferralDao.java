@@ -81,6 +81,25 @@ public class BillingreferralDao extends AbstractDao<Billingreferral> {
             return null;
         }
     }
+    
+    public List<Billingreferral> getBillingreferral(String referral_no, boolean findLike) {
+		// Use the standard 'getBillingreferral' method to search for exact equivalence of referral numbers
+		if (!findLike)
+			return getBillingreferral( referral_no );
+
+        String sql = "SELECT br From Billingreferral br WHERE br.referralNo like ? order by br.referralNo asc";
+		Query query = entityManager.createQuery(sql);
+		query.setParameter(1, referral_no);
+
+		@SuppressWarnings("unchecked")
+		List<Billingreferral> cList = query.getResultList();
+
+        if (cList != null && cList.size() > 0) {
+            return cList;
+        } else {
+            return null;
+        }
+    }
 
     public List<Billingreferral> getBillingreferral(String last_name, String first_name) {
     	String sql = "SELECT br From Billingreferral br WHERE br.lastName like ? and br.firstName like ? order by br.lastName";
