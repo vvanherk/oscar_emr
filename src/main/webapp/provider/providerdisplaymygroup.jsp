@@ -52,7 +52,6 @@
 		<input type="hidden" name="submit_form"	value="">
 		<INPUT TYPE="submit" VALUE="<bean:message key="provider.providerdisplaymygroup.btnDelete"/>" onclick="document.forms['UPDATEPRE'].submit_form.value='Delete'; document.forms['UPDATEPRE'].submit();">
 		<INPUT TYPE="submit" VALUE="<bean:message key="provider.providerdisplaymygroup.btnNew"/>" onclick="document.forms['UPDATEPRE'].submit_form.value='New Group/Add a Member'; document.forms['UPDATEPRE'].submit();">
-		<INPUT TYPE="RESET" VALUE="<bean:message key="provider.providerdisplaymygroup.btnClose"/>" onClick="window.close();">
 	</div>
 </div>
 <br />
