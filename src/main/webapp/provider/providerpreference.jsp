@@ -654,6 +654,9 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 	  <tr>
           <td align="center"><a class='iframe' id='popupgroup' href='providerNewDemographicDefaultProvider.jsp'>Set Default Provider for New Demographic</a></td>
       </tr>
+	  <tr>
+          <td align="center"><a class='iframe' id='popupgroup' href='providerBillingDefaultProvider.jsp'>Set Default Provider for Invoice Billing</a></td>
+      </tr>
 
 
 	 <oscar:oscarPropertiesCheck property="util.erx.enabled" value="true">
