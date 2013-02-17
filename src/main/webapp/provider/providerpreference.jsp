@@ -634,6 +634,9 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 	  <tr>
           <td align="center"><a href=# onClick ="popupPage(230,860,'providerNewDemographicDefaultProvider.jsp');return false;">Set Default Provider for New Demographic</a></td>
       </tr>
+	  <tr>
+          <td align="center"><a href=# onClick ="popupPage(230,860,'providerBillingDefaultProvider.jsp');return false;">Set Default Provider for Billing</a></td>
+      </tr>
 </table>
 </FORM>
 

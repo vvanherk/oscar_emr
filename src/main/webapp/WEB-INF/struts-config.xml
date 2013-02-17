@@ -261,6 +261,9 @@
 		<form-bean name="setProviderNewDemographicDefaultProvider" type="org.apache.struts.action.DynaActionForm">
 			<form-property name="provno" type="java.lang.String" />
 		</form-bean>
+		<form-bean name="setProviderBillingDefaultProvider" type="org.apache.struts.action.DynaActionForm">
+			<form-property name="provno" type="java.lang.String" />
+		</form-bean>
 		<form-bean name="setProviderColour" type="org.apache.struts.action.DynaActionForm">
 			<form-property name="colour" type="java.lang.String" />
 		</form-bean>
@@ -1351,6 +1354,10 @@
         </action>
         <action input="/provider/providerNewDemographicDefaultProvider.jsp" name="setProviderNewDemographicDefaultProvider" path="/SetNewDemDefPrv" scope="request" type="oscar.oscarProvider.pageUtil.ProSetNewDemDefPrvAction">
             <forward name="success" path="/provider/providerNewDemographicDefaultProvider.jsp" />
+            <forward name="eject" path="/index.jsp" />
+        </action>
+        <action input="/provider/providerBillingDefaultProvider.jsp" name="setProviderBillingDefaultProvider" path="/SetBillingDefPrv" scope="request" type="oscar.oscarProvider.pageUtil.ProSetBillingDefPrvAction">
+            <forward name="success" path="/provider/providerBillingDefaultProvider.jsp" />
             <forward name="eject" path="/index.jsp" />
         </action>
 		<action input="/provider/providerFax.jsp" name="editProviderFaxForm" path="/EditFaxNum" scope="request" type="oscar.oscarProvider.pageUtil.ProEditFaxNumAction">

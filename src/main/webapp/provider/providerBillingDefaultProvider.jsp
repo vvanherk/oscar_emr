@@ -51,7 +51,7 @@
 <link rel="stylesheet" type="text/css"
 	href="../oscarEncounter/encounterStyles.css">
 
-<title>Set Default Provider for New Demographics</title>
+<title>Set Default Provider for Billing</title>
 
 <script type="text/javascript">
     function validate() {       
@@ -144,7 +144,7 @@ br {
 <table class="MainTable" id="scrollNumber1" name="encounterTable">
 	<tr class="MainTableTopRow">
 		<td class="MainTableTopRowLeftColumn">Preferences</td>
-		<td style="color: white" class="MainTableTopRowRightColumn">Set Default Provider for New Demographics</td>
+		<td style="color: white" class="MainTableTopRowRightColumn">Set Default Provider for Billing</td>
 	</tr>
 	<tr>
 		<td class="MainTableLeftColumn">&nbsp;</td>
@@ -155,15 +155,15 @@ br {
 			List<Provider> activeDoctors = providerDao.getActiveProvidersByType("doctor");
 			
 			UserProperty prop = null;
-            prop = propertyDao.getProp(curUser_no,"newDemDefPrv");
+            prop = propertyDao.getProp(curUser_no,"billingDefPrv");
             if(prop!=null) { provno = prop.getValue(); }
 	           if( request.getAttribute("status") == null ){
             %> 
             
-            <html:form action="/SetNewDemDefPrv.do">
+            <html:form action="/SetBillingDefPrv.do">
 
 			<span style="color:blue">
-                Select the default selected provider for new demographics. 
+				Select the default selected provider for billing. 
 				<br/>
 				<% if( provno.equals("") ){
 					%>There is currently no default set<%

@@ -41,6 +41,9 @@
 
 <%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="oscar.OscarProperties"%>
+<%@ page import="org.oscarehr.common.model.UserProperty"%>
+<%@ page import="org.oscarehr.common.dao.UserPropertyDAO"%>
+<%@page import="org.oscarehr.util.SpringUtils" %>
 
 
 <% OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao"); %>
@@ -595,6 +598,10 @@ String proOHIP="";
 String specialty_code; 
 String billinggroup_no;
 int Count = 0;
+String curUser_no = (String) session.getAttribute("user");
+UserPropertyDAO propertyDao = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
+UserProperty nddp = propertyDao.getProp(curUser_no,"billingDefPrv");
+if( nddp!=null ){ providerview=nddp.getValue(); }
 
 ResultSet rslocal = isTeamBillingOnly
 ?apptMainBean.queryResults(new String[]{"billingreport", user_no, user_no }, "search_reportteam")
