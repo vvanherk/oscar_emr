@@ -41,6 +41,9 @@
 
 <%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="oscar.OscarProperties"%>
+<%@ page import="org.oscarehr.common.model.UserProperty"%>
+<%@ page import="org.oscarehr.common.dao.UserPropertyDAO"%>
+<%@page import="org.oscarehr.util.SpringUtils" %>
 
 
 <% OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao"); %>
@@ -113,8 +116,14 @@ int curDay = now.get(Calendar.DAY_OF_MONTH);
 
 List<Appointment> date_appts = appointmentDao.getFirstAndLastUnbilledAppointments( );                                                                                    
 SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
-String xml_vdate            = request.getParameter("xml_vdate"           ) == null ? sdf.format( date_appts.get( 0 ).getAppointmentDate( ) ) : request.getParameter("xml_vdate"           );
-String xml_appointment_date = request.getParameter("xml_appointment_date") == null ? sdf.format( date_appts.get( 1 ).getAppointmentDate( ) ) : request.getParameter("xml_appointment_date");
+String xml_vdate            = "";
+String xml_appointment_date = "";
+if ( !date_appts.isEmpty() ){
+    xml_vdate            = sdf.format( date_appts.get( 0 ).getAppointmentDate( ) );
+    xml_appointment_date = sdf.format( date_appts.get( 1 ).getAppointmentDate( ) );
+}
+if ( request.getParameter("xml_vdate"           ) != null ){ xml_vdate            = request.getParameter("xml_vdate"           ); }
+if ( request.getParameter("xml_appointment_date") != null ){ xml_appointment_date = request.getParameter("xml_appointment_date"); }
 %>
 
 <%
@@ -592,6 +601,10 @@ String proOHIP="";
 String specialty_code; 
 String billinggroup_no;
 int Count = 0;
+String curUser_no = (String) session.getAttribute("user");
+UserPropertyDAO propertyDao = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
+UserProperty nddp = propertyDao.getProp(curUser_no,"billingDefPrv");
+if( nddp!=null && providerview.equals("all") ){ providerview=nddp.getValue(); }
 
 ResultSet rslocal = isTeamBillingOnly
 ?apptMainBean.queryResults(new String[]{"billingreport", user_no, user_no }, "search_reportteam")
