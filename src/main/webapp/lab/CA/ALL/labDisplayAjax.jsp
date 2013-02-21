@@ -151,6 +151,8 @@ else if (h instanceof SpireHandler) {
 		for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 			handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
 		}
+	} else {
+		handlers.add( Factory.getHandler("" + lab_no) );
 	}
 } else {
 	handlers.add( h );
