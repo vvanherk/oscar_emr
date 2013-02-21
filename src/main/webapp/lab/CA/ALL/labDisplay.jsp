@@ -158,6 +158,8 @@ if (remoteFacilityIdString==null) // local lab
 			for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 				handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
 			}
+		} else {
+			handlers.add( Factory.getHandler("" + lab_no) );
 		}
 	} else {
 		handlers.add( h );
