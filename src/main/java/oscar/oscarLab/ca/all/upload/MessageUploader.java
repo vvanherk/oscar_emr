@@ -203,6 +203,10 @@ public final class MessageUploader {
 					
 					try {
 						Integer uniqueAccn = Integer.parseInt(uniqueAccnAsString);
+						
+						if (uniqueAccn.intValue() == 0)
+							throw new Exception("Unique accession number cannot be 0.");
+						
 						SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
 						accnDao.add( uniqueAccn, accn, hl7TextInfo.getLabNumber() );
 					} catch (Exception e) {
