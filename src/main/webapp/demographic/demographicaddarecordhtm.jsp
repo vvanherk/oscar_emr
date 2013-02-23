@@ -17,6 +17,8 @@
 <%@page import="org.oscarehr.util.SpringUtils" %>
 <%@page import="org.oscarehr.common.model.Billingreferral" %>
 <%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
+<%@page import="org.oscarehr.common.model.UserProperty"%>
+<%@page import="org.oscarehr.common.dao.UserPropertyDAO"%>
 <%
 	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
 %>
@@ -917,10 +919,13 @@ function autoFillHin(){
       <td align="left" >
         <select name="staff">
           <%
+  UserPropertyDAO propertyDao = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
   ResultSet rsdemo = addDemoBean.queryResults("search_provider");
+  UserProperty nddp = null;
+  nddp = propertyDao.getProp(curUser_no,"newDemDefPrv");
   while (rsdemo.next()) {
 %>
-					<option value="<%=rsdemo.getString("provider_no")%>"><%=Misc.getShortStr( (rsdemo.getString("last_name")+","+rsdemo.getString("first_name")),"",12)%></option>
+<option <%= (nddp!=null && rsdemo.getString("provider_no").equals(nddp.getValue())) ? "selected" : ""%> value="<%=rsdemo.getString("provider_no")%>"><%=Misc.getShortStr( (rsdemo.getString("last_name")+","+rsdemo.getString("first_name")),"",12)%></option>
 					<%
   }
   rsdemo.close();

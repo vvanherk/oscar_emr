@@ -1,6 +1,6 @@
 <eformap-config>
 
-<!-- Date information -->
+<!-- Date and time information -->
     <databaseap>
         <ap-name>today</ap-name>
         <ap-sql>SELECT curdate()</ap-sql>
@@ -11,6 +11,12 @@
         <ap-sql>SELECT appointment_date from appointment WHERE appointment_no=${appt_no}</ap-sql>
         <ap-output>${appointment_date}</ap-output>
     </databaseap>
+    <databaseap>
+        <ap-name>appt_time</ap-name>
+        <ap-sql>SELECT start_time from appointment WHERE appointment_no=${appt_no}</ap-sql>
+        <ap-output>${start_time}</ap-output>
+    </databaseap>
+
 
 <!-- Current user information -->
     <databaseap>

@@ -116,7 +116,7 @@ public class DemographicExt {
             
             ResultSet rs;
                                     
-            String sql = "select key_val, value from demographicExt where demographic_no = ? ";
+            String sql = "select key_val, value from demographicExt where demographic_no = ? order by id";
             
             Connection conn = DbConnectionFilter.getThreadLocalDbConnection();
             
