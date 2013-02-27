@@ -180,6 +180,27 @@ public class UtilMisc {
       return "'" + mysqlEscape(S) + "'";
     }
   }
+  
+  public static String newlineEscape(String S) {
+    if (null == S) {
+      return S;
+    }
+    int N = S.length();
+    StringBuilder sb = new StringBuilder(N);
+    for (int i = 0; i < N; i++) {
+      char c = S.charAt(i);
+      if (c == '\\') {
+        sb.append("\\");
+      }
+      else if (c == '\n') {
+        sb.append("\\n");
+      }
+      else {
+        sb.append(c);
+      }
+    }
+    return sb.toString();
+  }
 
   public static String mysqlEscape(String S) {
     if (null == S) {
