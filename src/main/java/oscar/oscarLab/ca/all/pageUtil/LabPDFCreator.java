@@ -549,7 +549,7 @@ public class LabPDFCreator extends PdfPageEventHelper{
         
         String listedAccessionNumber = "";
 		if (handler instanceof SpireHandler)
-			listedAccessionNumber = ((SpireHandler)handlers).getUniqueAccessionNum();
+			listedAccessionNumber = ((SpireHandler)handler).getUniqueAccessionNum();
 		else
 			listedAccessionNumber = handler.getAccessionNum();
         cell.setPhrase(new Phrase("Accession #: ", boldFont));
