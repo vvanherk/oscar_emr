@@ -1521,9 +1521,14 @@ if(oscarVariables.getProperty("demographicExt") != null) {
 						</div>
 						<% } %>
 						</div>
+						
 
-
-
+						<!--
+							For some reason, on some demographics, div open/close tags become unbalanced, which causes the editDemographic table to not show. 
+							This extra closing div fixes it - and it doesn't look like it unbalances div tags if it is not required.						
+						-->
+						</div>
+						
 
 						<!--newEnd-->
 
