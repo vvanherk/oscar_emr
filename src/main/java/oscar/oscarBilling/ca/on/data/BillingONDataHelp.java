@@ -96,6 +96,7 @@ public class BillingONDataHelp {
 			
 			ret = DBHandler.GetSQL(sql);
 		} catch (SQLException e) {
+			MiscUtils.getLogger().error("Query: " + sql);
 			MiscUtils.getLogger().error("Error", e);
 		}
 		return ret;

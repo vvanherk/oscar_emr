@@ -1022,6 +1022,12 @@ while(rs.next()){
 <script type="text/javascript">
 var billingDefaults = new Array();
 var defaults = new Object();
+var anyValueMap = new Object();
+
+anyValueMap['provider_no'] 		= "-1";
+anyValueMap['visit_type_no'] 	= "";
+anyValueMap['location_id'] 		= "-1";
+anyValueMap['sli_code'] 		= "";
 
 <%
 	List<BillingDefault> billingDefaults = billingDefaultDao.getAll();
@@ -1034,7 +1040,6 @@ var defaults = new Object();
 		defaults['location_id']				= "<%=billingDefault.getLocationId()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
 		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
-		defaults['billing_form_name']		= "<%=billingServiceHashMap.get( billingDefault.getBillingFormServiceType().trim() )%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
 
 		billingDefaults.push( defaults );
@@ -1056,23 +1061,20 @@ var currentBillingDefault = null;
 		
 		var values = new Object();
 		
-		var toIndex = providerElem.value.indexOf("|");
-		if (toIndex < 0)
-			toIndex = providerElem.value.length;		
-		
-		values['provider_no']	= providerElem.value.substring(0, toIndex).trim();
-		
-		
 		var fromIndex = locationElem.value.indexOf("|");
 		if (fromIndex < 0)
-			fromIndex = 0;	
-		toIndex = locationElem.value.substring(fromIndex+1, locationElem.value.length).indexOf("|");
+			fromIndex = 0;
+		else
+			fromIndex++;
+			
+		toIndex = locationElem.value.substring(fromIndex, locationElem.value.length).indexOf("|");
 		if (toIndex < 0)
 			toIndex = 2;
+		else
+			toIndex += fromIndex;
 		
 		values['location_id']	= locationElem.value.substring(fromIndex, toIndex);
-		
-		
+		values['provider_no']	= providerElem.value.trim();
 		values['visit_type_no']	= visitTypeElem.value.substring(0,2);
 		values['sli_code_no']	= sliCodeElem.value.trim();
 		
@@ -1133,12 +1135,11 @@ var currentBillingDefault = null;
 		
 		var billingDefaultsOverride = new Object();
 		<% if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes")) { %>
-		billingDefaultsOverride['provider_no']			= provider_no;
-		billingDefaultsOverride['visit_type_no']		= visit_type_no;
-		billingDefaultsOverride['location_id']			= location_id;
-		billingDefaultsOverride['sli_code']				= sli_code_no;
-		billingDefaultsOverride['billing_form']			= "<%=ctlBillForm%>";
-		billingDefaultsOverride['billing_form_name']	= "<%=billingServiceHashMap.get( ctlBillForm )%>";
+		billingDefaultsOverride['provider_no'] = provider_no;
+		billingDefaultsOverride['visit_type_no'] = visit_type_no;
+		billingDefaultsOverride['location_id'] = location_id;
+		billingDefaultsOverride['sli_code'] = sli_code_no;
+		billingDefaultsOverride['billing_form'] = "<%=ctlBillForm%>";
 		<% } %>
 		
 		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
@@ -1161,7 +1162,7 @@ var currentBillingDefault = null;
 				}
 			}
 		}
-	}	
+	}
 	
 	/**
 	 * Method getBillingDefaultByValues
@@ -1169,22 +1170,28 @@ var currentBillingDefault = null;
 	 * Get the default values that have matching provider, visit_type, etc.  If the function finds an undefined parameter,
 	 * it just matches the billing defaults to any preceeding parameters.
 	 * 
-	 * Assumes that the billing default values are ordered by priority in 'descending' order (i.e. highest to lowest priority)
+	 * Assumes that the billing default values are ordered by priority in 'descending' order (i.e. highest to lowest priority).
+	 * 
+	 * Also, the function will skip over default values that match 'Any' value for a provider, visit_type, etc.  It will not match
+	 * a default value if the only match it finds is with 'Any' values.
 	 */
 	function getBillingDefaultByValues(provider, visit_type, location, sli_code) {
 		for (var i = 0; i < billingDefaults.length; i++) {
-			//alert( billingDefaults[i]['provider_no'] + " " + provider);
-			if (billingDefaults[i]['provider_no'] == provider) {
+			if (billingDefaults[i]['provider_no'] == provider || billingDefaults[i]['provider_no'] == anyValueMap['provider_no']) {
 				if (visit_type == undefined) {
-					return billingDefaults[i];
-				} else if (billingDefaults[i]['visit_type_no'] == visit_type) {
-					if (location == undefined) {
+					if (billingDefaults[i]['provider_no'] != anyValueMap['provider_no']) 
 						return billingDefaults[i];
-					} else if (billingDefaults[i]['location_id'] == location) {
+				} else if (billingDefaults[i]['visit_type_no'] == visit_type  || billingDefaults[i]['visit_type_no'] == anyValueMap['visit_type_no']) {
+					if (location == undefined) {
+						if (billingDefaults[i]['visit_type_no'] != anyValueMap['visit_type_no']) 
+							return billingDefaults[i];
+					} else if (billingDefaults[i]['location_id'] == location  || billingDefaults[i]['location_id'] == anyValueMap['location_id']) {
 						if (sli_code == undefined) {
-							return billingDefaults[i];
-						} else if (billingDefaults[i]['sli_code'] == sli_code) {
-							return billingDefaults[i];
+							if (billingDefaults[i]['location_id'] != anyValueMap['location_id']) 
+								return billingDefaults[i];
+						} else if (billingDefaults[i]['sli_code'] == sli_code  || billingDefaults[i]['sli_code'] == anyValueMap['sli_code']) {
+							if (billingDefaults[i]['sli_code'] != anyValueMap['sli_code']) 
+								return billingDefaults[i];
 						}
 					}
 				}
@@ -1196,55 +1203,62 @@ var currentBillingDefault = null;
 	 * Method setBillingDefaults
 	 * 
 	 * Set the dropdown options to the values in the defaults parameter.
-	 */ 	
+	 */ 
 	function setBillingDefaults( defaults, billingDefaultsOverride ) {
 		billingDefaultsOverride = billingDefaultsOverride || new Object();
 		
 		currentBillingDefault = defaults;
 		
+		
 		var elem = jQuery('select[name="xml_provider"]');
 		if (billingDefaultsOverride['provider_no'] != undefined) {
 			elem.find( 'option[value^="'+billingDefaultsOverride['provider_no']+'"]' ).attr('selected',true);
 		} else {
-			elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
+			if (defaults['provider_no'] != anyValueMap['provider_no'])
+				elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
 		}
 		
 		elem = jQuery('select[name="xml_location"]');
 		if (billingDefaultsOverride['location_id'] != undefined) {
 			elem.find( 'option[value*="|'+billingDefaultsOverride['location_id']+'|"]' ).attr('selected',true);
 		} else {
-			elem.find( 'option[value*="|'+defaults['location_id']+'|"]' ).attr('selected',true);
+			if (defaults['location_id'] != anyValueMap['location_id'])
+				elem.find( 'option[value*="|'+defaults['location_id']+'|"]' ).attr('selected',true);
 		}
 		
 		elem = jQuery('select[name="xml_slicode"]');
 		if (billingDefaultsOverride['sli_code'] != undefined) {
 			elem.find( 'option[value^="'+billingDefaultsOverride['sli_code']+'"]' ).attr('selected',true);
 		} else {
-			elem.find( 'option[value^="'+defaults['sli_code']+'"]' ).attr('selected',true);
+			if (defaults['sli_code'] != anyValueMap['sli_code'])
+				elem.find( 'option[value^="'+defaults['sli_code']+'"]' ).attr('selected',true);
 		}
 		
 		elem = jQuery('select[name="xml_visittype"]');
 		if (billingDefaultsOverride['visit_type_no'] != undefined) {
 			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
 		} else {
-			elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+			if (defaults['visit_type_no'] != anyValueMap['visit_type_no'])
+				elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
 		}
 		
-		if (billingDefaultsOverride['billing_form'] != undefined) {
-			toggleDiv(billingDefaultsOverride['billing_form'], billingDefaultsOverride['billing_form_name'],'');
-		} else {
-			toggleDiv(defaults['billing_form'], defaults['billing_form_name'],'');
+		var isSameBillingForm = false;
+		if (defaults['billing_form'] == '<%=ctlBillForm%>' || billingDefaultsOverride['billing_form'] == '<%=ctlBillForm%>') {
+			isSameBillingForm = true;
+		}
+		
+		if (!isSameBillingForm) {
+			var values = getParsedDropdownValues();
+			// reload billing form if it is different from previous one
+			var url = "billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
+			var defaultsString = "xml_visittype=" + values['visit_type_no'] + "&xml_location=" + values['location_id'] + "&xml_slicode=" + values['sli_code_no'] + "&xml_provider=" + values['provider_no'];
+			window.location = url + "&" + defaultsString;
 		}
 	}
-	
 </script>
 
 <script>
-
 jQuery(document).ready(function() {
-	//var elem = jQuery('select[name="xml_provider"]');
-	//onBillingDefaultsDropdownChange( elem.get(0) );
-	
 	// if no default was set, establish a 'default' default
 	if (currentBillingDefault == null) {
 		var currentValues = getParsedDropdownValues();
@@ -1254,14 +1268,13 @@ jQuery(document).ready(function() {
 		tempDefault['location_id']			= currentValues['location_id'];
 		tempDefault['sli_code']				= currentValues['sli_code_no'];
 		tempDefault['visit_type_no']		= currentValues['visit_type_no'];
-		//tempDefault['billing_form']		= "<%=ctlBillForm%>";
-		tempDefault['billing_form_name']	= jQuery('input[name="billFormName"]').val();
+		tempDefault['billing_form']			= "<%=ctlBillForm%>";
+		//tempDefault['billing_form_name']	= jQuery('input[name="billFormName"]').val();
 		setBillingDefaults(tempDefault);
 	}
 	
 	setDefaultsOnPageLoad();
 });
-
 </script>
 
 </head>

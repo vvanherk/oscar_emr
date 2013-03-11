@@ -45,6 +45,7 @@ BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("b
 <%
 // Setup values for visit types and SLI codes
 Map<String, String> visitTypeHashMap = new LinkedHashMap<String, String>(); 
+visitTypeHashMap.put( "", "Any");
 visitTypeHashMap.put( "00", "Clinic Visit");
 visitTypeHashMap.put( "01", "Outpatient Visit");
 visitTypeHashMap.put( "02", "Hospital Visit");
@@ -58,6 +59,7 @@ Map<String, String> sliCodeHashMap = new LinkedHashMap<String, String>();
 ResourceBundle bundle = ResourceBundle.getBundle("oscarResources");
 
 sliCodeHashMap.put( clinicNo + "", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.NA") );
+sliCodeHashMap.put( "", "Any" );
 sliCodeHashMap.put( "HDS", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.HDS") );
 sliCodeHashMap.put( "HED", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.HED") );
 sliCodeHashMap.put( "HIP", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.HIP") );
@@ -72,6 +74,7 @@ ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("c
 List<ClinicLocation> clinicLocations = clinicLocationDao.getAll();
 
 Map<Integer, String> locationHashMap = new LinkedHashMap<Integer, String>(); 
+locationHashMap.put( new Integer(-1), "Any" );
 for (ClinicLocation location : clinicLocations) {
 	locationHashMap.put( location.getId(), location.getClinicLocationName() );
 }
@@ -79,7 +82,7 @@ for (ClinicLocation location : clinicLocations) {
 
 List<Provider> providers = providerDao.getActiveProviders();
 Map<String, String> providerHashMap = new LinkedHashMap<String, String>(); 
-
+providerHashMap.put( "-1", "Any" );
 for (Provider provider : providers) {
 	providerHashMap.put( provider.getProviderNo(), provider.getFormattedName() );
 }
@@ -518,7 +521,7 @@ String visitType = "";
 		    String key = entry.getKey();
 		    String value = entry.getValue();
 		    %>
-		    <option value="<%=key%>" <%=visitType.startsWith(key)?"selected":""%>><%=key%> | <%=value%></option>
+		    <option value="<%=key%>" <%=visitType.startsWith(key)?"selected":""%>><%=key%> <%=(key == null || key.equals("")? "" : "|")%> <%=value%></option>
 		    <%
 		}
 	} %>
