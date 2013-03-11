@@ -1991,3 +1991,44 @@ function getDiagnosticCodes(billId, billingItemId, diagnosticCode, description) 
 	AJAX.open("GET", fullContextPath + "/getDiagnosticCodes.jsp?diagnosticCode="+diagnosticCode+"&diagnosticDescription="+description);
 	AJAX.send("");
 }
+
+
+function displaySecondLevelMenu(action) {
+	if (action == 'null')
+	{			
+		var div = document.getElementById("search_details");
+		div.style.visibility = 'hidden';		
+	}
+	else
+	{
+		var div = document.getElementById("search_details");
+		div.style.visibility = visible;
+	}
+}
+
+function toggleOffsiteBilling() {
+	
+	// check to see if Offsite has been selected.  If it has, disable the To: date field (possibly rename labels?)
+	// else, enable To: date field
+	if (document.getElementById("offsite").checked) {
+		document.getElementById("xml_appointment_date").disabled=true;
+	}
+	else {
+		document.getElementById("xml_appointment_date").disabled=false;
+	}	
+}
+
+function toggleSuperCode(){
+	var superCodesDiv = document.getElementById("superCodes");
+	var superCodesIFrameDiv = document.getElementById("superCodesIframe");
+	if(superCodesDiv.style.visibility == 'hidden'){
+		superCodesDiv.style.visibility = 'visible'
+		superCodesIFrameDiv.style.visibility = 'visible'
+	}
+	else{
+		superCodesDiv.style.visibility = 'hidden'
+		superCodesIFrameDiv.style.visibility = 'hidden'
+	}
+}
+
+
