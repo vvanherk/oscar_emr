@@ -105,6 +105,14 @@ public final class RxRePrescribeAction extends DispatchAction {
 		oscar.oscarRx.pageUtil.RxSessionBean beanRX = new oscar.oscarRx.pageUtil.RxSessionBean();
 		beanRX.setDemographicNo(sessionBeanRX.getDemographicNo());
 		beanRX.setProviderNo(sessionBeanRX.getProviderNo());
+		
+		String clinicNo = request.getParameter("clinicNo");
+		try {
+			beanRX.setClinicNo( Integer.parseInt(clinicNo) );
+		} catch (Exception e) {
+			logger.warn("Could not parse clinicNo: " + clinicNo);
+		}
+		
 
 		// RxDrugListForm frm = (RxDrugListForm) form;
 		String script_no = request.getParameter("scriptNo");

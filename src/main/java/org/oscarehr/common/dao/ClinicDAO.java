@@ -44,6 +44,20 @@ public class ClinicDAO extends HibernateDaoSupport {
         List<Clinic> codeList = this.getHibernateTemplate().find("from Clinic");
         return codeList.get(0);
     }
+    
+    public List<Clinic> findAll(){
+        List<Clinic> codeList = this.getHibernateTemplate().find("from Clinic");
+        return codeList;
+    }
+    
+    public Clinic find(long clinicNo){
+        List<Clinic> codeList = this.getHibernateTemplate().find("from Clinic c where c.id=?", new Object[] { new Long(clinicNo) });
+        
+        if (codeList == null || codeList.size() == 0)
+			return null;
+        
+        return codeList.get(0);
+    }
    
     
     public void save(Clinic clinic) {

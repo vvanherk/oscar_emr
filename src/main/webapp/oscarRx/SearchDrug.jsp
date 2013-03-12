@@ -7,6 +7,8 @@
 <%@ taglib uri="/WEB-INF/indivo-tag.tld" prefix="indivo" %>
 <%@ page import="oscar.oscarRx.data.*,oscar.oscarProvider.data.ProviderMyOscarIdData,oscar.oscarDemographic.data.DemographicData,oscar.OscarProperties,oscar.log.*"%>
 <%@ page import="org.oscarehr.common.model.OscarAnnotation,org.oscarehr.common.model.*" %>
+<%@page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@page import="org.oscarehr.common.model.Clinic" %>
 <%@page import="java.util.Enumeration"%>
 
 <%
@@ -224,6 +226,9 @@ function load() {
 	boolean showall = false;
 
 		if (request.getParameter("show") != null) if (request.getParameter("show").equals("all")) showall = true;
+		
+ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+List<Clinic> clinics = clinicDao.findAll();
 %>
 
 <bean:define id="patient" type="oscar.oscarRx.data.RxPatientData.Patient" name="Patient" />
@@ -282,7 +287,22 @@ function load() {
 			<tr>
 				<td>
 					<div style="height: 100px; overflow: auto; background-color: #DCDCDC; border: thin solid green; display: none;" id="reprint">
+						<label title="Clinic">Clinic: </label>
+						<select id="clinic_no" name="clinic_no">
 					<%
+						String sessionClinicId = (String) session.getAttribute("rx_clinic_id");
+						if (sessionClinicId == null)
+							sessionClinicId = "";
+						for ( Clinic clinic : clinics) {
+						%>
+							<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+						<%
+						}
+						%>
+						</select>
+						<br>
+						<%
+					
 						oscar.oscarRx.data.RxPrescriptionData.Prescription[] prescribedDrugs;
 							prescribedDrugs = patient.getPrescribedDrugScripts(); //this function only returns drugs which have an entry in prescription and drugs table
 							String script_no = "";
