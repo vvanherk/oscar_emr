@@ -504,7 +504,7 @@ function calToday(field) {
 </script>
 </head>
 
-<body text="#000000" style="margin: 0 0 0" onLoad="displaySecondLevelMenu('<%= request.getParameter("reportAction") %>');">
+<body text="#000000" style="margin: 0 0 0">
 <table width="100%" border="0" cellspacing="0" cellpadding="0">
 	<tr bgcolor="#aabcfe">
 		<td width="5%"></td>
@@ -527,9 +527,9 @@ function calToday(field) {
     <tr>
         <td width="30%" align="center">
             <font size="2"> 
-                <input type="radio" name="reportAction" id="unbilled" value="unbilled" <%="unbilled".equals(action)? "checked" : "" %> onchange="toggleOffsiteBilling(); return false;" />Unbilled 
-                <input type="radio" name="reportAction" id="billed" value="billed" <%="billed".equals(action)? "checked" : "" %> onchange="toggleOffsiteBilling(); return false;" />Billed 
-                <input type="radio" name="reportAction" id="offsite" value="offsite" <%="offsite".equals(action)? "checked" : "" %> onchange="toggleOffsiteBilling(); return false;" />Offsite 
+                <input type="radio" name="reportAction" value="unbilled" <%="unbilled".equals(action)? "checked" : "" %>>Unbilled 
+                <input type="radio" name="reportAction" value="billed" <%="billed".equals(action)? "checked" : "" %>>Billed 
+                <input type="radio" name="reportAction" value="offsite" <%="offsite".equals(action)? "checked" : "" %> disabled>Offsite 
             </font>
         </td>
         <td width="20%" align="right" nowrap><b>Provider </b>
@@ -728,7 +728,7 @@ if (editable) {
 }
 %>
 
-<table id="search_details" class="search_details">
+<table class="search_details">
 	<tbody>
 		<tr>
 			<td>Visit Type &nbsp;
@@ -766,8 +766,6 @@ if (editable) {
 			}
 			%>
 		</tr>
-		<tr><td>
-		<a class="billing_button" href="appointmentcontrol.jsp?displaymode=Search%20" tabindex="-1">Zed</a> </td></tr>
 	</tbody>
 </table>
 
@@ -926,7 +924,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 				<td width="10px"> <a class="billing_button hide_element" href="" tabindex="-1" onclick="preventEventPropagation(event); return false;">Copy</a> </td>
 			</tr>
 			<tr id="bill_details<%=i%>" class="bill hide_bill">
-				<td colspan="10">
+				<td colspan="5">
 					<% 
 					if (editable) {
 						
@@ -988,7 +986,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							<option>2</option>
 							<option>3</option>
 						</select>
-						<a class="billing_button" href="" tabindex="-1" onclick="toggleSuperCode(); return false;">Add Super Code</a>
+						<a class="billing_button" href="" tabindex="-1" onclick="return false;">Add Super Code</a>
 						
 						<b>SLI Code</b>:
 						<select class="dropdown" name="sli_code<%=i%>" onchange="">
@@ -1037,17 +1035,6 @@ if (vecHeader != null && vecHeader.size() > 0) {
 									
 					<table>
 						<thead>
-						
-						<tr><td colspan="8">
-						
-						<div id="superCodes" style="visibility:hidden; z-index:1000; position:absolute; top:0; bottom:0; left:0; width:100%; background:#000; opacity:0.45; -moz-opacity:0.45; filter:alpha(opacity=45);">
-</div>
-	<div id="superCodesIframe" style="visibility:hidden; z-index:1001; position:absolute; margin:-300px 0 0 -400px; top:50%; left:50%; width:800px; height:600px;">
-		<iframe style="width:800px; height:600px; position:relative" src="billingONfavourite.jsp"></iframe>
-	</div>
-						
-						</td></tr>
-						
 							<tr>
 								<td></td>
 								<td>Billing Code</td>
