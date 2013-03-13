@@ -40,6 +40,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
+
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
@@ -134,6 +135,8 @@ br {
 
 <body vlink="#0000FF" class="BodyStyle">
 
+<html:form action="/admin/ManageClinic">
+
 <table class="MainTable">
 	<tr class="MainTableTopRow">
 		<td class="MainTableTopRowLeftColumn">admin</td>
@@ -146,11 +149,17 @@ br {
 		</td>
 	</tr>
 	<tr>
-		<td class="MainTableLeftColumn" valign="top" width="160px;">
-		&nbsp;</td>
+		<td class="MainTableLeftColumn" valign="top" width="160px;">		
+			<label for="clinic.id">Clinic: </label>
+			<html:select property="clinic.id">
+				<logic:iterate name="clinics" id="cl">
+					<html:option value=""> <bean:write name="cl" property="clinicName"/> </html:option>
+				</logic:iterate>
+			</html:select>
+			<br>
+		</td>
 		<td class="MainTableRightColumn" valign="top">
-		<fieldset><legend>Clinic Details</legend> <html:form
-			action="/admin/ManageClinic">
+		<fieldset><legend>Clinic Details</legend> 
 			<html:hidden property="clinic.id" />
 			<input type="hidden" name="method" value="update" />
 
@@ -185,7 +194,7 @@ br {
 			<label for="clinic.clinicDelimFax">multi fax</label>
 			<html:text property="clinic.clinicDelimFax" />  (Delimited by |)<br />
 			<input type="submit" value="submit" />
-		</html:form></fieldset>
+		</fieldset>
 		</td>
 	</tr>
 	<tr>
@@ -194,4 +203,6 @@ br {
 		<td class="MainTableBottomRowRightColumn">&nbsp;</td>
 	</tr>
 </table>
+</html:form>
+
 </html:html>
