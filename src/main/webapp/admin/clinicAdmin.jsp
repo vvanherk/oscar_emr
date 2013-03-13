@@ -42,6 +42,8 @@
 <%
 String clinicNo = request.getParameter("clinicNo");
 if (clinicNo == null)
+	clinicNo = (String) request.getAttribute("clinicNo");
+if (clinicNo == null)	
 	clinicNo = "";
 %>
 
@@ -178,17 +180,19 @@ br {
 		
 			<logic:notEmpty name="actionResult">
 				<div>
-					Action 
+					<b>Action 
 					<logic:equal name="actionResult" value="0">Succeeded</logic:equal>
 					<logic:notEqual name="actionResult" value="0">Failed</logic:notEqual>
-					with message:
+					with message</b>:
 					<br>
 					<bean:write name="actionResultMessage" />
+					<br><br>
 				</div>
 			</logic:notEmpty>
 			
 			<fieldset><legend>Clinic Details</legend> 
 				<html:form action="/admin/ManageClinic">
+					<input type="hidden" name="clinicNo" value="<%=clinicNo%>" />
 					<html:hidden property="clinic.id" />
 					<input type="hidden" name="method" value="update" />
 		

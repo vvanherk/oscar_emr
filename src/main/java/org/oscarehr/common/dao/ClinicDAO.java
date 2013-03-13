@@ -40,6 +40,15 @@ public class ClinicDAO extends HibernateDaoSupport {
     public ClinicDAO() {
     }
    
+	public int getNumberOfClinics(){
+        List<Clinic> codeList = findAll();
+        
+        if (codeList == null)
+			return 0;
+		
+        return codeList.size();
+    }
+   
     public Clinic getClinic(){
         List<Clinic> codeList = findAll();
         

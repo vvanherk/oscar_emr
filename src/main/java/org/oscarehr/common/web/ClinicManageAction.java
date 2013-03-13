@@ -53,12 +53,15 @@ public class ClinicManageAction extends DispatchAction {
 		
         if (clinic == null)
 			clinic = clinicDAO.getClinic();
+			id = "" + clinic.getId();
 		if (clinic == null) {
 			logger.error("Unable to find Clinic.");
 			request.setAttribute("actionResultMessage", "Unable to find Clinic");
 			request.setAttribute("actionResult", -1);
 			return mapping.findForward("failure");
 		}
+		
+		request.setAttribute("clinicNo", id);
 				
         DynaActionForm frm = (DynaActionForm)form;
         frm.set("clinic",clinic);
@@ -71,13 +74,16 @@ public class ClinicManageAction extends DispatchAction {
         Clinic clinic = (Clinic) frm.get("clinic");
         clinicDAO.save(clinic);
         
+        // Set the clinicNo so the 'view' action can load it properly
+        //request.setParameter("clinicNo", clinic.getId());
+        
         // Need to do this AFTER we call save on the clinicDAO
         putClinicsInRequest(request);
         
         request.setAttribute("actionResultMessage", "Successfully saved/updated Clinic");
 		request.setAttribute("actionResult", 0);
 		
-        return mapping.findForward("success");
+        return view(mapping, form, request, response);
     }
     
     public ActionForward save(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -94,6 +100,20 @@ public class ClinicManageAction extends DispatchAction {
 			clinic = clinicDAO.find(clinicNo);
 		} catch (Exception e) {
 			logger.warn("Unable to parse clinicNo: " + id);
+			request.setAttribute("actionResultMessage", "Unable to delete Clinic - No Clinic specified");
+			request.setAttribute("actionResult", -1);
+			return view(mapping, form, request, response);
+		}
+		
+		
+		int numClinics = clinicDAO.getNumberOfClinics();
+		
+		// We need at least one clinic at all times
+		if (numClinics <= 1) {
+			logger.error("Unable to delete Clinic - OSCAR must have at least one (1) Clinic");
+			request.setAttribute("actionResultMessage", "Unable to delete Clinic - OSCAR must have at least one (1) Clinic");
+			request.setAttribute("actionResult", -1);
+			return view(mapping, form, request, response);
 		}
 		
 		try {
@@ -102,7 +122,7 @@ public class ClinicManageAction extends DispatchAction {
 			logger.error("Unable to delete Clinic");
 			request.setAttribute("actionResultMessage", "Unable to delete Clinic");
 			request.setAttribute("actionResult", -1);
-			return mapping.findForward("failure");
+			return view(mapping, form, request, response);
 		}
 		
 		// Need to do this AFTER we call delete on the clinicDAO
