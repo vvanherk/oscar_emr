@@ -76,6 +76,10 @@ import oscar.util.OscarRoleObjectPrivilege;
 import com.quatro.dao.security.SecObjectNameDao;
 import com.quatro.model.security.Secobjectname;
 
+import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
+import org.oscarehr.common.model.SpireAccessionNumberMap;
+import org.oscarehr.common.model.SpireCommonAccessionNumber;
+
 public class DmsInboxManageAction extends DispatchAction {
 	private static Logger logger=MiscUtils.getLogger();
 	
@@ -341,6 +345,8 @@ public class DmsInboxManageAction extends DispatchAction {
 			docQueue.put(i.toString(), n.toString());
 		}
 		ArrayList<LabResultData> labdocs = comLab.populateLabResultsData2(searchProviderNo, demographicNo, request.getParameter("fname"), request.getParameter("lname"), request.getParameter("hnum"), ackStatus, scannedDocStatus);
+		
+		labdocs = collapseSpireLabs(labdocs);
 
 		ArrayList validlabdocs = new ArrayList();
 
@@ -599,6 +605,84 @@ public class DmsInboxManageAction extends DispatchAction {
 		request.setAttribute("patientIdNamesStr", patientIdNamesStr);
 
 		return mapping.findForward("dms_index");
+	}
+	
+	/**
+	 * Method collapseSpireLabs
+	 * 
+	 * Returns a list of Lab Results that include all non-spire labs, and include only a single spire
+	 * lab for any given unique spire accession number.
+	 * 
+	 * Furthermore, for spire labs that share the same 'common' accession number, the newest lab will be
+	 * included.
+	 * 
+	 * To elaborate, Spire labs have a 'regular' accession number, and also a 'unique' accession number.
+	 * The unique accession number identifies seperate spire labs that are actually part of a single lab, but
+	 * were sent as seperate HL7 files.  
+	 */ 
+	private ArrayList<LabResultData> collapseSpireLabs(ArrayList<LabResultData> labdocs) {
+		ArrayList<LabResultData> collapsedLabdocs = new ArrayList<LabResultData>();
+		
+		List<String> accns = new ArrayList<String>();
+		
+		// Get accession numbers for all labs
+		for (LabResultData data : labdocs) {
+			accns.add(data.getAccessionNum());
+		}
+		
+		// Get accession number mappings for spire labs
+		SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
+		List<SpireAccessionNumberMap> accnsMap = accnDao.getFromCommonAccessionNumbers(accns);
+		
+		// Add non-spire labs to the collapsed lab list
+		for (LabResultData data : labdocs) {
+			boolean found = false;
+			if (accnsMap != null) {
+				for (SpireAccessionNumberMap map : accnsMap) {
+					List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+					for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+						if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+							found = true;
+							break;
+						}
+					}
+					
+					if (found)
+						break;
+				}
+			}
+			
+			// Add the Lab Result to the collapsed list if it isn't a spire lab
+			if (!found) {
+				collapsedLabdocs.add(data);
+			}	
+		}
+		
+		
+		if (accnsMap != null) {
+			// Add only a single Spire lab to the collapsed lab list for any given unique spire accession number
+			for (SpireAccessionNumberMap map : accnsMap) {
+				List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+				
+				LabResultData addedData = null;
+				// Only add one spire lab 'LabResultData' for each unique accession number
+				for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+					for (LabResultData data : labdocs) {
+						if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+							if (addedData == null) {
+								collapsedLabdocs.add(data);
+								addedData = data;
+							} else {
+								if (data.isAbnormal())
+									addedData.setIsAbnormal(true);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return collapsedLabdocs;
 	}
 
 	public ActionForward addNewQueue(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {

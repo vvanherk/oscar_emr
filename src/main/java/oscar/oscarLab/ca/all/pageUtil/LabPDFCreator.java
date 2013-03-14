@@ -34,6 +34,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -45,6 +46,11 @@ import oscar.oscarLab.ca.all.parsers.SpireHandler;
 
 import org.oscarehr.common.dao.Hl7TextMessageDao;
 import org.oscarehr.common.model.Hl7TextMessage;
+import org.oscarehr.common.dao.Hl7TextInfoDao;
+import org.oscarehr.common.model.Hl7TextInfo;
+import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
+import org.oscarehr.common.model.SpireAccessionNumberMap;
+import org.oscarehr.common.model.SpireCommonAccessionNumber;
 import oscar.util.UtilDateUtilities;
 import org.oscarehr.util.SpringUtils;
 
@@ -72,7 +78,7 @@ public class LabPDFCreator extends PdfPageEventHelper{
     private OutputStream os;
     
     private boolean ackFlag = false;
-    private MessageHandler handler;
+    private List<MessageHandler> handlers = new ArrayList<MessageHandler>();
     private int versionNum;
     private String[] multiID;
     private String id;
@@ -110,8 +116,48 @@ public class LabPDFCreator extends PdfPageEventHelper{
         String stringFormat = "yyyy-MM-dd HH:mm";
         dateLabReceived = UtilDateUtilities.DateToString(date, stringFormat);
         
+        /*
+        String multiLabId = "";
+		List<Hl7TextInfo> olderLabs = hl7TextInfoDao.getMatchingLabsByLabId( Integer.valueOf(segmentID) );
+        
+		for (Hl7TextInfo info : olderLabs) {			
+			if (multiLabId.length() > 0)
+				multiLabId += ",";
+			multiLabId += info.getLabNumber();
+		}
+		*/
+        
         // create handler
-        this.handler = Factory.getHandler(id);
+        MessageHandler h = Factory.getHandler(this.id);
+        
+        // If this lab is a spire lab, get all of the spire lab 'pieces' (otherwise, 
+        // just add the lab to the handlers list)
+        if (h instanceof SpireHandler) {
+			int lab_no = Integer.parseInt(this.id);
+			
+			Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
+			Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
+		
+			String accn = hl7Lab.getAccessionNumber();
+			// get accession number mappings for spire labs
+			SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
+			SpireAccessionNumberMap map = accnDao.getFromCommonAccessionNumber(accn);
+			
+			if (map != null) {
+				List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+				
+				// filter out older versions of labs
+				removeDuplicates(cAccns, hl7TextInfoDao, accn, lab_no);
+				
+				for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+					this.handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
+				}
+			} else {
+				this.handlers.add( Factory.getHandler("" + lab_no) );
+			}
+		} else {
+			this.handlers.add( h );
+		}
         
         // determine lab version
         String multiLabId = Hl7textResultsData.getMatchingLabs(id);
@@ -128,7 +174,7 @@ public class LabPDFCreator extends PdfPageEventHelper{
     public void printPdf() throws IOException, DocumentException{
         
         // check that we have data to print
-        if (handler == null)
+        if (handlers == null || handlers.size() == 0)
             throw new DocumentException();
         
         //response.setContentType("application/pdf");  //octet-stream
@@ -157,9 +203,11 @@ public class LabPDFCreator extends PdfPageEventHelper{
         createInfoTable();
         
         // add the tests and test info for each header
-        ArrayList headers = handler.getHeaders();
-        for (int i=0; i < headers.size(); i++)
-            addLabCategory((String) headers.get(i));
+        for ( MessageHandler h : this.handlers) {
+	        ArrayList headers = h.getHeaders();
+	        for (int i=0; i < headers.size(); i++)
+	            addLabCategory((String) headers.get(i), h);
+        }
         
         // add end of report table
         PdfPTable table = new PdfPTable(1);
@@ -186,7 +234,7 @@ public class LabPDFCreator extends PdfPageEventHelper{
      *  Given the name of a lab category this method will add the category header,
      *  the test result headers and the test results for that category.
      */
-    private void addLabCategory(String header) throws DocumentException{
+    private void addLabCategory(String header, MessageHandler handler) throws DocumentException{
         
         float[] mainTableWidths = {5f, 3f, 1f, 3f, 2f, 4f, 2f};
         PdfPTable table = new PdfPTable(mainTableWidths);
@@ -440,6 +488,7 @@ public class LabPDFCreator extends PdfPageEventHelper{
      *  which contains the patient and lab information
      */
     private void createInfoTable() throws DocumentException{
+        MessageHandler handler = handlers.get(0);
         
         //Create patient info table
         PdfPCell cell = new PdfPCell();
@@ -497,9 +546,15 @@ public class LabPDFCreator extends PdfPageEventHelper{
         rInfoTable.addCell(cell);
         cell.setPhrase(new Phrase(handler.getClientRef(), font));
         rInfoTable.addCell(cell);
+        
+        String listedAccessionNumber = "";
+		if (handler instanceof SpireHandler)
+			listedAccessionNumber = ((SpireHandler)handler).getUniqueAccessionNum();
+		else
+			listedAccessionNumber = handler.getAccessionNum();
         cell.setPhrase(new Phrase("Accession #: ", boldFont));
         rInfoTable.addCell(cell);
-        cell.setPhrase(new Phrase(handler.getAccessionNum(), font));
+        cell.setPhrase(new Phrase(listedAccessionNumber, font));
         rInfoTable.addCell(cell);
         
         //Create client table
@@ -564,6 +619,8 @@ public class LabPDFCreator extends PdfPageEventHelper{
     public void onEndPage(PdfWriter writer, Document document){
         try {
             
+            MessageHandler handler = handlers.get(0);
+            
             Rectangle page = document.getPageSize();
             PdfContentByte cb = writer.getDirectContent();
             BaseFont bf = BaseFont.createFont(BaseFont.TIMES_ROMAN, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
@@ -600,4 +657,42 @@ public class LabPDFCreator extends PdfPageEventHelper{
             throw new ExceptionConverter(e);
         }
     }
+    
+    private void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInfoDao hl7TextInfoDao, String currentAccn, int currentLabNo) {
+		List<SpireCommonAccessionNumber> removeList = new ArrayList<SpireCommonAccessionNumber>();
+		
+		for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+			int labNo = commonAccessionNumber.getLabNo().intValue();
+			List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId(labNo);
+			
+			if (vers.size() > 1) {
+				Hl7TextInfo first = vers.get(0);
+				for (Hl7TextInfo ver : vers) {				
+					// Generally, we want to keep the first (i.e. newest) version of a lab
+					if (first == ver) {
+						// Unless newest lab is NOT the version the user wants to see
+						if (!currentAccn.equals(ver.getAccessionNumber())) {
+							continue;
+						}
+					}
+					
+					// Don't remove the version of the current lab
+					if (currentLabNo == ver.getLabNumber()) continue;
+					
+					addToSCANRemoveList(ver, cAccns, removeList);
+				}
+			}
+		}
+		
+		cAccns.removeAll(removeList);
+	}
+	
+	private void addToSCANRemoveList(Hl7TextInfo ver, List<SpireCommonAccessionNumber> cAccns, List<SpireCommonAccessionNumber> removeList) {
+		for (int i=0; i < cAccns.size(); i++) {
+			if (ver.getLabNumber() == cAccns.get(i).getLabNo().intValue()) {
+				removeList.add(cAccns.get(i));
+				return;
+			}
+		}
+	}
 }

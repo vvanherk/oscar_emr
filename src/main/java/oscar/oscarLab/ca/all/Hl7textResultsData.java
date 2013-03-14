@@ -35,6 +35,10 @@ public class Hl7textResultsData {
     public static void populateMeasurementsTable(String lab_no, String demographic_no){
         MessageHandler h = Factory.getHandler(lab_no);
         
+        logger.info("h: " + h);
+        logger.info("lab_no: " + lab_no);
+        logger.info("demographic_no: " + demographic_no);
+        
         java.util.Calendar calender = java.util.Calendar.getInstance();
         String day =  Integer.toString(calender.get(java.util.Calendar.DAY_OF_MONTH));
         String month =  Integer.toString(calender.get(java.util.Calendar.MONTH)+1);
@@ -86,6 +90,8 @@ public class Hl7textResultsData {
             }
             // loop through the measurements for the lab and insert them
             
+            logger.info("h: " + h);            
+            logger.info("h.getOBRCount(): " + h.getOBRCount());
             for (int i=0; i < h.getOBRCount(); i++){
                 for (int j=0; j < h.getOBXCount(i); j++){
 

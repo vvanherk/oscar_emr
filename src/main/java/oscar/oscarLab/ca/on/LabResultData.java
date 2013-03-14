@@ -122,6 +122,14 @@ public class LabResultData implements Comparable{
         this.segmentID=sid;
     }
     
+    public String getAccessionNum() {
+		return this.accessionNumber;
+	}
+	
+	public void setIsAbnormal(boolean isAbnormal) {
+		abn = isAbnormal;
+	}
+    
     public boolean isAbnormal(){
         if (EXCELLERIS.equals(this.labType)){
             //logger.debug("excelleris is doc type");

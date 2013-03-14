@@ -238,6 +238,7 @@ class Lines {
 public class SpireHandler implements MessageHandler {
     
     ORU_R01 msg = null;
+    String originalMessage = null;
     Logger logger = Logger.getLogger(SpireHandler.class);
     
     /** Creates a new instance of SpireHandler */
@@ -250,6 +251,8 @@ public class SpireHandler implements MessageHandler {
         ModelClassFactory cmf = new CustomModelClassFactory("oscar.oscarLab.ca.all.spireHapiExt");
 		PipeParser p = new PipeParser(cmf);
         p.setValidationContext(new NoValidation());
+        
+        originalMessage = hl7Body;
         
         msg = (ORU_R01) p.parse(hl7Body.replaceAll( "\n", "\r\n" ));
     }
@@ -825,6 +828,52 @@ public class SpireHandler implements MessageHandler {
             logger.error("Could not return accession number", e);
             return("");
         }
+    }
+    
+    /**
+     * Method getUniqueAccessionNum
+     * 
+     * Attempts to parse the Spire 'unique' Accession number from the HL7 lab.  Spire labs can come in
+     * seperate 'pieces' (i.e. one lab comes as seperate HL7 files), and we need to string these lab pieces
+     * back together based on the 'unique' Accession number (the 'regular' accession number for each lab piece
+     * is different, so we need one that is common to all of them, which is located in OBR field 20).
+     * 
+     * @return The unique Accession number if available, otherwise returns the 'regular' accession number (or an empty string
+     * if the regular accession number isn't available)
+     */ 
+    public String getUniqueAccessionNum(){
+		String uniqueAccn = "";
+		
+		try {
+			Terser terser = new Terser(msg);
+			String obrAccessionString = terser.get("/.OBR-20-2");
+			
+			// try parsing using the terser
+			if (obrAccessionString != null && obrAccessionString.equals("HNA_CEACCN")) {
+				uniqueAccn = terser.get("/.OBR-20-1");
+			} 
+			// otherwise, parse by extracting the accession number using the message string
+			else {
+				String messageAsString = originalMessage.toString();
+				int accnIndex1 = messageAsString.indexOf("^HNA_ACCN~");
+				int accnIndex2 = messageAsString.indexOf("^HNA_", Math.max(accnIndex1+1, 0));
+				
+				logger.info("parsing1: " + accnIndex1 + " " + accnIndex2);
+				
+				if (accnIndex1 < 0 || accnIndex2 <= 0) {
+					logger.info("parsing2 (NUTS): " + messageAsString);
+					// if we can't pull out the unique accession number, just use the regular one
+					uniqueAccn = getAccessionNum();
+				}
+				else {				
+					uniqueAccn = messageAsString.substring(accnIndex1+10, accnIndex2);
+				}
+			}
+		} catch (Exception e) {
+			logger.error("Something went wrong parsing the unique accession number!", e);
+		}
+		
+        return uniqueAccn;
     }
     
     public List<String> getDocNames() {
