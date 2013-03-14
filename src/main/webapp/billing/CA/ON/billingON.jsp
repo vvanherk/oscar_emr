@@ -1717,7 +1717,6 @@ function changeSite(sel) {
                     <td><b><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode"/></b></td>
                     <td colspan="3">
                         <select name="xml_slicode" onChange="onBillingDefaultsDropdownChange(this);">
-                        		<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
                                 <option <%=(sliCode.equals(clinicNo) ? "selected" : "")%> value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
 								<option <%=(sliCode.equals("HDS") ? "selected" : "")%> value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 								<option <%=(sliCode.equals("HED") ? "selected" : "")%> value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
