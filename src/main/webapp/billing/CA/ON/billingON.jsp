@@ -40,6 +40,7 @@
 <%@ page import="org.oscarehr.billing.dao.BillingDefaultDao"%>
 <%@ page import="org.oscarehr.common.model.ClinicLocation"%>
 <%@ page import="org.oscarehr.common.dao.ClinicLocationDao"%>
+<%@page import="oscar.oscarDB.*" %>
 <%
 	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
 	
@@ -238,7 +239,17 @@
 			// get patient's billing history
 			boolean bFirst = true;
 			JdbcBillingReviewImpl hdbObj = new JdbcBillingReviewImpl();
-			List aL = hdbObj.getBillingHist(demo_no, 5,0, null);
+			
+			Calendar calendar = Calendar.getInstance();
+			String stringToday = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DATE);
+			calendar.add(Calendar.DATE, -oscarVariables.getBillingHistoryNumDays());
+			String strStartDay = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DATE);
+			
+			DBPreparedHandlerParam[] pDateRange= new DBPreparedHandlerParam[2];
+			pDateRange[0]= new DBPreparedHandlerParam(MyDateFormat.getSysDate(strStartDay));
+			pDateRange[1]= new DBPreparedHandlerParam(MyDateFormat.getSysDate(stringToday));
+			
+			List aL = hdbObj.getBillingHist(demo_no, 0,0, pDateRange);
 			
 			Vector vecHistD = new Vector();
 			if (aL.size()>0) {
@@ -885,7 +896,7 @@ function showHideBox(layerName, iState) { // 1 visible, 0 hidden
 function onHistory() { 
     var dd = document.forms[0].day.value;
     //alert(dd);
-    popupPage("800","640","billingONHistorySpec.jsp?demographic_no=<%=demo_no%>&demo_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&orderby=appointment_date&day=" + dd);
+    popupPage("1000","640","billingONHistorySpec.jsp?demographic_no=<%=demo_no%>&demo_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&orderby=appointment_date&day=" + dd);
 }
 
 function prepareBack() {
@@ -2005,7 +2016,12 @@ function changeSite(sel) {
 
 <table border="0" cellpadding="0" cellspacing="2" width="100%" class="myIvory">
     <tr class="myYellow">
-	<td><%=demoname%> - <b>Billing History</b> (last 5 records)</td>
+	<td><%=demoname%> - <b>Billing History</b> 
+		-
+			<bean:message key="billing.hospitalBilling.frmLast"/> 
+			<%=oscarVariables.getBillingHistoryNumDays()%> 
+			<bean:message key="billing.hospitalBilling.frmDays"/>
+	</td>
 	<td width="20%" align="right">
 	    Last <input type="text" name="day" value="365" size="3" /> days
 	    <input type="button" name="buttonDay" value="Go" onClick="onHistory(); return false;" />
@@ -2020,6 +2036,7 @@ function changeSite(sel) {
 		<table border="1" cellspacing="0" cellpadding="0" bordercolorlight="#99A005" bordercolordark="#FFFFFF" width="100%">
 			<tr class="myYellow" align="center">
 				<th nowrap>Serial No.</th>
+				<th nowrap>Doctor</th>
 				<th nowrap>Billing Date</th>
 				<th nowrap>Appt/Adm Date</th>
 				<th nowrap>Service Code</th>
@@ -2030,10 +2047,13 @@ function changeSite(sel) {
 			for (int i = 0; i < aL.size(); i = i + 2) {
 				BillingClaimHeader1Data obj = (BillingClaimHeader1Data) aL.get(i);
 				BillingItemData iobj = (BillingItemData) aL.get(i + 1);
+				ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+				Provider p = providerDao.getProvider(obj.getProviderNo());
 
 				%>
 			<tr <%=i%4==0? "class=\"myGreen\"":""%> align="center">
 				<td class="smallFont" ><%=obj.getId()%></td>
+				<td><%=p.getLastName()%>, <%=p.getFirstName()%></td>
 				<td class="smallFont" ><%=obj.getBilling_date()%></td>
 				<td class="smallFont" ><%=iobj.getService_date()%></td>
 				<td class="smallFont" ><%=iobj.getService_code()%></td>

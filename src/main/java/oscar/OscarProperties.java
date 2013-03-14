@@ -301,4 +301,14 @@ public class OscarProperties extends Properties {
 		String prop = getProperty("EMERALD_HL7_A04_TRANSPORT_PORT", "3987"); // default to port 3987
 		return Integer.parseInt(prop);
 	}
+
+	public int getBillingHistoryNumDays() {
+		String numDays = getProperty("billing_history_num_days");
+		int numDaysAsInt = 731;    // 2 years and 1 day
+		try {
+			numDaysAsInt = Integer.parseInt(numDays);
+		} catch (Exception e) {}
+		
+		return numDaysAsInt;
+	}
 }

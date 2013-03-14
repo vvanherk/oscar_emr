@@ -28,7 +28,7 @@
 <%@ page import="org.oscarehr.common.model.ClinicLocation"%>
 <%@ page import="org.oscarehr.common.dao.ClinicLocationDao"%>
 
-<% java.util.Properties oscarVariables = OscarProperties.getInstance(); %>
+<% oscar.OscarProperties oscarVariables = OscarProperties.getInstance(); %>
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
 <%@page import="org.oscarehr.util.SpringUtils" %>
@@ -37,6 +37,8 @@
 <%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
 <%@ page import="org.oscarehr.billing.model.BillingDefault"%>
 <%@ page import="org.oscarehr.billing.dao.BillingDefaultDao"%>
+<%@page import="oscar.oscarDB.*" %>
+
 <%
 	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
 	
@@ -139,7 +141,7 @@
   OscarProperties props = OscarProperties.getInstance();
   if(!props.getProperty("isNewONbilling", "").equals("true")) {
 	  
-  sql = "select billing_no,billing_date,visitdate,visitType, update_date, clinic_ref_code, content from billing " +
+  sql = "select billing_no,provider_no,billing_date,visitdate,visitType, update_date, clinic_ref_code, content from billing " +
 		" where demographic_no=" + demo_no + " and status!='D' order by billing_date desc, billing_no desc limit 5";
   rs = dbObj.searchDBRecord(sql);
 
@@ -147,6 +149,7 @@
     propHist = new Properties();
 
     propHist.setProperty("billing_no", "" + rs.getInt("billing_no"));
+    propHist.setProperty("provider_no", "" + rs.getString("provider_no"));
     propHist.setProperty("visitdate", rs.getString("visitdate")); // admission date
     propHist.setProperty("billing_date", rs.getString("billing_date")); // service date
     propHist.setProperty("update_date", rs.getString("update_date")); // create date
@@ -193,7 +196,17 @@
   }
   } else {
 		JdbcBillingReviewImpl hdbObj = new JdbcBillingReviewImpl();
-		aL = hdbObj.getBillingHist(demo_no, 5,0, null);
+		
+		Calendar calendar = Calendar.getInstance();
+		String strToday = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DATE);
+		calendar.add(Calendar.DATE, -oscarVariables.getBillingHistoryNumDays());
+		String strStartDay = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DATE);
+		
+		DBPreparedHandlerParam[] pDateRange= new DBPreparedHandlerParam[2];
+		pDateRange[0]= new DBPreparedHandlerParam(MyDateFormat.getSysDate(strStartDay));
+		pDateRange[1]= new DBPreparedHandlerParam(MyDateFormat.getSysDate(strToday));
+		
+		aL = hdbObj.getBillingHist(demo_no, 0,0, pDateRange);
 		if (aL.size()>0) {
 			BillingClaimHeader1Data obj = (BillingClaimHeader1Data) aL.get(0);
 			BillingItemData iobj = (BillingItemData) aL.get(1);
@@ -622,6 +635,12 @@ function onDblClickServiceCode(item) {
 }
 
 //-->
+
+function onHistory() { 
+    //var dd = document.forms[0].day.value;
+    var dd = document.getElementsByName("day")[0].value;
+    popupPage("1000","640","billingONHistorySpec.jsp?demographic_no=<%=demo_no%>&demo_name=<%=demoname%>&orderby=appointment_date&day=" + dd);
+}
 
   </script>
   
@@ -1478,7 +1497,8 @@ ctlCount = 0;
 	bgcolor="#CCCCFF">
 	<tr>
 		<td colspan="6" class="RowTop"><%= demoname %> - <b><bean:message key="billing.hospitalBilling.frmBillHistory"/>
-                </b> <bean:message key="billing.hospitalBilling.frmLastFive"/></td>
+                </b> <bean:message key="billing.hospitalBilling.frmLastFive"/>
+		</td>
 	</tr>
 	<tr>
 		<td>
@@ -1487,6 +1507,7 @@ ctlCount = 0;
 			bgcolor="#FFFFFF">
 			<tr bgcolor="#99CCCC" align="center">
 				<td nowrap><bean:message key="billing.hospitalBilling.frmSerial"/></td>
+				<td nowrap>Doctor</td>
 				<td nowrap><bean:message key="billing.billingCorrection.msgBillingDate"/></td>
 				<td nowrap><bean:message key="billing.hospitalBilling.frmApptAdmDate"/></td>
 				<td nowrap><bean:message key="billing.billingCorrection.formServiceCode"/></td>
@@ -1500,6 +1521,7 @@ ctlCount = 0;
 %>
 			<tr bgcolor="<%=i%2==0?"ivory":"#EEEEFF"%>" align="center">
 				<td><%= prop.getProperty("billing_no", "&nbsp;") %></td>
+				<td><%= prop.getProperty("provider_no", "&nbsp;") %></td>
 				<td><%= prop.getProperty("billing_date", "&nbsp;") %></td>
 				<td><%= prop.getProperty("visitdate", "&nbsp;") %></td>
 				<td><%= propD.getProperty("service_code", "&nbsp;") %></td>
@@ -1514,18 +1536,29 @@ ctlCount = 0;
 	</tr>
 </table>
 <% } else { %>
-<table border="0" cellpadding="1" cellspacing="2" width="100%"
-	class="myIvory">
-	<tr class="myYellow">
-		<td colspan="6"><%=demoname%> - <b><bean:message key="billing.hospitalBilling.frmBillHistory"/></b> <bean:message key="billing.hospitalBilling.frmLastFive"/>
-		</td>
-	</tr>
+
+<table border="0" cellpadding="1" cellspacing="2" width="100%" class="myIvory">
+    <tr class="myYellow">
+	<td colspan="6"><%=demoname%> - <b><bean:message key="billing.hospitalBilling.frmBillHistory"/></b> 
+		-
+			<bean:message key="billing.hospitalBilling.frmLast"/> 
+			<%=oscarVariables.getBillingHistoryNumDays()%> 
+			<bean:message key="billing.hospitalBilling.frmDays"/>
+	</td>
+	<td width="20%" align="right">
+	    Last <input type="text" name="day" value="365" size="3" /> days
+	    <input type="button" name="buttonDay" value="Go" onClick="onHistory(); return false;" />
+	</td>
+    </tr>
+</table>
+<table border="0" cellpadding="1" cellspacing="2" width="100%" class="myIvory">
 	<tr>
 		<td>
 		<table border="1" cellspacing="0" cellpadding="1"
 			bordercolorlight="#99A005" bordercolordark="#FFFFFF" width="100%">
 			<tr class="myYellow" align="center">
 				<th><bean:message key="billing.hospitalBilling.frmSerial"/></th>
+				<td nowrap><bean:message key="billing.hospitalBilling.frmDoctorsName"/></td>
 				<th><bean:message key="billing.billingCorrection.msgBillingDate"/></th>
 				<th><bean:message key="billing.hospitalBilling.frmApptAdmDate"/></th>
 				<th><bean:message key="billing.billingCorrection.formServiceCode"/></th>
@@ -1536,10 +1569,13 @@ ctlCount = 0;
 			for (int i = 0; i < aL.size(); i = i + 2) {
 				BillingClaimHeader1Data obj = (BillingClaimHeader1Data) aL.get(i);
 				BillingItemData iobj = (BillingItemData) aL.get(i + 1);
+				ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+				Provider p = providerDao.getProvider(obj.getProviderNo());
 
 				%>
 			<tr <%=i%4==0? "class=\"myGreen\"":""%> align="center">
 				<td><%=obj.getId()%></td>
+				<td><%=p.getLastName()%>, <%=p.getFirstName()%></td>
 				<td><%=obj.getBilling_date()%></td>
 				<td><%=iobj.getService_date()%></td>
 				<td><%=iobj.getService_code()%></td>
