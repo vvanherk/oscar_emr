@@ -630,7 +630,7 @@ var billingDefaults = new Array();
 var defaults = new Object();
 var anyValueMap = new Object();
 
-anyValueMap['provider_no'] 		= "-1";
+anyValueMap['provider_no'] 		= "-999999";
 anyValueMap['visit_type_no'] 	= "";
 anyValueMap['location_id'] 		= "-1";
 anyValueMap['sli_code'] 		= "";

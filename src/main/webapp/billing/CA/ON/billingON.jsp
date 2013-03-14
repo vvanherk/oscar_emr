@@ -55,6 +55,7 @@
 			String user_no = (String) session.getAttribute("user");
 			String providerview = request.getParameter("providerview") == null ? "" : request
 					.getParameter("providerview");
+			String sliCode = (request.getParameter("xml_slicode") == null? "" : request.getParameter("xml_slicode"));
 			providerview = providerview.equals("1") ? user_no : providerview;
 			String asstProvider_no = "", color = "", premiumFlag = "", service_form = "";
 			String sql = null;
@@ -1024,7 +1025,7 @@ var billingDefaults = new Array();
 var defaults = new Object();
 var anyValueMap = new Object();
 
-anyValueMap['provider_no'] 		= "-1";
+anyValueMap['provider_no'] 		= "-999999";
 anyValueMap['visit_type_no'] 	= "";
 anyValueMap['location_id'] 		= "-1";
 anyValueMap['sli_code'] 		= "";
@@ -1250,7 +1251,7 @@ var currentBillingDefault = null;
 		if (!isSameBillingForm) {
 			var values = getParsedDropdownValues();
 			// reload billing form if it is different from previous one
-			var url = "billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
+			var url = "billingON.jsp?useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
 			var defaultsString = "xml_visittype=" + values['visit_type_no'] + "&xml_location=" + values['location_id'] + "&xml_slicode=" + values['sli_code_no'] + "&xml_provider=" + values['provider_no'];
 			window.location = url + "&" + defaultsString;
 		}
@@ -1702,14 +1703,15 @@ function changeSite(sel) {
                     <td colspan="3">
                         <select name="xml_slicode" onChange="onBillingDefaultsDropdownChange(this);">
                         		<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
-                                <option value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
-                                <option value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
-                                <option value="HIP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
-                                <option value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
-                                <option value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
-                                <option value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
-                                <option value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
-                                <option value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+                                <option <%=(sliCode.equals(clinicNo) ? "selected" : "")%> value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
+								<option <%=(sliCode.equals("HDS") ? "selected" : "")%> value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+								<option <%=(sliCode.equals("HED") ? "selected" : "")%> value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+								<option <%=(sliCode.equals("HIP") ? "selected" : "")%> value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+								<option <%=(sliCode.equals("HOP") ? "selected" : "")%> value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+								<option <%=(sliCode.equals("HRP") ? "selected" : "")%> value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+								<option <%=(sliCode.equals("IHF") ? "selected" : "")%> value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+								<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+								<option <%=(sliCode.equals("OTN") ? "selected" : "")%> value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
                         </select> 
                     </td>
                 </tr>
