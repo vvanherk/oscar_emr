@@ -82,7 +82,7 @@ for (ClinicLocation location : clinicLocations) {
 
 List<Provider> providers = providerDao.getActiveProviders();
 Map<String, String> providerHashMap = new LinkedHashMap<String, String>(); 
-providerHashMap.put( "-1", "Any" );
+providerHashMap.put( "-999999", "Any" );
 for (Provider provider : providers) {
 	providerHashMap.put( provider.getProviderNo(), provider.getFormattedName() );
 }
