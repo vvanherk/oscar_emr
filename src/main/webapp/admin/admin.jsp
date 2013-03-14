@@ -529,6 +529,8 @@ div.logoutBox {
 			<%
 				}
 			%>
+			<li><a href="#"
+				onclick='popupPage(700,1000,&quot;<html:rewrite page="/billing/billingPageDefaults.jsp"/>&quot;);return false;'><bean:message key="admin.admin.billingDefaults"/></a></li>
 		</ul>
 		</div>
 		<%
