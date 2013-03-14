@@ -25,26 +25,35 @@
 <%@page import="org.oscarehr.common.model.Provider"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+<%@ page import="org.oscarehr.common.model.ClinicLocation"%>
+<%@ page import="org.oscarehr.common.dao.ClinicLocationDao"%>
 
 <% java.util.Properties oscarVariables = OscarProperties.getInstance(); %>
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
 <%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.oscarehr.common.model.Billingreferral" %>
 <%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
+<%@ page import="org.oscarehr.billing.model.BillingDefault"%>
+<%@ page import="org.oscarehr.billing.dao.BillingDefaultDao"%>
 <%
 	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+	
+	BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("billingDefaultDao");
 %>
 <%
   boolean bHospitalBilling = true;
   String            clinicview        = bHospitalBilling? oscarVariables.getProperty("clinic_hospital", "") : oscarVariables.getProperty("clinic_view", "");
   String            clinicNo          = oscarVariables.getProperty("clinic_no", "");
   String            visitType         = bHospitalBilling? "02" : oscarVariables.getProperty("visit_type", "");
+  String 			ctlHtmlGetValues  = request.getParameter("useHtmlGetValues");
+  String			sliCode			  = (request.getParameter("xml_slicode") == null? "" : request.getParameter("xml_slicode"));
   String            appt_no           = request.getParameter("appointment_no");
   String            demoname          = request.getParameter("demographic_name");
   String            demo_no           = request.getParameter("demographic_no");
   String            apptProvider_no   = request.getParameter("apptProvider_no");
-  String ctlBillForm = request.getParameter("billForm");
+  String 			ctlBillForm		  = request.getParameter("billForm");
   String            assgProvider_no   = request.getParameter("assgProvider_no");
   //String            dob               = request.getParameter("dob");
   String            demoSex           = request.getParameter("DemoSex");
@@ -252,6 +261,21 @@
   } else {
     clinicview = clinicview==null? "":clinicview;
   }
+  
+  // parse the clinic view value to extract the id of the location
+if (xml_location.indexOf("|") >= 0) {
+	int fromIndex = xml_location.indexOf("|");
+	if (fromIndex < 0)
+		fromIndex = 0;
+	else
+		fromIndex++;
+	
+	int toIndex = xml_location.substring(fromIndex, xml_location.length()).indexOf("|");
+	if (toIndex < 0)
+		toIndex = 2;
+	
+	xml_location = xml_location.substring(fromIndex, fromIndex+toIndex);
+}
 
   String visitdate = null;
   paraName = request.getParameter("xml_vdate");
@@ -600,6 +624,265 @@ function onDblClickServiceCode(item) {
 //-->
 
   </script>
+  
+<script type="text/javascript">
+var billingDefaults = new Array();
+var defaults = new Object();
+var anyValueMap = new Object();
+
+anyValueMap['provider_no'] 		= "-1";
+anyValueMap['visit_type_no'] 	= "";
+anyValueMap['location_id'] 		= "-1";
+anyValueMap['sli_code'] 		= "";
+
+<%
+	List<BillingDefault> billingDefaults = billingDefaultDao.getAll();
+	for (BillingDefault billingDefault : billingDefaults) {
+%>
+		defaults = new Object();
+		defaults['id']						= <%=billingDefault.getId()%>;
+		defaults['provider_no']				= <%=billingDefault.getproviderNo()%>;
+		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
+		defaults['location_id']				= "<%=billingDefault.getLocationId()%>";
+		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
+		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
+		defaults['priority']				= "<%=billingDefault.getPriority()%>";
+
+		billingDefaults.push( defaults );
+<%
+	}
+%>
+
+var currentBillingDefault = null;
+</script>
+
+  
+<script type="text/javascript">
+
+	function getParsedDropdownValues() {
+		var providerElem = document.getElementsByName("xml_provider")[0];
+		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
+		var locationElem = document.getElementsByName("xml_location")[0];
+		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
+		
+		var values = new Object();
+		
+		var fromIndex = locationElem.value.indexOf("|");
+		if (fromIndex < 0)
+			fromIndex = 0;
+		else
+			fromIndex++;
+			
+		toIndex = locationElem.value.substring(fromIndex, locationElem.value.length).indexOf("|");
+		if (toIndex < 0)
+			toIndex = 2;
+		else
+			toIndex += fromIndex;
+		
+		values['location_id']	= locationElem.value.substring(fromIndex, toIndex);
+		values['provider_no']	= providerElem.value.trim();
+		values['visit_type_no']	= visitTypeElem.value.substring(0,2);
+		values['sli_code_no']	= sliCodeElem.value.trim();
+		
+		return values;
+	}
+
+	/**
+	 * Method onBillingDefaultsDropdownChange
+	 * 
+	 * Change the dropdown values based on the billing defaults and the currently selected option from
+	 * one of the monitored dropdowns (i.e. xml_provider, etc).
+	 */
+	function onBillingDefaultsDropdownChange(element) {
+		var currentValues = getParsedDropdownValues();
+			
+		var provider_no		= currentValues['provider_no'];
+		var visit_type_no	= currentValues['visit_type_no'];
+		var location_id		= currentValues['location_id'];
+		var sli_code_no		= currentValues['sli_code_no'];
+		
+		if (element.name == 'xml_provider') {
+			var billingDefault = getBillingDefaultByValues( provider_no );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+		
+		if (element.name == 'xml_visittype') {
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+		
+		if (element.name == 'xml_location') {
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+		
+		if (element.name == 'xml_slicode') {
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id, sli_code_no );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+	}
+	
+	/**
+	 * Method setDefaultsOnPageLoad
+	 * 
+	 * Call this on page load so that the billing default gets checked/set once all of the page defaults have been set.
+	 */ 
+	function setDefaultsOnPageLoad() {
+		var currentValues = getParsedDropdownValues();
+			
+		var provider_no		= currentValues['provider_no'];
+		var visit_type_no	= currentValues['visit_type_no'];
+		var location_id		= currentValues['location_id'];
+		var sli_code_no		= currentValues['sli_code_no'];
+		
+		var billingDefaultsOverride = new Object();
+		<% if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes")) { %>
+		billingDefaultsOverride['provider_no'] = provider_no;
+		billingDefaultsOverride['visit_type_no'] = visit_type_no;
+		billingDefaultsOverride['location_id'] = location_id;
+		billingDefaultsOverride['sli_code'] = sli_code_no;
+		billingDefaultsOverride['billing_form'] = "<%=ctlBillForm%>";
+		<% } %>
+		
+		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
+		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id, sli_code_no );
+		if (billingDefault != undefined) {
+			setBillingDefaults( billingDefault, billingDefaultsOverride );
+		} else {
+			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id );
+			if (billingDefault != undefined) {
+				setBillingDefaults( billingDefault, billingDefaultsOverride );
+			} else {
+				billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
+				if (billingDefault != undefined) {
+					setBillingDefaults( billingDefault, billingDefaultsOverride );
+				} else {
+					billingDefault = getBillingDefaultByValues( provider_no );
+					if (billingDefault != undefined) {
+						setBillingDefaults( billingDefault, billingDefaultsOverride );
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Method getBillingDefaultByValues
+	 * 
+	 * Get the default values that have matching provider, visit_type, etc.  If the function finds an undefined parameter,
+	 * it just matches the billing defaults to any preceeding parameters.
+	 * 
+	 * Assumes that the billing default values are ordered by priority in 'descending' order (i.e. highest to lowest priority).
+	 * 
+	 * Also, the function will skip over default values that match 'Any' value for a provider, visit_type, etc.  It will not match
+	 * a default value if the only match it finds is with 'Any' values.
+	 */
+	function getBillingDefaultByValues(provider, visit_type, location, sli_code) {
+		for (var i = 0; i < billingDefaults.length; i++) {
+			if (billingDefaults[i]['provider_no'] == provider || billingDefaults[i]['provider_no'] == anyValueMap['provider_no']) {
+				if (visit_type == undefined) {
+					if (billingDefaults[i]['provider_no'] != anyValueMap['provider_no']) 
+						return billingDefaults[i];
+				} else if (billingDefaults[i]['visit_type_no'] == visit_type  || billingDefaults[i]['visit_type_no'] == anyValueMap['visit_type_no']) {
+					if (location == undefined) {
+						if (billingDefaults[i]['visit_type_no'] != anyValueMap['visit_type_no']) 
+							return billingDefaults[i];
+					} else if (billingDefaults[i]['location_id'] == location  || billingDefaults[i]['location_id'] == anyValueMap['location_id']) {
+						if (sli_code == undefined) {
+							if (billingDefaults[i]['location_id'] != anyValueMap['location_id']) 
+								return billingDefaults[i];
+						} else if (billingDefaults[i]['sli_code'] == sli_code  || billingDefaults[i]['sli_code'] == anyValueMap['sli_code']) {
+							if (billingDefaults[i]['sli_code'] != anyValueMap['sli_code']) 
+								return billingDefaults[i];
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Method setBillingDefaults
+	 * 
+	 * Set the dropdown options to the values in the defaults parameter.
+	 */ 
+	function setBillingDefaults( defaults, billingDefaultsOverride ) {
+		billingDefaultsOverride = billingDefaultsOverride || new Object();
+		
+		currentBillingDefault = defaults;
+		
+		
+		var elem = $('select[name="xml_provider"]');
+		if (billingDefaultsOverride['provider_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['provider_no']+'"]' ).attr('selected',true);
+		} else {
+			if (defaults['provider_no'] != anyValueMap['provider_no'])
+				elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
+		}
+		
+		elem = $('select[name="xml_location"]');
+		if (billingDefaultsOverride['location_id'] != undefined) {
+			elem.find( 'option[value*="|'+billingDefaultsOverride['location_id']+'|"]' ).attr('selected',true);
+		} else {
+			if (defaults['location_id'] != anyValueMap['location_id'])
+				elem.find( 'option[value*="|'+defaults['location_id']+'|"]' ).attr('selected',true);
+		}
+		
+		elem = $('select[name="xml_slicode"]');
+		if (billingDefaultsOverride['sli_code'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['sli_code']+'"]' ).attr('selected',true);
+		} else {
+			if (defaults['sli_code'] != anyValueMap['sli_code'])
+				elem.find( 'option[value^="'+defaults['sli_code']+'"]' ).attr('selected',true);
+		}
+		
+		elem = $('select[name="xml_visittype"]');
+		if (billingDefaultsOverride['visit_type_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		} else {
+			if (defaults['visit_type_no'] != anyValueMap['visit_type_no'])
+				elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+		}
+		
+		var isSameBillingForm = false;
+		if (defaults['billing_form'] == '<%=ctlBillForm%>' || billingDefaultsOverride['billing_form'] == '<%=ctlBillForm%>') {
+			isSameBillingForm = true;
+		}
+		
+		if (!isSameBillingForm) {
+			var values = getParsedDropdownValues();
+			// reload billing form if it is different from previous one
+			var url = "billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
+			var defaultsString = "xml_visittype=" + values['visit_type_no'] + "&xml_location=" + values['location_id'] + "&xml_slicode=" + values['sli_code_no'] + "&xml_provider=" + values['provider_no'];
+			window.location = url + "&" + defaultsString;
+		}
+	}
+</script>
+
+<script>
+jQuery(document).ready(function() {
+	// if no default was set, establish a 'default' default
+	if (currentBillingDefault == null) {
+		var currentValues = getParsedDropdownValues();
+		
+		var tempDefault = new Object();
+		tempDefault['provider_no']			= currentValues['provider_no'];
+		tempDefault['location_id']			= currentValues['location_id'];
+		tempDefault['sli_code']				= currentValues['sli_code_no'];
+		tempDefault['visit_type_no']		= currentValues['visit_type_no'];
+		tempDefault['billing_form']			= "<%=ctlBillForm%>";
+		//tempDefault['billing_form_name']	= jQuery('input[name="billFormName"]').val();
+		setBillingDefaults(tempDefault);
+	}
+	
+	setDefaultsOnPageLoad();
+});
+</script>
+
 </head>
 
 <body onload="setfocus();" topmargin="0">
@@ -628,8 +911,8 @@ int ctlCount = 0;
 %>
 	<tr bgcolor=<%=ctlCount%2==0 ? "#FFFFFF" : "#EEEEFF"%>>
 		<td colspan="2"><b><font size="-2" color="#7A388D"><a
-			href="billingShortcutPg1.jsp?billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1"
-			onClick="showHideLayers('Layer1','','hide');"><%=ctlcodename%></a></font></b></td>
+			href="#"
+			onClick="showHideLayers('Layer1','','hide');  window.location='billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1&xml_visittype=' + getParsedDropdownValues()['visit_type_no'] + '&xml_location=' + getParsedDropdownValues()['location_id'] + '&xml_slicode=' + getParsedDropdownValues()['sli_code_no'] + '&xml_provider=' + getParsedDropdownValues()['provider_no'];"><%=ctlcodename%></a></font></b></td>
 	</tr>
 	<%
 }
@@ -783,7 +1066,7 @@ ctlCount = 0;
 					<tr>
 						<td nowrap width="30%" align="center"><b><bean:message key="billing.hospitalBilling.frmBillPhysician"/>
 						</b></td>
-						<td width="20%"><select name="xml_provider">
+						<td width="20%"><select name="xml_provider" onChange="onBillingDefaultsDropdownChange(this);">
 							<%
 				if(vecProvider.size()==1) {
 					propT = (Properties) vecProvider.get(0);
@@ -813,7 +1096,7 @@ ctlCount = 0;
 					<tr>
 
 						<td width="30%"><b><%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.formVisitType"/> <% } %></b></td>
-						<td width="20%"><select name="xml_visittype">
+						<td width="20%"><select name="xml_visittype" onChange="onBillingDefaultsDropdownChange(this);">
 						<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
 					    <% 
 					    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
@@ -864,19 +1147,24 @@ ctlCount = 0;
 					</tr>
 					<tr>
 						<td><b><bean:message key="billing.billingCorrection.msgVisitLocation"/></b></td>
-						<td colspan="3"><select name="xml_location">
-							<%
-				for(int i=0; i<vecLocation.size(); i++) {
-					propT = (Properties) vecLocation.get(i);
-					String strLocation = request.getParameter("xml_location")!=null? request.getParameter("xml_location"):clinicview;
-				%>
-							<option
-								value="<%=propT.getProperty("clinic_location_no") + "|" + propT.getProperty("clinic_location_name")%>"
-								<%=strLocation.startsWith(propT.getProperty("clinic_location_no"))?"selected":""%>>
-							<%=propT.getProperty("clinic_location_name")%></option>
-							<%
+						<td colspan="3"><select name="xml_location" onChange="onBillingDefaultsDropdownChange(this);">
+							
+<%
+				ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
+				List<ClinicLocation> clinicLocations = clinicLocationDao.getAll();
+				String strLocation = (xml_location != null? xml_location : clinicview);
+				
+				for (ClinicLocation location : clinicLocations) {
+%>
+						    <option value="<%=location.getClinicLocationNo() + "|" + location.getId() + "|" + location.getClinicLocationName()%>"
+							    <%=strLocation.indexOf(location.getId().intValue() + "") >= 0?"selected":""%>>
+							<%=location.getClinicLocationName()%>
+						    </option>
+<%
 				}
-				%>
+		
+%>
+							
 						</select></td>
 					</tr>
 						<%
@@ -892,53 +1180,53 @@ ctlCount = 0;
 					<tr>
 						<td><b><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode"/></b></td>
 				   	 	<td colspan="3">
-						<select name="xml_slicode">
+						<select name="xml_slicode" onChange="onBillingDefaultsDropdownChange(this);">
 						
 							<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
 						
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HDS")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HDS") || sliCode.equals("HDS")) {%>
 								<option selected value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 							<%} else { %>
 								<option value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HED")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HED") || sliCode.equals("HED")) {%>
 								<option selected value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
 							<%} else { %>
 								<option value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HIP")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HIP") || sliCode.equals("HIP")) {%>
 								<option selected value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
 							<%} else { %>
 								<option value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HOP")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HOP") || sliCode.equals("HOP")) {%>
 								<option selected value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
 							<%} else { %>
 								<option value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HRP")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HRP") || sliCode.equals("HRP")) {%>
 								<option selected value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
 							<%} else { %>
 								<option value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("IHF")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("IHF") || sliCode.equals("IHF")) {%>
 								<option selected value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
 							<%} else { %>
 								<option value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OFF")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OFF") || sliCode.equals("OFF")) {%>
 								<option selected value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
 							<%} else { %>
 								<option value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OTN")) {%>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OTN") || sliCode.equals("OTN")) {%>
 								<option selected value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 							<%} else { %>
 								<option value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
@@ -951,15 +1239,15 @@ ctlCount = 0;
 				    <td><b><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode"/></b></td>
 				    <td colspan="3">
 					<select name="xml_slicode">
-						<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
-						<option value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
-						<option value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
-						<option value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
-						<option value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
-						<option value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
-						<option value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
-						<option value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
-						<option value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+						<option <%=(sliCode.equals(clinicNo) ? "selected" : "")%> value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
+						<option <%=(sliCode.equals("HDS") ? "selected" : "")%> value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+						<option <%=(sliCode.equals("HED") ? "selected" : "")%> value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+						<option <%=(sliCode.equals("HIP") ? "selected" : "")%> value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+						<option <%=(sliCode.equals("HOP") ? "selected" : "")%> value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+						<option <%=(sliCode.equals("HRP") ? "selected" : "")%> value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+						<option <%=(sliCode.equals("IHF") ? "selected" : "")%> value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+						<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+						<option <%=(sliCode.equals("OTN") ? "selected" : "")%> value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 					</select> 
 				    </td>
 				</tr>
@@ -1177,6 +1465,7 @@ ctlCount = 0;
 	<input type="hidden" name="assgProvider_no"
 		value="<%=assgProvider_no%>" />
 	<input type="hidden" name="billForm" value="<%=ctlBillForm%>" />
+	<input type="hidden" name="useHtmlGetValues" value="<%=ctlHtmlGetValues%>" />
 
 </table>
 </form>
