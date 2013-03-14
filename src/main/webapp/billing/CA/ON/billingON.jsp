@@ -1041,6 +1041,7 @@ anyValueMap['sli_code'] 		= "";
 		defaults['location_id']				= "<%=billingDefault.getLocationId()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
 		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
+		defaults['billing_form_name']           = "<%=billingServiceHashMap.get( billingDefault.getBillingFormServiceType().trim() )%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
 
 		billingDefaults.push( defaults );
@@ -1062,6 +1063,13 @@ var currentBillingDefault = null;
 		
 		var values = new Object();
 		
+		var toIndex = providerElem.value.indexOf("|");
+		if (toIndex < 0)
+			toIndex = providerElem.value.length;            
+		
+		values['provider_no']   = providerElem.value.substring(0, toIndex).trim();
+			
+
 		var fromIndex = locationElem.value.indexOf("|");
 		if (fromIndex < 0)
 			fromIndex = 0;
@@ -1075,7 +1083,8 @@ var currentBillingDefault = null;
 			toIndex += fromIndex;
 		
 		values['location_id']	= locationElem.value.substring(fromIndex, toIndex);
-		values['provider_no']	= providerElem.value.trim();
+		
+		
 		values['visit_type_no']	= visitTypeElem.value.substring(0,2);
 		values['sli_code_no']	= sliCodeElem.value.trim();
 		
@@ -1136,11 +1145,12 @@ var currentBillingDefault = null;
 		
 		var billingDefaultsOverride = new Object();
 		<% if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes")) { %>
-		billingDefaultsOverride['provider_no'] = provider_no;
-		billingDefaultsOverride['visit_type_no'] = visit_type_no;
-		billingDefaultsOverride['location_id'] = location_id;
-		billingDefaultsOverride['sli_code'] = sli_code_no;
-		billingDefaultsOverride['billing_form'] = "<%=ctlBillForm%>";
+		billingDefaultsOverride['provider_no'] 			= provider_no;
+		billingDefaultsOverride['visit_type_no'] 		= visit_type_no;
+		billingDefaultsOverride['location_id'] 			= location_id;
+		billingDefaultsOverride['sli_code'] 			= sli_code_no;
+		billingDefaultsOverride['billing_form'] 		= "<%=ctlBillForm%>";
+		billingDefaultsOverride['billing_form_name'] 	= "<%=billingServiceHashMap.get( ctlBillForm )%>";
 		<% } %>
 		
 		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
@@ -1243,17 +1253,11 @@ var currentBillingDefault = null;
 				elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
 		}
 		
-		var isSameBillingForm = false;
-		if (defaults['billing_form'] == '<%=ctlBillForm%>' || billingDefaultsOverride['billing_form'] == '<%=ctlBillForm%>') {
-			isSameBillingForm = true;
-		}
 		
-		if (!isSameBillingForm) {
-			var values = getParsedDropdownValues();
-			// reload billing form if it is different from previous one
-			var url = "billingON.jsp?useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
-			var defaultsString = "xml_visittype=" + values['visit_type_no'] + "&xml_location=" + values['location_id'] + "&xml_slicode=" + values['sli_code_no'] + "&xml_provider=" + values['provider_no'];
-			window.location = url + "&" + defaultsString;
+		if (billingDefaultsOverride['billing_form'] != undefined) {
+			toggleDiv(billingDefaultsOverride['billing_form'], billingDefaultsOverride['billing_form_name'], '');
+		} else {
+			toggleDiv(defaults['billing_form'], defaults['billing_form_name'], '');
 		}
 	}
 </script>
@@ -1270,7 +1274,7 @@ jQuery(document).ready(function() {
 		tempDefault['sli_code']				= currentValues['sli_code_no'];
 		tempDefault['visit_type_no']		= currentValues['visit_type_no'];
 		tempDefault['billing_form']			= "<%=ctlBillForm%>";
-		//tempDefault['billing_form_name']	= jQuery('input[name="billFormName"]').val();
+		tempDefault['billing_form_name']	= jQuery('input[name="billFormName"]').val();
 		setBillingDefaults(tempDefault);
 	}
 	
