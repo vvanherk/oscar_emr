@@ -203,6 +203,12 @@ function setfocus() {
   document.titlesearch.keyword.focus();
   document.titlesearch.keyword.select();
 }
+
+// Converts a string to title case (i.e. 'john smith' becomes 'John Smith')
+String.prototype.toTitleCase = function () {
+    return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+};
+
 function upCaseCtrl(ctrl) {
 	ctrl.value = ctrl.value.toUpperCase();
 }
@@ -1541,13 +1547,13 @@ if(oscarVariables.getProperty("demographicExt") != null) {
 									key="demographic.demographiceditdemographic.formLastName" />: </b></td>
 								<td align="left"><input type="text" name="last_name" <%=getDisabled("last_name")%>
 									size="30" value="<%=demographic.getLastName()%>"
-									onBlur="upCaseCtrl(this)"></td>
+									onBlur="this.value = this.value.toTitleCase();"></td>
 								<td align="right"><b><bean:message
 									key="demographic.demographiceditdemographic.formFirstName" />:
 								</b></td>
 								<td align="left"><input type="text" name="first_name" <%=getDisabled("first_name")%>
 									size="30" value="<%=demographic.getFirstName()%>"
-									onBlur="upCaseCtrl(this)"></td>
+									onBlur="this.value = this.value.toTitleCase();"></td>
 							</tr>
 							<tr>
 							  <td align="right"> <b><bean:message key="demographic.demographiceditdemographic.msgDemoTitle"/>: </b></td>
