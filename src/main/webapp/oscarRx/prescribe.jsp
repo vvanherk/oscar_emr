@@ -183,7 +183,7 @@ if(listRxDrugs!=null){
 			<label title="Clinic">Clinic: </label>
 			<select id="clinic_<%=rand%>" name="clinic_<%=rand%>">
 			<%
-			String sessionClinicId = (String) session.getAttribute("rx_clinic_id");
+			String sessionClinicId = (String) session.getAttribute("clinic_id");
 			if (sessionClinicId == null)
 				sessionClinicId = "";
 			for ( Clinic clinic : clinics) {

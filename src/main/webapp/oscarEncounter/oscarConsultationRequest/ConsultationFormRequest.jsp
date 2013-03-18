@@ -47,7 +47,10 @@
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
 <%@page import="org.oscarehr.common.model.Site"%>
+<%@page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@page import="org.oscarehr.common.model.Clinic" %>
 <%@page import="org.oscarehr.util.WebUtils"%>
+<%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="oscar.oscarEncounter.oscarConsultationRequest.pageUtil.EctConsultationFormRequestForm"%>
 <%@page import="oscar.oscarEncounter.oscarConsultationRequest.pageUtil.EctConsultationFormRequestUtil"%>
 <%@page import="oscar.oscarDemographic.data.DemographicData"%>
@@ -80,6 +83,9 @@
 			defaultSiteName = siteDao.getSiteNameByAppointmentNo(appNo);
 		}
 	}
+	
+	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+	List<Clinic> clinics = clinicDao.findAll();
 %>
 
 
@@ -1041,6 +1047,21 @@ function addCCName(){
 						<input name="update" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnUpdate"/>" onclick="return checkForm('Update Consultation Request','EctConsultationFormRequestForm');" />
 						<input name="updateAndPrint" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnUpdateAndPrint"/>" onclick="return checkForm('Update Consultation Request And Print Preview','EctConsultationFormRequestForm');" />
 						<input name="updateAndSendElectronicallyTop" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnUpdateAndSendElectronicReferral"/>" onclick="return checkForm('Update_esend','EctConsultationFormRequestForm');" />
+						<br>
+						<label title="Clinic">Clinic: </label>
+						<select id="clinicNo" name="clinicNo">
+						<%
+						String sessionClinicId = (String) session.getAttribute("clinic_id");
+						if (sessionClinicId == null)
+							sessionClinicId = "";
+						for ( Clinic clinic : clinics) {
+						%>
+							<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+						<%
+						}
+						%>
+						</select>
+						<br>
 						<%
 							if (props.getProperty("faxEnable", "").equalsIgnoreCase("yes"))
 										{
@@ -1057,6 +1078,21 @@ function addCCName(){
 						<input name="submitSaveOnly" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnSubmit"/>" onclick="return checkForm('Submit Consultation Request','EctConsultationFormRequestForm'); " />
 						<input name="submitAndPrint" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnSubmitAndPrint"/>" onclick="return checkForm('Submit Consultation Request And Print Preview','EctConsultationFormRequestForm'); " />
 						<input name="submitAndSendElectronicallyTop" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnSubmitAndSendElectronicReferral"/>" onclick="return checkForm('Submit_esend','EctConsultationFormRequestForm');" />
+						<br>
+						<label title="Clinic">Clinic: </label>
+						<select id="clinicNo" name="clinicNo">
+						<%
+						String sessionClinicId = (String) session.getAttribute("clinic_id");
+						if (sessionClinicId == null)
+							sessionClinicId = "";
+						for ( Clinic clinic : clinics) {
+						%>
+							<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+						<%
+						}
+						%>
+						</select>
+						<br>
 						<%
 							if (props.getProperty("faxEnable", "").equalsIgnoreCase("yes"))
 										{

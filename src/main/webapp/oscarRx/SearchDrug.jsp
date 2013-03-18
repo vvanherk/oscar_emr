@@ -290,7 +290,7 @@ List<Clinic> clinics = clinicDao.findAll();
 						<label title="Clinic">Clinic: </label>
 						<select id="clinic_no" name="clinic_no">
 					<%
-						String sessionClinicId = (String) session.getAttribute("rx_clinic_id");
+						String sessionClinicId = (String) session.getAttribute("clinic_id");
 						if (sessionClinicId == null)
 							sessionClinicId = "";
 						for ( Clinic clinic : clinics) {

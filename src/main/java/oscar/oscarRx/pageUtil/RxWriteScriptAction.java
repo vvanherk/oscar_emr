@@ -804,7 +804,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 					int clinicNoAsInt = Integer.parseInt(clinicNo);
 					bean.setClinicNo(clinicNoAsInt);
 					logger.info("SET clinic number!: " + clinicNoAsInt);
-					request.getSession().setAttribute("rx_clinic_id", clinicNo);
+					request.getSession().setAttribute("clinic_id", clinicNo);
 				} catch (Exception e) {
 					logger.error("Unable to parse clinic number: " + clinicNo, e);
 				}
