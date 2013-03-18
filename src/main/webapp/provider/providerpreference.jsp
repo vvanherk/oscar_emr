@@ -568,7 +568,7 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 			<%
 				String billingProvider = providerPreference.getBillingProviderDefault();
 			%>
-	      <option value="" <%=billingProvider.length()==0?"selected":""%>>-- None --</option>
+	      <option value="no" <%=billingProvider.length()==0?"selected":""%>>-- None --</option>
 					    <%
 					    for (Provider p : providerList) {
 					    %>
