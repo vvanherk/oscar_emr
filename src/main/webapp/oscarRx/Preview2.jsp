@@ -11,7 +11,9 @@
 
 <%@ page import="oscar.*,java.lang.*,java.util.Date,oscar.oscarRx.util.RxUtil,org.springframework.web.context.WebApplicationContext,
          org.springframework.web.context.support.WebApplicationContextUtils,
-         org.oscarehr.common.dao.UserPropertyDAO,org.oscarehr.common.model.UserProperty"%>
+         org.oscarehr.common.dao.UserPropertyDAO,org.oscarehr.common.model.UserProperty,
+         oscar.oscarRx.data.*"%>
+<%@ page import="java.text.SimpleDateFormat"%>
 <%@ page import="org.oscarehr.util.SpringUtils"%>
 
 <!-- Classes needed for signature injection -->
@@ -140,6 +142,11 @@ if (hasSig){
 }else{
    doctorName = (provider.getFirstName() + ' ' + provider.getSurname());
 }
+
+
+RxPharmacyData pharmacyData = new RxPharmacyData();
+PharmacyInfo pharmacy = null;
+pharmacy = pharmacyData.getPharmacyFromDemographic(Integer.toString(bean.getDemographicNo()));
 
 //doctorName = doctorName.replaceAll("\\d{6}","");
 //doctorName = doctorName.replaceAll("\\-","");
@@ -353,9 +360,59 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
                                                                             Logger.getLogger("preview_jsp").error("drug full outline was null");
                                                                             fullOutLine="<span style=\"color:red;font-size:16;font-weight:bold\">An error occurred, please write a new prescription.</span><br />"+fullOutLine;
                                                                     }
+											SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+											java.util.Date endDate = rx.getEndDate();
+											java.util.Date prescriptionDate = rx.getRxDate();
+											java.util.Date prescriptionCreatedDate = rx.getRxCreatedDate();
                                             %>
                                             <%=fullOutLine%>
+                                            <br>
+                                            <br>
+                                            <%
+                                            try {
+												String prescriptionDateAsString = df.format(prescriptionDate);
+											%>
+												Rx Date: <%=prescriptionDateAsString%>
+												<br>
+											<%
+											} catch (Exception e) {}
+                                            %>
+                                            
+                                            <%
+                                            try {
+												String prescriptionCreatedDateAsString = df.format(prescriptionCreatedDate);
+											%>
+												Rx Created Date: <%=prescriptionCreatedDateAsString%>
+												<br>
+											<%
+											} catch (Exception e) {}
+                                            %>
+												
+											<%
+                                            try {
+												String endDateAsString = df.format(endDate);
+											%>
+												End Date: <%=endDateAsString%>
+											<%
+											} catch (Exception e) {}
+                                            %>
                                                             <hr>
+											
+											<%
+											if (pharmacy != null) {
+											%>	
+												<%=pharmacy.getName()%> <br>
+												<%=pharmacy.getAddress()%> <br>
+												<%=pharmacy.getCity()%>, <%=pharmacy.getProvince()%>, <%=pharmacy.getPostalCode()%> <br>
+												Tel: <%=pharmacy.getPhone1()%>, <%=pharmacy.getPhone2()%> <br>
+												Fax: <%=pharmacy.getFax()%> <br>
+												Email: <%=pharmacy.getEmail()%> <br>
+												Note: <%=pharmacy.getNotes()%> <br>
+												<%=pharmacy.getServiceLocationIdentifier() == null? "" : pharmacy.getServiceLocationIdentifier()%> <br>
+											<%
+											}
+											%>
+											
                                                             <%
                                             strRx += rx.getFullOutLine() + ";;";
                                             strRxNoNewLines.append(rx.getFullOutLine().replaceAll(";"," ")+ "\n");
