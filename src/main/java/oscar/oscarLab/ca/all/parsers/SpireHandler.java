@@ -688,7 +688,7 @@ public class SpireHandler implements MessageHandler {
     
     public String getDOB(){
         try{
-            return(formatDateTime(getString(msg.getRESPONSE().getPATIENT().getPID().getDateOfBirth().getTimeOfAnEvent().getValue())));
+            return(formatDOB(getString(msg.getRESPONSE().getPATIENT().getPID().getDateOfBirth().getTimeOfAnEvent().getValue())));
         }catch(Exception e){
             return("");
         }
@@ -721,9 +721,21 @@ public class SpireHandler implements MessageHandler {
     public String getHealthNum(){
         String hin = (getString(msg.getRESPONSE().getPATIENT().getPID().getAlternatePatientID().getID().getValue()));
         
-        if (hin != null && hin.equals(""))
-			hin = null;
+        logger.info("health num: " + hin);
         
+		Terser terser = new Terser(msg);
+		hin = "";
+         
+		try {
+			hin = (getString(terser.get("/.PATIENT(0)/.PID-2-1")));
+			
+			if (hin != null && hin.equals(""))
+				hin = null;
+		} catch (HL7Exception e) {
+		        logger.error("Could not return health insurance number", e);
+		}
+
+        logger.info("health num: " + hin);
         return hin;
     }
     
@@ -1079,6 +1091,17 @@ public class SpireHandler implements MessageHandler {
         dateFormat = dateFormat.substring(0, plain.length());
         String stringFormat = "yyyy-MM-dd HH:mm:ss";
         stringFormat = stringFormat.substring(0, stringFormat.lastIndexOf(dateFormat.charAt(dateFormat.length()-1))+1);
+        
+        Date date = UtilDateUtilities.StringToDate(plain, dateFormat);
+        return UtilDateUtilities.DateToString(date, stringFormat);
+    }
+    
+    private String formatDOB(String plain){
+    	if (plain==null || plain.trim().equals("")) return "";
+    	
+        String dateFormat = "yyyyMMddHHmmss";
+        dateFormat = dateFormat.substring(0, plain.length());
+        String stringFormat = "yyyy-MM-dd";
         
         Date date = UtilDateUtilities.StringToDate(plain, dateFormat);
         return UtilDateUtilities.DateToString(date, stringFormat);
