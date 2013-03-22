@@ -161,6 +161,10 @@ function showHideBillPref() {
     $("billingONpref").toggle();
 }
 
+function showHideRxPrintPref() {
+    $("rxPrintPrefs").toggle();
+}
+
 </script>
 <style type="text/css">
 	.preferenceTable td
@@ -199,7 +203,7 @@ function showHideBillPref() {
 	}
 %>
 
-<body bgproperties="fixed"  onLoad="setfocus();showHideBillPref();" topmargin="0"leftmargin="0" rightmargin="0" style="font-family:sans-serif">
+<body bgproperties="fixed"  onLoad="setfocus();showHideBillPref();showHideRxPrintPref();" topmargin="0"leftmargin="0" rightmargin="0" style="font-family:sans-serif">
 	<FORM NAME = "UPDATEPRE" METHOD="post" ACTION="providerupdatepreference.jsp" onSubmit="return(checkTypeInAll())">
 
 		<div style="background-color:<%=deepcolor%>;text-align:center;font-weight:bold">
@@ -550,6 +554,7 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 	  </div>
       </td>
   </tr>
+
 </security:oscarSec>
       <tr>
           <td align="center"><a href=# onClick ="popupPage(230,860,'providerPhone.jsp');return false;"><bean:message key="provider.btnEditPhoneNumber"/></a></td>
@@ -566,6 +571,36 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
       <tr>
           <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewUseRx3');return false;"><bean:message key="provider.btnSetRx3"/></a></td>
       </tr>
+      
+      <tr>
+	    <td align="center">
+			<a href=# onClick ="showHideRxPrintPref();return false;"><bean:message key="provider.btnRxPrintingPreferences"/></a>
+	    </td>
+	  </tr>
+	
+	  <tr>
+	      <td align="center">
+		  <div id="rxPrintPrefs">
+				<%
+				boolean printDateOnRx = false;
+				boolean printPharmacyOnRx = false;
+		      
+				if (providerPreference != null) {
+					printDateOnRx = providerPreference.isPrintDateOnRxSet();
+					printPharmacyOnRx = providerPreference.isPrintPharmacyOnRxSet();
+				}
+				%>
+	      
+				<bean:message key="provider.labelRxPrintPharmacy"/>:
+				<input type="checkbox" name="rx_print_pharmacy" <%=printPharmacyOnRx? "checked" : ""%>>
+				<br>
+				<bean:message key="provider.labelRxPrintDates"/>:
+				<input type="checkbox" name="rx_print_dates" <%=printDateOnRx? "checked" : ""%>>
+		
+		  </div>
+	      </td>
+	  </tr>
+      
       <tr>
           <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewCppSingleLine');return false;"><bean:message key="provider.btnSetCppSingleLine"/></a></td>
       </tr>

@@ -23,6 +23,11 @@
 <%@page import="org.oscarehr.util.LoggedInInfo"%>
 <%@page import="org.oscarehr.util.DigitalSignatureUtils"%>
 <%@page import="org.oscarehr.ui.servlet.ImageRenderingServlet"%>
+
+<%@page import="org.oscarehr.common.dao.ProviderPreferenceDao"%>
+<%@page import="org.oscarehr.common.model.ProviderPreference"%>
+<%@page import="org.oscarehr.web.admin.ProviderPreferencesUIBean"%>
+
 <!-- end -->
 
 <!--
@@ -143,19 +148,33 @@ if (hasSig){
    doctorName = (provider.getFirstName() + ' ' + provider.getSurname());
 }
 
+String pracNo = provider.getPractitionerNo();
+String strUser = (String)session.getAttribute("user");
+ProviderData user = new ProviderData(strUser);
 
-RxPharmacyData pharmacyData = new RxPharmacyData();
+ProviderPreferenceDao preferenceDao = (ProviderPreferenceDao) SpringUtils.getBean("providerPreferenceDao");
+ProviderPreference preference = null;
+preference = ProviderPreferencesUIBean.getProviderPreferenceByProviderNo(strUser);
+
+boolean printDateOnRx = false;
+boolean printPharmacyOnRx = false;
+Logger.getLogger("preview_jsp").info("preference: " + provider.getPractitionerNo());
+if (preference != null) {
+	printDateOnRx = preference.isPrintDateOnRxSet();
+	printPharmacyOnRx = preference.isPrintPharmacyOnRxSet();
+}
+
+
 PharmacyInfo pharmacy = null;
-pharmacy = pharmacyData.getPharmacyFromDemographic(Integer.toString(bean.getDemographicNo()));
+if (printPharmacyOnRx) {
+	RxPharmacyData pharmacyData = new RxPharmacyData();
+	pharmacy = pharmacyData.getPharmacyFromDemographic(Integer.toString(bean.getDemographicNo()));	
+}
 
 //doctorName = doctorName.replaceAll("\\d{6}","");
 //doctorName = doctorName.replaceAll("\\-","");
 
 OscarProperties props = OscarProperties.getInstance();
-
-String pracNo = provider.getPractitionerNo();
-String strUser = (String)session.getAttribute("user");
-ProviderData user = new ProviderData(strUser);
 
 String patientDOBStr=RxUtil.DateToString(patient.getDOB(), "MMM d, yyyy") ;
 boolean showPatientDOB=false;
@@ -353,7 +372,7 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
                                             {
                                             rx = bean.getStashItem(i);
                                                                     String fullOutLine=rx.getFullOutLine().replaceAll(";","<br />");
-                                                                    fullOutLine += "<br>End Date: " + rx.getEndDate().toString();
+                                                                    //fullOutLine += "<br>End Date: " + rx.getEndDate().toString();
 
                                                                     if (fullOutLine==null || fullOutLine.length()<=6)
                                                                     {
@@ -367,40 +386,49 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
                                             %>
                                             <%=fullOutLine%>
                                             <br>
-                                            <br>
-                                            <%
-                                            try {
-												String prescriptionDateAsString = df.format(prescriptionDate);
-											%>
-												Rx Date: <%=prescriptionDateAsString%>
-												<br>
-											<%
-											} catch (Exception e) {}
-                                            %>
                                             
-                                            <%
-                                            try {
-												String prescriptionCreatedDateAsString = df.format(prescriptionCreatedDate);
-											%>
-												Rx Created Date: <%=prescriptionCreatedDateAsString%>
-												<br>
-											<%
-											} catch (Exception e) {}
-                                            %>
-												
-											<%
-                                            try {
-												String endDateAsString = df.format(endDate);
-											%>
-												End Date: <%=endDateAsString%>
-											<%
-											} catch (Exception e) {}
-                                            %>
+                                            <% if (printDateOnRx) { %>
+	                                            <%
+	                                            try {
+													String prescriptionDateAsString = df.format(prescriptionDate);
+												%>
+													Rx Date: <%=prescriptionDateAsString%>
+													<br>
+												<%
+												} catch (Exception e) {}
+	                                            %>
+	                                            
+	                                            <%
+	                                            try {
+													String prescriptionCreatedDateAsString = df.format(prescriptionCreatedDate);
+												%>
+													Rx Created Date: <%=prescriptionCreatedDateAsString%>
+													<br>
+												<%
+												} catch (Exception e) {}
+	                                            %>
+													
+												<%
+	                                            try {
+													String endDateAsString = df.format(endDate);
+												%>
+													End Date: <%=endDateAsString%>
+												<%
+												} catch (Exception e) {}
+	                                            %>
+	                                        <% } %>
                                                             <hr>
 											
-											<%
+                                                            <%
+                                            strRx += rx.getFullOutLine() + ";;";
+                                            strRxNoNewLines.append(rx.getFullOutLine().replaceAll(";"," ")+ "\n");
+                                            }
+                                            %> 
+                                            
+                                            <%
 											if (pharmacy != null) {
 											%>	
+												<br>
 												<%=pharmacy.getName()%> <br>
 												<%=pharmacy.getAddress()%> <br>
 												<%=pharmacy.getCity()%>, <%=pharmacy.getProvince()%>, <%=pharmacy.getPostalCode()%> <br>
@@ -412,12 +440,8 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
 											<%
 											}
 											%>
-											
-                                                            <%
-                                            strRx += rx.getFullOutLine() + ";;";
-                                            strRxNoNewLines.append(rx.getFullOutLine().replaceAll(";"," ")+ "\n");
-                                            }
-                                            %> <input type="hidden" name="rx"
+                                            
+                                            <input type="hidden" name="rx"
                                                                     value="<%= StringEscapeUtils.escapeHtml(strRx.replaceAll(";","\\\n")) %>" />
                                                             <input type="hidden" name="rx_no_newlines"
                                                                     value="<%= strRxNoNewLines.toString() %>" /></td>
