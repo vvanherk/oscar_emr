@@ -107,6 +107,18 @@ public final class ProviderPreferencesUIBean {
 
 		temp = StringUtils.trimToNull(request.getParameter("color_template"));
 		if (temp != null) providerPreference.setColourTemplate(temp);
+		
+		temp = StringUtils.trimToNull(request.getParameter("rx_print_pharmacy"));
+		if (temp != null) 
+			providerPreference.setPrintPharmacyOnRx(true);
+		else
+			providerPreference.setPrintPharmacyOnRx(false);
+		
+		temp = StringUtils.trimToNull(request.getParameter("rx_print_dates"));
+		if (temp != null) 
+			providerPreference.setPrintDateOnRx(true);
+		else
+			providerPreference.setPrintDateOnRx(false);
 
 		providerPreference.setPrintQrCodeOnPrescriptions(WebUtils.isChecked(request, "prescriptionQrCodes"));
 
