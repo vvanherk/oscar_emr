@@ -551,6 +551,17 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 	}
 %>
 	  </select>
+	  <br>
+		<%
+		boolean billingRefBoxDefaultChecked = false;
+      
+		if (providerPreference != null) {
+			billingRefBoxDefaultChecked = providerPreference.isBillingRefBoxDefaultChecked();
+		}
+		%>
+  
+		<bean:message key="provider.labelBillingRefBoxDefaultChecked"/>:
+		<input type="checkbox" name="billing_ref_box_default_checked" <%=billingRefBoxDefaultChecked? "checked" : ""%>>
 	  </div>
       </td>
   </tr>

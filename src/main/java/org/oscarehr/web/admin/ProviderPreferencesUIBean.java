@@ -109,7 +109,13 @@ public final class ProviderPreferencesUIBean {
 			providerPreference.setPrintDateOnRx(true);
 		else
 			providerPreference.setPrintDateOnRx(false);
-
+			
+		temp = StringUtils.trimToNull(request.getParameter("billing_ref_box_default_checked"));
+		if (temp != null) 
+			providerPreference.setBillingRefBoxDefaultChecked(true);
+		else
+			providerPreference.setBillingRefBoxDefaultChecked(false);
+			
 		providerPreference.setPrintQrCodeOnPrescriptions(WebUtils.isChecked(request, "prescriptionQrCodes"));
 
 		// get encounterForms for appointment screen

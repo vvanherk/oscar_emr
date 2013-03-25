@@ -212,7 +212,7 @@
 					demoHCTYPE = demoHCTYPE.substring(0, 2).toUpperCase();
 				}
 
-				if ("".equals(family_doctor)) {
+				if ("".equals(family_doctor) || "<rdohip></rdohip><rd></rd>".equals(family_doctor)) {
 					r_doctor = "N/A";
 					r_doctor_ohip = "000000";
 				} else {
@@ -744,6 +744,7 @@ function rs(n,u,w,h,x) {
     //    remote.opener = self;
     //}
     //if (x == 1) { return remote; }
+    return remote;
 }
 
 var awnd=null;
@@ -756,11 +757,12 @@ function referralScriptAttach(elementName) {
      awnd.focus();
 }
 
-function referralScriptAttach2(elementName, name2) {
+function referralScriptAttach2(elementName, name2, refSpet) {
      var d = elementName;
      t0 = escape("document.forms[0].elements[\'"+d+"\'].value");
      t1 = escape("document.forms[0].elements[\'"+name2+"\'].value");
-     awnd=rs('att',('searchRefDoc.jsp?param='+t0+'&param2='+t1),600,600,1);
+     t2 = escape("document.forms[0].elements[\'"+refSpet+"\'].value");
+     awnd=rs('att',('searchRefDoc.jsp?param='+t0+'&param2='+t1+'&param3='+t2),600,600,1);
      awnd.focus();
 }
 
@@ -854,15 +856,23 @@ function popupPage(vheight,vwidth,varpage) { //open a new popup window
     }
 }
 
+// We want to keep the users previously selected referral doctor information, and also set their default values
+var previousReferralCode	= "<%=r_doctor_ohip%>";
+var previousReferralDocName	= "<%=r_doctor%>";
+var previousReferralSpet	= "<%=referSpet%>";
+
 function onClickRefDoc() { 
     if (!document.forms[0].rfcheck.checked) {
+	previousReferralCode	= document.forms[0].referralCode.value
+	previousReferralDocName	= document.forms[0].referralDocName.value
+	previousReferralSpet	= document.forms[0].referralSpet.value
 	document.forms[0].referralCode.value="";
 	document.forms[0].referralDocName.value="";
 	document.forms[0].referralSpet.value="";
     } else {
-	document.forms[0].referralCode.value="<%=r_doctor_ohip%>";
-	document.forms[0].referralDocName.value="<%=r_doctor%>";
-	document.forms[0].referralSpet.value="<%=referSpet%>";
+	document.forms[0].referralCode.value=previousReferralCode;
+	document.forms[0].referralDocName.value=previousReferralDocName;
+	document.forms[0].referralSpet.value=previousReferralSpet;
     }
 }
 
@@ -1492,20 +1502,30 @@ jQuery(document).ready(function() {
 					    </tr>
 					</table>
 					
-					<a href="javascript:referralScriptAttach2('referralCode','referralDocName')">Refer. Doctor #</a>
+					<a href="javascript:referralScriptAttach2('referralCode','referralDocName','referralSpet')">Refer. Doctor #</a>
 <%
 			String checkRefBox = "";
 			String refName = "";
 			String refNo = "";
+			String refSpet = "";
+			boolean provPrefBillingRefBoxDefault = false;
+		    ProviderPreference pp=null;
+		    pp = preferenceDao.find(user_no);
+                
+			if (pp != null && pp.isBillingRefBoxDefaultChecked()) {
+				provPrefBillingRefBoxDefault = true;
+			}
+			
 			if (request.getParameter("rfcheck") != null) {
 				checkRefBox = request.getParameter("rfcheck");
 				refName = request.getParameter("referralDocName");
 				refNo = request.getParameter("referralCode");
-				referSpet = request.getParameter("referralSpet");
-			} else if (oscarVariables.getProperty("billingRefBoxDefault", "").equals("checked")) {
+				refSpet = request.getParameter("referralSpet");
+			} else if (oscarVariables.getProperty("billingRefBoxDefault", "").equals("checked") || provPrefBillingRefBoxDefault) {
 				checkRefBox = "checked";
 				refName = r_doctor;
 				refNo = r_doctor_ohip;
+				refSpet = referSpet;
 			}
 
 
@@ -1515,7 +1535,7 @@ jQuery(document).ready(function() {
 
 					<input type="checkbox" name="rfcheck" value="checked" <%=checkRefBox%> onclick="onClickRefDoc()" /><br />
 					<input type="text" name="referralCode" size="5" maxlength="6" value="<%=refNo%>">&nbsp;
-					<input type="text" name="referralSpet" size="2" maxlength="2" value="<%=referSpet==null?"":referSpet%>"><br />
+					<input type="text" name="referralSpet" size="2" maxlength="2" value="<%=refSpet%>"><br />
 					<input type="text" name="referralDocName" size="22" maxlength="30" value="<%=refName%>">
 				    </td>
 				</tr>
