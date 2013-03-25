@@ -1718,14 +1718,14 @@ function changeSite(sel) {
                     <td colspan="3">
                         <select name="xml_slicode" onChange="onBillingDefaultsDropdownChange(this);">
                                 <option <%=(sliCode.equals(clinicNo) ? "selected" : "")%> value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
-								<option <%=(sliCode.equals("HDS") ? "selected" : "")%> value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
-								<option <%=(sliCode.equals("HED") ? "selected" : "")%> value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
-								<option <%=(sliCode.equals("HIP") ? "selected" : "")%> value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
-								<option <%=(sliCode.equals("HOP") ? "selected" : "")%> value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
-								<option <%=(sliCode.equals("HRP") ? "selected" : "")%> value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
-								<option <%=(sliCode.equals("IHF") ? "selected" : "")%> value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
-								<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
-								<option <%=(sliCode.equals("OTN") ? "selected" : "")%> value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+								<option <%=(sliCode.equals("HDS") ? "selected" : "")%> value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+								<option <%=(sliCode.equals("HED") ? "selected" : "")%> value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+								<option <%=(sliCode.equals("HIP") ? "selected" : "")%> value="HIP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+								<option <%=(sliCode.equals("HOP") ? "selected" : "")%> value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+								<option <%=(sliCode.equals("HRP") ? "selected" : "")%> value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+								<option <%=(sliCode.equals("IHF") ? "selected" : "")%> value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+								<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+								<option <%=(sliCode.equals("OTN") ? "selected" : "")%> value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
                         </select> 
                     </td>
                 </tr>
