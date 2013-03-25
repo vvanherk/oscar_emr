@@ -1204,51 +1204,51 @@ ctlCount = 0;
 							<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
 						
 							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HDS") || sliCode.equals("HDS")) {%>
-								<option selected value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+								<option selected value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 							<%} else { %>
-								<option value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+								<option value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 							<%}%>
 							
 							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HED") || sliCode.equals("HED")) {%>
-								<option selected value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+								<option selected value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
 							<%} else { %>
-								<option value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+								<option value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
 							<%}%>
 							
 							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HIP") || sliCode.equals("HIP")) {%>
-								<option selected value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+								<option selected value="HIP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
 							<%} else { %>
-								<option value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+								<option value="HIP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
 							<%}%>
 							
 							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HOP") || sliCode.equals("HOP")) {%>
-								<option selected value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+								<option selected value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
 							<%} else { %>
-								<option value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+								<option value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
 							<%}%>
 							
 							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HRP") || sliCode.equals("HRP")) {%>
-								<option selected value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+								<option selected value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
 							<%} else { %>
-								<option value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+								<option value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
 							<%}%>
 							
 							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("IHF") || sliCode.equals("IHF")) {%>
-								<option selected value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+								<option selected value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
 							<%} else { %>
-								<option value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+								<option value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
 							<%}%>
 							
 							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OFF") || sliCode.equals("OFF")) {%>
-								<option selected value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+								<option selected value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
 							<%} else { %>
-								<option value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+								<option value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
 							<%}%>
 							
 							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OTN") || sliCode.equals("OTN")) {%>
-								<option selected value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+								<option selected value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 							<%} else { %>
-								<option value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+								<option value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 							<%}%>
 							</select> 
 				   		</td>
@@ -1259,14 +1259,14 @@ ctlCount = 0;
 				    <td colspan="3">
 					<select name="xml_slicode">
 						<option <%=(sliCode.equals(clinicNo) ? "selected" : "")%> value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
-						<option <%=(sliCode.equals("HDS") ? "selected" : "")%> value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
-						<option <%=(sliCode.equals("HED") ? "selected" : "")%> value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
-						<option <%=(sliCode.equals("HIP") ? "selected" : "")%> value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
-						<option <%=(sliCode.equals("HOP") ? "selected" : "")%> value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
-						<option <%=(sliCode.equals("HRP") ? "selected" : "")%> value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
-						<option <%=(sliCode.equals("IHF") ? "selected" : "")%> value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
-						<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
-						<option <%=(sliCode.equals("OTN") ? "selected" : "")%> value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+						<option <%=(sliCode.equals("HDS") ? "selected" : "")%> value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+						<option <%=(sliCode.equals("HED") ? "selected" : "")%> value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+						<option <%=(sliCode.equals("HIP") ? "selected" : "")%> value="HIP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+						<option <%=(sliCode.equals("HOP") ? "selected" : "")%> value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+						<option <%=(sliCode.equals("HRP") ? "selected" : "")%> value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+						<option <%=(sliCode.equals("IHF") ? "selected" : "")%> value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+						<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+						<option <%=(sliCode.equals("OTN") ? "selected" : "")%> value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 					</select> 
 				    </td>
 				</tr>
