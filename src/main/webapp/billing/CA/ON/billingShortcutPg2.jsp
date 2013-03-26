@@ -64,7 +64,10 @@
 	proOHIPNO = rs.getString("ohip_no");
 	proRMA = rs.getString("rma_no");
   }
-  if(request.getParameter("xml_provider")!=null) providerview = request.getParameter("xml_provider");
+  if(request.getParameter("xml_provider")!=null) {
+	providerview = request.getParameter("xml_provider");
+	session.setAttribute( "hospital_billing_previous_provider_no", providerview);
+  }
   // get patient's detail
   String errorFlag = "";
   String warningMsg = "", errorMsg = "";
@@ -151,6 +154,8 @@
 
     String billingDate = request.getParameter("billDate");
 	String [] tempDate = billingDate.split("\\s");
+	
+	session.setAttribute( "hospital_billing_previous_billing_dates", billingDate);
 
     for( int idx = 0; idx < tempDate.length; ++idx ) {
     }
