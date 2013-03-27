@@ -599,7 +599,49 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 		  
 		  <label><bean:message key="provider.labelDefaultHospBilling"/></label>
 	  
-	  <br>
+	  <div class="container">
+		  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr: <% } else { %> 
+		  <label for="default_bill_visit_type"><bean:message key="provider.labelDefaultHospBillingVisitType"/>:</label>
+		  <% 
+		  } 
+		  %>
+		  
+		  
+		  <select name="default_bill_visit_type">
+				<%
+					String visitType = providerPreference.getBillingVisitTypeDefault();				
+				%>
+		      <option value="" <%=visitType.length()==0?"selected":""%>>-- None --</option>
+							<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
+						    <% 
+						    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
+							ArrayList<ClinicNbr> nbrs = cnDao.findAll();	            
+		                    for (ClinicNbr clinic : nbrs) {
+								String valueString = String.format("%s | %s", clinic.getNbrValue(), clinic.getNbrString());
+								%>
+						    	<option value="<%=valueString%>" <%=visitType.startsWith(clinic.getNbrValue())?"selected":""%>><%=valueString%></option>
+						    <%}%>
+						    <% } else { %>
+								<option value="00| Clinic Visit"
+									<%=visitType.startsWith("00")?"selected":""%>><bean:message key="billing.billingCorrection.formClinicVisit"/>
+								</option>
+								<option value="01| Outpatient Visit"
+									<%=visitType.startsWith("01")?"selected":""%>><bean:message key="billing.billingCorrection.formOutpatientVisit"/>
+								</option>
+								<option value="02| Hospital Visit"
+									<%=visitType.startsWith("02")?"selected":""%>><bean:message key="billing.billingCorrection.formHospitalVisit"/>
+								</option>
+								<option value="03| ER"
+									<%=visitType.startsWith("03")?"selected":""%>><bean:message key="billing.billingCorrection.formER"/></option>
+								<option value="04| Nursing Home"
+									<%=visitType.startsWith("04")?"selected":""%>><bean:message key="billing.billingCorrection.formNursingHome"/>
+								</option>
+								<option value="05| Home Visit"
+									<%=visitType.startsWith("05")?"selected":""%>><bean:message key="billing.billingCorrection.formHomeVisit"/>
+								</option>
+								<% } %>
+		  </select>
+		<br>
 	  
 	  
 		  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr: <% } else { %> <label for="default_bill_visit_location"><bean:message key="provider.labelDefaultHospBillingVisitLocation"/>:</label> <% } %>
@@ -614,7 +656,7 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 		      <option value="" <%=selectedVisitLocation.length()==0?"selected":""%>>-- None --</option>
 					<%	for(int i=0; i<clinicLocations.size(); i++) {
 							ClinicLocation clinicLocation = clinicLocations.get(i);
-							String strLocation = clinicLocation.getId();
+							String strLocation = clinicLocation.getId() + "";
 					%>
 								<option
 									value="<%=clinicLocation.getId()%>"
