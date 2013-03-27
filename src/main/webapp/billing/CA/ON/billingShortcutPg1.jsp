@@ -281,7 +281,6 @@
   String defaultVisitLocation = providerPreference.getBillingVisitLocationDefault();
   if (defaultVisitLocation != null) {
 	paraName = (paraName == null || paraName.length() == 0? defaultVisitLocation : paraName);
-	MiscUtils.getLogger().info("YES: " + defaultVisitLocation);
 }
   String xml_location = getDefaultValue(paraName, vecHist, "clinic_ref_code");
   if(!"".equals(xml_location)) {
