@@ -199,6 +199,31 @@ function showHideRxPrintPref() {
 	{
 		font-size:12px;
 	}
+	
+	label {
+		display: block;
+		font-weight:bold;
+		margin-top: 5px;
+	}
+	
+	.container {
+		margin-top: 5px;
+		margin-bottom: 10px;
+        width: 420px;
+        
+    }
+    
+    .container label {
+		text-align:right;
+		width:140px;
+		float:left;
+	}
+	
+    .container select {
+		margin-left: 10px;
+        float:left;
+		width:200px;
+    }
 </style>
 </head>
 
@@ -534,92 +559,73 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
   <tr>
       <td align="center">
 	  <div id="billingONpref">
-          <bean:message key="provider.labelDefaultBillForm"/>:
-	  <select name="default_servicetype">
-	      <option value="no">-- no --</option>
-<%
-	if (providerPreference!=null) {
-		String def = providerPreference.getDefaultServiceType();
-		List<Map<String,Object>> resultList = oscarSuperManager.find("providerDao", "list_bills_servicetype", new Object[] {});
-		for (Map bill : resultList) {
-%>
-				<option value="<%=bill.get("servicetype")%>"
-					<%=bill.get("servicetype").equals(def)?"selected":""%>>
-					<%=bill.get("servicetype_name")%></option>
-<%
+		
+		<label><bean:message key="provider.labelDefaultClinicBilling"/></label>
+		<div class="container">
+			
+		  <label for="default_servicetype"><bean:message key="provider.labelDefaultClinicBillingForm"/>:</label>
+		  
+		  <select name="default_servicetype">
+		      <option value="no">-- no --</option>
+	<%
+		if (providerPreference!=null) {
+			String def = providerPreference.getDefaultServiceType();
+			List<Map<String,Object>> resultList = oscarSuperManager.find("providerDao", "list_bills_servicetype", new Object[] {});
+			for (Map bill : resultList) {
+	%>
+					<option value="<%=bill.get("servicetype")%>"
+						<%=bill.get("servicetype").equals(def)?"selected":""%>>
+						<%=bill.get("servicetype_name")%></option>
+	<%
+			}
+		} else {
+			List<Map<String,Object>> resultList = oscarSuperManager.find("providerDao", "list_bills_servicetype", new Object[] {});
+			for (Map bill : resultList) {
+	%>
+			<option value="<%=bill.get("servicetype")%>"><%=bill.get("servicetype_name")%></option>
+	<%
+			}
 		}
-	} else {
-		List<Map<String,Object>> resultList = oscarSuperManager.find("providerDao", "list_bills_servicetype", new Object[] {});
-		for (Map bill : resultList) {
-%>
-		<option value="<%=bill.get("servicetype")%>"><%=bill.get("servicetype_name")%></option>
-<%
-		}
-	}
-%>
-	  </select>
+	%>
+		  </select>
+		  
+		</div>
 	  
 	  <br>
 	  
-	  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.formVisitType"/> <% } %>:
-	  <select name="default_bill_visit_type">
-			<%
-				String visitType = providerPreference.getBillingVisitTypeDefault();				
-			%>
-	      <option value="" <%=visitType.length()==0?"selected":""%>>-- None --</option>
-						<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
-					    <% 
-					    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
-						ArrayList<ClinicNbr> nbrs = cnDao.findAll();	            
-	                    for (ClinicNbr clinic : nbrs) {
-							String valueString = String.format("%s | %s", clinic.getNbrValue(), clinic.getNbrString());
-							%>
-					    	<option value="<%=valueString%>" <%=visitType.startsWith(clinic.getNbrValue())?"selected":""%>><%=valueString%></option>
-					    <%}%>
-					    <% } else { %>
-							<option value="00| Clinic Visit"
-								<%=visitType.startsWith("00")?"selected":""%>><bean:message key="billing.billingCorrection.formClinicVisit"/>
-							</option>
-							<option value="01| Outpatient Visit"
-								<%=visitType.startsWith("01")?"selected":""%>><bean:message key="billing.billingCorrection.formOutpatientVisit"/>
-							</option>
-							<option value="02| Hospital Visit"
-								<%=visitType.startsWith("02")?"selected":""%>><bean:message key="billing.billingCorrection.formHospitalVisit"/>
-							</option>
-							<option value="03| ER"
-								<%=visitType.startsWith("03")?"selected":""%>><bean:message key="billing.billingCorrection.formER"/></option>
-							<option value="04| Nursing Home"
-								<%=visitType.startsWith("04")?"selected":""%>><bean:message key="billing.billingCorrection.formNursingHome"/>
-							</option>
-							<option value="05| Home Visit"
-								<%=visitType.startsWith("05")?"selected":""%>><bean:message key="billing.billingCorrection.formHomeVisit"/>
-							</option>
-							<% } %>
-	  </select>
+		  <br>
+		  <br>
+		  
+		  
+		  <label><bean:message key="provider.labelDefaultHospBilling"/></label>
 	  
 	  <br>
 	  
-	  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.msgVisitLocation"/> <% } %>:
-	  <select name="default_bill_visit_location">
-			<%
-				String selectedVisitLocation = providerPreference.getBillingVisitLocationDefault();
-				ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
-				List<ClinicLocation> clinicLocations = clinicLocationDao.findAll();			
-			%>
-	      <option value="" <%=selectedVisitLocation.length()==0?"selected":""%>>-- None --</option>
-				<%	for(int i=0; i<clinicLocations.size(); i++) {
-						ClinicLocation clinicLocation = clinicLocations.get(i);
-						String strLocation = clinicLocation.getId() + "";
-				%>
-							<option
-								value="<%=clinicLocation.getId()%>"
-								<%=selectedVisitLocation.length() != 0 && strLocation.startsWith(selectedVisitLocation)?"selected":""%>>
-							<%=clinicLocation.getClinicLocationName()%></option>
-							<%
-				}
-				%>
-	  </select>
 	  
+		  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr: <% } else { %> <label for="default_bill_visit_location"><bean:message key="provider.labelDefaultHospBillingVisitLocation"/>:</label> <% } %>
+		  
+		  
+		  <select name="default_bill_visit_location">
+				<%
+					String selectedVisitLocation = providerPreference.getBillingVisitLocationDefault();
+					ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
+					List<ClinicLocation> clinicLocations = clinicLocationDao.findAll();			
+				%>
+		      <option value="" <%=selectedVisitLocation.length()==0?"selected":""%>>-- None --</option>
+					<%	for(int i=0; i<clinicLocations.size(); i++) {
+							ClinicLocation clinicLocation = clinicLocations.get(i);
+							String strLocation = clinicLocation.getId();
+					%>
+								<option
+									value="<%=clinicLocation.getId()%>"
+									<%=selectedVisitLocation.length() != 0 && strLocation.startsWith(selectedVisitLocation)?"selected":""%>>
+								<%=clinicLocation.getClinicLocationName()%></option>
+								<%
+					}
+					%>
+		  </select>
+	  
+	  </div> <!-- end of "container" -->
 	  </div>
       </td>
   </tr>
