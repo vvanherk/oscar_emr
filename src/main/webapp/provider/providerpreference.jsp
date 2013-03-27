@@ -609,10 +609,10 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 	      <option value="" <%=selectedVisitLocation.length()==0?"selected":""%>>-- None --</option>
 				<%	for(int i=0; i<clinicLocations.size(); i++) {
 						ClinicLocation clinicLocation = clinicLocations.get(i);
-						String strLocation = clinicLocation.getClinicLocationNo();
+						String strLocation = clinicLocation.getId() + "";
 				%>
 							<option
-								value="<%=clinicLocation.getClinicLocationNo()%>"
+								value="<%=clinicLocation.getId()%>"
 								<%=selectedVisitLocation.length() != 0 && strLocation.startsWith(selectedVisitLocation)?"selected":""%>>
 							<%=clinicLocation.getClinicLocationName()%></option>
 							<%
