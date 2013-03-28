@@ -1,10 +1,10 @@
-CREATE TABLE spireAccessionNumberMap (
+CREATE TABLE IF NOT EXISTS spireAccessionNumberMap (
 	id int(10) NOT NULL auto_increment,
 	uaccn varchar(20) NOT NULL,
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE spireCommonAccessionNumber (
+CREATE TABLE IF NOT EXISTS spireCommonAccessionNumber (
 	id int(10) NOT NULL auto_increment,
 	caccn varchar(20) NOT NULL,
 	lab_no int(10),
