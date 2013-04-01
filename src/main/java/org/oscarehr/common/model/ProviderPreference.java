@@ -80,6 +80,7 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 	private boolean printQrCodeOnPrescriptions=Boolean.valueOf(OscarProperties.getInstance().getProperty("QR_CODE_ENABLED_PROVIDER_DEFAULT"));
 	private boolean printDateOnRx;
 	private boolean printPharmacyOnRx;
+	private boolean billingRefBoxDefaultChecked;
 	private int appointmentScreenLinkNameDisplayLength=3;
 	private int defaultDoNotDeleteBilling=0;
 	private String defaultDxCode=null;
@@ -280,6 +281,14 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 
 	public void setBillingVisitLocationDefault(String billingVisitLocationDefault) {
 		this.billingVisitLocationDefault = billingVisitLocationDefault;
+	}
+
+	public boolean isBillingRefBoxDefaultChecked() {
+		return billingRefBoxDefaultChecked;
+	}
+
+	public void setBillingRefBoxDefaultChecked(boolean billingRefBoxDefaultChecked) {
+		this.billingRefBoxDefaultChecked = billingRefBoxDefaultChecked;
 	}
 
 	public Collection<QuickLink> getAppointmentScreenQuickLinks() {
