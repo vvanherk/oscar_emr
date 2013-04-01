@@ -50,7 +50,7 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 	}
 
 	public List<BillingService> findBillingCodesByCode(String code, String region) {
-		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.serviceCode like (:code) and region = (:region) order by bs.billingserviceDate");
+		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.serviceCode like (:code) and (region = (:region) or region is null) order by bs.billingserviceDate");
 		query.setParameter("code", code + "%");
 		query.setParameter("region", region);
 
@@ -60,7 +60,7 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 	}
 	
 	public List<BillingService> findBillingCodesByCode(List<String> codes, String region) {
-		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.serviceCode in (:code) and region = (:region) order by bs.billingserviceDate");
+		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.serviceCode in (:code) and (region = (:region) or region is null) order by bs.billingserviceDate");
 		
 		query.setParameter("code", codes);
 		query.setParameter("region", region);
@@ -92,7 +92,7 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 
 	public List<BillingService> search(String str, String region,Date billingDate) {
 
-		Query query = entityManager.createQuery("select bs from BillingService bs where bs.region = (:region) and (bs.serviceCode like (:searchString) or bs.description like (:searchString)) and bs.billingserviceDate = (select max(b2.billingserviceDate) from BillingService b2 where b2.serviceCode = bs.serviceCode and b2.billingserviceDate <= (:billDate))");
+		Query query = entityManager.createQuery("select bs from BillingService bs where (bs.region = (:region) or bs.region is null) and (bs.serviceCode like (:searchString) or bs.description like (:searchString)) and bs.billingserviceDate = (select max(b2.billingserviceDate) from BillingService b2 where b2.serviceCode = bs.serviceCode and b2.billingserviceDate <= (:billDate))");
 		query.setParameter("region", region);
 		query.setParameter("searchString", str);
                 query.setParameter("billDate", billingDate);
@@ -108,7 +108,7 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 	}
 
 	public BillingService searchBillingCode(String str, String region, Date billingDate) {
-		Query query = entityManager.createQuery("select bs from BillingService bs where bs.region = (:region) and bs.serviceCode like (:searchStr) and bs.billingserviceDate = (select max(b2.billingserviceDate) from BillingService b2 where b2.serviceCode = bs.serviceCode and b2.billingserviceDate <= (:billDate))");
+		Query query = entityManager.createQuery("select bs from BillingService bs where (bs.region = (:region) or bs.region is null) and bs.serviceCode like (:searchStr) and bs.billingserviceDate = (select max(b2.billingserviceDate) from BillingService b2 where b2.serviceCode = bs.serviceCode and b2.billingserviceDate <= (:billDate))");
 
 		query.setParameter("region", region);
 		query.setParameter("searchStr", str + "%");
