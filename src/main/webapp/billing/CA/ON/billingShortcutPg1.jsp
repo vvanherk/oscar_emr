@@ -44,7 +44,6 @@
 <%
 	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
 	
-	BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("billingDefaultDao");
 	ProviderPreferenceDao providerPreferenceDao = (ProviderPreferenceDao)SpringUtils.getBean("providerPreferenceDao");
     ProviderPreference providerPreference = providerPreferenceDao.find(user_no);
 	BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("billingDefaultDao");

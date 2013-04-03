@@ -250,22 +250,6 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 	public void setDefaultDxCode(String defaultDxCode) {
 		this.defaultDxCode = defaultDxCode;
 	}
-	
-	public boolean isPrintDateOnRxSet() {
-		return printDateOnRx;
-	}
-
-	public void setPrintDateOnRx(boolean printDateOnRx) {
-		this.printDateOnRx = printDateOnRx;
-	}
-	
-	public boolean isPrintPharmacyOnRxSet() {
-		return printPharmacyOnRx;
-	}
-
-	public void setPrintPharmacyOnRx(boolean printPharmacyOnRx) {
-		this.printPharmacyOnRx = printPharmacyOnRx;
-	}
 
 	public String getBillingVisitTypeDefault() {
 		return billingVisitTypeDefault;
