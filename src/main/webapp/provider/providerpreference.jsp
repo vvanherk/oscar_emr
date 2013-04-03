@@ -207,6 +207,8 @@ function showHideRxPrintPref() {
 	}
 	
 	.container {
+		display: table-cell;
+		vertical-align: middle;
 		margin-top: 5px;
 		margin-bottom: 10px;
         width: 420px;
@@ -215,14 +217,21 @@ function showHideRxPrintPref() {
     
     .container label {
 		text-align:right;
-		width:140px;
-		float:left;
+		width: 200px;
+		float: left;
 	}
 	
     .container select {
 		margin-left: 10px;
-        float:left;
-		width:200px;
+        float: left;
+		width: 200px;
+    }
+    
+    .container input {
+		margin-top: 17px;
+		margin-left: 10px;
+        float: left;
+		width: 200px;
     }
 </style>
 </head>
@@ -589,6 +598,7 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 	%>
 		  </select>
 		  <br>
+		  
 		  <%
 		  boolean billingRefBoxDefaultChecked = false;
         
@@ -597,8 +607,9 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 		  }
 	      %>
     
-		  <bean:message key="provider.labelBillingRefBoxDefaultChecked"/>:
+		  <label for="billing_ref_box_default_checked"><bean:message key="provider.labelBillingRefBoxDefaultChecked"/>:</label>
 		  <input type="checkbox" name="billing_ref_box_default_checked" <%=billingRefBoxDefaultChecked? "checked" : ""%>>
+		  
 		</div>
 	  
 	  <br>
