@@ -140,14 +140,13 @@
 			    ctlBillForm = curBillForm;
 			} else {
 			    // check user preference to show a bill form
-			    ProviderPreferenceDao providerPreferenceDao=(ProviderPreferenceDao)SpringUtils.getBean("providerPreferenceDao");
 			    ProviderPreference providerPreference=null;
 			    
                 if( apptProvider_no.equalsIgnoreCase("none") ) {
-                	providerPreference = providerPreferenceDao.find(user_no);
+                	providerPreference = preferenceDao.find(user_no);
                 }
                 else {
-                	providerPreference = providerPreferenceDao.find(apptProvider_no);
+                	providerPreference = preferenceDao.find(apptProvider_no);
                 }
 			    
 			    if (providerPreference!=null) {
@@ -307,6 +306,22 @@
             }                
             String dxCode = getDefaultValue(paraName, vecHistD, "diagnostic_code");
 
+			//provider
+			paraName = request.getParameter("xml_provider");
+			if(paraName != null && paraName.indexOf("|")!=-1)
+				paraName = paraName.substring( 0, paraName.indexOf("|") );
+			
+			String defaultProvider = null;
+			if (preference != null)
+				defaultProvider = preference.getBillingProviderDefault();
+			if (defaultProvider != null)
+			paraName = (paraName == null || paraName.length() == 0? defaultProvider : paraName);
+			String xml_provider = getDefaultValue(paraName, vecHist, "defaultProvider");
+			if(!"".equals(xml_provider)) {
+			defaultProvider = xml_provider;
+			} else {
+			defaultProvider = defaultProvider==null? "":defaultProvider;
+			}
 
 			//visitType
 			paraName = request.getParameter("xml_visittype");
@@ -1642,14 +1657,19 @@ function changeSite(sel) {
 						<b>Select Provider</b>
 					    </option>
 <%	        for (int i = 0; i < vecProvider.size(); i++) {
-		    propT = (Properties) vecProvider.get(i);
-                    
-                    %>
+				propT = (Properties) vecProvider.get(i);
+				String proOHIP = propT.getProperty("proOHIP","").substring(0,propT.getProperty("proOHIP","").indexOf("|"));
+				String selected = "";
+				if ( defaultProvider.equals(proOHIP) ) {
+					selected = "selected";
+				} else if ( defaultProvider.length() == 0 && providerview.equals(proOHIP) ) {
+					selected = "selected";
+				}
+				//MiscUtils.getLogger().info("OUT: " + propT.getProperty("proOHIP") + " | " + defaultProvider);
+%>
 					    <option value="<%=propT.getProperty("proOHIP")%>"
-						    <%=providerview.equals(propT.getProperty("proOHIP","").substring(0,propT.getProperty("proOHIP","").indexOf("|")))?"selected":""%>>
-						<b><%=propT.getProperty("last_name")%>,
-						   <%=propT.getProperty("first_name")%></b>
-					    </option>
+							<%=selected%>><b><%=propT.getProperty("last_name")%>,
+						<%=propT.getProperty("first_name")%></b></option>
 <%		}
 	    }
 %>

@@ -86,6 +86,7 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 	private String defaultDxCode=null;
 	private String billingVisitTypeDefault="";
 	private String billingVisitLocationDefault="";
+	private String billingProviderDefault="";
 	
 	
 	@CollectionOfElements(targetElement = String.class)
@@ -289,6 +290,14 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 
 	public void setBillingRefBoxDefaultChecked(boolean billingRefBoxDefaultChecked) {
 		this.billingRefBoxDefaultChecked = billingRefBoxDefaultChecked;
+	}
+
+	public String getBillingProviderDefault() {
+		return billingProviderDefault;
+	}
+
+	public void setBillingProviderDefault(String billingProviderDefault) {
+		this.billingProviderDefault = billingProviderDefault;
 	}
 
 	public Collection<QuickLink> getAppointmentScreenQuickLinks() {

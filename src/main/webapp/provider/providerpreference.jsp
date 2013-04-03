@@ -25,6 +25,7 @@
 <%@page import="org.oscarehr.common.model.Provider"%>
 <%@page import="org.oscarehr.common.model.ClinicLocation"%>
 <%@ page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@ page import="oscar.SxmlMisc" %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 <!--
@@ -687,6 +688,29 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 					}
 					%>
 		  </select>
+		<br>
+
+		<%
+	  ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+	  List<Provider> providerList = providerDao.getActiveProviders();
+	  %>
+
+		<label for="default_bill_provider">Default Provider:</label>
+	  <select name="default_bill_provider">
+			<%
+				String billingProvider = providerPreference.getBillingProviderDefault();
+			%>
+	      <option value="no" <%=billingProvider.length()==0?"selected":""%>>-- None --</option>
+					    <%
+					    for (Provider p : providerList) {
+					    %>
+							<option value="<%=p.getProviderNo()%>"
+								<%=billingProvider.startsWith(p.getProviderNo())?"selected":""%>><%=p.getFormattedName()%>
+							</option>
+						<% 
+						} 
+						%>
+	  </select>
 	  
 	  </div> <!-- end of "container" -->
 	  </div>

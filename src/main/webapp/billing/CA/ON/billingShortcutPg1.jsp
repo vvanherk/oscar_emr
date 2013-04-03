@@ -50,6 +50,7 @@
 %>
 <%
   boolean bHospitalBilling = true;
+  String            defaultProvider   = "";
   String            clinicview        = bHospitalBilling? oscarVariables.getProperty("clinic_hospital", "") : oscarVariables.getProperty("clinic_view", "");
   String            clinicNo          = oscarVariables.getProperty("clinic_no", "");
   String            visitType         = bHospitalBilling? "02" : oscarVariables.getProperty("visit_type", "");
@@ -264,6 +265,18 @@
 
   String paraName = request.getParameter("dxCode");
   String dxCode = getDefaultValue(paraName, vecHistD, "diagnostic_code");
+
+  //provider
+  paraName = request.getParameter("xml_provider");
+  defaultProvider = providerPreference.getBillingProviderDefault();
+  if (defaultProvider != null)
+	paraName = (paraName == null || paraName.length() == 0? defaultProvider : paraName);
+  String xml_provider = getDefaultValue(paraName, vecHist, "defaultProvider");
+  if(!"".equals(xml_provider)) {
+    defaultProvider = xml_provider;
+  } else {
+    defaultProvider = defaultProvider==null? "":defaultProvider;
+  }
 
   //visitType
   paraName = request.getParameter("xml_visittype");
@@ -1122,9 +1135,15 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 							<%
 				for(int i=0; i<vecProvider.size(); i++) {
 					propT = (Properties) vecProvider.get(i);
+					String selected = "";
+					if ( defaultProvider.equals(propT.getProperty("proOHIP")) ) {
+						selected = "selected";
+					} else if ( providerview.equals(propT.getProperty("proOHIP")) ) {
+						//selected = "selected";
+					}
 				%>
 							<option value="<%=propT.getProperty("proOHIP")%>"
-								<%=providerview.equals(propT.getProperty("proOHIP"))?"selected":""%>><b><%=propT.getProperty("last_name")%>,
+								<%=selected%>><b><%=propT.getProperty("last_name")%>,
 							<%=propT.getProperty("first_name")%></b></option>
 							<%	}
 				}

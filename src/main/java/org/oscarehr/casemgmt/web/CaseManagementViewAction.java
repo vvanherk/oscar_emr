@@ -1024,7 +1024,7 @@ public class CaseManagementViewAction extends BaseCaseManagementViewAction {
 
 			for (CachedDemographicNote cachedDemographicNote : linkedNotes) {
 				try {
-
+					logger.info("HI MOM");
 					// filter on issues to display
 					if (issueCodesToDisplay == null || hasIssueToBeDisplayed(cachedDemographicNote, issueCodesToDisplay)) {
 						// filter on role based access
