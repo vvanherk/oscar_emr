@@ -102,6 +102,16 @@ public final class ProviderPreferencesUIBean {
 				temp = "";
 			providerPreference.setBillingProviderDefault(temp);
 		}
+		
+		temp = StringUtils.trimToNull(request.getParameter("default_bill_visit_type"));
+		if (temp == null) 
+			temp = "";
+		providerPreference.setBillingVisitTypeDefault(temp);
+		
+		temp = StringUtils.trimToNull(request.getParameter("default_bill_visit_location"));
+		if (temp == null) 
+			temp = "";
+		providerPreference.setBillingVisitLocationDefault(temp);
 
 		temp = StringUtils.trimToNull(request.getParameter("color_template"));
 		if (temp != null) providerPreference.setColourTemplate(temp);
