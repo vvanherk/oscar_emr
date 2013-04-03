@@ -37,6 +37,7 @@
   Properties prop = null;
   String param = request.getParameter("param")==null?"":request.getParameter("param") ;
   String param2 = request.getParameter("param2")==null?"":request.getParameter("param2") ;
+  String param3 = request.getParameter("param3")==null?"":request.getParameter("param3") ;  
   String toname = request.getParameter("toname")==null?"":request.getParameter("toname") ;
   String toaddress1 = request.getParameter("toaddress1")==null?"":request.getParameter("toaddress1") ;
   String toaddress2 = request.getParameter("toaddress2")==null?"":request.getParameter("toaddress2") ;
@@ -121,7 +122,14 @@
 		  opener.<%=param2%> = data2;
 		  self.close();
 		}
-		<%}}%>
+		<%if(param3.length()>0) {%>
+		function typeInData3WithSpecialty(data1, data2, data3) {
+		  opener.<%=param%> = data1;
+		  opener.<%=param2%> = data2;
+		  opener.<%=param3%> = data3;
+		  self.close();
+		}
+		<%}}}%>
                 <%if(toname.length()>0){%>
                 function typeInData3(billno, toname, toaddress1, toaddress2, tophone, tofax){
                 self.close();
@@ -165,6 +173,8 @@
 		value="<%=StringEscapeUtils.escapeHtml(param)%>">
 	<input type='hidden' name='param2'
 		value="<%=StringEscapeUtils.escapeHtml(param2)%>">
+	<input type='hidden' name='param3'
+		value="<%=StringEscapeUtils.escapeHtml(param3)%>">
 	<input type='hidden' name='toname'
 		value="<%=StringEscapeUtils.escapeHtml(toname)%>">
 	<input type='hidden' name='toaddress1'
@@ -199,9 +209,13 @@
                         if ( param2.length() <= 0){
                             strOnClick = "typeInData3('" + prop.getProperty("referral_no","") + "', '" + prop.getProperty("to_name", "") + "', '" + prop.getProperty("to_address1", "") + "', '" + prop.getProperty("to_address2", "") + "', '" + prop.getProperty("phone", "") + "', '" + prop.getProperty("to_fax", "") + "')" ;
                         } else {
-                            strOnClick = param2.length()>0? "typeInData2('" + prop.getProperty("referral_no", "") + "','"+StringEscapeUtils.escapeJavaScript(prop.getProperty("last_name", "")+ "," + prop.getProperty("first_name", "")) + "')"
-				: "typeInData1('" + prop.getProperty("referral_no", "") + "')";
-                                }
+							if (param3.length() > 0) {
+								strOnClick = "typeInData3WithSpecialty('" + prop.getProperty("referral_no", "") + "','"+StringEscapeUtils.escapeJavaScript(prop.getProperty("last_name", "")+ "," + prop.getProperty("first_name", "")) + "','"+StringEscapeUtils.escapeJavaScript(prop.getProperty("specialty", "")) + "')";
+							} else {
+							
+                            strOnClick = param2.length()>0? "typeInData2('" + prop.getProperty("referral_no", "") + "','"+StringEscapeUtils.escapeJavaScript(prop.getProperty("last_name", "")+ "," + prop.getProperty("first_name", "")) + "')" : "typeInData1('" + prop.getProperty("referral_no", "") + "')";
+							}
+						}
         %>
 	<tr align="center" bgcolor="<%=bgColor%>" align="center"
 		onMouseOver="this.style.cursor='hand';this.style.backgroundColor='pink';"
@@ -228,11 +242,11 @@
 %> <script language="JavaScript">
 <!--
 function last() {
-  document.nextform.action="searchRefDoc.jsp?param=<%=URLEncoder.encode(param,"UTF-8")%>&param2=<%=URLEncoder.encode(param2,"UTF-8")%>&toname=<%=URLEncoder.encode(toname,"UTF-8")%>&toaddress1=<%=URLEncoder.encode(toaddress1,"UTF-8")%>&toaddress2=<%=URLEncoder.encode(toaddress2,"UTF-8")%>&tophone=<%=URLEncoder.encode(tophone,"UTF-8")%>&tofax=<%=URLEncoder.encode(tofax,"UTF-8")%>&keyword=<%=request.getParameter("keyword")%>&search_mode=<%=request.getParameter("search_mode")%>&orderby=<%=request.getParameter("orderby")%>&limit1=<%=nLastPage%>&limit2=<%=strLimit2%>" ;
+  document.nextform.action="searchRefDoc.jsp?param=<%=URLEncoder.encode(param,"UTF-8")%>&param2=<%=URLEncoder.encode(param2,"UTF-8")%>&param3=<%=URLEncoder.encode(param3,"UTF-8")%>&toname=<%=URLEncoder.encode(toname,"UTF-8")%>&toaddress1=<%=URLEncoder.encode(toaddress1,"UTF-8")%>&toaddress2=<%=URLEncoder.encode(toaddress2,"UTF-8")%>&tophone=<%=URLEncoder.encode(tophone,"UTF-8")%>&tofax=<%=URLEncoder.encode(tofax,"UTF-8")%>&keyword=<%=request.getParameter("keyword")%>&search_mode=<%=request.getParameter("search_mode")%>&orderby=<%=request.getParameter("orderby")%>&limit1=<%=nLastPage%>&limit2=<%=strLimit2%>" ;
   document.nextform.submit();
 }
 function next() {
-  document.nextform.action="searchRefDoc.jsp?param=<%=URLEncoder.encode(param,"UTF-8")%>&param2=<%=URLEncoder.encode(param2,"UTF-8")%>&toname=<%=URLEncoder.encode(toname,"UTF-8")%>&toaddress1=<%=URLEncoder.encode(toaddress1,"UTF-8")%>&toaddress2=<%=URLEncoder.encode(toaddress2,"UTF-8")%>&tophone=<%=URLEncoder.encode(tophone,"UTF-8")%>&tofax=<%=URLEncoder.encode(tofax,"UTF-8")%>&keyword=<%=request.getParameter("keyword")%>&search_mode=<%=request.getParameter("search_mode")%>&orderby=<%=request.getParameter("orderby")%>&limit1=<%=nNextPage%>&limit2=<%=strLimit2%>" ;
+  document.nextform.action="searchRefDoc.jsp?param=<%=URLEncoder.encode(param,"UTF-8")%>&param2=<%=URLEncoder.encode(param2,"UTF-8")%>&param3=<%=URLEncoder.encode(param3,"UTF-8")%>&toname=<%=URLEncoder.encode(toname,"UTF-8")%>&toaddress1=<%=URLEncoder.encode(toaddress1,"UTF-8")%>&toaddress2=<%=URLEncoder.encode(toaddress2,"UTF-8")%>&tophone=<%=URLEncoder.encode(tophone,"UTF-8")%>&tofax=<%=URLEncoder.encode(tofax,"UTF-8")%>&keyword=<%=request.getParameter("keyword")%>&search_mode=<%=request.getParameter("search_mode")%>&orderby=<%=request.getParameter("orderby")%>&limit1=<%=nNextPage%>&limit2=<%=strLimit2%>" ;
   document.nextform.submit();
 }
 //-->
