@@ -1450,6 +1450,10 @@ public class RxPrescriptionData {
                         days = days * r;
                     }
                     //    p("days",Integer.toString(days));
+                    
+                    // End date should be on the day the last pill/unit of medication is taken
+                    days--;
+                    
                     if (days > 0) {
                         cal.add(GregorianCalendar.DATE, days);
                     }
