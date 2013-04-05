@@ -936,6 +936,7 @@ public class RxPrescriptionData {
          */
         String provider_no = bean.getProviderNo();
         int demographic_no = bean.getDemographicNo();
+        int clinic_no = bean.getClinicNo();
         String date_prescribed = oscar.oscarRx.util.RxUtil.DateToString(oscar.oscarRx.util.RxUtil.Today(), "yyyy/MM/dd");
         String date_printed = date_prescribed;
         
@@ -947,7 +948,7 @@ public class RxPrescriptionData {
         oscar.oscarRx.data.RxProviderData.Provider provider = null;
         try {
             patient = RxPatientData.getPatient(demographic_no);
-            provider = new oscar.oscarRx.data.RxProviderData().getProvider(provider_no);
+            provider = new oscar.oscarRx.data.RxProviderData().getProvider(provider_no, clinic_no);
         } catch (Exception e) {
             logger.error("unexpected error", e);
         }

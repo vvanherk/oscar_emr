@@ -114,6 +114,10 @@ public class EctConsultationFormRequestAction extends Action {
                 
                 String[] format = new String[] {"yyyy-MM-dd","yyyy/MM/dd"};
 
+
+		String clinicNo = request.getParameter("clinicNo");
+		request.getSession().setAttribute("clinic_id", clinicNo);
+		
 		if (submission.startsWith("Submit")) {
 
 			try {				

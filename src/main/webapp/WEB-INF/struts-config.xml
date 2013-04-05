@@ -41,6 +41,7 @@
 		</form-bean>
 		<form-bean name="clinicForm" type="org.apache.struts.validator.DynaValidatorForm">
 			<form-property name="clinic" type="org.oscarehr.common.model.Clinic" />
+			<form-property name="clinics" type="java.util.List" />
 		</form-bean>
 		<form-bean name="olisPreferences" type="org.oscarehr.olis.model.OLISSystemPreferences"/>
 
@@ -2228,6 +2229,7 @@
 
 		<action path="/admin/ManageClinic" name="clinicForm" type="org.springframework.web.struts.DelegatingActionProxy" parameter="method" scope="request">
 			<forward name="success" path="/admin/clinicAdmin.jsp" />
+			<forward name="failure" path="/admin/clinicAdmin.jsp" />
 		</action>
 
 		<action path="/olis/Preferences" name="olisPreferences" type="org.oscarehr.olis.OLISPreferencesAction" parameter="method" scope="request">

@@ -108,11 +108,14 @@ String rePrint = (String)request.getSession().getAttribute("rePrint");
 oscar.oscarRx.pageUtil.RxSessionBean bean;
 oscar.oscarRx.data.RxProviderData.Provider provider;
 String signingProvider;
+int clinicNo;
 if( rePrint != null && rePrint.equalsIgnoreCase("true") ) {
     bean = (oscar.oscarRx.pageUtil.RxSessionBean)session.getAttribute("tmpBeanRX");
     signingProvider = bean.getStashItem(0).getProviderNo();
+    clinicNo = bean.getClinicNo();
+    
     rxDate = bean.getStashItem(0).getRxDate();
-    provider = new oscar.oscarRx.data.RxProviderData().getProvider(signingProvider);
+    provider = new oscar.oscarRx.data.RxProviderData().getProvider(signingProvider, clinicNo);
 //    session.setAttribute("tmpBeanRX", null);
     String ip = request.getRemoteAddr();
     //LogAction.addLog((String) session.getAttribute("user"), LogConst.UPDATE, LogConst.CON_PRESCRIPTION, String.valueOf(bean.getDemographicNo()), ip);
@@ -131,7 +134,7 @@ else {
     }
     rePrint = "";
     signingProvider = bean.getProviderNo();
-    provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo());
+    provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo(), bean.getClinicNo());
 }
 
 
