@@ -33,7 +33,11 @@
 <%@ taglib uri="/WEB-INF/caisi-tag.tld" prefix="caisi" %>
 <%@ taglib uri="/WEB-INF/special_tag.tld" prefix="special" %>
 <!-- end -->
-<%@ page import="oscar.OscarProperties, oscar.oscarClinic.ClinicData, java.util.*" %>
+<%@ page import="oscar.OscarProperties, java.util.*" %>
+<%@ page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@ page import="org.oscarehr.common.model.Clinic" %>
+
+<%@ page import="org.oscarehr.util.MiscUtils" %>
 
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.common.model.ConsultationRequestExt"%>
@@ -67,7 +71,26 @@
     }
 
     OscarProperties props = OscarProperties.getInstance();
-    ClinicData clinic = new ClinicData();
+    
+    ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+	String clinicNo = request.getParameter("clinicNo");
+	Clinic clinic = null;
+	
+	try {
+		int clinicNoAsInt = Integer.parseInt(clinicNo);
+		clinic = clinicDao.find(clinicNoAsInt);
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("Unable to parse clinic number.", e);
+	}
+	
+	// Error check
+	if (clinic == null)
+		clinic = clinicDao.getClinic();
+	if (clinic == null) {
+		MiscUtils.getLogger().error("No clinic found in OSCAR!");
+		return;
+	}
+	
     String strPhones = clinic.getClinicDelimPhone();
 
     if (strPhones == null) { strPhones = ""; }
@@ -114,13 +137,13 @@
       		}
             // default address
         if (defaultSite!=null) {
-            clinic.setClinic_address(defaultSite.getAddress());
-            clinic.setClinic_city(defaultSite.getCity());
-            clinic.setClinic_province(defaultSite.getProvince());
-            clinic.setClinic_postal(defaultSite.getPostal());
-            clinic.setClinic_phone(defaultSite.getPhone());
-            clinic.setClinic_fax(defaultSite.getFax());
-            clinic.setClinic_name(defaultSite.getName());
+            clinic.setClinicAddress(defaultSite.getAddress());
+            clinic.setClinicCity(defaultSite.getCity());
+            clinic.setClinicProvince(defaultSite.getProvince());
+            clinic.setClinicPostal(defaultSite.getPostal());
+            clinic.setClinicPhone(defaultSite.getPhone());
+            clinic.setClinicFax(defaultSite.getFax());
+            clinic.setClinicName(defaultSite.getName());
    			defaultAddrName=defaultSite.getName();
         }
     } else
@@ -149,12 +172,12 @@
         }
         // default address
         //clinic.setClinic_name();
-        clinic.setClinic_address(temp1[0]);
-        clinic.setClinic_city(temp2[0]);
-        clinic.setClinic_province(temp3[0]);
-        clinic.setClinic_postal(temp4[0]);
-        clinic.setClinic_phone(temp5[0]);
-        clinic.setClinic_fax(temp6[0]);
+        clinic.setClinicAddress(temp1[0]);
+        clinic.setClinicCity(temp2[0]);
+        clinic.setClinicProvince(temp3[0]);
+        clinic.setClinicPostal(temp4[0]);
+        clinic.setClinicPhone(temp5[0]);
+        clinic.setClinicFax(temp6[0]);
     }
 
     ConsultationRequestExtDao consultationRequestExtDao = (ConsultationRequestExtDao)SpringUtils.getBean("consultationRequestExtDao");
@@ -422,7 +445,14 @@
 							out.print("Please reply");
                     } else { %>
                         <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgPleaseReplyPart1"/>
-               			<%=reqFrm.getClinicName()%>
+                        <c:choose>
+                        <c:when test="${empty infirmaryView_programAddress}">
+							<%=clinic.getClinicName()%>
+						</c:when>
+						<c:otherwise>
+							<%=reqFrm.getClinicName()%>
+						</c:otherwise>
+						</c:choose>
                		<% } %>
                         <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgPleaseReplyPart2"/>
                         </b>

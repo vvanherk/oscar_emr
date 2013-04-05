@@ -27,6 +27,7 @@
  */
 -->
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
+<%@ include file="/taglibs.jsp"%>
 <%
     if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
     String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
@@ -37,12 +38,24 @@
 </security:oscarSec>
 
 <%@ page import="java.util.*,oscar.oscarReport.reportByTemplate.*"%>
-<%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
-<%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
-<%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
+
+<%
+String clinicNo = request.getParameter("clinicNo");
+if (clinicNo == null)
+	clinicNo = (String) request.getAttribute("clinicNo");
+if (clinicNo == null)	
+	clinicNo = "";
+%>
+
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
+<script src="<c:out value="../js/jquery.js"/>"></script>
+
+<script>
+jQuery.noConflict();	
+</script>
+
 <title>Clinic</title>
 <link rel="stylesheet" type="text/css"
 	href="../share/css/OscarStandardLayout.css">
@@ -146,46 +159,88 @@ br {
 		</td>
 	</tr>
 	<tr>
-		<td class="MainTableLeftColumn" valign="top" width="160px;">
-		&nbsp;</td>
+		<td class="MainTableLeftColumn" valign="top" width="160px;">		
+			<form id="viewForm" name="viewForm" action="<%= request.getContextPath()%>/admin/ManageClinic.do">
+				<input type="hidden" name="method" value="view" />
+				<label>Clinic: </label>
+				<select id="clinicNo" name="clinicNo" onChange="jQuery('#viewForm').submit();">
+					<logic:iterate name="clinics" id="cl">
+						<option <logic:equal name="cl" property="id" value="<%=clinicNo%>"> selected </logic:equal> value="<bean:write name="cl" property="id"/>"> <bean:write name="cl" property="clinicName"/> </option>
+					</logic:iterate>
+				</select>
+			</form>
+		</td>
+		
 		<td class="MainTableRightColumn" valign="top">
-		<fieldset><legend>Clinic Details</legend> <html:form
-			action="/admin/ManageClinic">
-			<html:hidden property="clinic.id" />
-			<input type="hidden" name="method" value="update" />
-
-			<label for="clinic.clinicName">Clinic Name</label>
-			<html:text property="clinic.clinicName" />
-			<br />
-			<label for="clinic.clinicAddress">Clinic Address</label>
-			<html:text property="clinic.clinicAddress" />
-			<br />
-			<label for="clinic.clinicCity">Clinic City</label>
-			<html:text property="clinic.clinicCity" />
-			<br />
-			<label for="clinic.clinicPostal">Clinic Postal</label>
-			<html:text property="clinic.clinicPostal" />
-			<br />
-			<label for="clinic.clinicPhone">Clinic Phone</label>
-			<html:text property="clinic.clinicPhone" />
-			<br />
-			<label for="clinic.clinicFax">Clinic Fax</label>
-			<html:text property="clinic.clinicFax" />
-			<br />
-			<label for="clinic.clinicLocationCode">Clinic Location Code</label>
-			<html:text property="clinic.clinicLocationCode" />
-			<br />
-			<html:hidden property="clinic.status" value="A" />
-			<br />
-			<label for="clinic.clinicProvince">Clinic Province</label>
-			<html:text property="clinic.clinicProvince" />
-			<br />
-			<label for="clinic.clinicDelimPhone">multi phone</label>
-			<html:text property="clinic.clinicDelimPhone" /> (Delimited by |) <br />
-			<label for="clinic.clinicDelimFax">multi fax</label>
-			<html:text property="clinic.clinicDelimFax" />  (Delimited by |)<br />
-			<input type="submit" value="submit" />
-		</html:form></fieldset>
+			<c:if test="%{clinic==null}">
+				<div>
+					No Clinic was found.
+				</div>
+			</c:if>
+		
+			<logic:notEmpty name="actionResult">
+				<div>
+					<b>Action 
+					<logic:equal name="actionResult" value="0">Succeeded</logic:equal>
+					<logic:notEqual name="actionResult" value="0">Failed</logic:notEqual>
+					with message</b>:
+					<br>
+					<bean:write name="actionResultMessage" />
+					<br><br>
+				</div>
+			</logic:notEmpty>
+			
+			<fieldset><legend>Clinic Details</legend> 
+				<html:form action="/admin/ManageClinic">
+					<input type="hidden" name="clinicNo" value="<%=clinicNo%>" />
+					<html:hidden property="clinic.id" />
+					<input type="hidden" name="method" value="update" />
+		
+					<label for="clinic.clinicName">Clinic Name</label>
+					<html:text property="clinic.clinicName" />
+					<br />
+					<label for="clinic.clinicAddress">Clinic Address</label>
+					<html:text property="clinic.clinicAddress" />
+					<br />
+					<label for="clinic.clinicCity">Clinic City</label>
+					<html:text property="clinic.clinicCity" />
+					<br />
+					<label for="clinic.clinicPostal">Clinic Postal</label>
+					<html:text property="clinic.clinicPostal" />
+					<br />
+					<label for="clinic.clinicPhone">Clinic Phone</label>
+					<html:text property="clinic.clinicPhone" />
+					<br />
+					<label for="clinic.clinicFax">Clinic Fax</label>
+					<html:text property="clinic.clinicFax" />
+					<br />
+					<label for="clinic.clinicLocationCode">Clinic Location Code</label>
+					<html:text property="clinic.clinicLocationCode" />
+					<br />
+					<html:hidden property="clinic.status" value="A" />
+					<br />
+					<label for="clinic.clinicProvince">Clinic Province</label>
+					<html:text property="clinic.clinicProvince" />
+					<br />
+					<label for="clinic.clinicDelimPhone">multi phone</label>
+					<html:text property="clinic.clinicDelimPhone" /> (Delimited by |) <br />
+					<label for="clinic.clinicDelimFax">multi fax</label>
+					<html:text property="clinic.clinicDelimFax" />  (Delimited by |)<br />
+					
+					<input type="submit" value="submit" />
+					<input type="button" name="deleteButton" value="delete" onClick="jQuery('#deleteForm').submit();" />
+					<input type="button" name="newButton" value="new" onClick="jQuery('#newForm').submit();" />
+				</html:form>
+				
+				<form id="deleteForm" name="deleteForm" action="<%=request.getContextPath()%>/admin/ManageClinic.do">
+					<input type="hidden" name="clinicNo" value="<%=clinicNo%>" />
+					<input type="hidden" name="method" value="delete" />
+				</form>
+				
+				<form id="newForm" name="newForm" action="<%=request.getContextPath()%>/admin/ManageClinic.do">
+					<input type="hidden" name="method" value="newClinic" />
+				</form>
+			</fieldset>
 		</td>
 	</tr>
 	<tr>
@@ -194,4 +249,5 @@ br {
 		<td class="MainTableBottomRowRightColumn">&nbsp;</td>
 	</tr>
 </table>
+
 </html:html>

@@ -47,6 +47,7 @@ public class RxSessionBean  implements java.io.Serializable {
 
     private String providerNo = null;
     private int demographicNo = 0;
+    private int clinicNo = 0;
     private String view = "Active";
 
     private ArrayList<RxPrescriptionData.Prescription> stash = new ArrayList();
@@ -139,6 +140,13 @@ public class RxSessionBean  implements java.io.Serializable {
     public void setDemographicNo(int RHS) {
         this.demographicNo = RHS;
     }
+    public int getClinicNo() {
+        return this.clinicNo;
+    }
+    public void setClinicNo(int clinicNo) {
+        this.clinicNo = clinicNo;
+    }
+    
 
     public ArrayList getAttributeNames() {
 	return this.attributeNames;

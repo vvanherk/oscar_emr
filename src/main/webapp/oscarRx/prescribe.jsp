@@ -2,6 +2,9 @@
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
 <%@page import="oscar.oscarRx.data.RxDrugData,java.util.*" %>
+<%@page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@page import="org.oscarehr.common.model.Clinic" %>
+<%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="java.text.SimpleDateFormat" %>
 <%@page import="java.util.Calendar" %>
 <%@page import="oscar.oscarRx.data.*" %>
@@ -118,6 +121,9 @@ if(listRxDrugs!=null){
                 drugName=drugName.replace("Â","");
                 drugName=drugName.replace("¬","");
                 
+		//ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+		ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+		List<Clinic> clinics = clinicDao.findAll();
 %>
 
 <fieldset style="margin-top:2px;width:620px;" id="set_<%=rand%>">
@@ -174,6 +180,20 @@ if(listRxDrugs!=null){
            <input id="rx_save_updates_<%=rand%>" type="button" value="Save Changes" onclick="saveLinks('<%=rand%>')"/>
        </div>
        <div id="rx_more_<%=rand%>" style="display:none;padding:2px;">
+			<label title="Clinic">Clinic: </label>
+			<select id="clinic_<%=rand%>" name="clinic_<%=rand%>">
+			<%
+			String sessionClinicId = (String) session.getAttribute("clinic_id");
+			if (sessionClinicId == null)
+				sessionClinicId = "";
+			for ( Clinic clinic : clinics) {
+			%>
+				<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+			<%
+			}
+			%>
+			</select>
+			<br>
        	  <bean:message key="WriteScript.msgPrescribedRefill"/>:
        	  &nbsp;
        	  <bean:message key="WriteScript.msgPrescribedRefillDuration"/>
