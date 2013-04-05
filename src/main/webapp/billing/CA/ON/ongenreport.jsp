@@ -132,8 +132,8 @@
 				for (int i = 0; i < lProvider.size(); i++) {
 					BillingProviderData dataProvider = (BillingProviderData) lProvider.get(i);
 					// not for group provider
-					if (!(dataProvider.getBillingGroupNo().equals("") || dataProvider.getBillingGroupNo().equals("0000")))
-						continue;
+					//if (!(dataProvider.getBillingGroupNo().equals("") || dataProvider.getBillingGroupNo().equals("0000")))
+					//	continue;
 					
 					diskId = obj.createNewSoloDiskName(dataProvider.getProviderNo(), (String) session
 							.getAttribute("user"));
