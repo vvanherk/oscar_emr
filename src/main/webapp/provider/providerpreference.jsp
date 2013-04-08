@@ -593,6 +593,19 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 							} 
 							%>
 		  </select>
+		  <br>
+		  
+		  <%
+		  boolean useBillingProviderFromPreviousBill = false;
+        
+		  if (providerPreference != null) {
+		  	useBillingProviderFromPreviousBill = providerPreference.isUseBillingProviderFromPreviousBillSet();
+		  }
+	      %>
+    
+		  <label for="use_billing_provider_from_previous_bill"><bean:message key="provider.labelUseBillingProviderFromPreviousBill"/>:</label>
+		  <input type="checkbox" name="use_billing_provider_from_previous_bill" <%=useBillingProviderFromPreviousBill? "checked" : ""%>>
+		  
 		</div>
 		
 		<br>

@@ -103,6 +103,12 @@ public final class ProviderPreferencesUIBean {
 			providerPreference.setBillingProviderDefault(temp);
 		}
 		
+		temp = StringUtils.trimToNull(request.getParameter("use_billing_provider_from_previous_bill"));
+		if (temp != null) 
+			providerPreference.setUseBillingProviderFromPreviousBill(true);
+		else
+			providerPreference.setUseBillingProviderFromPreviousBill(false);
+		
 		temp = StringUtils.trimToNull(request.getParameter("default_bill_visit_type"));
 		if (temp == null) 
 			temp = "";

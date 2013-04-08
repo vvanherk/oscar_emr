@@ -268,7 +268,10 @@
 
   //provider
   paraName = request.getParameter("xml_provider");
-  defaultProvider = providerPreference.getBillingProviderDefault();
+  if (providerPreference.isUseBillingProviderFromPreviousBillSet())
+    defaultProvider = (String) session.getAttribute("previous_billing_provider");
+  if (defaultProvider == null || defaultProvider.length() == 0)
+    defaultProvider = providerPreference.getBillingProviderDefault();
   if (defaultProvider != null)
 	paraName = (paraName == null || paraName.length() == 0? defaultProvider : paraName);
   String xml_provider = getDefaultValue(paraName, vecHist, "defaultProvider");
