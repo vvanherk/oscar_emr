@@ -151,6 +151,8 @@
 
     String billingDate = request.getParameter("billDate");
 	String [] tempDate = billingDate.split("\\s");
+	
+	session.setAttribute( "hospital_billing_previous_billing_dates", billingDate );
 
     for( int idx = 0; idx < tempDate.length; ++idx ) {
     }
