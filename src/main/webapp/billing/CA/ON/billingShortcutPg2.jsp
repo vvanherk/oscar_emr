@@ -388,6 +388,11 @@
 			
 			}
 		} // end of for loop
+		
+		// Save provider used for this bill in the session
+		String providerNo = request.getParameter("xml_provider");
+		session.setAttribute("previous_billing_provider", providerNo);
+		
 		msg = "<br>Billing records were added.<br>";
 		if("Save".equals(request.getParameter("submit"))) {
 			msg += "<script language=\"JavaScript\"> self.close();</script>";
