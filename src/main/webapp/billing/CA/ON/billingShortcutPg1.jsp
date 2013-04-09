@@ -1637,19 +1637,6 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 <script type="text/javascript">//<![CDATA[
     // the default multiple dates selected, first time the calendar is instantiated
     var MA = [];
-    setupServiceDates();
-    
-    function setupServiceDates() {
-		var el = document.titlesearch.billDate.value;
-		
-		var dates = el.split('\n');
-		
-		MA.length = 0;
-		for (var i in dates) {
-			if (dates[i])
-				MA[MA.length] = new Date(dates[i]);
-		}
-	}
     
     function closed(cal) {
       //var el = document.getElementById("output");
