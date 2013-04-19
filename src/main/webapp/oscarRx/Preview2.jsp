@@ -113,6 +113,8 @@ if( rePrint != null && rePrint.equalsIgnoreCase("true") ) {
     bean = (oscar.oscarRx.pageUtil.RxSessionBean)session.getAttribute("tmpBeanRX");
     signingProvider = bean.getStashItem(0).getProviderNo();
     clinicNo = bean.getClinicNo();
+
+    request.getSession().setAttribute("clinic_id", clinicNo + "");
     
     rxDate = bean.getStashItem(0).getRxDate();
     provider = new oscar.oscarRx.data.RxProviderData().getProvider(signingProvider, clinicNo);
