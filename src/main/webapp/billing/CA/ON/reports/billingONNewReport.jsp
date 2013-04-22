@@ -114,14 +114,14 @@ int curYear = now.get(Calendar.YEAR);
 int curMonth = (now.get(Calendar.MONTH)+1);
 int curDay = now.get(Calendar.DAY_OF_MONTH);
 
-List<Appointment> date_appts = appointmentDao.getFirstAndLastUnbilledAppointments( );                                                                                    
+//List<Appointment> date_appts = appointmentDao.getFirstAndLastUnbilledAppointments( );                                                                                    
 SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
 String xml_vdate            = "";
 String xml_appointment_date = "";
-if ( !date_appts.isEmpty() ){
-    xml_vdate            = sdf.format( date_appts.get( 0 ).getAppointmentDate( ) );
-    xml_appointment_date = sdf.format( date_appts.get( 1 ).getAppointmentDate( ) );
-}
+//if ( !date_appts.isEmpty() ){
+//    xml_vdate            = sdf.format( date_appts.get( 0 ).getAppointmentDate( ) );
+//    xml_appointment_date = sdf.format( date_appts.get( 1 ).getAppointmentDate( ) );
+//}
 if ( request.getParameter("xml_vdate"           ) != null ){ xml_vdate            = request.getParameter("xml_vdate"           ); }
 if ( request.getParameter("xml_appointment_date") != null ){ xml_appointment_date = request.getParameter("xml_appointment_date"); }
 %>
