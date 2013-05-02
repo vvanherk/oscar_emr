@@ -60,7 +60,7 @@
 				Provider p = providerDao.getProvider(provider);
 				if(p != null) {
 					String retval = SxmlMisc.getXmlContent(p.getComments(), "<xml_p_billinggroup_no>", "</xml_p_billinggroup_no>");
-					if(retval != null && retval.length()>0) {
+					if(retval != null && retval.length()>0 && !retval.equals("0000")) {
 						groupReport = true;
 					}
 				}
