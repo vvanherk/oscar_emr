@@ -76,6 +76,8 @@ if (bMultisites)
 			int rowReCount = 0;
 			ResultSet rslocation = null;
 			ResultSet rsPatient = null;
+			
+			String AppointmentDate = "";
 
 			%>
 
@@ -125,6 +127,7 @@ if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
 
 <%@ page import="java.math.*,java.util.*,java.sql.*,oscar.*,java.net.*"
 	errorPage="errorpage.jsp"%>
+<%@ page import="java.text.SimpleDateFormat"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.pageUtil.*"%>
 <%@ page import="oscar.oscarDemographic.data.*"%>
@@ -147,6 +150,8 @@ if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.common.model.ClinicNbr"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
+<%@page import="org.oscarehr.common.dao.OscarAppointmentDao"%>
+<%@page import="org.oscarehr.common.model.Appointment"%>
 
 <html:html locale="true">
 <head>
@@ -365,6 +370,19 @@ function checkSettle(status) {
 					if (recordObj != null && recordObj.size() > 0) {
 
 						ch1Obj = (BillingClaimHeader1Data) recordObj.get(0);
+						
+						
+						String apptNo = ch1Obj.getAppointment_no();
+						Integer apptNoAsInteger = new Integer(apptNo);
+						
+						OscarAppointmentDao appointmentDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
+						Appointment appt = appointmentDao.getAppointment( apptNoAsInteger );
+						
+						if (appt != null) {
+							java.util.Date d = appt.getCreateDateTime();
+							if (d != null)
+								AppointmentDate = new SimpleDateFormat("yyyy-MM-dd").format(d);
+						}
 
 						//multisite. check provider no
 					    if ((isSiteAccessPrivacy || isTeamAccessPrivacy) && (providerMap.get(ch1Obj.getProviderNo())== null || !mgrSites.contains(ch1Obj.getClinic())))
@@ -675,12 +693,21 @@ if(bFlag) {
 <table width="600" border="0">
 	<tr class="myGreen">
 		<td><b><bean:message
+			key="billing.billingCorrection.msgAppointmentInf" /></b></td>
+		<td width="46%"><bean:message
+			key="billing.billingCorrection.btnAppointmentDate" />: <input
+			type="text" readonly value="<%=AppointmentDate%>" size=10 /></td>
+			
+	</tr>
+	<tr class="myGreen">
+		<td><b><bean:message
 			key="billing.billingCorrection.msgBillingInf" /></b></td>
 		<td width="46%"><bean:message
 			key="billing.billingCorrection.btnBillingDate" /><img
 			src="../../../images/cal.gif" id="xml_appointment_date_cal" />: <input
 			type="text" id="xml_appointment_date" name="xml_appointment_date"
 			value="<%=BillDate%>" size=10 /></td>
+			
 	</tr>
 	<tr>
 		<td width="54%"><b><bean:message
