@@ -15,6 +15,7 @@ public class JdbcBillingCorrection {
 
 	public boolean updateBillingClaimHeader(BillingClaimHeader1Data ch1Obj) {
 		boolean retval = false;
+		
 		String sql = "update billing_on_cheader1 set transc_id='" + ch1Obj.getTransc_id() + "'," + " rec_id='"
 				+ ch1Obj.getRec_id() + "'," + " hin='" + ch1Obj.getHin() + "'," + " ver='" + ch1Obj.getVer() + "',"
 				+ " dob='" + ch1Obj.getDob() + "'," + " pay_program='" + ch1Obj.getPay_program() + "'," + " payee='"
@@ -29,7 +30,7 @@ public class JdbcBillingCorrection {
 				+ ch1Obj.getSex() + "'," + " province='" + ch1Obj.getProvince() + "'," + " billing_date='"
 				+ ch1Obj.getBilling_date() + "'," + " billing_time='" + ch1Obj.getBilling_time() + "'," + " total='"
 				+ ch1Obj.getTotal() + "'," + " paid='" + ch1Obj.getPaid() + "'," + " status='" + ch1Obj.getStatus()
-				+ "'," + " comment1='" + ch1Obj.getComment() + "'," + " visittype='" + ch1Obj.getVisittype() + "',"
+				+ "'," + " comment1='" + StringEscapeUtils.escapeSql( ch1Obj.getComment() ) + "'," + " visittype='" + ch1Obj.getVisittype() + "',"
 				+ " provider_ohip_no='" + ch1Obj.getProvider_ohip_no() + "'," + " provider_rma_no='"
 				+ ch1Obj.getProvider_rma_no() + "'," + " apptProvider_no='" + ch1Obj.getApptProvider_no() + "',"
 				+ " asstProvider_no='" + ch1Obj.getAsstProvider_no() + "'," + " creator='" + ch1Obj.getCreator()
@@ -56,7 +57,7 @@ public class JdbcBillingCorrection {
 				+ val.demographic_no + "|" + val.provider_no + "|" + val.appointment_no + "|"
 				+ StringEscapeUtils.escapeSql(val.demographic_name) + "|" + val.sex + "|" + val.province + "|"
 				+ val.billing_date + "|" + val.billing_time + "|" + val.total + "|" + val.paid + "|" + val.status + "|"
-				+ val.comment + "|" + val.visittype + "|" + val.provider_ohip_no + "|" + val.apptProvider_no + "|"
+				+ StringEscapeUtils.escapeSql( val.comment ) + "|" + val.visittype + "|" + val.provider_ohip_no + "|" + val.apptProvider_no + "|"
 				+ val.asstProvider_no + "|" + val.creator + "|" + val.clinic + "', '" + val.update_datetime + "')";
 		_logger.info("addRepoBatchHeader(sql = " + sql + ")");
 		retval = dbObj.saveBillingRecord(sql);
