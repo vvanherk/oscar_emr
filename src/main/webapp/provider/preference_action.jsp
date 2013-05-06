@@ -25,6 +25,8 @@
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.util.LoggedInInfo"%>
 
+<%@page import="org.apache.commons.lang.StringUtils"%>;
+
 <%@page import="org.oscarehr.common.dao.ProviderPreferenceDao"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@page import="org.oscarehr.web.admin.ProviderPreferencesUIBean"%>
@@ -42,9 +44,14 @@
 	String providerNo = parameters.get("provider_no")[0];
 	
 	ProviderPreferenceDao preferenceDao = (ProviderPreferenceDao) SpringUtils.getBean("providerPreferenceDao");
-	ProviderPreference preference = ProviderPreferencesUIBean.updateOrCreateProviderPreferences(request);
+	//ProviderPreference preference = ProviderPreferencesUIBean.updateOrCreateProviderPreferences(request);
 	
-	//preference.setDefaultDxCode(parameters.get("dxCode")[0]);
+	ProviderPreference preference = ProviderPreferencesUIBean.getLoggedInProviderPreference();
+	String temp = StringUtils.trimToNull( parameters.get("dxCode")[0] );
+	if (temp != null) {
+		preference.setDefaultDxCode(temp);
+		preferenceDao.merge(preference);
+	}
 	//preference.setNew_tickler_warning_window(parameters.get("new_tickler_warning_window")[0]);
 	//PreferenceAction.savePreference(preference);	
 	
