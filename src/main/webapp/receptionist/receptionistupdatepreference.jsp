@@ -60,7 +60,7 @@ function closeit() {
 	</tr>
 </table>
 <%
-	ProviderPreference providerPreference=ProviderPreferencesUIBean.updateOrCreateProviderPreferences(request);
+	ProviderPreference providerPreference=ProviderPreferencesUIBean.updateOrCreateProviderPreferences(request, false);
 
 	//--- 
 	session.setAttribute(SessionConstants.LOGGED_IN_PROVIDER_PREFERENCE, providerPreference);
