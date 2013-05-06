@@ -66,7 +66,7 @@
 		session.setAttribute("site_selected", (selected_site.equals("none") ? null : selected_site) );	    
 	}
 
-	ProviderPreference providerPreference=ProviderPreferencesUIBean.updateOrCreateProviderPreferences(request, false);
+	ProviderPreference providerPreference=ProviderPreferencesUIBean.updateOrCreateProviderPreferences(request);
 
 	//--- 
 	session.setAttribute(SessionConstants.LOGGED_IN_PROVIDER_PREFERENCE, providerPreference);
