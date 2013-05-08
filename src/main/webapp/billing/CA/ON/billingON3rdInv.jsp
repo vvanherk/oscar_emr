@@ -1,6 +1,8 @@
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.common.model.Demographic"%>
 <%@page import="org.oscarehr.common.dao.DemographicDao"%>
+<%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+<%@page import="org.oscarehr.common.model.Provider"%>
 <%
 String invNo = request.getParameter("billingNo");
 Billing3rdPartPrep privateObj = new Billing3rdPartPrep();
@@ -18,6 +20,9 @@ List aL = billObj.getBillingRecordObj(invNo);
 BillingClaimHeader1Data ch1Obj = (BillingClaimHeader1Data) aL.get(0);
 DemographicDao demoDAO = (DemographicDao)SpringUtils.getBean("demographicDao");
 Demographic demo = demoDAO.getDemographic(ch1Obj.getDemographic_no());
+
+ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+Provider provider = providerDao.getProvider( ch1Obj.getProviderNo() );
 
 Properties gstProp = new Properties();
 GstControlAction db = new GstControlAction();
@@ -90,7 +95,7 @@ String percent = gstProp.getProperty("gstPercent", "");
 	</tr>
 	<tr align="center">
 		<td><%=ch1Obj.getBilling_date() %></td>
-		<td><%=(new ProviderData()).getProviderName(ch1Obj.getProviderNo()) %></td>
+		<td><%=(new ProviderData()).getProviderName(ch1Obj.getProviderNo()) %> <br> OHIP # <%=provider.getOhipNo()%></td>
 <% Properties prop = oscar.OscarProperties.getInstance();
    String payee = prop.getProperty("PAYEE", "");
    payee = payee.trim();
@@ -98,7 +103,7 @@ String percent = gstProp.getProperty("gstPercent", "");
 %>
     <td><%=payee%></td>
 <% } else { %>
-    <td><%=(new ProviderData()).getProviderName(ch1Obj.getProviderNo()) %></td>
+    <td><%=(new ProviderData()).getProviderName(ch1Obj.getProviderNo()) %> <br> OHIP # <%=provider.getOhipNo()%></td>
 <% } %>
 		<td><%=ch1Obj.getRef_num() %></td>
 	</tr>
