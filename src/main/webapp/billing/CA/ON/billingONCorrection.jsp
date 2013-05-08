@@ -379,9 +379,15 @@ function checkSettle(status) {
 						Appointment appt = appointmentDao.getAppointment( apptNoAsInteger );
 						
 						if (appt != null) {
-							java.util.Date d = appt.getCreateDateTime();
+							java.util.Date d = appt.getAppointmentDate();
 							if (d != null)
 								AppointmentDate = new SimpleDateFormat("yyyy-MM-dd").format(d);
+						} else {
+							if (recordObj.size() > 1) {
+								BillingItemData billingItemData = (BillingItemData) recordObj.get(1);
+								AppointmentDate = billingItemData.getService_date();
+							}
+								
 						}
 
 						//multisite. check provider no

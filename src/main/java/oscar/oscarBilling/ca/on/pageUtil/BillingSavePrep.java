@@ -166,7 +166,7 @@ public class BillingSavePrep {
 		claim1Header.setProviderNo(val.getParameter("xml_provider").substring(0,
 				val.getParameter("xml_provider").indexOf("|")));
 
-		claim1Header.setBilling_date(val.getParameter("service_date"));
+		claim1Header.setBilling_date( UtilDateUtilities.getToday("yyyy-MM-dd") );
 		claim1Header.setBilling_time(val.getParameter("start_time"));
 		claim1Header.setUpdate_datetime(UtilDateUtilities.getToday("yyyy-MM-dd HH:mm:ss"));
 		claim1Header.setTotal(val.getParameter("total"));
@@ -253,7 +253,8 @@ public class BillingSavePrep {
 		claim1Header.setSex(val.getParameter("sex"));
 		claim1Header.setProvince(val.getParameter("hc_type"));
 
-		claim1Header.setBilling_date(service_date);
+		//claim1Header.setBilling_date(service_date);
+		claim1Header.setBilling_date( UtilDateUtilities.getToday("yyyy-MM-dd") );
 		claim1Header.setBilling_time(val.getParameter("start_time"));
 		claim1Header.setUpdate_datetime(UtilDateUtilities.getToday("yyyy-MM-dd HH:mm:ss"));
 		claim1Header.setTotal(total);

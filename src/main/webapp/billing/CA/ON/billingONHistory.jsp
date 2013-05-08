@@ -33,6 +33,10 @@
 	import="java.util.*, java.sql.*, java.net.*, oscar.*, oscar.oscarDB.*"
 	errorPage="errorpage.jsp"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
+<%@page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+<%@page import="org.oscarehr.common.model.Provider"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
@@ -66,8 +70,10 @@
 	<tr class="myYellow">
 		<TH width="12%"><b>Invoice No.</b></TH>
 		<TH width="15%"><b>Bill Created</b></TH>
+		<TH width="15%"><b>Appointment Date</b></TH>
+		<TH width="15%"><b>Provider</b></TH>
 		<TH width="10%"><b>Bill Type</b></TH>
-		<TH width="35%"><b>Service Code</b></TH>
+		<TH width="30%"><b>Service Code</b></TH>
 		<TH width="5%"><b>Dx</b></TH>
 		<TH width="8%"><b>Fee</b></TH>
 		<TH><b>COMMENTS</b></TH>
@@ -82,6 +88,7 @@ for(int i=0; i<aL.size(); i=i+2) {
 	BillingClaimHeader1Data obj = (BillingClaimHeader1Data) aL.get(i);
 	BillingItemData itObj = (BillingItemData) aL.get(i+1);
 	String strBillType = obj.getPay_program();
+	String appointmentDate = itObj.getService_date();
 	if(strBillType != null) {
 		if(strBillType.matches(BillingDataHlp.BILLINGMATCHSTRING_3RDPARTY)) {
 			if(BillingDataHlp.propBillingType.getProperty(obj.getStatus(),"").equals("Settled")) {
@@ -93,6 +100,13 @@ for(int i=0; i<aL.size(); i=i+2) {
 	} else {
 		strBillType = "";
 	}
+	
+	// Get provider name
+	String providerNo = obj.getProviderNo();
+	String providerName = "";
+	ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+	Provider p = providerDao.getProvider(providerNo);
+	providerName = p.getFullName();
 %>
 	<tr bgcolor="<%=i%2==0?"#CCFF99":"white"%>">
 		<td width="5%" align="center" height="25"><a href=#
@@ -103,6 +117,8 @@ for(int i=0; i<aL.size(); i=i+2) {
 				onClick="popupPage(600,800, 'billingONCorrection.jsp?billing_no=<%=obj.getId()%>')">edit</a>
 		</security:oscarSec></td>
 		<td align="center"><%=obj.getBilling_date()%> <%--=obj.getBilling_time()--%></td>
+		<td align="center"><%=appointmentDate%> </td>
+		<td align="center"><%=providerName%> </td>
 		<td align="center"><%=strBillType%></td>
 		<td align="center"><%=itObj.getService_code()%></td>
 		<td align="center"><%=itObj.getDx()%></td>
