@@ -42,7 +42,7 @@
 	String providerNo = parameters.get("provider_no")[0];
 	
 	ProviderPreferenceDao preferenceDao = (ProviderPreferenceDao) SpringUtils.getBean("providerPreferenceDao");
-	ProviderPreference preference = ProviderPreferencesUIBean.updateOrCreateProviderPreferences(request, false);
+	ProviderPreference preference = ProviderPreferencesUIBean.updateOrCreateProviderPreferences(request);
 	
 	//preference.setDefaultDxCode(parameters.get("dxCode")[0]);
 	//preference.setNew_tickler_warning_window(parameters.get("new_tickler_warning_window")[0]);

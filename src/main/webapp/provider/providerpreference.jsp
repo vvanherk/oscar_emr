@@ -943,6 +943,10 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 
 
 </table>
+
+<!-- Hack to only update checkbox values for provider preferences if we are sending an update/create request from this page -->
+<input type="hidden" name="updating_from_preferences_page" value="updating_from_preferences_page">
+
 </FORM>
 
 </body>

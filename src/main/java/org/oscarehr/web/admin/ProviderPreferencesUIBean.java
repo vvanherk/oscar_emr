@@ -51,15 +51,15 @@ public final class ProviderPreferencesUIBean {
 	private static final EncounterFormDao encounterFormDao = (EncounterFormDao) SpringUtils.getBean("encounterFormDao");
 
 	public static final ProviderPreference updateOrCreateProviderPreferences(HttpServletRequest request) {
-		return updateOrCreateProviderPreferences( request, true );
-	}
-
-	public static final ProviderPreference updateOrCreateProviderPreferences(HttpServletRequest request, boolean updateCheckboxValues) {
 		ProviderPreference providerPreference = getLoggedInProviderPreference();
 
 		// update preferences based on request parameters
 		String temp;
 		HttpSession session = request.getSession();
+		
+		// Hack to only update checkbox values if we are receiving this update/create request from the Provider Preferences page
+		temp = StringUtils.trimToNull(request.getParameter("updating_from_preferences_page"));
+		boolean updateCheckboxValues = (temp != null);
 
 		// new tickler window
 		temp = StringUtils.trimToNull(request.getParameter("new_tickler_warning_window"));
