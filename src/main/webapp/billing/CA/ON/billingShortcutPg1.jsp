@@ -1055,27 +1055,27 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 						<textarea name="billDate" cols="11" rows="5" readonly><%=billDates%></textarea>
 						</td>
 						<td nowrap align="center"><bean:message key="billing.billingCorrection.formServiceCode"/> x <bean:message key="billing.billingCorrection.formUnit"/><br>
-						<input type="text" name="serviceDate0" size="5" maxlength="5"
+						<input type="text" name="serviceDate0" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate0")!=null?request.getParameter("serviceDate0"):""%>">x
 						<input type="text" name="serviceUnit0" size="2" maxlength="2"
 							style=""
 							value="<%=request.getParameter("serviceUnit0")!=null?request.getParameter("serviceUnit0"):""%>"><br>
-						<input type="text" name="serviceDate1" size="5" maxlength="5"
+						<input type="text" name="serviceDate1" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate1")!=null?request.getParameter("serviceDate1"):""%>">x
 						<input type="text" name="serviceUnit1" size="2" maxlength="2"
 							style=""
 							value="<%=request.getParameter("serviceUnit1")!=null?request.getParameter("serviceUnit1"):""%>"><br>
-						<input type="text" name="serviceDate2" size="5" maxlength="5"
+						<input type="text" name="serviceDate2" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate2")!=null?request.getParameter("serviceDate2"):""%>">x
 						<input type="text" name="serviceUnit2" size="2" maxlength="2"
 							style=""
 							value="<%=request.getParameter("serviceUnit2")!=null?request.getParameter("serviceUnit2"):""%>"><br>
-                                                 <input type="text" name="serviceDate3" size="5" maxlength="5"
+                                                 <input type="text" name="serviceDate3" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate3")!=null?request.getParameter("serviceDate3"):""%>">x
 						<input type="text" name="serviceUnit3" size="2" maxlength="2"
 							style=""
 							value="<%=request.getParameter("serviceUnit3")!=null?request.getParameter("serviceUnit3"):""%>"><br>
-                                                <input type="text" name="serviceDate4" size="5" maxlength="5"
+                                                <input type="text" name="serviceDate4" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate4")!=null?request.getParameter("serviceDate4"):""%>">x
 						<input type="text" name="serviceUnit4" size="2" maxlength="2"
 							style=""
