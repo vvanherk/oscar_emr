@@ -32,7 +32,7 @@
 <%@ page import="java.sql.*, java.util.*, oscar.*" errorPage="errorpage.jsp"%>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 
-
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@page import="org.oscarehr.web.admin.ProviderPreferencesUIBean"%><html:html locale="true">
 <head>
@@ -55,7 +55,11 @@
 </table>
 <%
 	String programId_forCME = request.getParameter("case_program_id");
-	request.getSession().setAttribute("case_program_id",programId_forCME);
+	if (programId_forCME != null) {
+		request.getSession().setAttribute("case_program_id",programId_forCME);
+	} else {
+		MiscUtils.getLogger().warn("case_program_id is null - not setting as session attribute");
+	}
 	
 	String selected_site = (String) request.getParameter("site") ;
 	if (selected_site != null) {
