@@ -310,9 +310,9 @@ public class BillingSavePrep {
                     valsMap.put("payment", valsMap.get("total"));
                 }
                 else {
-                    valsMap.put("payment", val.getParameter("payment"));
+                    valsMap.put("payment", (val.getParameter("payment") != null? val.getParameter("payment") : "0.00"));
                 }
-		valsMap.put("refund",val.getParameter("refund"));
+		valsMap.put("refund", (val.getParameter("refund") != null? val.getParameter("refund") : "0.00"));
                 valsMap.put("provider_no",val.getParameter("provider_no"));
                 valsMap.put("gst",val.getParameter("gst"));
 

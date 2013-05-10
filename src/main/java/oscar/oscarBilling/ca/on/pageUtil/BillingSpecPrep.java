@@ -127,7 +127,7 @@ public class BillingSpecPrep {
 		}
 		
 		claim1Header.setTotal(total);
-		claim1Header.setPaid("");
+		claim1Header.setPaid( (val.getParameter("payment") != null? val.getParameter("payment") : "0.00") );
 		claim1Header.setStatus(getStatus(val.getParameter("xml_billtype")));
 		claim1Header.setComment("");
 		claim1Header.setVisittype(val.getParameter("xml_visittype").substring(0, 2));
