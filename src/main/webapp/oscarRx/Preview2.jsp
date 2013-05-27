@@ -127,9 +127,13 @@ else {
 
     //set Date to latest in stash
     Date tmp;
-
+	
     for( int idx = 0; idx < bean.getStashSize(); ++idx ) {
         tmp = bean.getStashItem(idx).getWrittenDate();
+        
+        if (idx == 0)
+			rxDate = tmp;
+		
         if( tmp.after(rxDate) ) {
             rxDate = tmp;
         }
