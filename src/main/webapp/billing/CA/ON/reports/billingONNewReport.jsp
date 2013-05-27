@@ -1027,10 +1027,9 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							} );
 						</script>
 						-->
-						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" value="yes" onclick="return !isElementReadOnly(this);" onkeydown="return !isElementReadOnly(this);"> <span class="input_element_label">Manual</span>
+						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" onclick="return !isElementReadOnly(this);" onkeydown="return !isElementReadOnly(this);"> <span class="input_element_label">Manual</span>
 						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="if (isElementReadOnly(this)) { return false; } toggleReferralDoctorVisible(<%=i%>); if (this.checked) setFocusOnReferralDoctorInput(<%=i%>);" onkeydown="return !isElementReadOnly(this);" > <span class="input_element_label">Referral Doctor</span>
 						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" >
-						<input type="hidden" name="manual_checkbox<%=i%>" value="yes" >
 						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" >
 						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" >
 						<input type="hidden" name="demo_name<%=i%>" value="<%=prop.getProperty("Patient Name", "")%>" >
