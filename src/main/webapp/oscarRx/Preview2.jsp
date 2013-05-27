@@ -116,7 +116,7 @@ if( rePrint != null && rePrint.equalsIgnoreCase("true") ) {
 
     request.getSession().setAttribute("clinic_id", clinicNo + "");
     
-    rxDate = bean.getStashItem(0).getRxDate();
+    rxDate = bean.getStashItem(0).getWrittenDate();
     provider = new oscar.oscarRx.data.RxProviderData().getProvider(signingProvider, clinicNo);
 //    session.setAttribute("tmpBeanRX", null);
     String ip = request.getRemoteAddr();
@@ -129,7 +129,7 @@ else {
     Date tmp;
 
     for( int idx = 0; idx < bean.getStashSize(); ++idx ) {
-        tmp = bean.getStashItem(idx).getRxDate();
+        tmp = bean.getStashItem(idx).getWrittenDate();
         if( tmp.after(rxDate) ) {
             rxDate = tmp;
         }
