@@ -48,6 +48,8 @@ public class BillingClaimHeader1Data {
 
 	String billing_date;
 	String billing_time;
+	String service_date;
+	
         private String settle_date;
 	String total;
 	String paid;
@@ -124,7 +126,15 @@ public class BillingClaimHeader1Data {
 	public void setBilling_date(String billing_date) {
 		this.billing_date = billing_date;
 	}
+	
+	public String getService_date() {
+		return service_date;
+	}
 
+	public void setService_date(String service_date) {
+		this.service_date = service_date;
+	}
+	
 	public String getBilling_time() {
 		return billing_time;
 	}

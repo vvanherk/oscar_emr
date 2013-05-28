@@ -24,8 +24,8 @@ public class BillingStatusPrep {
 		statusType = statusType == null || statusType.length() == 0 || statusType.equals(ANY_STATUS_TYPE) ? "" : " and status = '"
 				+ statusType + "'";
 		providerNo = providerNo == null || providerNo.length() == 0 || providerNo.equals(ANY_PROVIDER) ? "" : " and provider_no ='" + providerNo + "'";
-		startDate = startDate == null || startDate.length() == 0 ? "" : " and billing_date >= '" + startDate + "'";
-		endDate = endDate == null || endDate.length() == 0 ? "" : " and billing_date <= '" + endDate + "'";
+		startDate = startDate == null || startDate.length() == 0 ? "" : " and (service_date >= '" + startDate + "' or service_date = '')";
+		endDate = endDate == null || endDate.length() == 0 ? "" : " and (service_date <= '" + endDate + "' or service_date = '')";
 		demoNo = demoNo == null || demoNo.length() == 0 ? "" : " and demographic_no=" + demoNo;
 		List retval = bObj.getBill(billType, statusType, providerNo, startDate, endDate, demoNo);
 
@@ -39,8 +39,8 @@ public class BillingStatusPrep {
 		statusType = statusType == null || statusType.length() == 0 || statusType.equals(ANY_STATUS_TYPE) ? "" : " and ch1.status = '"
 				+ statusType + "'";
 		providerNo = providerNo == null || providerNo.length() == 0 || providerNo.equals(ANY_PROVIDER) ? "" : " and ch1.provider_no ='" + providerNo + "'";
-		startDate = startDate == null || startDate.length() == 0 ? "" : " and ch1.billing_date >= '" + startDate + "'";
-		endDate = endDate == null || endDate.length() == 0 ? "" : " and ch1.billing_date <= '" + endDate + "'";
+		startDate = startDate == null || startDate.length() == 0 ? "" : " and (bi.service_date >= '" + startDate + "' or bi.service_date = '')";
+		endDate = endDate == null || endDate.length() == 0 ? "" : " and (bi.service_date <= '" + endDate + "' or bi.service_date = '')";
 		demoNo = demoNo == null || demoNo.length() == 0 ? "" : " and ch1.demographic_no=" + demoNo;
 		dx = dx == null || dx.length() < 2 ? "" : " and ch1.dx='" + dx + "'";
 		visitType = visitType == null || visitType.length() < 2 ? "" : " and ch1.visittype='" + visitType + "'";

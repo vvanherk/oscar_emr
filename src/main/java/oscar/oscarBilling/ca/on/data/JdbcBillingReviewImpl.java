@@ -117,9 +117,10 @@ public class JdbcBillingReviewImpl {
 		String temp = demoNo + " " + providerNo + " " + statusType + " " + startDate + " " + endDate + " " + billType;
 		temp = temp.trim().startsWith("and") ? temp.trim().substring(3) : temp;
 		String sql = "select id,pay_program,billing_on_cheader1.demographic_no,demographic_name,billing_date,billing_time,status,"
-				+ "provider_no,provider_ohip_no, apptProvider_no,timestamp1,total,paid,clinic" + " from billing_on_cheader1 " +
-                                "where " + temp
-				+ " order by billing_date, billing_time";
+				+ "provider_no,provider_ohip_no, apptProvider_no,timestamp1,total,paid,clinic, service_date" + 
+				"FROM billing_on_cheader1 ch1 LEFT JOIN billing_on_item bi ON ch1.id=bi.ch1_id " +
+				"WHERE " + temp + " and bi.status!='D' " +
+				" ORDER BY bi.service_date, demographic_name, bi.service_code, total, paid";
 
 		_logger.info("getBill(sql = " + sql + ")");
 		ResultSet rs = dbObj.searchDBRecord(sql);
@@ -132,6 +133,7 @@ public class JdbcBillingReviewImpl {
 				ch1Obj.setDemographic_name(rs.getString("demographic_name"));
 				ch1Obj.setBilling_date(rs.getString("billing_date"));
 				ch1Obj.setBilling_time(rs.getString("billing_time"));
+				ch1Obj.setService_date(rs.getString("service_date"));
 				ch1Obj.setStatus(rs.getString("status"));
 				ch1Obj.setProviderNo(rs.getString("provider_no"));
 				ch1Obj.setProvider_ohip_no(rs.getString("provider_ohip_no"));
@@ -170,10 +172,10 @@ public class JdbcBillingReviewImpl {
 
 		String sql = "SELECT ch1.id,pay_program,demographic_no,demographic_name,billing_date,billing_time," +
 				"ch1.status,provider_no,provider_ohip_no,apptProvider_no,timestamp1,total,paid,clinic," +
-				"bi.fee, bi.service_code, bi.dx " +
+				"bi.fee, bi.service_code, bi.service_date, bi.dx " +
 				"FROM billing_on_cheader1 ch1 LEFT JOIN billing_on_item bi ON ch1.id=bi.ch1_id " +
 				"WHERE " + temp + serviceCodes + " and bi.status!='D' " +
-				" ORDER BY billing_date, billing_time";
+				" ORDER BY bi.service_date, demographic_name, bi.service_code, total, paid";
 
 		_logger.info("getBill(sql = " + sql + ")");
 		ResultSet rs = dbObj.searchDBRecord(sql);
@@ -190,8 +192,9 @@ public class JdbcBillingReviewImpl {
 					ch1Obj.setId("" + rs.getInt("id"));
 					ch1Obj.setDemographic_no("" + rs.getInt("demographic_no"));
 					ch1Obj.setDemographic_name(rs.getString("demographic_name"));
-					ch1Obj.setBilling_date(rs.getString("billing_date"));
+					ch1Obj.setBilling_date(rs.getString("billing_date"));					
 					ch1Obj.setBilling_time(rs.getString("billing_time"));
+					ch1Obj.setService_date(rs.getString("service_date"));
 					ch1Obj.setStatus(rs.getString("status"));
 					ch1Obj.setProviderNo(rs.getString("provider_no"));
 					ch1Obj.setProvider_ohip_no(rs.getString("provider_ohip_no"));
