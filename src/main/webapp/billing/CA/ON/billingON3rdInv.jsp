@@ -18,6 +18,18 @@ Properties propGst = privateObj.getGst(invNo);
 BillingCorrectionPrep billObj = new BillingCorrectionPrep();
 List aL = billObj.getBillingRecordObj(invNo);
 BillingClaimHeader1Data ch1Obj = (BillingClaimHeader1Data) aL.get(0);
+
+String serviceDate = ch1Obj.getBilling_date();
+
+// Find the first billing item
+for (Object item : aL) {
+	if (item instanceof BillingItemData) {
+		serviceDate = ((BillingItemData) item).getService_date();
+		break;
+	}
+}
+	
+
 DemographicDao demoDAO = (DemographicDao)SpringUtils.getBean("demographicDao");
 Demographic demo = demoDAO.getDemographic(ch1Obj.getDemographic_no());
 
@@ -94,7 +106,7 @@ String percent = gstProp.getProperty("gstPercent", "");
 		<th>Ref. Doctor</th>
 	</tr>
 	<tr align="center">
-		<td><%=ch1Obj.getBilling_date() %></td>
+		<td><%=serviceDate %></td>
 		<td><%=(new ProviderData()).getProviderName(ch1Obj.getProviderNo()) %> <br> OHIP # <%=provider.getOhipNo()%></td>
 <% Properties prop = oscar.OscarProperties.getInstance();
    String payee = prop.getProperty("PAYEE", "");

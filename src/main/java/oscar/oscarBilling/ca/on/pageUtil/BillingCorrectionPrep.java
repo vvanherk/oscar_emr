@@ -173,7 +173,7 @@ public class BillingCorrectionPrep {
 		Vector vecStatus = new Vector();
 		String dx = request.getParameter("xml_diagnostic_detail");
 		dx = dx.length() > 2 ? dx.substring(0, 3) : dx;
-		String serviceDate = request.getParameter("xml_appointment_date");
+		String serviceDate = request.getParameter("xml_service_date");
 
 		for (int i = 0; i < BillingDataHlp.FIELD_MAX_SERVICE_NUM; i++) {
 			if (request.getParameter("servicecode" + i) != null

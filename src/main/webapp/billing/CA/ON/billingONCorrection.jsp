@@ -372,23 +372,11 @@ function checkSettle(status) {
 						ch1Obj = (BillingClaimHeader1Data) recordObj.get(0);
 						
 						
-						String apptNo = ch1Obj.getAppointment_no();
-						Integer apptNoAsInteger = new Integer(apptNo);
-						
-						OscarAppointmentDao appointmentDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
-						Appointment appt = appointmentDao.getAppointment( apptNoAsInteger );
-						
-						if (appt != null) {
-							java.util.Date d = appt.getAppointmentDate();
-							if (d != null)
-								AppointmentDate = new SimpleDateFormat("yyyy-MM-dd").format(d);
-						} else {
-							if (recordObj.size() > 1) {
-								BillingItemData billingItemData = (BillingItemData) recordObj.get(1);
-								AppointmentDate = billingItemData.getService_date();
-							}
-								
+						if (recordObj.size() > 1) {
+							BillingItemData billingItemData = (BillingItemData) recordObj.get(1);
+							AppointmentDate = billingItemData.getService_date();
 						}
+						
 
 						//multisite. check provider no
 					    if ((isSiteAccessPrivacy || isTeamAccessPrivacy) && (providerMap.get(ch1Obj.getProviderNo())== null || !mgrSites.contains(ch1Obj.getClinic())))
@@ -701,8 +689,10 @@ if(bFlag) {
 		<td><b><bean:message
 			key="billing.billingCorrection.msgAppointmentInf" /></b></td>
 		<td width="46%"><bean:message
-			key="billing.billingCorrection.btnAppointmentDate" />: <input
-			type="text" readonly value="<%=AppointmentDate%>" size=10 /></td>
+			key="billing.billingCorrection.btnAppointmentDate" /><img
+			src="../../../images/cal.gif" id="xml_service_date_cal" />: <input
+			type="text" id="xml_service_date" name="xml_service_date"
+			value="<%=AppointmentDate%>" size=10 /></td>
 			
 	</tr>
 	<tr class="myGreen">
@@ -1045,6 +1035,7 @@ function changeSite(sel) {
 </body>
 <script type="text/javascript">
 Calendar.setup( { inputField : "xml_appointment_date", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_appointment_date_cal", singleClick : true, step : 1 } );
+Calendar.setup( { inputField : "xml_service_date", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_service_date_cal", singleClick : true, step : 1 } );
 Calendar.setup( { inputField : "xml_vdate", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_vdate_cal", singleClick : true, step : 1 } );
 </script>
 <%!String nullToEmpty(String str) {
