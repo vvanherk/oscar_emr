@@ -247,14 +247,20 @@ public class JdbcBillingReviewImpl {
 		String sql;
 		ResultSet rs;
 		if(pDateRange==null){
-		  sql = "select * from billing_on_cheader1 where demographic_no=" + demoNo + 
-				" and status!='D' order by billing_date desc, billing_time desc, id desc ";// + strLimit;
+		  sql = "select * " +
+				"FROM billing_on_cheader1 ch1 LEFT JOIN billing_on_item bi ON ch1.id=bi.ch1_id " +
+				" where ch1.demographic_no=" + demoNo + 
+				" and ch1.status!='D' group by ch1.id " +
+				" order by bi.service_date desc, demographic_name, bi.service_code, total, paid";
 	      rs = dbPH.queryResults_paged(sql, iOffSet);
 		}
 		else{
-	      sql = "select * from billing_on_cheader1 where demographic_no=" + demoNo + 
-	            "  and billing_date>=? and billing_date <=?" + 
-				" and status!='D' order by billing_date desc, billing_time desc, id desc ";// + strLimit;
+	      sql = "select * " + 
+				" FROM billing_on_cheader1 ch1 LEFT JOIN billing_on_item bi ON ch1.id=bi.ch1_id " +
+				" where ch1.demographic_no=" + demoNo + 
+				" and bi.service_date>=? and bi.service_date <=?" + 
+				" and ch1.status!='D' group by ch1.id " +
+				" order by bi.service_date desc, demographic_name, bi.service_code, total, paid";
 	      rs = dbPH.queryResults_paged(sql, pDateRange, iOffSet);
 		}	
 		 _logger.debug("getBillingHist(sql = " + sql + ")");

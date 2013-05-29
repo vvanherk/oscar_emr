@@ -124,10 +124,10 @@ for(int i=0; i<aL.size(); i=i+2) {
 	<tr bgcolor="<%=i%2==0?"#CCFF99":"white"%>">
 		<td align="center" width="5%" height="25"><%=obj.getId()%></td>
 		<td align="center"><%=p.getLastName()%>, <%=p.getFirstName()%></td>
-		<td align="center"><%=obj.getBilling_date()%> <%--=obj.getBilling_time()--%></td>
+		<td align="center"><%=itObj.getService_date()%> </td>
 		<td align="center"><%=BillingDataHlp.propBillingType.getProperty(obj.getStatus(),"")%></td>
 		<td align="center"><%=strServiceCode%></td>
-		<td align="center"><%=obj.getUpdate_datetime().substring(0, 10)%></td>
+		<td align="center"><%=obj.getBilling_date()%> <%--=obj.getBilling_time()--%> </td>
 		<td align="center"><%=itObj.getDx()%></td>
 		<td align="center"><%=obj.getTotal()%></td>
 	</tr>
