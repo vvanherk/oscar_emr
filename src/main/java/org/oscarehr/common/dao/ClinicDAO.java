@@ -86,11 +86,11 @@ public class ClinicDAO extends AbstractDao<Clinic> {
 
 
     public void save(Clinic clinic) {
-        if(clinic.getId() != null && clinic.getId().intValue()>0) {
+        //if(clinic.getId() != null && clinic.getId().intValue()>0) {
         	merge(clinic);
-        } else {
-        	persist(clinic);
-        }
+        //} else {
+        //	persist(clinic);
+        //}
     }
 
 	public void delete(Clinic clinic) {
