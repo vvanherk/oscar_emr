@@ -166,6 +166,10 @@ public class Clinic extends AbstractModel<Integer> implements Serializable {
     public void setClinicDelimFax(String clinicDelimFax) {
         this.clinicDelimFax = clinicDelimFax;
     }
+    
+    public boolean isNew() {
+		return this.getId() == null || this.getId().intValue() <= 0;
+	}
 
     public String toString(){
        return "clinicName " +clinicName +

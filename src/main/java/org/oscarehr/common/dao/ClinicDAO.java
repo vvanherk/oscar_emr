@@ -25,6 +25,10 @@
 
 package org.oscarehr.common.dao;
 
+import org.apache.log4j.Logger;
+
+import org.oscarehr.util.MiscUtils;
+
 import java.util.List;
 
 import javax.persistence.Query;
@@ -39,19 +43,19 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ClinicDAO extends AbstractDao<Clinic> {
 
+	static Logger logger = MiscUtils.getLogger();
+
     public ClinicDAO() {
     	super(Clinic.class);
     }
 
 	public int getNumberOfClinics(){
-		Query query = entityManager.createQuery("select count(c) from Clinic c");
-
-		Number countResult = (Number) query.getSingleResult();
+        List<Clinic> codeList = findAll();
         
-        if (countResult == null)
+        if (codeList == null)
 			return 0;
 		
-        return countResult.intValue();
+        return codeList.size();
     }
 
     public Clinic getClinic(){
@@ -63,21 +67,23 @@ public class ClinicDAO extends AbstractDao<Clinic> {
         }
         return null;
     }
-    
-    public List<Clinic> getClinics(){
-    	Query query = entityManager.createQuery("select c from Clinic c");
+
+	public List<Clinic> findAll(){
+        Query query = entityManager.createQuery("select c from Clinic c");
+        
         @SuppressWarnings("unchecked")
         List<Clinic> codeList = query.getResultList();
-                
+        
         return codeList;
     }
-
-	public Clinic find(long clinicNo){
-		Query query = entityManager.createQuery("select c from Clinic c where c.id = (:id)");
+    
+    public Clinic find(int clinicNo){
+        Query query = entityManager.createQuery("select c from Clinic c where c.id = :id");
         query.setParameter("id", clinicNo);
-
-		List<Clinic> codeList = query.getResultList();
-
+        
+        @SuppressWarnings("unchecked")
+        List<Clinic> codeList = query.getResultList();
+        
         if (codeList == null || codeList.size() == 0)
 			return null;
         
@@ -85,8 +91,8 @@ public class ClinicDAO extends AbstractDao<Clinic> {
     }
 
 
-    public void save(Clinic clinic) {
-        //if(clinic.getId() != null && clinic.getId().intValue()>0) {
+    public void save(Clinic clinic) {		
+        //if(!clinic.isNew()) {
         	merge(clinic);
         //} else {
         //	persist(clinic);

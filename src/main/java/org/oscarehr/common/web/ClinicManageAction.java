@@ -101,6 +101,7 @@ public class ClinicManageAction extends DispatchAction {
         if(request.getParameter("clinic.id") != null && request.getParameter("clinic.id").length()>0 && clinic.getId()==null) {
         	clinic.setId(Integer.parseInt(request.getParameter("clinic.id")));
         }
+		
         clinicDAO.save(clinic);
         
         // Set the clinicNo so the 'view' action can load it properly
@@ -148,7 +149,7 @@ public class ClinicManageAction extends DispatchAction {
 		try {
 			clinicDAO.delete(clinic);
 		} catch (Exception e) {
-			logger.error("Unable to delete Clinic");
+			logger.error("Unable to delete Clinic.", e);
 			request.setAttribute("actionResultMessage", "Unable to delete Clinic");
 			request.setAttribute("actionResult", -1);
 			return view(mapping, form, request, response);
@@ -168,7 +169,7 @@ public class ClinicManageAction extends DispatchAction {
     }
     
     private void putClinicsInRequest(HttpServletRequest request) {
-		List<Clinic> clinics = this.clinicDAO.getClinics();
+		List<Clinic> clinics = this.clinicDAO.findAll();
 		
 		request.setAttribute("clinics", clinics);
 	}
