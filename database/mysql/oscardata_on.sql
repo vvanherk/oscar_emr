@@ -13160,6 +13160,7 @@ INSERT INTO billing_payment_type (id, payment_type) VALUES (6,'ELECTRONIC');
 INSERT INTO billing_payment_type (id, payment_type) VALUES (7,'DEBIT');
 INSERT INTO billing_payment_type (id, payment_type) VALUES (8,'ALTERNATE');
 
+insert into billing_on_errorCode values ('ARF', 'Technical service code requires referring physician');
 insert into billing_on_errorCode values ('HCC', 'Not complex/vulnerable');
 insert into billing_on_errorCode values ('AC4', 'unacceptable Ref. #');
 insert into billing_on_errorCode values ('AD3', 'not allowed with visit');
