@@ -455,16 +455,27 @@ public final class MessageUploader {
 
 			if (!firstName.equals("")) firstName = firstName.substring(0, 1);
 			if (!lastName.equals("")) lastName = lastName.substring(0, 1);
-
-			if (hinMod.equals("%")) {
-				if (OscarProperties.getInstance().getBooleanProperty("LAB_NOMATCH_NAMES", "yes")) {
-					sql = "select demographic_no, provider_no from demographic where hin='" + hinMod + "' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
-				} else {
-					sql = "select demographic_no, provider_no from demographic where hin='" + hinMod + "' and " + " last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
-				}
-			} else {
-				sql = "select demographic_no, provider_no from demographic where" + " last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
+			
+			String nameCondition = "";
+			String hinCondition = "";
+		
+			if (!OscarProperties.getInstance().getBooleanProperty("LAB_NOMATCH_NAMES", "yes")) {
+				nameCondition = "and last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' ";
 			}
+
+			if (!hinMod.equals("%")) {
+				hinCondition = "and hin='"+ hinMod +"' ";
+			}
+			
+			sql = 	"select d.demographic_no, d.provider_no from demographic d left join demographic_merged dm on dm.demographic_no = d.demographic_no  where " +
+					"year_of_birth like '" + dobYear + "' " +
+					"and month_of_birth like '" + dobMonth + "' " +
+					"and date_of_birth like '" + dobDay + "' " +
+					"and sex like '" + sex + "%' " +
+					"and dm.merged_to is NULL " +
+					nameCondition +
+					hinCondition
+			;
 
 			logger.info(sql);
 			PreparedStatement pstmt = conn.prepareStatement(sql);
