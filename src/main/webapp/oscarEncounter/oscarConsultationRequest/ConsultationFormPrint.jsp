@@ -167,7 +167,7 @@
 	    	//is letterhead different?
 	    	if(!reqFrm.letterheadName.equals(clinic.getClinicName()) && !reqFrm.letterheadName.equals("-1")) {
 	    		Provider p = providerDao.getProvider(reqFrm.letterheadName);
-	    		if(p != null && !p.getProviderNo().equals("-1")) {
+	    		if(p != null) {
 		    		//why, yes it is
 		    		vecAddressName = new Vector();
 			        vecAddress = new Vector();
