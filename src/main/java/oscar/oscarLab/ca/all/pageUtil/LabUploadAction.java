@@ -93,6 +93,7 @@ public class LabUploadAction extends Action {
                 		logger.info("Filtering out this message, as we don't have client ref " + filterHandler.getClientRef() + " in our database (" + file + ")");
                 		outcome="uploaded";
                 		request.setAttribute("outcome", outcome);
+                		request.getSession(false).invalidate();
                 		return mapping.findForward("success");
                 	}
                 }
@@ -132,8 +133,12 @@ public class LabUploadAction extends Action {
             } catch (IOException e) {
 	            logger.error("Error", e);
             }
+            request.getSession(false).invalidate();
 			return (null);
-		} else return mapping.findForward("success");
+		} else {
+			request.getSession(false).invalidate();
+			return mapping.findForward("success");
+		}
 	}
 
 	public LabUploadAction() {
