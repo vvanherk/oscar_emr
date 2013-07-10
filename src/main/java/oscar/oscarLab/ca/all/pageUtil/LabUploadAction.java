@@ -58,7 +58,10 @@ public class LabUploadAction extends Action {
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		LabUploadForm frm = (LabUploadForm) form;
 		FormFile importFile = frm.getImportFile();
-
+		
+		// We don't want a session...
+		request.getSession(false).invalidate();
+		
 		String signature = request.getParameter("signature");
 		String key = request.getParameter("key");
 		String service = request.getParameter("service");
@@ -93,7 +96,6 @@ public class LabUploadAction extends Action {
                 		logger.info("Filtering out this message, as we don't have client ref " + filterHandler.getClientRef() + " in our database (" + file + ")");
                 		outcome="uploaded";
                 		request.setAttribute("outcome", outcome);
-                		request.getSession(false).invalidate();
                 		return mapping.findForward("success");
                 	}
                 }
@@ -133,12 +135,8 @@ public class LabUploadAction extends Action {
             } catch (IOException e) {
 	            logger.error("Error", e);
             }
-            request.getSession(false).invalidate();
 			return (null);
-		} else {
-			request.getSession(false).invalidate();
-			return mapping.findForward("success");
-		}
+		} else return mapping.findForward("success");
 	}
 
 	public LabUploadAction() {
