@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -22,6 +22,7 @@
  * Ontario, Canada
  */
 
+
 package oscar.form.graphic;
 
 import java.text.ParseException;
@@ -29,8 +30,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.Properties;
-import java.util.Vector;
 
 import org.oscarehr.util.MiscUtils;
 
@@ -44,6 +45,7 @@ public class FrmPdfGraphicRourke extends FrmPdfGraphic {
     
     private final static String DATEFORMAT = new String("dd/MM/yyyy");    
     
+    int xDateScale;
     int nMaxPixX;
     int nMaxPixY;
     float fStartX;
@@ -57,6 +59,8 @@ public class FrmPdfGraphicRourke extends FrmPdfGraphic {
     Properties xyProp;
     
     public void init( Properties prop ) {
+    			xDateScale = Integer.parseInt(prop.getProperty("__xDateScale","-1"));
+    	
                 String str = prop.getProperty("__nMaxPixX");
                 nMaxPixX = toInt(str);
                 
@@ -93,7 +97,8 @@ public class FrmPdfGraphicRourke extends FrmPdfGraphic {
                 
                 //use __finalEDB as place holder for start date
                 str = prop.getProperty("__finalEDB");
-                str = makeDateStr(str);                
+                str = makeDateStr(str);  
+                MiscUtils.getLogger().debug("Setting start date " + str);
                 startDate = createCalendar(str);
     }        
     
@@ -112,7 +117,7 @@ public class FrmPdfGraphicRourke extends FrmPdfGraphic {
         return cal;
     }
     
-    public Properties getGraphicXYProp(Vector xDate, Vector yHeight) {
+    public Properties getGraphicXYProp(List xDate, List yHeight) {
         xyProp = new Properties();
         String x,y;
 	for (int i = 0; i < xDate.size(); i++) {
@@ -140,21 +145,29 @@ public class FrmPdfGraphicRourke extends FrmPdfGraphic {
             curDate = createCalendar(xDate);                        
             
             //what months are we dealing with?
-            smonth = (float)startDate.get(Calendar.MONTH);
-            emonth = (float)curDate.get(Calendar.MONTH);
+            smonth = startDate.get(Calendar.MONTH);
+            emonth = curDate.get(Calendar.MONTH);
             
             //what fraction of each month do we have?
-            sday = (float)startDate.get(Calendar.DAY_OF_MONTH);
-            eday = (float)curDate.get(Calendar.DAY_OF_MONTH);
+            sday = startDate.get(Calendar.DAY_OF_MONTH);
+            eday = curDate.get(Calendar.DAY_OF_MONTH);
             
             MiscUtils.getLogger().debug("sday, eday " + sday + ", " + eday);
             
-            smonth += (sday / (float)startDate.getActualMaximum(Calendar.DAY_OF_MONTH));
-            emonth += (eday / (float)curDate.getActualMaximum(Calendar.DAY_OF_MONTH));                        
+            smonth += (sday / startDate.getActualMaximum(Calendar.DAY_OF_MONTH));
+            emonth += (eday / curDate.getActualMaximum(Calendar.DAY_OF_MONTH));                        
             
             //don't forget to add years
-            smonth += (float)startDate.get(Calendar.YEAR) * 12.0;
-            emonth += (float)curDate.get(Calendar.YEAR) * 12.0;
+            switch (xDateScale) {
+            case Calendar.YEAR:
+            	smonth = (smonth/12.0f) + startDate.get(Calendar.YEAR);
+                emonth = (emonth/12.0f) + curDate.get(Calendar.YEAR);
+            case Calendar.MONTH:
+            default:
+            	smonth += startDate.get(Calendar.YEAR) * 12.0;
+                emonth += curDate.get(Calendar.YEAR) * 12.0;
+                break;
+            }
             
             if ( smonth > emonth ) {
                 MiscUtils.getLogger().debug("FrmPdfGraphicRourke: Start date after xDate");
@@ -172,7 +185,16 @@ public class FrmPdfGraphicRourke extends FrmPdfGraphic {
             ycoord = deltaY * (ycoord - fStartY);
             
             MiscUtils.getLogger().debug("Graphic x y: " + xcoord + ", " + ycoord );
-            xyProp.setProperty(String.valueOf(xcoord), String.valueOf(ycoord));
+            
+            if( xyProp.containsKey(String.valueOf(xcoord)) ) {
+            	StringBuilder yvalue = new StringBuilder(xyProp.getProperty(String.valueOf(xcoord)));
+            	yvalue = yvalue.append(",");
+            	yvalue = yvalue.append(String.valueOf(ycoord));
+            	xyProp.setProperty(String.valueOf(xcoord), yvalue.toString());
+            }
+            else {
+            	xyProp.setProperty(String.valueOf(xcoord), String.valueOf(ycoord));
+            }
         }
     }
     

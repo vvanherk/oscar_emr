@@ -1,28 +1,28 @@
-<!--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University test2
- * Hamilton 
- * Ontario, Canada 
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 
 <%
 if(session.getValue("user") == null) response.sendRedirect("../logout.htm");
@@ -63,7 +63,7 @@ if (request.getParameter("function") != null) {
 }
 
 OscarProperties props = OscarProperties.getInstance();
-String defaultType = (String) props.getProperty("eDocAddTypeDefault", "");
+String defaultType = props.getProperty("eDocAddTypeDefault", "");
 String defaultDesc = "Enter Title"; //if defaultType isn't defined, this value is used for the title/description
 
 Hashtable linkhtmlerrors = new Hashtable();
@@ -107,8 +107,8 @@ if (request.getAttribute("completedForm") != null) {
     oldDoc = false;
 }
 
-ArrayList<Hashtable> pdList = new ProviderData().getProviderList();
-ArrayList doctypes = EDocUtil.getDoctypes(module);
+ArrayList<Hashtable<String,String>> pdList = new ProviderData().getProviderList();
+ArrayList<String> doctypes = EDocUtil.getDoctypes(module);
 String annotation_display = org.oscarehr.casemgmt.model.CaseManagementNoteLink.DISP_DOCUMENT;
 String annotation_tableid = editDocumentNo;
 Long now = new Date().getTime();
@@ -182,7 +182,7 @@ for (String reportClass : reportClasses) {
 <script type="text/javascript">
             window.onload=function(){
                 if(!NiftyCheck()) return;
-                
+
                     //Rounded("div.leftplane","top", "transparent", "#CCCCFF","small border #ccccff");
                     //Rounded("div.leftplane","bottom","transparent","#EEEEFF","small border #ccccff");
             }
@@ -229,6 +229,17 @@ for (String reportClass : reportClasses) {
             "<%=subClasses.get(i)%>"<%=(i<subClasses.size()-1)?",":""%>
 <% } %>
             ];
+            
+function newDocType(){ 
+	var newOpt = prompt("Please enter new document type:", ""); 
+	if (newOpt != "") { 
+		document.getElementById("docType").options[document.getElementById("docType").length] = new Option(newOpt, newOpt); 
+		document.getElementById("docType").options[document.getElementById("docType").length-1].selected = true;                 
+	} else { 
+		alert("Invalid entry"); 
+	}
+} 
+
         </script>
 <link rel="stylesheet" type="text/css" media="all" href="../share/css/extractedFromPages.css"  />
 </head>
@@ -253,23 +264,20 @@ for (String reportClass : reportClasses) {
 	<input type="hidden" name="reviewDateTime" value="<%=formdata.getReviewDateTime()%>" />
 	<input type="hidden" name="reviewDoc" value="false" />
 	<input type="hidden" name="annotation_attrib" value="<%=annotation_attrib%>" />
-	
+
 	<table width="100%" height="100%" class="layouttable">
 		<tr>
 			<td width="180px">Type:</td>
-			<td><select name="docType" id="docType"
-				onchange="checkSel(this)"
-				<% if (linkhtmlerrors.containsKey("typemissing")) {%>
-				class="warning" <%}%>>
-				<option value=""><bean:message
-					key="dms.addDocument.formSelect" /></option>
-				<%for (int i=0; i<doctypes.size(); i++) {
-                             String doctype = (String) doctypes.get(i); %>
-				<option value="<%= doctype%>"
-					<%=(formdata.getDocType().equals(doctype))?" selected":""%>><%= doctype%></option>
-				<%}%>
-                            </select>
-                        </td>
+				<td> 
+					<select id="docType" name="docType" style="width: 160" > 
+					<option value=""><bean:message key="dms.addDocument.formSelect" /></option> 
+					<% for (int i=0; i<doctypes.size(); i++) { 
+						String doctype = doctypes.get(i); %> 
+						<option value="<%= doctype%>" <%=(formdata.getDocType().equals(doctype))?" selected":""%>><%= doctype%></option> 
+					<%}%> 
+					</select> 
+					<input id="docTypeinput" type="button" size="20" onClick="newDocType();" value="<bean:message key="dms.documentEdit.formAddNewDocType"/> " /> 
+				</td> 
                 </tr>
                 <tr>
                         <td><bean:message key="dms.addDocument.msgDocClass"/>:</td>
@@ -302,7 +310,7 @@ for (String reportClass : reportClasses) {
 		</tr>
 		<tr>
 			<td>Added By:</td>
-			<td><%=EDocUtil.getModuleName("provider", formdata.getDocCreator())%></td>
+			<td><%=EDocUtil.getProviderName(formdata.getDocCreator())%></td>
 		</tr>
 		<tr>
 			<td>Responsible Provider:</td>
@@ -311,7 +319,7 @@ for (String reportClass : reportClasses) {
 				<option value="">---</option>
 		<% for (Hashtable pd : pdList) {
 			String selected = "";
-			if (formdata.getResponsibleId().equals((String)pd.get("providerNo"))) selected = "selected";
+			if (formdata.getResponsibleId().equals(pd.get("providerNo"))) selected = "selected";
 			%>
 				<option value="<%=pd.get("providerNo")%>" <%=selected%>><%=pd.get("lastName")%>, <%=pd.get("firstName")%></option>
 		<% } %>
@@ -348,7 +356,7 @@ for (String reportClass : reportClasses) {
 		<tr>
 			<td colspan="2">
 			    <% if (formdata.getReviewerId()!=null && !formdata.getReviewerId().equals("")) { %>
-			    Reviewed: &nbsp; <%=EDocUtil.getModuleName("provider", formdata.getReviewerId())%>
+			    Reviewed: &nbsp; <%=EDocUtil.getProviderName(formdata.getReviewerId())%>
 			    &nbsp; [<%=formdata.getReviewDateTime()%>]
 			    <% } else { %>
 			    <input type="button" value="Reviewed" title="Click to set Reviewed" onclick="reviewed(this);" />

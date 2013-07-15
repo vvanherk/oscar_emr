@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package oscar.oscarLab.ca.all.parsers;
 
 import java.util.ArrayList;
@@ -256,7 +279,7 @@ public class EpsilonHandler  extends CMLHandler implements MessageHandler {
 	        try{
 	            
 	            Terser terser = new Terser(msg);
-	            result = getString(terser.get(msg.getRESPONSE().getORDER_OBSERVATION(i).getOBSERVATION(j).getOBX(),5,0,1,1));
+	            result = getString(Terser.get(msg.getRESPONSE().getORDER_OBSERVATION(i).getOBSERVATION(j).getOBX(),5,0,1,1));
 	            
 	            // format the result
 	            if (result.endsWith("."))
@@ -277,9 +300,9 @@ public class EpsilonHandler  extends CMLHandler implements MessageHandler {
 	            
 	            Terser terser = new Terser(msg);
 	            OBX obxSeg = msg.getRESPONSE().getORDER_OBSERVATION(i).getOBSERVATION(j).getOBX();
-	            comment = terser.get(obxSeg,7,k,1,1);
+	            comment = Terser.get(obxSeg,7,k,1,1);
 	            if (comment == null)
-	                comment = terser.get(obxSeg,7,k,2,1);
+	                comment = Terser.get(obxSeg,7,k,2,1);
 	            
 	        }catch(Exception e){
 	            logger.error("Cannot return comment", e);
@@ -312,11 +335,11 @@ public class EpsilonHandler  extends CMLHandler implements MessageHandler {
 	            l--;
 	            
 	            int k = 0;
-	            String nextComment = terser.get(obxSeg,5,k,1,1);
+	            String nextComment = Terser.get(obxSeg,5,k,1,1);
 	            while(nextComment != null){
 	                comment = comment + nextComment.replaceAll("\\\\\\.br\\\\", "<br />");
 	                k++;
-	                nextComment = terser.get(obxSeg,5,k,1,1);
+	                nextComment = Terser.get(obxSeg,5,k,1,1);
 	            }
 	            
 	        } catch (Exception e) {

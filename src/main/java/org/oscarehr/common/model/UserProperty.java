@@ -1,86 +1,94 @@
-/*
+/**
  *
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * <OSCAR TEAM>
- *
- * UserProperty.java
- *
- * Created on December 19, 2007, 4:30 PM
- *
- *
- *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
+
 
 package org.oscarehr.common.model;
 
 import java.io.Serializable;
 
-/**
- *
- * @author rjonasz
- */
-public class UserProperty implements Serializable {
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+import javax.persistence.Transient;
 
-    public final static String MYOSCAR_ID="MyOscarId";
-    public final static String STALE_NOTEDATE = "cme_note_date";
-    public final static String STALE_FORMAT = "cme_note_format";
-    public final static String MYDRUGREF_ID = "mydrugref_id";
-    public final static String ONTARIO_MD_USERNAME = "ontario_md_username";
-    public final static String ONTARIO_MD_PASSWORD = "ontario_md_password";
-    public final static String CONSULTATION_TIME_PERIOD_WARNING = "consultation_time_period_warning";
-    public final static String CONSULTATION_TEAM_WARNING = "consultation_team_warning";
-    public final static String WORKLOAD_MANAGEMENT = "workload_management";
-    public final static String CONSULTATION_REQ_PASTE_FMT = "consultation_req_paste_fmt";
-    public final static String RX_PAGE_SIZE = "rx_page_size";
-    public final static String RX_DEFAULT_QUANTITY = "rx_default_quantity";
-    public final static String RX_PROFILE_VIEW = "rx_profile_view";
-    public final static String RX_USE_RX3 = "rx_use_rx3";
-    public final static String USE_MYMEDS = "use_mymeds";
-    public final static String DMFLOW_SHEET_VIEW = "DMFlowsheet_view";
-    public final static String DOC_DEFAULT_QUEUE="doc_default_queue";
-    public final static String HC_TYPE= "HC_Type";
-    public final static String DEFAULT_SEX= "default_sex";
+@Entity
+@Table(name="property")
+public class UserProperty extends AbstractModel<Integer> implements Serializable {
 
-    public final static String EFORM_FAVOURITE_GROUP = "favourite_eform_group";
-    public final static String RX_SHOW_PATIENT_DOB="rx_show_patient_dob";
+    @Transient public final static String MYOSCAR_ID="MyOscarId";
+    @Transient public final static String STALE_NOTEDATE = "cme_note_date";
+    @Transient public final static String STALE_FORMAT = "cme_note_format";
+    @Transient public final static String MYDRUGREF_ID = "mydrugref_id";
+    @Transient public final static String ONTARIO_MD_USERNAME = "ontario_md_username";
+    @Transient public final static String ONTARIO_MD_PASSWORD = "ontario_md_password";
+    @Transient public final static String CONSULTATION_TIME_PERIOD_WARNING = "consultation_time_period_warning";
+    @Transient public final static String CONSULTATION_TEAM_WARNING = "consultation_team_warning";
+    @Transient public final static String WORKLOAD_MANAGEMENT = "workload_management";
+    @Transient public final static String CONSULTATION_REQ_PASTE_FMT = "consultation_req_paste_fmt";
+    @Transient public final static String RX_PAGE_SIZE = "rx_page_size";
+    @Transient public final static String RX_DEFAULT_QUANTITY = "rx_default_quantity";
+    @Transient public final static String RX_PROFILE_VIEW = "rx_profile_view";
+    @Transient public final static String RX_USE_RX3 = "rx_use_rx3";
+    @Transient public final static String USE_MYMEDS = "use_mymeds";
+    @Transient public final static String DMFLOW_SHEET_VIEW = "DMFlowsheet_view";
+    @Transient public final static String DOC_DEFAULT_QUEUE="doc_default_queue";
+    @Transient public final static String HC_TYPE= "HC_Type";
+    @Transient public final static String DEFAULT_SEX= "default_sex";
+    @Transient public final static String EFORM_REFER_FAX = "eform_refer_fax";
+    @Transient public final static String EFORM_FAVOURITE_GROUP = "favourite_eform_group";
+    @Transient public final static String RX_SHOW_PATIENT_DOB="rx_show_patient_dob";
+    @Transient public final static String PATIENT_NAME_LENGTH="patient_name_length";
 
     //added to user properties with new interface
-    public final static String FAX = "fax";
-    public final static String SIGNATURE = "signature";
-    public final static String COLOUR = "colour";
-    public final static String SEX = "sex";
-    public final static String SCHEDULE_START_HOUR = "schedule.start_hour";
-    public final static String SCHEDULE_END_HOUR = "schedule.end_hour";
-    public final static String SCHEDULE_PERIOD = "schedule.period";
-    public final static String MYGROUP_NO = "mygroup_no";
-    public final static String NEW_CME = "new_cme";
-    public final static String ENCOUNTER_FORM_LENGTH = "encounter.form_length";
-    public final static String ENCOUNTER_FORM_NAME = "encounter.form_name";
-    public final static String EFORM_NAME = "encounter.eform_name";
-    public final static String RX_SHOW_QR_CODE = "rx_show_qr_code";
-    public final static String MYMEDS = "mymeds";
-    public final static String NEW_TICKLER_WARNING_WINDOW = "new_tickler_warning_window";
-    public final static String CAISI_DEFAULT_PMM = "caisi.default_pmm";
-    public final static String CAISI_PREV_BILLING = "caisi.prev_billing";
-    public final static String DEFAULT_BILLING_FORM = "default_billing_form";
-    public final static String DEFAULT_REFERRAL_TYPE = "default_referral_type";
-    public final static String DEFAULT_PAYEE = "default_payee";
-    public final static String DEFAULT_DX_CODE = "default_dx_code";
-    public final static String CPP_SINGLE_LINE="cpp_single_line";
-    public final static String LAB_ACK_COMMENT="lab_ack_comment";
-
+    public static final String FAX = "fax";
+    public static final String SIGNATURE = "signature";
+    public static final String COLOUR = "colour";
+    public static final String SEX = "sex";
+    public static final String SCHEDULE_START_HOUR = "schedule.start_hour";
+    public static final String SCHEDULE_END_HOUR = "schedule.end_hour";
+    public static final String SCHEDULE_PERIOD = "schedule.period";
+    public static final String MYGROUP_NO = "mygroup_no";
+    public static final String NEW_CME = "new_cme";
+    public static final String ENCOUNTER_FORM_LENGTH = "encounter.form_length";
+    public static final String ENCOUNTER_FORM_NAME = "encounter.form_name";
+    public static final String EFORM_NAME = "encounter.eform_name";
+    public static final String RX_SHOW_QR_CODE = "rx_show_qr_code";
+    public static final String MYMEDS = "mymeds";
+    public static final String NEW_TICKLER_WARNING_WINDOW = "new_tickler_warning_window";
+    public static final String CAISI_DEFAULT_PMM = "caisi.default_pmm";
+    public static final String CAISI_PREV_BILLING = "caisi.prev_billing";
+    public static final String DEFAULT_BILLING_FORM = "default_billing_form";
+    public static final String DEFAULT_REFERRAL_TYPE = "default_referral_type";
+    public static final String DEFAULT_PAYEE = "default_payee";
+    public static final String DEFAULT_DX_CODE = "default_dx_code";
+    public static final String CPP_SINGLE_LINE="cpp_single_line";
+    public static final String LAB_ACK_COMMENT="lab_ack_comment";
+    public static final String EDOC_BROWSER_IN_MASTER_FILE="edoc_browser_in_master_file";
+    public static final String EDOC_BROWSER_IN_DOCUMENT_REPORT="edoc_browser_in_document_report";
+  
 
     public static final String INTEGRATOR_DEMOGRAPHIC_SYNC = "integrator_demographic_sync";
     public static final String INTEGRATOR_DEMOGRAPHIC_ISSUES = "integrator_demographic_issues";
@@ -105,12 +113,18 @@ public class UserProperty implements Serializable {
     public static final String INTEGRATOR_FULL_PUSH = "integrator_full_push";
     public static final String INTEGRATOR_LAST_PUSH = "integrator_last_push";
     public static final String INTEGRATOR_LAST_UPDATED = "integrator_last_updated";
+	public static final String INTEGRATOR_LAST_PULL_PRIMARY_EMR = "integrator_last_pull";
 
-    private long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
     private String name;
     private String value;
+    @Column(name="provider_no")
     private String providerNo;
+    @Transient
     private String[] valueArray;
+    @Transient
     private boolean checked;
 
     public boolean isChecked(){
@@ -153,11 +167,11 @@ public class UserProperty implements Serializable {
         this.name = name;
     }
 
-    public long getId() {
+    public Integer getId() {
         return this.id;
     }
 
-    public void setId(long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 

@@ -1,41 +1,54 @@
-/*
+/**
  *
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * Jason Gallagher
- *
- * UserProperty.java
- *
- * Created on December 19, 2007, 4:30 PM
- *
- *
- *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
+
 
 package org.oscarehr.common.model;
 
 import java.io.Serializable;
 
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
 /**
  *
  * @author Jay Gallagher
  */
-public class CountryCode implements Serializable {
-    
-    private long id;
+@Entity
+@Table(name="country_codes")
+public class CountryCode extends AbstractModel<Integer> implements Serializable {
+
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+	@Column(name="country_name")
     private String countryName;
+	@Column(name="country_id")
     private String countryId;
+	@Column(name="c_locale")
     private String clocale;
 
     public void setClocale(String cLocale) {
@@ -61,22 +74,13 @@ public class CountryCode implements Serializable {
     public String getCountryName() {
         return countryName;
     }
-   
-        
-    //country_name                                 | country_id | c_locale
-    
-    public long getId() {
+
+    public Integer getId() {
         return this.id;
     }
-    
-    public void setId(long id) {
+
+    public void setId(Integer id) {
         this.id = id;
     }
-    
-    
-    /** Creates a new instance of UserProperty */
-    public CountryCode() {
-    }
 
-    
 }

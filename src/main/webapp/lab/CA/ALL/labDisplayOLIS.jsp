@@ -1,3 +1,13 @@
+<%--
+
+    Copyright (c) 2008-2012 Indivica Inc.
+
+    This software is made available under the terms of the
+    GNU General Public License, Version 2, 1991 (GPLv2).
+    License details are available via "indivica.ca/gplv2"
+    and "gnu.org/licenses/gpl-2.0.html".
+
+--%>
 <%@ page language="java" errorPage="../../../provider/errorpage.jsp" %>
 <%@ page import="java.util.*,java.sql.*,org.oscarehr.olis.*,org.oscarehr.common.dao.PatientLabRoutingDao, org.oscarehr.util.SpringUtils, org.oscarehr.common.model.PatientLabRouting,oscar.oscarLab.ca.all.*,oscar.oscarLab.ca.all.util.*,oscar.oscarLab.ca.all.parsers.*,oscar.oscarLab.LabRequestReportLink,oscar.oscarMDS.data.ReportStatus,oscar.log.*,org.apache.commons.codec.binary.Base64" %>
 <%@page import="org.oscarehr.util.AppointmentUtil" %>
@@ -8,8 +18,7 @@
 <%@ taglib uri="/WEB-INF/oscarProperties-tag.tld" prefix="oscarProperties"%>
 <%@ taglib uri="/WEB-INF/indivo-tag.tld" prefix="indivo"%>
 <%
-
-String segmentID = request.getParameter("segmentID");
+	String segmentID = request.getParameter("segmentID");
 String originalSegmentID = segmentID;
 String providerNo = request.getParameter("providerNo");
 String searchProviderNo = request.getParameter("searchProviderNo");
@@ -22,7 +31,7 @@ String reqTableID = reqIDL==null ? "" : reqIDL.toString();
 
 PatientLabRoutingDao plrDao = preview ? null : (PatientLabRoutingDao) SpringUtils.getBean("patientLabRoutingDao");
 PatientLabRouting plr = preview ? null : plrDao.findDemographicByLabId(Integer.valueOf(segmentID));
-String demographicID = preview || plr.getDemographicNumber() == null ? "" : plr.getDemographicNumber().toString();
+String demographicID = preview || plr.getDemographicNo() == null ? "" : plr.getDemographicNo().toString();
 
 
 if(demographicID != null && !demographicID.equals("")){
@@ -65,7 +74,7 @@ if (handlerMain instanceof OLISHL7Handler) {
 	handler = (OLISHL7Handler) handlerMain;
 }
 else {
-	%> <jsp:forward page="labDisplay.jsp" /> <%
+%> <jsp:forward page="labDisplay.jsp" /> <%
 }
 if (!preview && "true".equals(request.getParameter("showLatest"))) {
 
@@ -1623,4 +1632,3 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
         </form>
     </body>
 </html>
-

@@ -1,6 +1,30 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package oscar.form.study.HSFO.pageUtil;
 
-import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,7 +54,7 @@ public class RecommitHSFOAction extends DispatchActionSupport {
 
     protected static Logger logger = Logger.getLogger(RecommitHSFOAction.class);
 
-    public ActionForward showSchedule(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws SQLException {
+    public ActionForward showSchedule(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response)  {
         LazyValidatorForm sform = (LazyValidatorForm)form;
         boolean sflag = false;// whether have current schedule
         boolean cflag = true;// whether copy the demographic info to
@@ -128,7 +152,7 @@ public class RecommitHSFOAction extends DispatchActionSupport {
                 XMLTransferUtil tfutil = new XMLTransferUtil();
                 RecommitDAO rDao = new RecommitDAO();
                 RecommitSchedule rs = rDao.getLastSchedule(false);
-                ArrayList message = new ArrayList();
+                ArrayList<String> message = new ArrayList<String>();
                 String retS = null;
                 if (!"D".equalsIgnoreCase(rs.getStatus())) {
                     rs.setStatus("D");
@@ -149,7 +173,7 @@ public class RecommitHSFOAction extends DispatchActionSupport {
                     }
                     message = tfutil.validateDoc(doc);
                     if (message.size() != 0) {
-                        rs.setMemo((String)message.get(0));
+                        rs.setMemo(message.get(0));
                         rDao.updateLastSchedule(rs);
                         return;
                     }
@@ -163,7 +187,7 @@ public class RecommitHSFOAction extends DispatchActionSupport {
                         logger.error("Error", e);
                         throw e;
                     }
-                    String msg = "Code: " + (String)message.get(0) + " " + (String)message.get(1);
+                    String msg = "Code: " + message.get(0) + " " + message.get(1);
                     rs.setMemo(msg);
                     rDao.updateLastSchedule(rs);
                 }
@@ -179,7 +203,7 @@ public class RecommitHSFOAction extends DispatchActionSupport {
 
     }
 
-    public ActionForward test(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    public ActionForward test(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response)  {
 
         return null;
     }

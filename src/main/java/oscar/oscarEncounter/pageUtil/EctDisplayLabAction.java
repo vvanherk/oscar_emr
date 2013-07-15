@@ -1,27 +1,27 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License. 
-// * This program is free software; you can redistribute it and/or 
-// * modify it under the terms of the GNU General Public License 
-// * as published by the Free Software Foundation; either version 2 
-// * of the License, or (at your option) any later version. * 
-// * This program is distributed in the hope that it will be useful, 
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-// * along with this program; if not, write to the Free Software 
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-// * 
-// * <OSCAR TEAM>
-// * This software was written for the 
-// * Department of Family Medicine 
-// * McMaster University 
-// * Hamilton 
-// * Ontario, Canada 
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
 
 package oscar.oscarEncounter.pageUtil;
 
@@ -52,8 +52,8 @@ public class EctDisplayLabAction extends EctDisplayAction {
 	  logger.debug("EctDisplayLabAction");
 	  
 	  CommonLabResultData comLab = new CommonLabResultData();
-        ArrayList labs = comLab.populateLabResultsData("",bean.demographicNo, "", "","","U");
-        Collections.sort(labs);               
+        ArrayList<LabResultData> labs = comLab.populateLabResultsData("",bean.demographicNo, "", "","","U");
+        Collections.sort(labs);
 
         //set text for lefthand module title
         Dao.setLeftHeading(messages.getMessage(request.getLocale(), "oscarEncounter.LeftNavBar.Labs"));
@@ -85,7 +85,7 @@ public class EctDisplayLabAction extends EctDisplayAction {
         StringBuilder func; 
         int hash;
         for( int idx = 0; idx < labs.size(); ++idx ) {
-            result = (LabResultData) labs.get(idx);
+            result =  labs.get(idx);
             Date date = result.getDateObj();
             String formattedDate = DateUtils.formatDate(date,request.getLocale());               
             func = new StringBuilder("popupPage(700,960,'");
@@ -105,13 +105,11 @@ public class EctDisplayLabAction extends EctDisplayAction {
                 url = request.getContextPath() + "/lab/CA/ALL/labDisplay.jsp?providerNo="+bean.providerNo+"&segmentID="+result.segmentID;
             }else {
             	if (label == null || label.equals("")) labDisplayName = result.getDiscipline();
-            	else labDisplayName = label; 
-                url = request.getContextPath() + "/lab/CA/BC/labDisplay.jsp?segmentID="+result.segmentID+"&providerNo="+bean.providerNo;                
-            }            
-             
-            logger.info("Lab display name: " + labDisplayName); 
-             
-            NavBarDisplayDAO.Item item = Dao.Item();
+            	else labDisplayName = label;
+                url = request.getContextPath() + "/lab/CA/BC/labDisplay.jsp?segmentID="+result.segmentID+"&providerNo="+bean.providerNo;
+            }
+
+            NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
             item.setLinkTitle(labDisplayName + " " + formattedDate);
             labDisplayName = StringUtils.maxLenString(labDisplayName, MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES); // +" "+formattedDate;
             hash = winName.hashCode();

@@ -1,13 +1,31 @@
+/**
+ * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 package oscar.form;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Properties;
 
-import org.oscarehr.common.dao.BillingreferralDao;
 import org.oscarehr.common.dao.ClinicDAO;
-import org.oscarehr.common.model.Billingreferral;
+import org.oscarehr.common.dao.ProfessionalSpecialistDao;
 import org.oscarehr.common.model.Clinic;
+import org.oscarehr.common.model.ProfessionalSpecialist;
 import org.oscarehr.util.SpringUtils;
 
 import oscar.OscarProperties;
@@ -18,7 +36,7 @@ import oscar.util.UtilDateUtilities;
 
 public class FrmConsultantRecord extends FrmRecord {
 
-	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
 	private ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
 
 
@@ -66,13 +84,12 @@ public class FrmConsultantRecord extends FrmRecord {
 
 
         public Properties getDocInfo(Properties props, String billingreferral_no) {
-            Billingreferral billingReferral = billingReferralDao.getByReferralNo(billingreferral_no);
-            if(billingReferral != null) {
-            	props.setProperty("t_name", "Dr. " + billingReferral.getFirstName() + " " + billingReferral.getLastName());
-            	props.setProperty("t_address1", billingReferral.getAddress1() +" " + billingReferral.getAddress2());
-            	props.setProperty("t_address2", billingReferral.getCity() + " " + billingReferral.getProvince() + " " + billingReferral.getPostal());
-            	props.setProperty("t_phone", billingReferral.getPhone());
-            	props.setProperty("t_fax", billingReferral.getFax());
+            ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(billingreferral_no);
+            if(professionalSpecialist != null) {
+            	props.setProperty("t_name", "Dr. " + professionalSpecialist.getFirstName() + " " + professionalSpecialist.getLastName());
+            	props.setProperty("t_address", professionalSpecialist.getStreetAddress());
+            	props.setProperty("t_phone", professionalSpecialist.getPhoneNumber());
+            	props.setProperty("t_fax", professionalSpecialist.getFaxNumber());
             }
 
             return props;
@@ -146,4 +163,3 @@ public class FrmConsultantRecord extends FrmRecord {
     }
 
 }
-

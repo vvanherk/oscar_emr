@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package org.oscarehr.PMmodule.caisi_integrator;
 
 import java.io.IOException;
@@ -25,13 +50,27 @@ import oscar.util.DateUtils;
 public final class RemotePreventionHelper {
 	private static Logger logger = MiscUtils.getLogger();
 
-	public static ArrayList<HashMap<String, Object>> getLinkedPreventionDataMap(Integer localDemographicId) throws MalformedURLException {
+	public static ArrayList<HashMap<String, Object>> getLinkedPreventionDataMap(Integer localDemographicId) {
 		ArrayList<HashMap<String, Object>> results = new ArrayList<HashMap<String, Object>>();
 
 		try {
-			DemographicWs demographicWs = CaisiIntegratorManager.getDemographicWs();
-			List<CachedDemographicPrevention> preventions = demographicWs.getLinkedCachedDemographicPreventionsByDemographicId(localDemographicId);
-
+			
+			
+			List<CachedDemographicPrevention> preventions  = null;
+			try {
+				if (!CaisiIntegratorManager.isIntegratorOffline()){
+				   DemographicWs demographicWs = CaisiIntegratorManager.getDemographicWs();
+				   preventions = demographicWs.getLinkedCachedDemographicPreventionsByDemographicId(localDemographicId);
+				}
+			} catch (Exception e) {
+				MiscUtils.getLogger().error("Unexpected error.", e);
+				CaisiIntegratorManager.checkForConnectionError(e);
+			}
+				
+			if(CaisiIntegratorManager.isIntegratorOffline()){
+			   preventions = IntegratorFallBackManager.getRemotePreventions(localDemographicId);
+			} 
+		 
 			for (CachedDemographicPrevention prevention : preventions) {
 				results.add(getPreventionDataMap(prevention));
 			}
@@ -54,7 +93,7 @@ public final class RemotePreventionHelper {
 		{
 			result.put("prevention_date_asDate", prevention.getPreventionDate().getTime());
 		}
-		
+
 		FacilityIdStringCompositePk providerPk=new FacilityIdStringCompositePk();
 		providerPk.setIntegratorFacilityId(prevention.getFacilityPreventionPk().getIntegratorFacilityId());
 		providerPk.setCaisiItemId(prevention.getCaisiProviderId());
@@ -63,7 +102,7 @@ public final class RemotePreventionHelper {
 		{
 			result.put("provider_name", cachedProvider.getLastName()+", "+cachedProvider.getFirstName());
 		}
-		
+
 		return (result);
 	}
 
@@ -71,20 +110,20 @@ public final class RemotePreventionHelper {
 		if (b) return ("1");
 		else return ("0");
 	}
-	
+
 	public static HashMap<String,String> getRemotePreventionAttributesAsHashMap(CachedDemographicPrevention prevention) throws IOException, SAXException, ParserConfigurationException
 	{
 		Document doc=XmlUtils.toDocument(prevention.getAttributes());
 		Node root=doc.getFirstChild();
 		HashMap<String,String> result=new HashMap<String, String>();
-		
+
 		NodeList nodeList=root.getChildNodes();
 		for (int i=0; i<nodeList.getLength(); i++)
 		{
 			Node node=nodeList.item(i);
 			result.put(node.getNodeName(), node.getTextContent());
 		}
-		
+
 		return(result);
 	}
 }

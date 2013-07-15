@@ -1,4 +1,29 @@
+<%--
 
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+<%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%
   if(session.getAttribute("user") == null) response.sendRedirect("../logout.jsp");
@@ -15,12 +40,12 @@
 <%@ page
 	import="org.springframework.web.context.*,org.springframework.web.context.support.*,org.oscarehr.common.dao.*,org.oscarehr.common.model.*"%>
 <%@page import="org.oscarehr.util.SpringUtils" %>
-<%@page import="org.oscarehr.common.model.Billingreferral" %>
-<%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
-<%@page import="org.oscarehr.common.model.UserProperty"%>
-<%@page import="org.oscarehr.common.dao.UserPropertyDAO"%>
+<%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
+<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
+<%@ page import="org.oscarehr.common.model.UserProperty"%>
+<%@ page import="org.oscarehr.common.dao.UserPropertyDAO"%>
 <%
-	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
 %>
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
@@ -28,7 +53,7 @@
 	scope="page" />
 <%@ include file="../admin/dbconnection.jsp"%>
 <%
-  String [][] dbQueries=new String[][] {
+	String [][] dbQueries=new String[][] {
     {"search_provider", "select * from provider where provider_type='doctor' and status='1' order by last_name"},
     {"search_rsstatus", "select distinct roster_status from demographic where roster_status != '' and roster_status != 'RO' and roster_status != 'NR' and roster_status != 'TE' and roster_status != 'FS' "},
     {"search_ptstatus", "select distinct patient_status from demographic where patient_status != '' and patient_status != 'AC' and patient_status != 'IN' and patient_status != 'DE' and patient_status != 'MO' and patient_status != 'FI'"},
@@ -58,7 +83,7 @@
   String defaultCity = prov.equals("ON")&&billingCentre.equals("N") ? "Toronto":"";
 
   WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
-  CountryCodeDAO ccDAO =  (CountryCodeDAO) ctx.getBean("countryCodeDAO");
+  CountryCodeDao ccDAO =  (CountryCodeDao) ctx.getBean("countryCodeDao");
 
   List<CountryCode> countryList = ccDAO.getAllCountryCodes();
 
@@ -82,36 +107,24 @@
   // Use this value as the default value for province, as well
   String defaultProvince = HCType;
 %>
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
+   <script>
+     jQuery.noConflict();
+   </script>
+<oscar:customInterface section="masterCreate"/>
+
 <title><bean:message
 	key="demographic.demographicaddrecordhtm.title" /></title>
+	
+<% if (OscarProperties.getInstance().getBooleanProperty("indivica_hc_read_enabled", "true")) { %>
+	<script language="javascript" src="<%=request.getContextPath() %>/hcHandler/hcHandler.js"></script>
+	<script language="javascript" src="<%=request.getContextPath() %>/hcHandler/hcHandlerNewDemographic.js"></script>
+	<link rel="stylesheet" href="<%=request.getContextPath() %>/hcHandler/hcHandler.css" type="text/css" />
+<% } %>
+	
 <!-- calendar stylesheet -->
 <link rel="stylesheet" type="text/css" media="all"
 	href="../share/calendar/calendar.css" title="win2k-cold-1" />
@@ -394,6 +407,11 @@ function autoFillHin(){
    	  last = removeAccents(last.substring(0,3)).toUpperCase();
    	  first = removeAccents(first.substring(0,1)).toUpperCase();
    	  yob = yob.substring(2,4);
+   	  
+   	  var sex = document.getElementById('sex').value;
+   	  if(sex == 'F'){
+   		  mob = parseInt(mob) + 50; 
+   	  }
 
       document.getElementById('hin').value = last + first + yob + mob + dob;
       hin.focus();
@@ -418,14 +436,67 @@ function autoFillHin(){
 <table width="100%" bgcolor="#CCCCFF">
 <tr><td class="RowTop">
     <b><bean:message key="demographic.record"/></b>
+    <% if (OscarProperties.getInstance().getBooleanProperty("indivica_hc_read_enabled", "true")) { %>
+		<span style="position: relative; float: right; font-style: italic; background: black; color: white; padding: 4px; font-size: 12px; border-radius: 3px;">
+			<span class="_hc_status_icon _hc_status_success"></span>Ready for Card Swipe
+		</span>
+	<% } %>
 </td></tr>
 <tr><td>
 <form method="post" name="adddemographic" action="demographicaddarecord.jsp"  onsubmit="return checkFormTypeIn()">
+<input type="hidden" name="fromAppt" value="<%=request.getParameter("fromAppt")%>">
+<input type="hidden" name="originalPage" value="<%=request.getParameter("originalPage")%>">
+<input type="hidden" name="bFirstDisp" value="<%=request.getParameter("bFirstDisp")%>">
+<input type="hidden" name="provider_no" value="<%=request.getParameter("provider_no")%>">
+<input type="hidden" name="start_time" value="<%=request.getParameter("start_time")%>">
+<input type="hidden" name="end_time" value="<%=request.getParameter("end_time")%>">
+<input type="hidden" name="duration" value="<%=request.getParameter("duration")%>">
+<input type="hidden" name="year" value="<%=request.getParameter("year")%>">
+<input type="hidden" name="month" value="<%=request.getParameter("month")%>">
+<input type="hidden" name="day" value="<%=request.getParameter("day")%>">
+<input type="hidden" name="appointment_date" value="<%=request.getParameter("appointment_date")%>">
+<input type="hidden" name="notes" value="<%=request.getParameter("notes")%>">
+<input type="hidden" name="reason" value="<%=request.getParameter("reason")%>">
+<input type="hidden" name="location" value="<%=request.getParameter("location")%>">
+<input type="hidden" name="resources" value="<%=request.getParameter("resources")%>">
+<input type="hidden" name="type" value="<%=request.getParameter("type")%>">
+<input type="hidden" name="style" value="<%=request.getParameter("style")%>">
+<input type="hidden" name="billing" value="<%=request.getParameter("billing")%>">
+<input type="hidden" name="status" value="<%=request.getParameter("status")%>">
+<input type="hidden" name="createdatetime" value="<%=request.getParameter("createdatetime")%>">
+<input type="hidden" name="creator" value="<%=request.getParameter("creator")%>">
+<input type="hidden" name="remarks" value="<%=request.getParameter("remarks")%>">
+
 <table border="0" cellpadding="1" cellspacing="0" width="100%" bgcolor="#EEEEFF">
+
+    
+    <%if (OscarProperties.getInstance().getProperty("workflow_enhance")!=null && OscarProperties.getInstance().getProperty("workflow_enhance").equals("true")) { %>
+   		 <tr bgcolor="#CCCCFF">
+				<td colspan="4">
+				<div align="center"><input type="hidden" name="dboperation"
+					value="add_record"> <%
+          if (vLocale.getCountry().equals("BR")) { %> <input
+					type="hidden" name="dboperation2" value="add_record_ptbr">
+				<%}%> <%--
+						          <input type="submit" name="displaymode" value="<bean:message key="demographic.demographicaddrecordhtm.btnAddRecord"/>" onclick="document.forms['adddemographic'].displaymode.value='Add Record'; document.forms['adddemographic'].submit();">
+						--%> <input type="hidden" name="displaymode" value="Add Record">
+				<input type="submit" name="submit"
+					value="<bean:message key="demographic.demographicaddrecordhtm.btnAddRecord"/>">
+				<input type="button" name="Button"
+					value="<bean:message key="demographic.demographicaddrecordhtm.btnSwipeCard"/>"
+					onclick="window.open('zadddemographicswipe.htm','', 'scrollbars=yes,resizable=yes,width=600,height=300')";>
+				&nbsp; <input type="button" name="Button"
+					value="<bean:message key="demographic.demographicaddrecordhtm.btnCancel"/>"
+					onclick=self.close();></div>
+				</td>
+			</tr>
+    <%}%>
+
     <tr>
       <td align="right"> <b><bean:message key="demographic.demographicaddrecordhtm.formLastName"/><font color="red">:</font> </b></td>
       <td align="left">
-        <input type="text" name="last_name" id="last_name" onBlur="upCaseCtrl(this)" size=30 />
+        <input type="text" name="last_name" id="last_name" onBlur="upCaseCtrl(this)" size=30 value=<%=request.getParameter("keyword")==null?"":request.getParameter("keyword")%>>
+
       </td>
       <td align="right"><b><bean:message key="demographic.demographicaddrecordhtm.formFirstName"/><font color="red">:</font> </b> </td>
       <td align="left">
@@ -776,7 +847,7 @@ function autoFillHin(){
                                        sex = props.getProperty("defaultsex","");
                                    }
                                 %>
-                                <td align="left"><select name="sex">
+                                <td align="left"><select name="sex" id="sex">
                                     <option value="M"  <%= sex.equals("M") ? " selected": "" %>><bean:message
                                         key="demographic.demographicaddrecordhtm.formM" /></option>
                                     <option value="F"  <%= sex.equals("F") ? " selected": "" %>><bean:message
@@ -988,12 +1059,12 @@ function autoFillHin(){
 									  Properties prop = null;
 									  Vector vecRef = new Vector();
 
-                                      List<Billingreferral> billingReferrals = billingReferralDao.getBillingreferrals();
-                                      for(Billingreferral billingReferral:billingReferrals) {
+                                      List<ProfessionalSpecialist> specialists = professionalSpecialistDao.findAll();
+                                      for(ProfessionalSpecialist specialist : specialists) {
                                     	  prop = new Properties();
-                                          prop.setProperty("referral_no",billingReferral.getReferralNo());
-                                          prop.setProperty("last_name",billingReferral.getLastName());
-                                          prop.setProperty("first_name",billingReferral.getFirstName());
+                                          prop.setProperty("referral_no", specialist.getReferralNo());
+                                          prop.setProperty("last_name", specialist.getLastName());
+                                          prop.setProperty("first_name", specialist.getFirstName());
                                           vecRef.add(prop);
                                       }
                                   %> <select name="r_doctor"

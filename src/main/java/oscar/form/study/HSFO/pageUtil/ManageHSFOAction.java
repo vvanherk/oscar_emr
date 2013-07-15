@@ -1,31 +1,27 @@
-/*
- *  Copyright (C) 2007  Heart & Stroke Foundation
-
-    This program is free software; you can redistribute it and/or
-    modify it under the terms of the GNU General Public License
-    as published by the Free Software Foundation; either version 2
-    of the License, or (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program; if not, write to the Free Software
-    Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
-    <HSFO TEAM>
-
-   This software was written for the
-   The Heart and Stroke Foundation of Ontario
-   Toronto, Ontario, Canada
-
-   ManageHSFOAction.java
-
-   Created on March 1, 2007, 11:03 PM
-
+/**
+ * Copyright (C) 2007  Heart & Stroke Foundation
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package oscar.form.study.HSFO.pageUtil;
 
@@ -67,13 +63,9 @@ public class ManageHSFOAction extends Action{
 
         PatientData patientData = new PatientData();
         VisitData latestVisitData = new VisitData();
-        VisitData visitData = new VisitData();
         PatientList historyList = new PatientList();
-        //RecordList record = new RecordList();
-        List recordList = new LinkedList();
-        String forward = "registration";
 
-        List patientHistory = new LinkedList();
+        List<VisitData> patientHistory = new LinkedList<VisitData>();
         String id = (String) request.getAttribute("demographic_no");
         if (id == null){
             id = request.getParameter("demographic_no");
@@ -118,7 +110,7 @@ public class ManageHSFOAction extends Action{
                 Integer num = (Integer) request.getAttribute("formId");
                 latestVisitData = hsfoDAO.retrieveSelectedRecord(num.intValue());
             }else{
-                latestVisitData = (VisitData)patientHistory.get(size-1);
+                latestVisitData = patientHistory.get(size-1);
                 //should i check to see if currently editing todays visit?
 
                 latestVisitData.setVisitDateIdToday();
@@ -126,7 +118,7 @@ public class ManageHSFOAction extends Action{
 
             }
 
-
+/*
             int SBPArray[] = new int[size];
             String SBPDateArray[] = new String[size];
             int DBPArray[] = new int[size];
@@ -143,7 +135,7 @@ public class ManageHSFOAction extends Action{
             String importanceDateArray[] = new String[size];
             int confidenceArray[] = new int[size];
             String confidenceDateArray[] = new String[size];
-
+*/
 
 
             //////
@@ -159,8 +151,8 @@ public class ManageHSFOAction extends Action{
 
             //If patientHistory is greater than 1 than fill the graphing arrays
             if ( size >1 ){
-                ArrayList visitDateArray = new ArrayList();
-                ArrayList visitIdArray = new ArrayList();
+                ArrayList<String> visitDateArray = new ArrayList<String>();
+                ArrayList<String> visitIdArray = new ArrayList<String>();
                 ListIterator i = patientHistory.listIterator();
                 int a = 0, b=0, c=0, d=0, e=0, f=0, g=0, h=0;
                 while (i.hasNext() ) {
@@ -404,5 +396,3 @@ public class ManageHSFOAction extends Action{
 
 
 }
-
-

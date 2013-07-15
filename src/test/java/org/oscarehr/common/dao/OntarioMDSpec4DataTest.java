@@ -1,3 +1,26 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
 package org.oscarehr.common.dao;
 
 //-----------------------------------------------------------------------------------------------------------------------
@@ -66,14 +89,13 @@ import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DemographicContact;
 import org.oscarehr.common.model.DemographicQueryFavourite;
 import org.oscarehr.common.model.Drug;
+import org.oscarehr.common.model.Dxresearch;
 import org.oscarehr.common.model.Prevention;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.document.dao.DocumentDAO;
 import org.oscarehr.document.model.CtlDocument;
 import org.oscarehr.document.model.CtlDocumentPK;
 import org.oscarehr.document.model.Document;
-import org.oscarehr.dx.dao.DxResearchDAO;
-import org.oscarehr.dx.model.DxResearch;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 
@@ -118,11 +140,11 @@ public class OntarioMDSpec4DataTest extends DaoTestFixtures {
 
 
 
-	DxResearch getDxResearch(String codingSystem, String code,String status,Date startDate,Date updateDate,Integer demographicNo){
-		DxResearch dxresearch = new DxResearch();
+	Dxresearch getDxResearch(String codingSystem, String code,String status,Date startDate,Date updateDate,Integer demographicNo){
+		Dxresearch dxresearch = new Dxresearch();
 		dxresearch.setCodingSystem(codingSystem);
-		dxresearch.setCode(code);
-		dxresearch.setStatus(status);
+		dxresearch.setDxresearchCode(code);
+		dxresearch.setStatus(status.toCharArray()[0]);
 		dxresearch.setStartDate(startDate);
 		dxresearch.setUpdateDate(updateDate);
 		dxresearch.setDemographicNo(demographicNo);
@@ -632,7 +654,7 @@ public class OntarioMDSpec4DataTest extends DaoTestFixtures {
 		OscarAppointmentDao appointmentDao=(OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
 		ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
 		DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
-		DxResearchDAO dxResearchDAO = (DxResearchDAO) SpringUtils.getBean("dxResearchDao");
+		DxresearchDAO dxResearchDAO = (DxresearchDAO) SpringUtils.getBean("dxresearchDAO");
 		AdmissionDao admissionDao = (AdmissionDao) SpringUtils.getBean("admissionDao");
 		ProgramProviderDAO programProviderDAO = (ProgramProviderDAO) SpringUtils.getBean("programProviderDAO");
 		CaseManagementNoteDAO  caseManagementNoteDAO = (CaseManagementNoteDAO) SpringUtils.getBean("caseManagementNoteDAO");

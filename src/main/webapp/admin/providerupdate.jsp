@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ page
@@ -13,33 +38,14 @@
 <%@page import="org.oscarehr.common.dao.ProviderArchiveDao"%>
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.apache.commons.beanutils.BeanUtils"%>
-<jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
-	scope="session" />
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
+<%@page import="org.oscarehr.common.model.ProviderSite"%>
+<%@page import="org.oscarehr.common.model.ProviderSitePK"%>
+<%@page import="org.oscarehr.common.dao.ProviderSiteDao"%>
+<jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean" scope="session" />
+<%
+	ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+	ProviderSiteDao providerSiteDao = SpringUtils.getBean(ProviderSiteDao.class);
+%>
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
@@ -60,34 +66,8 @@
   ProviderBillCenter billCenter = new ProviderBillCenter();
   billCenter.updateBillCenter(request.getParameter("provider_no"),request.getParameter("billcenter"));
 
-  DBPreparedHandlerParam[] param =new DBPreparedHandlerParam[21];
-  param[0]=new DBPreparedHandlerParam(request.getParameter("last_name"));
-  param[1]=new DBPreparedHandlerParam(request.getParameter("first_name"));
-  param[2]=new DBPreparedHandlerParam(request.getParameter("provider_type"));
-  param[3]=new DBPreparedHandlerParam(request.getParameter("specialty"));
-  param[4]=new DBPreparedHandlerParam(request.getParameter("team"));
-  param[5]=new DBPreparedHandlerParam(request.getParameter("sex"));
 
-  param[6]=new DBPreparedHandlerParam(MyDateFormat.getSysDate(request.getParameter("dob")));
-//  String strDbType = oscar.OscarProperties.getInstance().getProperty("db_type").trim();
-//  if("oracle".equalsIgnoreCase(strDbType)){
-//  	param[6] = SqlUtils.isoToOracleDate(param[6]);
-//  }
 
-  param[7]=new DBPreparedHandlerParam(request.getParameter("address"));
-  param[8]=new DBPreparedHandlerParam(request.getParameter("phone"));
-  param[9]=new DBPreparedHandlerParam(request.getParameter("workphone"));
-  param[10]=new DBPreparedHandlerParam(request.getParameter("email"));
-  param[11]=new DBPreparedHandlerParam(request.getParameter("ohip_no"));
-  param[12]=new DBPreparedHandlerParam(request.getParameter("rma_no"));
-  param[13]=new DBPreparedHandlerParam(request.getParameter("billing_no"));
-  param[14]=new DBPreparedHandlerParam(request.getParameter("hso_no"));
-  param[15]=new DBPreparedHandlerParam(request.getParameter("status"));
-  param[16]=new DBPreparedHandlerParam(SxmlMisc.createXmlDataString(request,"xml_p"));
-  param[17]=new DBPreparedHandlerParam(request.getParameter("provider_activity"));
-  param[18]=new DBPreparedHandlerParam(request.getParameter("practitionerNo"));
-  param[19]=new DBPreparedHandlerParam((String)session.getAttribute("user"));
-  param[20]=new DBPreparedHandlerParam(request.getParameter("provider_no"));
 //multi-office provide id formalize check, can be turn off on properties multioffice.formalize.provider.id
   boolean isProviderFormalize = true;
   String  errMsgProviderFormalize = "admin.provideraddrecord.msgAdditionFailure";
@@ -152,8 +132,7 @@
   }
 
   if (!org.oscarehr.common.IsPropertiesOn.isProviderFormalizeEnable() || isProviderFormalize) {
-    ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
-	ProviderArchiveDao providerArchiveDao = (ProviderArchiveDao)SpringUtils.getBean("providerArchiveDao");
+    ProviderArchiveDao providerArchiveDao = (ProviderArchiveDao)SpringUtils.getBean("providerArchiveDao");
 	Provider provider = providerDao.getProvider(request.getParameter("provider_no"));
 	ProviderArchive pa = new ProviderArchive();
 	BeanUtils.copyProperties(pa, provider);
@@ -161,16 +140,44 @@
 
 
 
-  int rowsAffected = apptMainBean.queryExecuteUpdate(param, request.getParameter("dboperation"));
-  if (rowsAffected ==1) {
+	  Provider p = providerDao.getProvider(request.getParameter("provider_no"));
+	  if(p != null) {
+		  p.setLastName(request.getParameter("last_name"));
+		  p.setFirstName(request.getParameter("first_name"));
+		  p.setProviderType(request.getParameter("provider_type"));
+		  p.setSpecialty(request.getParameter("specialty"));
+		  p.setTeam(request.getParameter("team"));
+		  p.setSex(request.getParameter("sex"));
+		  p.setDob(MyDateFormat.getSysDate(request.getParameter("dob")));
+		  p.setAddress(request.getParameter("address"));
+		  p.setPhone(request.getParameter("phone"));
+		  p.setWorkPhone(request.getParameter("workphone"));
+		  p.setEmail(request.getParameter("email"));
+		  p.setOhipNo(request.getParameter("ohip_no"));
+		  p.setRmaNo(request.getParameter("rma_no"));
+		  p.setBillingNo(request.getParameter("billing_no"));
+		  p.setHsoNo(request.getParameter("hso_no"));
+		  p.setStatus(request.getParameter("status"));
+		  p.setComments(SxmlMisc.createXmlDataString(request,"xml_p"));
+		  p.setProviderActivity(request.getParameter("provider_activity"));
+		  p.setPractitionerNo(request.getParameter("practitionerNo"));
+		  p.setLastUpdateUser((String)session.getAttribute("user"));
+		  p.setLastUpdateDate(new java.util.Date());
+		  providerDao.updateProvider(p);
+
         if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
             String[] sites = request.getParameterValues("sites");
             DBPreparedHandler dbObj = new DBPreparedHandler();
             String provider_no = request.getParameter("provider_no");
-            dbObj.queryExecuteUpdate("delete from providersite where provider_no = ?", new String[]{provider_no});
+            List<ProviderSite> pss = providerSiteDao.findByProviderNo(provider_no);
+            for(ProviderSite ps:pss) {
+            	providerSiteDao.remove(ps.getId());
+            }
             if (sites!=null) {
                 for (int i=0; i<sites.length; i++) {
-                    dbObj.queryExecuteUpdate("insert into providersite (provider_no, site_id) values (?,?)", new String[] {provider_no, String.valueOf(sites[i])});
+                	ProviderSite ps = new ProviderSite();
+                	ps.setId(new ProviderSitePK(provider_no,Integer.parseInt(sites[i])));
+                	providerSiteDao.persist(ps);
                 }
             }
         }

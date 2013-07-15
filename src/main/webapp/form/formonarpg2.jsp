@@ -1,23 +1,4 @@
-<%--
-/*
- * 
- * Copyright (c) 2005- Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * Yi Li
- * Ontario, Canada 
- */
---%>
+<%@page import="oscar.OscarProperties"%>
 <%@ page
 	import="oscar.form.graphic.*, oscar.util.*, oscar.form.*, oscar.form.data.*"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
@@ -83,9 +64,22 @@
         document.forms[0].target = "";
         document.forms[0].action = "/<%=project_home%>/form/formname.do" ;
 	}
+    
+    function setLock (checked) {
+    	formElems = document.forms[0].elements;
+    	for (var i=0; i<formElems.length; i++) {
+    		if (formElems[i].type == "text" || formElems[i].type == "textarea") {
+            		formElems[i].readOnly = checked;
+    		} else if ((formElems[i].type == "checkbox") && (formElems[i].id != "pg1_lockPage") && (formElems[i].id != "pg1_4ColCom")) {
+            		formElems[i].disabled = checked;
+    		}
+    	}
+    }
+    
     function onPrint() {
         document.forms[0].submit.value="print"; 
         var ret = checkAllDates();
+        setLock(false);
         if(ret==true)
         {
             if( document.forms[0].c_finalEDB.value == "" && !confirm("<bean:message key="oscarEncounter.formOnar.msgNoEDB"/>")) {
@@ -97,6 +91,7 @@
             }
                 
         }   
+        setTimeout('setLock(wasLocked)', 500);
         return ret;
     }
 
@@ -1608,16 +1603,40 @@ function calToday(field) {
 						value="<%= UtilMisc.htmlEscape(props.getProperty("ar2_strep", "")) %>"></td>
 				</tr>
 				<tr>
-					<td>&nbsp;</td>
-					<td>&nbsp;</td>
+					<td><%if (OscarProperties.getInstance().getProperty("ar2005_enhance")!=null && OscarProperties.getInstance().getProperty("ar2005_enhance").equals("true")) {%>
+						<input type="text" name="pg2_labExtra2Name" size="10" maxlength="20" 
+							value="<%= UtilMisc.htmlEscape(props.getProperty("pg2_labExtra2Name", "")) %>">
+						<%}%>
+					</td>
+					<td><%if (OscarProperties.getInstance().getProperty("ar2005_enhance")!=null && OscarProperties.getInstance().getProperty("ar2005_enhance").equals("true")) {%>
+						<input type="text" name="pg2_labExtra2Value" size="10" maxlength="20" 
+							value="<%= UtilMisc.htmlEscape(props.getProperty("pg2_labExtra2Value", "")) %>">
+						<%}%>
+					</td>
 				</tr>
 				<tr>
-					<td>&nbsp;</td>
-					<td>&nbsp;</td>
+					<td><%if (OscarProperties.getInstance().getProperty("ar2005_enhance")!=null && OscarProperties.getInstance().getProperty("ar2005_enhance").equals("true")) {%>
+						<input type="text" name="pg2_labExtra2Name" size="10" maxlength="20" 
+							value="<%= UtilMisc.htmlEscape(props.getProperty("pg2_labExtra2Name", "")) %>">
+						<%}%>
+					</td>
+					<td><%if (OscarProperties.getInstance().getProperty("ar2005_enhance")!=null && OscarProperties.getInstance().getProperty("ar2005_enhance").equals("true")) {%>
+						<input type="text" name="pg2_labExtra2Value" size="10" maxlength="20" 
+							value="<%= UtilMisc.htmlEscape(props.getProperty("pg2_labExtra2Value", "")) %>">
+						<%}%>
+					</td>
 				</tr>
 				<tr>
-					<td>&nbsp;</td>
-					<td>&nbsp;</td>
+					<td><%if (OscarProperties.getInstance().getProperty("ar2005_enhance")!=null && OscarProperties.getInstance().getProperty("ar2005_enhance").equals("true")) {%>
+						<input type="text" name="pg2_labExtra3Name" size="10" maxlength="20" 
+									value="<%= UtilMisc.htmlEscape(props.getProperty("pg2_labExtra3Name", "")) %>">
+						<%}%>
+					</td>
+					<td><%if (OscarProperties.getInstance().getProperty("ar2005_enhance")!=null && OscarProperties.getInstance().getProperty("ar2005_enhance").equals("true")) {%>
+						<input type="text" name="pg2_labExtra3Value" size="10" maxlength="20" 
+							value="<%= UtilMisc.htmlEscape(props.getProperty("pg2_labExtra3Value", "")) %>">
+						<%}%>
+					</td>
 				</tr>
 				<tr>
 					<td>&nbsp;</td>
@@ -1694,6 +1713,13 @@ function calToday(field) {
 	</table>
 
 </html:form>
+<% if (bView) { %>
+<script type="text/javascript">
+window.onload= function() {
+setLock(true);
+}
+</script>
+<% } %>
 </body>
 <script type="text/javascript">
 Calendar.setup({ inputField : "ar2_uDate1", ifFormat : "%Y/%m/%d", showsTime :false, button : "ar2_uDate1_cal", singleClick : true, step : 1 });

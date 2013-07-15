@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -14,6 +39,8 @@ import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.indivo.IndivoException;
 import org.indivo.client.ActionNotPerformedException;
+import org.indivo.xml.JAXBUtils;
+import org.indivo.xml.phr.DocumentGenerator;
 import org.indivo.xml.phr.annotation.Annotation;
 import org.indivo.xml.phr.annotation.AnnotationType;
 import org.indivo.xml.phr.annotation.DocumentReferenceType;
@@ -54,8 +81,8 @@ public class PHRIndivoAnnotation extends PHRIndivoDocument {
         org.indivo.xml.phr.annotation.ObjectFactory annotationFactory = new org.indivo.xml.phr.annotation.ObjectFactory();
         Annotation indivoMeasurementObject = annotationFactory.createAnnotation(annotationType);
 
-        Element element = jaxbUtils.marshalToElement(indivoMeasurementObject, JAXBContext.newInstance("org.indivo.xml.phr.annotation"));
-        IndivoDocumentType document = generator.generateDefaultDocument(indivoId, providerPhrName, PHRDocument.PHR_ROLE_PROVIDER, DocumentClassificationUrns.ANNOTATION, ContentTypeQNames.ANNOTATION, element);
+        Element element = JAXBUtils.marshalToElement(indivoMeasurementObject, JAXBContext.newInstance("org.indivo.xml.phr.annotation"));
+        IndivoDocumentType document = DocumentGenerator.generateDefaultDocument(indivoId, providerPhrName, PHRDocument.PHR_ROLE_PROVIDER, DocumentClassificationUrns.ANNOTATION, ContentTypeQNames.ANNOTATION, element);
         return document;
     }
 
@@ -94,4 +121,3 @@ public class PHRIndivoAnnotation extends PHRIndivoDocument {
     }
 
 }
-

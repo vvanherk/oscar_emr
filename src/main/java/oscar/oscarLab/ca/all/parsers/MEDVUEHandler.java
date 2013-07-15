@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2008-2012 Indivica Inc.
+ *
+ * This software is made available under the terms of the
+ * GNU General Public License, Version 2, 1991 (GPLv2).
+ * License details are available via "indivica.ca/gplv2"
+ * and "gnu.org/licenses/gpl-2.0.html".
+ */
+
 package oscar.oscarLab.ca.all.parsers;
 
 
@@ -7,7 +16,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
@@ -85,7 +93,7 @@ public class MEDVUEHandler implements MessageHandler {
 	}
 
 	private ArrayList<String> getMatchingHL7Labs(String hl7Body) {
-		Base64 base64 = new Base64();
+		Base64 base64 = new Base64(0);
 		ArrayList<String> ret = new ArrayList<String>();
 		int monthsBetween = 0;
 		Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao) SpringUtils.getBean("hl7TextInfoDao");
@@ -209,8 +217,8 @@ public class MEDVUEHandler implements MessageHandler {
 
 			Terser t = new Terser(msg);
 			
-			String ident = getString(t.get(obxseg, 3, 0, 1, 1));
-			String subIdent = t.get(obxseg, 3, 0, 1, 2);
+			String ident = getString(Terser.get(obxseg, 3, 0, 1, 1));
+			String subIdent = Terser.get(obxseg, 3, 0, 1, 2);
 
 			if (subIdent != null)
 				ident = ident + "&" + subIdent;
@@ -252,7 +260,7 @@ public class MEDVUEHandler implements MessageHandler {
 		String result = "";
 		try {
 			Terser terser = new Terser(msg);
-			result = getString(terser.get(obxseg, 5, 0, 1, 1));
+			result = getString(Terser.get(obxseg, 5, 0, 1, 1));
 		} catch (Exception e) {
 			logger.error("Exception returning result", e);
 		}
@@ -301,7 +309,7 @@ public class MEDVUEHandler implements MessageHandler {
 		String comment = "";
 		try {
 			Terser terser = new Terser(msg);
-			comment = terser.get(obxseg, 5, 0, 1, 1);
+			comment = Terser.get(obxseg, 5, 0, 1, 1);
 			
 		} catch (Exception e) {
 			logger.error("getOBRComment error", e);
@@ -324,7 +332,7 @@ public class MEDVUEHandler implements MessageHandler {
 		
 		try {
 			Terser terser = new Terser(msg);
-			comment = terser.get(obxseg, 5, 0, 1, 1);
+			comment = Terser.get(obxseg, 5, 0, 1, 1);
 			comment = comment.replaceAll("<P\\s*/*>", "<br/>");
 			splitComment = comment.split("<br/>");
 			

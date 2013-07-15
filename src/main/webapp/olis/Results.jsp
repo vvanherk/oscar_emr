@@ -1,3 +1,13 @@
+<%--
+
+    Copyright (c) 2008-2012 Indivica Inc.
+
+    This software is made available under the terms of the
+    GNU General Public License, Version 2, 1991 (GPLv2).
+    License details are available via "indivica.ca/gplv2"
+    and "gnu.org/licenses/gpl-2.0.html".
+
+--%>
 <%@ page language="java" contentType="text/html;" %>
 <%@page import="com.indivica.olis.queries.*,org.oscarehr.olis.OLISSearchAction,java.util.*,oscar.oscarDB.DBHandler,java.sql.ResultSet, oscar.oscarLab.ca.all.parsers.Factory, oscar.oscarLab.ca.all.parsers.OLISHL7Handler, oscar.oscarLab.ca.all.parsers.OLISHL7Handler.OLISError, org.oscarehr.olis.OLISResultsAction, org.oscarehr.util.SpringUtils" %>
 <%@page import="org.oscarehr.util.MiscUtils" %>

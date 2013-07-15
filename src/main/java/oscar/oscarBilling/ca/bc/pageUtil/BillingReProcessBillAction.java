@@ -1,21 +1,19 @@
-package oscar.oscarBilling.ca.bc.pageUtil;
-
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -23,6 +21,7 @@ package oscar.oscarBilling.ca.bc.pageUtil;
  * Hamilton
  * Ontario, Canada
  */
+package oscar.oscarBilling.ca.bc.pageUtil;
 
 
 import java.io.IOException;
@@ -39,13 +38,14 @@ import org.apache.struts.action.Action;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
+import org.oscarehr.common.model.Billing;
 import org.oscarehr.util.MiscUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import oscar.Misc;
+import oscar.MyDateFormat;
 import oscar.OscarProperties;
-import oscar.entities.Billing;
 import oscar.entities.Billingmaster;
 import oscar.oscarBilling.ca.bc.MSP.MSPBillingNote;
 import oscar.oscarBilling.ca.bc.MSP.MSPReconcile;
@@ -170,7 +170,7 @@ public class BillingReProcessBillAction extends Action {
     }
 
     if (hcType.equals(billRegion)) { //if its bc go on
-      oinInsurerCode = "";
+      //oinInsurerCode = "";
       oinRegistrationNo = "";
       oinBirthdate = "";
       oinFirstName = "";
@@ -214,8 +214,8 @@ public class BillingReProcessBillAction extends Action {
       if (!persistedBillType.equals(billingStatus)) {
         //if the bill status was changed to "Bill Patient
         //And the persisted bill status is anything but private
-        if (msp.BILLPATIENT.equals(billingStatus) &&
-            !msp.PAIDPRIVATE.equals(persistedBillType)) {
+        if (MSPReconcile.BILLPATIENT.equals(billingStatus) &&
+            !MSPReconcile.PAIDPRIVATE.equals(persistedBillType)) {
           //get the correct the Private code representation
           //and correct code amount if applicable
           //yes, this is lame. Private codes are simply the standard msp
@@ -258,7 +258,7 @@ public class BillingReProcessBillAction extends Action {
       throw new RuntimeException("BC BILLING - Exception when attempting to multiply Bill Amount by Unit ");
     }
     bill.setProviderOhipNo(practitionerNo);
-    bill.setBillingDate(serviceDate);
+    bill.setBillingDate(MyDateFormat.getSysDate(serviceDate));
     billingmaster.setDatacenter(dataCenterId);
         //TODO
         billingmaster.setPayeeNo(billingGroupNo);

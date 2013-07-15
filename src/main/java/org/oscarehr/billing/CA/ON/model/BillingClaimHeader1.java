@@ -1,24 +1,26 @@
-///*
-// *
-// * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License.
-// * This program is free software; you can redistribute it and/or
-// * modify it under the terms of the GNU General Public License
-// * as published by the Free Software Foundation; either version 2
-// * of the License, or (at your option) any later version. *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-// * along with this program; if not, write to the Free Software
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-// *
-// * <OSCAR TEAM>
-// *
-// * BillingClaimHeader1.java
-// *
-// */
-//
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.billing.CA.ON.model;
 
 import java.io.Serializable;
@@ -61,6 +63,8 @@ import oscar.oscarBilling.ca.on.data.BillingDataHlp;
 @Table(name = "billing_on_cheader1")
 public class BillingClaimHeader1 extends AbstractModel<Integer> implements Serializable {
 
+    @Id()
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
     private Integer header_id = 0;
     private String transc_id = BillingDataHlp.CLAIMHEADER1_TRANSACTIONIDENTIFIER;
@@ -82,7 +86,9 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     private String demographic_name;
     private String sex;
     private String province;
+    @Temporal(TemporalType.DATE)    
     private Date billing_date;
+    @Temporal(TemporalType.TIME)    
     private Date billing_time;
     private String total = "";
     private String paid = "";
@@ -94,10 +100,13 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     private String apptProvider_no = "";
     private String asstProvider_no = "";
     private String creator;
+    @Temporal(TemporalType.TIMESTAMP)    
     private Date timestamp1;
     private String clinic;
 
-    private List<BillingItem> billingItems = new ArrayList<BillingItem>();
+    @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+    @JoinColumn(name="ch1_id", referencedColumnName="id")
+    private List<BillingItem>billingItems = new ArrayList<BillingItem>();
 
     /** Creates a new instance of BillingClaimHeader1 */
     public BillingClaimHeader1() {
@@ -455,7 +464,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     /**
      * @return the timestamp1
      */
-    @Temporal(TemporalType.TIMESTAMP)
+    @Temporal(TemporalType.DATE)
     public Date getTimestamp1() {
         return timestamp1;
     }
@@ -538,21 +547,21 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
      */
     public void setDemographic_name(String demographic_name) {
         this.demographic_name = demographic_name;
-    }
-
+    }    
+        
     @PostPersist
-    public void postPersist() {        
+    public void postPersist() {
         Iterator<BillingItem> i = this.billingItems.iterator();
         BillingItem item;
         while(i.hasNext()) {
             item = i.next();
-            item.setCh1_id(id);           
+            item.setCh1_id(id);
         }
     }
     
     /*
      * Filter deleted billing items from list
-     */
+     */    
     @Transient
     public List<BillingItem> getNonDeletedInvoices() {
     	List<BillingItem>tempItems = new ArrayList<BillingItem>();

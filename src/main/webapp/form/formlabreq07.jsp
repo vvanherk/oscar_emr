@@ -1,28 +1,29 @@
-<%--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
 --%>
+
 <%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager"%>
 <%@ page
@@ -53,20 +54,25 @@
    int formId = Integer.parseInt(request.getParameter("formId"));
    String provNo = (String) session.getAttribute("user");
 	String remoteFacilityIdString=request.getParameter("remoteFacilityId");
-	
+	String fromSession = request.getParameter("fromSession");
    java.util.Properties props =null;	        
 
    // means it's local
 	if (remoteFacilityIdString==null)
 	{
 		FrmRecord rec = (new FrmRecordFactory()).factory(formClass);
-	   	props = rec.getFormRecord(demoNo, formId);	        
-		props = ((FrmLabReq07Record) rec).getFormCustRecord(props, provNo);
+		if(fromSession != null && fromSession.equals("true")) {
+			props = (java.util.Properties)request.getSession().getAttribute("labReq07"+demoNo);	
+		}
+		if(props == null) {
+	   		props = rec.getFormRecord(demoNo, formId);	        
+			props = ((FrmLabReq07Record) rec).getFormCustRecord(props, provNo);
+		}		
 	}
 	else // it's remote
 	{
 		MiscUtils.getLogger().debug("Getting remote form : "+remoteFacilityIdString+":"+formId);
-		props=FrmLabReq07Record.getRemoteRecordProperties(Integer.parseInt(remoteFacilityIdString), formId);
+		props=FrmLabReq07Record.getRemoteRecordProperties(Integer.parseInt(remoteFacilityIdString), formId,demoNo);
 		FrmRecordHelp.convertBooleanToChecked(props);
 	}
 	
@@ -308,7 +314,7 @@ var maxYear=3100;
 	<input type="hidden" name="provNo"
 		value="<%= request.getParameter("provNo") %>" />
 	<input type="hidden" name="submit" value="exit" />
-
+	<input type="hidden" name="formId" value="<%=formId%>" />
 	<table class="Head" class="hidePrint">
 		<tr>
 			<td nowrap="true">
@@ -330,35 +336,35 @@ var maxYear=3100;
 
 			<table width="100%" class="topTable">
 				<tr>
-					<td class="title" colspan="3" nowrap="true">LABORATORY
-					REQUISITION</td>
+					<td class="title" colspan="3" nowrap="nowrap">LABORATORY REQUISITION</td>
 				</tr>
 				<tr>
-					<td colspan="3" nowrap="true">Requisitioning
-					Physician/Practitioner:<br>
-					<input type="hidden" style="width: 100%" name="provName"
-						value="<%=props.getProperty("provName", "")%>" /> <input
-						type="hidden" style="width: 100%" name="reqProvName"
-						value="<%=props.getProperty("reqProvName", "")%>" /> <%=props.getProperty("reqProvName", "")%>&nbsp;<br>
+					<td colspan="3" nowrap="nowrap">Requisitioning Physician/Practitioner:<br>
+					<input type="hidden" style="width: 100%" name="provName" value="<%=props.getProperty("provName", "")%>" /> 
+					<input type="hidden" style="width: 100%" name="reqProvName" value="<%=props.getProperty("reqProvName", "")%>" /> 
+					<%=props.getProperty("reqProvName", "")%>&nbsp;<br>
 					<%-- Dr. Hunter wants the form to say "Physician" instead of "Family Physician".  This is a quick and dirty hack to make it work.  This
-     should really be rewritten more elegantly at some later point in time. --%>
-					<br><%=oscarProps.getProperty("clinic_no", "").startsWith("1022")?"Physician:":"Family Physician:"%><br>
-					<%=props.getProperty("provName", "")==null?"":props.getProperty("provName", "")%>&nbsp;<br>
-					<input type="hidden" style="width: 100%" name="clinicName"
-						value="<%=props.getProperty("clinicName","")%>" /> <%=props.getProperty("clinicName","")%>&nbsp;<br>
-					<input type="hidden" style="width: 100%" name="clinicAddress"
-						value="<%=props.getProperty("clinicAddress", "")%>" /> <%=props.getProperty("clinicAddress", "")%>&nbsp;<br>
-					<input type="hidden" style="width: 100%" name="clinicCity"
-						value="<%=props.getProperty("clinicCity", "")%>" /> <%=props.getProperty("clinicCity", "")%>,<%=props.getProperty("clinicProvince","") %><br>
-					<input type="hidden" style="width: 100%" name="clinicPC"
-						value="<%=props.getProperty("clinicPC", "")%>" /> <%=props.getProperty("clinicPC", "")%>&nbsp;<br>
+     				should really be rewritten more elegantly at some later point in time. --%>
+					<br>
+					<% if(!oscarProps.getProperty("lab_req_override","true").equals("true")){ %>
+						<%=oscarProps.getProperty("clinic_no", "").startsWith("1022")?"Physician:":"Family Physician:"%><br>					
+						<%=props.getProperty("provName", "")==null?"":props.getProperty("provName", "")%>&nbsp;<br>
+					<% } %>
+					
+					<input type="hidden" style="width: 100%" name="clinicName" value="<%=props.getProperty("clinicName","")%>" /> 
+					<%=props.getProperty("clinicName","")%>&nbsp;<br>
+					<input type="hidden" style="width: 100%" name="clinicAddress" value="<%=props.getProperty("clinicAddress", "")%>" /> 
+					<%=props.getProperty("clinicAddress", "")%>&nbsp;<br>
+					<input type="hidden" style="width: 100%" name="clinicCity" value="<%=props.getProperty("clinicCity", "")%>" /> 
+					<%=props.getProperty("clinicCity", "")%>,<%=props.getProperty("clinicProvince","") %><br>
+					<input type="hidden" style="width: 100%" name="clinicPC" value="<%=props.getProperty("clinicPC", "")%>" /> 
+					<%=props.getProperty("clinicPC", "")%>&nbsp;<br>
 					</td>
 				</tr>
 				<tr>
 					<td class="borderGrayTopBottom" style="border-bottom: 0px;"><font
 						class="subHeading">Physician/Practitioner Number</font><br>
-					<input type="hidden" name="practitionerNo"
-						value="<%=props.getProperty("practitionerNo", "")%>" />
+					<input type="hidden" name="practitionerNo" value="<%=props.getProperty("practitionerNo", "")%>" />
 					<center><%=props.getProperty("practitionerNo", "")%>&nbsp;</center>
 					</td>
 				</tr>

@@ -1,27 +1,28 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License.
-// * This program is free software; you can redistribute it and/or
-// * modify it under the terms of the GNU General Public License
-// * as published by the Free Software Foundation; either version 2
-// * of the License, or (at your option) any later version. *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-// * along with this program; if not, write to the Free Software
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-// *
-// * <OSCAR TEAM>
-// * This software was written for the
-// * Department of Family Medicine
-// * McMaster University
-// * Hamilton
-// * Ontario, Canada
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package oscar.oscarEncounter.oscarConsultationRequest.config.pageUtil;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,7 +49,9 @@ public final class EctConAddSpecialistForm extends ActionForm {
 	String eDataOscarKey;
 	String eDataServiceKey;
 	String eDataServiceName;
-        String annotation;
+	String annotation;
+
+	private String referralNo;
 
 	public EctConAddSpecialistForm() {
 		whichType = 0;
@@ -158,7 +161,7 @@ public final class EctConAddSpecialistForm extends ActionForm {
 	}
 
 	@Override
-    public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
+	public ActionErrors validate(ActionMapping mapping, HttpServletRequest request) {
 		ActionErrors errors = new ActionErrors();
 		if (fName == null || fName.length() == 0) errors.add("fName", new ActionMessage("Errors.Firstname"));
 		if (lName == null || lName.length() == 0) errors.add("lName", new ActionMessage("Errors.Lastname"));
@@ -169,7 +172,7 @@ public final class EctConAddSpecialistForm extends ActionForm {
 	}
 
 	@Override
-    public void reset(ActionMapping mapping, HttpServletRequest request) {
+	public void reset(ActionMapping mapping, HttpServletRequest request) {
 		resetForm();
 	}
 
@@ -188,13 +191,15 @@ public final class EctConAddSpecialistForm extends ActionForm {
 		eDataUrl = null;
 		eDataOscarKey = null;
 		eDataServiceKey = null;
-                annotation = null;
+		annotation = null;
+		referralNo = null;
+
 		whichType = 0;
 	}
 
 	/**
 	 * Returns the whichType.
-	 * 
+	 *
 	 * @return int
 	 */
 	public int getWhichType() {
@@ -203,7 +208,7 @@ public final class EctConAddSpecialistForm extends ActionForm {
 
 	/**
 	 * Sets the whichType.
-	 * 
+	 *
 	 * @param whichType The whichType to set
 	 */
 	public void setWhichType(int whichType) {
@@ -211,42 +216,50 @@ public final class EctConAddSpecialistForm extends ActionForm {
 	}
 
 	public String geteDataUrl() {
-    	return eDataUrl;
-    }
+		return eDataUrl;
+	}
 
 	public void seteDataUrl(String eDataUrl) {
-    	this.eDataUrl = eDataUrl;
-    }
+		this.eDataUrl = eDataUrl;
+	}
 
 	public String geteDataOscarKey() {
-    	return eDataOscarKey;
-    }
+		return eDataOscarKey;
+	}
 
 	public void seteDataOscarKey(String eDataOscarKey) {
-    	this.eDataOscarKey = eDataOscarKey;
-    }
+		this.eDataOscarKey = eDataOscarKey;
+	}
 
 	public String geteDataServiceKey() {
-    	return eDataServiceKey;
-    }
+		return eDataServiceKey;
+	}
 
 	public void seteDataServiceKey(String eDataServiceKey) {
-    	this.eDataServiceKey = eDataServiceKey;
-    }
+		this.eDataServiceKey = eDataServiceKey;
+	}
 
 	public String geteDataServiceName() {
-    	return eDataServiceName;
-    }
+		return eDataServiceName;
+	}
 
 	public void seteDataServiceName(String eDataServiceName) {
-    	this.eDataServiceName = eDataServiceName;
-    }
+		this.eDataServiceName = eDataServiceName;
+	}
 
-        public String getAnnotation() {
-            return annotation;
-        }
+	public String getAnnotation() {
+		return annotation;
+	}
 
-        public void setAnnotation(String annotation) {
-            this.annotation = annotation;
-        }
+	public void setAnnotation(String annotation) {
+		this.annotation = annotation;
+	}
+
+	public void setReferralNo(String referralNo) {
+		this.referralNo = referralNo;
+	}
+
+	public String getReferralNo() {
+		return referralNo;
+	}
 }

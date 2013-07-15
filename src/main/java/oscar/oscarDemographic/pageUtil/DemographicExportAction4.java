@@ -1,30 +1,27 @@
 /**
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * Jay Gallagher
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
  * McMaster University
  * Hamilton
- * Ontario, Canada   Creates a new instance of DemographicExportAction
- *
- *
- * DemographicExportAction3.java
- *
- * Created on Nov 4, 2008
+ * Ontario, Canada
  */
+
 
 package oscar.oscarDemographic.pageUtil;
 
@@ -62,6 +59,7 @@ import org.oscarehr.casemgmt.model.CaseManagementNoteLink;
 import org.oscarehr.casemgmt.service.CaseManagementManager;
 import org.oscarehr.common.dao.DemographicArchiveDao;
 import org.oscarehr.common.dao.DemographicContactDao;
+import org.oscarehr.common.dao.DemographicExtDao;
 import org.oscarehr.common.dao.PartialDateDao;
 import org.oscarehr.common.model.Allergy;
 import org.oscarehr.common.model.DemographicArchive;
@@ -84,7 +82,6 @@ import oscar.dms.EDoc;
 import oscar.dms.EDocUtil;
 import oscar.oscarClinic.ClinicData;
 import oscar.oscarDemographic.data.DemographicData;
-import oscar.oscarDemographic.data.DemographicExt;
 import oscar.oscarDemographic.data.DemographicRelationship;
 import oscar.oscarEncounter.oscarMeasurements.data.ImportExportMeasurements;
 import oscar.oscarEncounter.oscarMeasurements.data.LabMeasurements;
@@ -132,7 +129,7 @@ public class DemographicExportAction4 extends Action {
 	private static final HRMDocumentDao hrmDocDao = (HRMDocumentDao) SpringUtils.getBean("HRMDocumentDao");
 	private static final HRMDocumentCommentDao hrmDocCommentDao = (HRMDocumentCommentDao) SpringUtils.getBean("HRMDocumentCommentDao");
 	private static final CaseManagementManager cmm = (CaseManagementManager) SpringUtils.getBean("caseManagementManager");
-
+	private static final DemographicExtDao demographicExtDao = (DemographicExtDao) SpringUtils.getBean("demographicExtDao");
 	private static final String PATIENTID = "Patient";
 	private static final String ALERT = "Alert";
 	private static final String ALLERGY = "Allergy";
@@ -156,7 +153,6 @@ public class DemographicExportAction4 extends Action {
 	OscarProperties oscarProperties = OscarProperties.getInstance();
 
 	@Override
-	@SuppressWarnings("static-access")
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String strEditable = oscarProperties.getProperty("ENABLE_EDIT_APPT_STATUS");
 
@@ -179,7 +175,7 @@ public class DemographicExportAction4 extends Action {
 		boolean exAlertsAndSpecialNeeds = WebUtils.isChecked(request, "exAlertsAndSpecialNeeds");
 		boolean exCareElements = WebUtils.isChecked(request, "exCareElements");
 
-		ArrayList<String> list = new ArrayList<String>();
+		List<String> list = new ArrayList<String>();
 		if (demographicNo==null) {
 			list = new DemographicSets().getDemographicSet(setName);
 		if (list.isEmpty()) {
@@ -191,7 +187,7 @@ public class DemographicExportAction4 extends Action {
 			frm.addDemoIfNotPresent();
 			frm.setAsofDate(UtilDateUtilities.DateToString(asofDate));
 			RptDemographicQueryBuilder demoQ = new RptDemographicQueryBuilder();
-			ArrayList<ArrayList> list2 = demoQ.buildQuery(frm,UtilDateUtilities.DateToString(asofDate));
+			ArrayList<ArrayList<String>> list2 = demoQ.buildQuery(frm,UtilDateUtilities.DateToString(asofDate));
 			for (ArrayList<String> listDemo : list2) {
 				list.add(listDemo.get(0));
 			}
@@ -225,14 +221,13 @@ public class DemographicExportAction4 extends Action {
 
 			// DEMOGRAPHICS
 			DemographicData d = new DemographicData();
-			DemographicExt ext = new DemographicExt();
 
 			org.oscarehr.common.model.Demographic demographic = d.getDemographic(demoNo);
 
 			if (demographic.getPatientStatus()!=null && demographic.getPatientStatus().equals("Contact-only")) continue;
 
 			HashMap<String,String> demoExt = new HashMap<String,String>();
-			demoExt.putAll(ext.getAllValuesForDemo(demoNo));
+			demoExt.putAll(demographicExtDao.getAllValuesForDemo(demoNo));
 
 			OmdCdsDocument omdCdsDoc = OmdCdsDocument.Factory.newInstance();
 			OmdCdsDocument.OmdCds omdCds = omdCdsDoc.addNewOmdCds();
@@ -995,7 +990,7 @@ public class DemographicExportAction4 extends Action {
 						Util.putPartialDate(alr.addNewStartDate(), allergy.getStartDate(), dateFormat);
 						aSummary = Util.addSummary(aSummary,"Start Date",partialDateDao.getDatePartial(allergy.getStartDate(), dateFormat));
 					}
-					if ("NICTA".contains(allergy.getLifeStage()) && allergy.getLifeStage().length()==1) {
+					if (allergy.getLifeStage() != null && "NICTA".contains(allergy.getLifeStage()) && allergy.getLifeStage().length()==1) {
 						alr.setLifeStage(cdsDt.LifeStage.Enum.forString(allergy.getLifeStage()));
 						aSummary = Util.addSummary(aSummary,"Life Stage at Onset", allergy.getLifeStageDesc());
 					}
@@ -1146,7 +1141,7 @@ public class DemographicExportAction4 extends Action {
 									String unit1 = Util.leadingNum(strength[2]).equals("") ? "1" : Util.leadingNum(strength[2]);
 									String unit2 = Util.trailingTxt(strength[2]).equals("") ? "unit" : Util.trailingTxt(strength[2]);
 
-									drugM.setAmount(Util.leadingNum(strength[0])+"/"+Util.leadingNum(strength[2]));
+									drugM.setAmount(Util.leadingNum(strength[0])+"/"+unit1);
 									drugM.setUnitOfMeasure(Util.trailingTxt(strength[0])+"/"+unit2);
 								}
 							} else {
@@ -1448,7 +1443,7 @@ public class DemographicExportAction4 extends Action {
 			if (exAppointments) {
 				// APPOINTMENTS
 				OscarSuperManager oscarSuperManager = (OscarSuperManager)SpringUtils.getBean("oscarSuperManager");
-				List appts = oscarSuperManager.populate("appointmentDao", "export_appt", new String[] {demoNo});
+				List<Object> appts = oscarSuperManager.populate("appointmentDao", "export_appt", new String[] {demoNo});
 				ApptData ap = null;
 				for (int j=0; j<appts.size(); j++) {
 					ap = (ApptData)appts.get(j);
@@ -2270,13 +2265,13 @@ public class DemographicExportAction4 extends Action {
 
 	private void addDemographicRelationships(String demoNo, Demographics demo) {
 		DemographicRelationship demographicRelationship = new DemographicRelationship();
-		ArrayList demographicRelationships = demographicRelationship.getDemographicRelationships(demoNo);
+		ArrayList<HashMap<String,String>> demographicRelationships = demographicRelationship.getDemographicRelationships(demoNo);
 		HashMap<String,String> demoRel;
 
 		//create a list of contactIds
 		String[] contactId = new String[demographicRelationships.size()];
 		for (int j=0; j<demographicRelationships.size(); j++) {
-			demoRel = (HashMap<String,String>) demographicRelationships.get(j);
+			demoRel = demographicRelationships.get(j);
 			if (demoRel!=null) contactId[j] = demoRel.get("demographic_no");
 		}
 
@@ -2290,7 +2285,7 @@ public class DemographicExportAction4 extends Action {
 						continue LoopContacts;
 					}
 				}
-				demoRel = (HashMap<String,String>) demographicRelationships.get(j);
+				demoRel = demographicRelationships.get(j);
 				if (demoRel==null) continue;
 
 				Demographics.Contact contact = demo.addNewContact();
@@ -2298,7 +2293,7 @@ public class DemographicExportAction4 extends Action {
 				String ec=null, sdm=null, rel=null, contactNote=null;
 				//process multiple contact purposes
 				for (int k=j; k<demographicRelationships.size(); k++) {
-					demoRel = (HashMap<String,String>) demographicRelationships.get(k);
+					demoRel = demographicRelationships.get(k);
 					if (demoRel==null) continue;
 					if (!contactId[j].equals(demoRel.get("demographic_no"))) continue;
 
@@ -2327,7 +2322,7 @@ public class DemographicExportAction4 extends Action {
 
 		org.oscarehr.common.model.Demographic relDemo = new DemographicData().getDemographic(contactId);
 		HashMap<String,String> relDemoExt = new HashMap<String,String>();
-		relDemoExt.putAll(new DemographicExt().getAllValuesForDemo(contactId));
+		relDemoExt.putAll(demographicExtDao.getAllValuesForDemo(contactId));
 
 		Util.writeNameSimple(contact.addNewName(), relDemo.getFirstName(), relDemo.getLastName());
 		if (StringUtils.empty(relDemo.getFirstName())) {

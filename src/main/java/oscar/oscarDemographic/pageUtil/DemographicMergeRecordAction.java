@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * DemographicMergeRecordAction.java
  *
@@ -29,40 +54,40 @@ import oscar.oscarDemographic.data.DemographicMerged;
  * @author wrighd
  */
 public class DemographicMergeRecordAction  extends Action {
-    
+
     Logger logger = Logger.getLogger(DemographicMergeRecordAction.class);
-    
+
     public DemographicMergeRecordAction() {
-        
+
     }
     public ActionForward execute(ActionMapping mapping,ActionForm form,HttpServletRequest request,HttpServletResponse response) {
-        
+
         if (request.getParameterValues("records")==null) {
             return mapping.findForward("failure");
         }
         String outcome = "success";
-        ArrayList records = new ArrayList(Arrays.asList(request.getParameterValues("records")));
+        ArrayList<String> records = new ArrayList<String>(Arrays.asList(request.getParameterValues("records")));
         String head = request.getParameter("head");
         String action = request.getParameter("mergeAction");
         String provider_no = request.getParameter("provider_no");
         DemographicMerged dmDAO = new DemographicMerged();
-        
+
         if (action.equals("merge") && head != null && records.size() > 1 && records.contains(head)){
-            
+
             for (int i=0; i < records.size(); i++){
-                if (!((String) records.get(i)).equals(head))
+                if (!( records.get(i)).equals(head))
                     try{
-                        dmDAO.Merge((String) records.get(i), head);
+                        dmDAO.Merge( records.get(i), head);
                     }catch(SQLException e){
                         logger.error("Could not merged records: "+records.get(i)+","+head, e);
                         outcome = "failure";
                     }
             }
-            
+
         }else if(action.equals("unmerge") && records.size() > 0){
             outcome = "successUnMerge";
             for (int i=0; i < records.size(); i++){
-                String demographic_no = (String) records.get(i);
+                String demographic_no = records.get(i);
                 try{
                     dmDAO.UnMerge(demographic_no, provider_no);
                 }catch(SQLException e){
@@ -70,16 +95,16 @@ public class DemographicMergeRecordAction  extends Action {
                     outcome = "failureUnMerge";
                 }
             }
-            
+
         }else{
             outcome = "failure";
         }
         request.setAttribute("mergeoutcome",outcome);
-        
+
         if (request.getParameter("caisiSearch") != null && request.getParameter("caisiSearch").equalsIgnoreCase("yes")){
             outcome = "caisiSearch";
         }
-        
+
         return mapping.findForward(outcome);
     }
 }

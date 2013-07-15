@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@page import="org.oscarehr.util.WebUtils"%>
 <%@page import="org.oscarehr.phr.util.MyOscarUtils"%>
 <%@page import="org.oscarehr.phr.PHRAuthentication"%>
@@ -5,7 +30,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security" %>
 <%@ taglib uri="/WEB-INF/indivo-tag.tld" prefix="indivo" %>
@@ -24,7 +49,26 @@
 <%@page import="org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager"%>
 <%@page import="org.oscarehr.util.LoggedInInfo"%>
 <%@page import="java.util.ArrayList,oscar.oscarRx.data.RxPrescriptionData"%>
+<%@page import="org.oscarehr.common.model.ProviderPreference"%>
+<%@page import="org.oscarehr.web.admin.ProviderPreferencesUIBean"%>
 <bean:define id="patient" type="oscar.oscarRx.data.RxPatientData.Patient" name="Patient" />
+
+<%
+String rx_enhance = OscarProperties.getInstance().getProperty("rx_enhance");
+%>	
+
+<% 
+if (rx_enhance!=null && rx_enhance.equals("true")) {
+	if (request.getParameter("ID") != null) { %>
+		<script>
+			window.opener.location = window.opener.location;
+			window.close();
+		</script>
+<%
+	} 
+}
+%>
+
 
 <%
         if (session.getAttribute("userrole") == null) response.sendRedirect("../logout.jsp");
@@ -38,7 +82,10 @@
 
             response.sendRedirect("../noRights.html");
     %>
-</security:oscarSec><logic:notPresent name="RxSessionBean" scope="session">
+</security:oscarSec>
+
+
+<logic:notPresent name="RxSessionBean" scope="session">
     <logic:redirect href="error.html" />
 </logic:notPresent>
 <logic:present name="RxSessionBean" scope="session">
@@ -55,6 +102,15 @@
 			String usefav=request.getParameter("usefav");
             String favid=request.getParameter("favid");
             int demoNo=bean.getDemographicNo();
+%>
+<security:oscarSec roleName="<%=roleName$%>"
+	objectName='<%="_rx$"+demoNo%>' rights="o"
+	reverse="<%=false%>">
+<bean:message key="demographic.demographiceditdemographic.accessDenied"/>
+<% response.sendRedirect("../acctLocked.html"); %>
+</security:oscarSec>
+
+<%         
             String providerNo=bean.getProviderNo();
             //String reRxDrugId=request.getParameter("reRxDrugId");
             HashMap hm=(HashMap)session.getAttribute("profileViewSpec");
@@ -65,10 +121,7 @@
             //boolean all=true;
             boolean longterm_acute=true;
             boolean longterm_acute_inactive_external=true;
-            if(hm==null) {
-			// do nothing
-            }
-            else{
+            if(hm!=null) {
              if(hm.get("show_current")!=null)
                 show_current=(Boolean)hm.get("show_current");
              else
@@ -119,38 +172,33 @@
                         prescribedDrugs = patient.getPrescribedDrugScripts(); //this function only returns drugs which have an entry in prescription and drugs table
                         String script_no = "";
                         
+            //This checks if the provider has the ExternalPresriber feature enabled, if so then a link appear for the provider to access the ExternalPrescriber
+            ProviderPreference providerPreference=ProviderPreferencesUIBean.getLoggedInProviderPreference();
+            
+            boolean eRxEnabled= false;
+            String eRx_SSO_URL = null;
+            String eRxUsername = null;
+            String eRxPassword = null;
+            String eRxFacility = null;
+            String eRxTrainingMode="0"; //not in training mode
+            
+            if(providerPreference!=null){
+            	eRxEnabled = providerPreference.isERxEnabled();
+                eRx_SSO_URL = providerPreference.getERx_SSO_URL();
+                eRxUsername = providerPreference.getERxUsername();
+                eRxPassword = providerPreference.getERxPassword();
+                eRxFacility = providerPreference.getERxFacility();
+                	                
+                boolean eRxTrainingModeTemp = providerPreference.isERxTrainingMode();
+                if(eRxTrainingModeTemp) eRxTrainingMode="1";
+             }
+
 			ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
 			List<Clinic> clinics = clinicDao.findAll();
+             
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
    "http://www.w3.org/TR/html4/loose.dtd">
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
-
-
 <html:html locale="true">
     <head>
             <script type="text/javascript" src="<%=request.getContextPath()%>/js/global.js"></script>
@@ -829,6 +877,10 @@ body {
                                                 %>
                                                     <input id="completeMedRecButton" type="button"  onclick="completeMedRec();" value="Complete Med Rec" />
                                                 <% } %>
+                                                
+                                                <% if(eRxEnabled) { %>
+													<a href="<%=eRx_SSO_URL%>User=<%=eRxUsername%>&Password=<%=eRxPassword%>&Clinic=<%=eRxFacility%>&PatientIdPMIS=<%=patient.getDemographicNo()%>&IsTraining=<%=eRxTrainingMode%>"><bean:message key="SearchDrug.eRx.msgExternalPrescriber"/></a>
+                                                <% } %>
                                             </td>
                                         </tr>
                                         <tr>
@@ -946,7 +998,7 @@ body {
                                         </tr>
                                         <tr><!--move this left-->
                                             <td>
-                                                <table border="0" width="700px">
+                                                <table border="0" width="100%">
                                                     <tr>
                                                         <td>
                                                             <table width="100%" cellspacing="0" cellpadding="0" class="legend">
@@ -1653,7 +1705,7 @@ function popForm2(scriptId){
                 //oscarLog( "preview2 done");
                 myLightWindow.activateWindow({
                     href: url,
-                    width: 660,
+                    width: 1000,
                     height: h
                 });
                 var editRxMsg='<bean:message key="oscarRx.Preview.EditRx"/>';

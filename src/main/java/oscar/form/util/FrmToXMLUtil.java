@@ -1,24 +1,25 @@
- /*
- * 
- * Copyright (c) 2001-2005. Compete 3
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <Ivy Chan>
- * 
- * This software was written for the 
- * Compete 3 Project
- * Hamilton 
- * Ontario, Canada 
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
 package oscar.form.util;
 
@@ -33,6 +34,7 @@ import java.util.Vector;
 
 import noNamespace.SitePatientVisitRecordsDocument;
 
+import org.apache.commons.validator.GenericValidator;
 import org.apache.xmlbeans.XmlCalendar;
 import org.apache.xmlbeans.XmlOptions;
 import org.oscarehr.util.MiscUtils;
@@ -43,6 +45,13 @@ import oscar.oscarProvider.data.ProviderData;
 import oscar.oscarRx.data.RxPatientData;
 import oscar.oscarRx.data.RxPrescriptionData;
 import oscar.util.UtilDateUtilities;
+
+/*
+ * This software was written for the 
+ * Compete 3 Project
+ * Hamilton 
+ * Ontario, Canada 
+ */
 
 /**
  *
@@ -121,7 +130,7 @@ public class FrmToXMLUtil{
             setWhoWhatWhereWhen(obj,how,who,when,value);
             
              ///FLU SHOT
-            if (getFluShotBillingDate((String) dataProps.getProperty("demographic_no"))!=null){               
+            if (getFluShotBillingDate(dataProps.getProperty("demographic_no"))!=null){               
                addNewMethod = cls.getMethod("addNewBFluShotDoneThisSeason", new Class[] {});
                obj = addNewMethod.invoke(visit,new Object[]{});                       
                setWhoWhatWhereWhen(obj,how,who,when,"true");                 
@@ -136,7 +145,7 @@ public class FrmToXMLUtil{
                 MiscUtils.getLogger().debug("method "+methodCall);
                 org.apache.commons.validator.GenericValidator gValidator = new org.apache.commons.validator.GenericValidator();
                 
-                if(mt.getType().equalsIgnoreCase("BP") && !gValidator.isBlankOrNull(dataProps.getProperty("SBPValue"))){
+                if(mt.getType().equalsIgnoreCase("BP") && !GenericValidator.isBlankOrNull(dataProps.getProperty("SBPValue"))){
                     methodCall = (String) nameProps.get("SBPValue");
                     if (methodCall != null){
                        cls = visit.getClass();
@@ -178,7 +187,7 @@ public class FrmToXMLUtil{
                     
                 }                
 
-                else if (methodCall != null && !gValidator.isBlankOrNull(dataProps.getProperty(itemName+"Value"))){                                                                               
+                else if (methodCall != null && !GenericValidator.isBlankOrNull(dataProps.getProperty(itemName+"Value"))){                                                                               
 
                    cls = visit.getClass();
 

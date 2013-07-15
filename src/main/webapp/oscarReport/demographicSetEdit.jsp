@@ -1,28 +1,29 @@
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
-     * This software was written for the
- * Department of Family Medicine
- * McMaster University test2
- * Hamilton
- * Ontario, Canada
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
 <%@page
 	import="oscar.oscarDemographic.data.*,java.util.*,oscar.oscarPrevention.*,oscar.oscarProvider.data.*,oscar.util.*,oscar.oscarReport.data.*,oscar.oscarPrevention.pageUtil.*"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
@@ -37,7 +38,7 @@
   String demographic_no = request.getParameter("demographic_no");
 
   DemographicSets  ds = new DemographicSets();
-  ArrayList sets = ds.getDemographicSets();
+  List<String> sets = ds.getDemographicSets();
 
   DemographicData dd = new DemographicData();
 
@@ -131,13 +132,13 @@ function disableifchecked(ele,nextDate){
 			<div><bean:message key="oscarReport.oscarReportDemoSetEdit.msgPatientSet"/>: <html:select property="patientSet">
 				<html:option value="-1"><bean:message key="oscarReport.oscarReportDemoSetEdit.msgOptionSet"/></html:option>
 				<% for ( int i = 0 ; i < sets.size(); i++ ){
-                            String s = (String) sets.get(i);%>
+                            String s = sets.get(i);%>
 				<html:option value="<%=s%>"><%=s%></html:option>
 				<%}%>
 			</html:select> <input type="submit" value="<bean:message key="oscarReport.oscarReportDemoSetEdit.btnDisplaySet"/>" /></div>
 
 		</html:form> <%if( request.getAttribute("SET") != null ) {
-                   ArrayList list = (ArrayList) request.getAttribute("SET");
+                   List<Map<String,String>> list = (List<Map<String,String>>) request.getAttribute("SET");
                    String setName = (String) request.getAttribute("setname");%>
 		<div><html:form action="/report/SetEligibility">
 			<input type="submit" value="<bean:message key="oscarReport.oscarReportDemoSetEdit.btnSetIneligible"/>" /> <bean:message key="oscarReport.oscarReportDemoSetEdit.msgIneligible"/><br>
@@ -156,8 +157,8 @@ function disableifchecked(ele,nextDate){
 					<th><bean:message key="oscarReport.oscarReportDemoSetEdit.msgEligibility" /></th>
 				</tr>
 				<%for (int i=0; i < list.size(); i++){
-                     Hashtable h = (Hashtable) list.get(i);
-                     org.oscarehr.common.model.Demographic demo = dd.getDemographic((String) h.get("demographic_no"));  %>
+                     Map<String,String> h = list.get(i);
+                     org.oscarehr.common.model.Demographic demo = dd.getDemographic(h.get("demographic_no"));  %>
 				<tr>
 					<td><input type="checkbox" name="demoNo"
 						value="<%=h.get("demographic_no")%>" />

@@ -1,3 +1,26 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
 // -----------------------------------------------------------------------------------------------------------------------
 // *
 // *
@@ -36,10 +59,12 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang.NotImplementedException;
+import org.apache.log4j.Logger;
 import org.oscarehr.util.MiscUtils;
 
 /**
@@ -49,6 +74,8 @@ import org.oscarehr.util.MiscUtils;
  */
 public class SchemaUtils
 {
+	private static Logger logger=MiscUtils.getLogger();
+	
 	public static boolean inited=false;
 	public static Map<String,String> createTableStatements = new HashMap<String,String>();
 
@@ -96,13 +123,21 @@ public class SchemaUtils
 	 */
 	public static void createDatabaseAndTables() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException, IOException
 	{
+		boolean skipDbInit = false;
+		if(System.getProperty("oscar.dbinit.skip") != null && System.getProperty("oscar.dbinit.skip").equalsIgnoreCase("true")) 
+			skipDbInit=true;
+		
 		String schema=ConfigUtils.getProperty("db_schema");
-
+		logger.info("using schema : "+schema);
+		
 		Connection c=getConnection();
 		try
 		{
 			Statement s=c.createStatement();
-			s.executeUpdate("create database "+schema);
+			
+			if(!skipDbInit) {
+				s.executeUpdate("create database "+schema);				
+			}
 			s.executeUpdate("use "+schema);
 
 			runCreateTablesScript(c);
@@ -184,8 +219,10 @@ public class SchemaUtils
                 } else {
                     env = new String[]{};
                 }
-                
-		Process p = Runtime.getRuntime().exec(new String[] {"mysql","--user="+ConfigUtils.getProperty("db_user"),"--password="+ConfigUtils.getProperty("db_password"),"-e","source "+filename,ConfigUtils.getProperty("db_schema")},env, new File(dir));
+
+        String[] commandString={"mysql","--user="+ConfigUtils.getProperty("db_user"),"--password="+ConfigUtils.getProperty("db_password"),"--host="+ConfigUtils.getProperty("db_host"),"-e","source "+filename,ConfigUtils.getProperty("db_schema")};
+        logger.info("Runtime exec command string : "+Arrays.toString(commandString));
+		Process p = Runtime.getRuntime().exec(commandString,env, new File(dir));
 		BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
 		BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
 
@@ -215,48 +252,82 @@ public class SchemaUtils
 
 	private static void runCreateTablesScript(Connection c) throws IOException
 	{
-		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/oscarinit.sql"),0);
+		boolean skipDbInit = false;
+		if(System.getProperty("oscar.dbinit.skip") != null && System.getProperty("oscar.dbinit.skip").equalsIgnoreCase("true")) 
+			skipDbInit=true;
+		
+		if(!skipDbInit) {
+			String baseDir=System.getProperty("basedir");
+			logger.info("using baseDir : "+baseDir);
+					
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscarinit.sql"),0);
+	
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscarinit_on.sql"),0);
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscardata.sql"),0);
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscardata_on.sql"),0);
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/icd9.sql"),0);
+	
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/caisi/initcaisi.sql"),0);
+	
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/caisi/initcaisidata.sql"),0);
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/caisi/populate_issue_icd9.sql"),0);
+			//		assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/icd9_issue_groups.sql"),0);
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/measurementMapData.sql"),0);
+	//		assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/expire_oscardoc.sql"),0);
+	
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscarinit_bc.sql"),0);
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscardata_bc.sql"),0);
 
-		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/oscarinit_on.sql"),0);
-		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/oscardata.sql"),0);
-		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/oscardata_on.sql"),0);
-		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/icd9.sql"),0);
 
-		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/caisi/initcaisi.sql"),0);
-
-		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/caisi/initcaisidata.sql"),0);
-		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/caisi/populate_issue_icd9.sql"),0);
-		//		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/icd9_issue_groups.sql"),0);
-		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/measurementMapData.sql"),0);
-//		assertEquals(loadFileIntoMySQL(System.getProperty("basedir") + "/database/mysql/expire_oscardoc.sql"),0);
-
-
-		createTableStatements.clear();
-		try {
-			ResultSet rs = c.getMetaData().getTables(ConfigUtils.getProperty("db_schema"), null, "%", null);
-			while(rs.next()) {
-				String tableName = rs.getString("TABLE_NAME");
-				Statement stmt2 = c.createStatement();
-				ResultSet rs2 = stmt2.executeQuery("show create table " + tableName + ";");
-				if(rs2.next()) {
-					String sql = rs2.getString(2);
-					createTableStatements.put(tableName, sql);
-
-					Statement stmt = c.createStatement();
-					stmt.executeUpdate("alter table "+ tableName + " rename to " + tableName + "_maventest");
-					stmt.close();
+		 
+			createTableStatements.clear();
+			try {
+				ResultSet rs = c.getMetaData().getTables(ConfigUtils.getProperty("db_schema"), null, "%", null);
+				while(rs.next()) {
+					String tableName = rs.getString("TABLE_NAME");				
+					Statement stmt2 = c.createStatement();
+					ResultSet rs2 = stmt2.executeQuery("show create table " + tableName + ";");
+					if(rs2.next()) {
+						String sql = rs2.getString(2);	
+						createTableStatements.put(tableName, sql);
+	
+						Statement stmt = c.createStatement();
+						stmt.executeUpdate("alter table "+ tableName + " rename to " + tableName + "_maventest");
+						stmt.close();
+					}
+					rs2.close();
+					stmt2.close();
 				}
-				rs2.close();
-				stmt2.close();
+				rs.close();
+	
+	
+			}catch(SQLException e) {
+				MiscUtils.getLogger().error("Error:",e);
 			}
-			rs.close();
-
-                        
-		}catch(SQLException e) {
-			MiscUtils.getLogger().error("Error:",e);
+		} else {
+			//we're assuming a db ready to go..we just need to build the createTableStatementsMap
+			createTableStatements.clear();
+			try {
+				ResultSet rs = c.getMetaData().getTables(ConfigUtils.getProperty("db_schema"), null, "%", null);
+				while(rs.next()) {
+					String tableName = rs.getString("TABLE_NAME");				
+					Statement stmt2 = c.createStatement();
+					ResultSet rs2 = stmt2.executeQuery("show create table " + tableName + ";");
+					if(rs2.next()) {
+						String sql = rs2.getString(2).replaceAll(tableName, tableName.substring(0,tableName.length()-10));	
+						createTableStatements.put(tableName.substring(0,tableName.length()-10), sql);							
+					}
+					rs2.close();
+					stmt2.close();
+				}
+				rs.close();
+	
+	
+			}catch(SQLException e) {
+				MiscUtils.getLogger().error("Error:",e);
+			}
 		}
-
-
+				
 		inited=true;
 	}
 
@@ -279,7 +350,11 @@ public class SchemaUtils
 	 */
 	public static void dropAndRecreateDatabase() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException, IOException
 	{
-		dropDatabaseIfExists();
+		boolean skipDbInit = false;
+		if(System.getProperty("oscar.dbinit.skip") != null && System.getProperty("oscar.dbinit.skip").equalsIgnoreCase("true")) 
+			skipDbInit=true;
+		if(!skipDbInit)
+			dropDatabaseIfExists();
 		createDatabaseAndTables();
 	}
 

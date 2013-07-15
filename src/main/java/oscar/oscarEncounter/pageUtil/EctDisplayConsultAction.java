@@ -1,27 +1,27 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License. 
-// * This program is free software; you can redistribute it and/or 
-// * modify it under the terms of the GNU General Public License 
-// * as published by the Free Software Foundation; either version 2 
-// * of the License, or (at your option) any later version. * 
-// * This program is distributed in the hope that it will be useful, 
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-// * along with this program; if not, write to the Free Software 
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-// * 
-// * <OSCAR TEAM>
-// * This software was written for the 
-// * Department of Family Medicine 
-// * McMaster University 
-// * Hamilton 
-// * Ontario, Canada 
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
 
 package oscar.oscarEncounter.pageUtil;
 
@@ -105,7 +105,7 @@ public class EctDisplayConsultAction extends EctDisplayAction {
             String serviceDateStr;
             Date date;
             for (int idx = theRequests.ids.size() - 1; idx >= 0; --idx ){
-                NavBarDisplayDAO.Item item = Dao.Item();
+                NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
                 String service =  theRequests.service.get(idx);
                 String dateStr    =  theRequests.date.get(idx);
                 String status = theRequests.status.get(idx);
@@ -123,7 +123,7 @@ public class EctDisplayConsultAction extends EctDisplayAction {
                     serviceDateStr = "Error";
                     date = null;
                 }
-                url = "popupPage(700,960,'" + winName + "','" + request.getContextPath() + "/oscarEncounter/ViewRequest.do?de=" + bean.demographicNo + "&requestId=" + (String)theRequests.ids.get(idx) + "'); return false;";
+                url = "popupPage(700,960,'" + winName + "','" + request.getContextPath() + "/oscarEncounter/ViewRequest.do?de=" + bean.demographicNo + "&requestId=" + theRequests.ids.get(idx) + "'); return false;";
                 
                 item.setLinkTitle(service + " " + serviceDateStr);
                 service = StringUtils.maxLenString(service, MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES);

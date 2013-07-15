@@ -1,28 +1,29 @@
-<!--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
 <%@ page import="java.util.ResourceBundle"%>
 <% java.util.Properties oscarVariables = oscar.OscarProperties.getInstance(); %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
@@ -33,7 +34,7 @@
 
 <%
   ResourceBundle oscarR = ResourceBundle.getBundle("oscarResources",request.getLocale());
-  
+
   String transactionType = new String(oscarR.getString("oscarEncounter.oscarConsultationRequest.config.AddSpecialist.addOperation"));
   int whichType = 1;
   if ( request.getAttribute("upd") != null){
@@ -115,6 +116,7 @@ function BackToOscar() {
                            thisForm.seteDataServiceKey( (String) request.getAttribute("eDataServiceKey"));
                            thisForm.seteDataServiceName( (String) request.getAttribute("eDataServiceName"));
                            thisForm.setAnnotation((String)request.getAttribute("annotation"));
+                           thisForm.setReferralNo((String)request.getAttribute("referralNo"));
                            }
                         %>
 						<html:hidden name="EctConAddSpecialistForm" property="specId" />
@@ -154,10 +156,20 @@ function BackToOscar() {
 						<tr>
 							<td><bean:message key="oscarEncounter.oscarConsultationRequest.config.AddSpecialist.specialistType" /></td>
 							<td><html:text name="EctConAddSpecialistForm" property="specType" /></td>
-							<td></td>
-							<td></td>
-							<td></td>
-							<td></td>
+							<td><bean:message key="oscarEncounter.oscarConsultationRequest.config.AddSpecialist.referralNo" /></td>
+							<td colspan="4">
+								<% if (request.getAttribute("refnoinuse") != null) { %>
+									<span style="color: red;"><bean:message
+										key="oscarEncounter.oscarConsultationRequest.config.AddSpecialist.referralNoInUse" /></span><br />
+								<% } else if (request.getAttribute("refnoinvalid") != null) { %>
+									<span style="color: red;"><bean:message
+										key="oscarEncounter.oscarConsultationRequest.config.AddSpecialist.referralNoInvalid" /></span><br />
+								<% } %>
+								<html:text name="EctConAddSpecialistForm" property="referralNo" maxlength="6" />
+							</td>
+						</tr>
+						<tr>
+							<td colspan="7"><hr /></td>
 						</tr>
 						<tr>
 							<td><bean:message key="oscarEncounter.oscarConsultationRequest.config.AddSpecialist.eDataUrl" /></td>
@@ -177,7 +189,7 @@ function BackToOscar() {
 						</tr>
 						<tr>
 							<td colspan="6">
-								<input type="hidden" name="whichType" value="<%=whichType%>" /> 
+								<input type="hidden" name="whichType" value="<%=whichType%>" />
 								<input type="submit" name="transType" value="<%=transactionType%>" />
 							</td>
 						</tr>
@@ -200,4 +212,3 @@ function BackToOscar() {
 </table>
 </body>
 </html:html>
-

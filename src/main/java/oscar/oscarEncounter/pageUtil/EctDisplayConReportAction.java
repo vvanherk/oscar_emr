@@ -1,27 +1,27 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License.
-// * This program is free software; you can redistribute it and/or
-// * modify it under the terms of the GNU General Public License
-// * as published by the Free Software Foundation; either version 2
-// * of the License, or (at your option) any later version. *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-// * along with this program; if not, write to the Free Software
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-// *
-// * <OSCAR TEAM>
-// * This software was written for the
-// * Department of Family Medicine
-// * McMaster University
-// * Hamilton
-// * Ontario, Canada
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
 
 package oscar.oscarEncounter.pageUtil;
 
@@ -34,9 +34,10 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.struts.util.MessageResources;
 import org.oscarehr.PMmodule.dao.ProviderDao;
-import org.oscarehr.common.dao.BillingreferralDao;
 import org.oscarehr.common.dao.DemographicDao;
+import org.oscarehr.common.dao.ProfessionalSpecialistDao;
 import org.oscarehr.common.model.Demographic;
+import org.oscarehr.common.model.ProfessionalSpecialist;
 import org.oscarehr.eyeform.dao.ConsultationReportDao;
 import org.oscarehr.eyeform.model.EyeformConsultationReport;
 import org.oscarehr.util.MiscUtils;
@@ -50,7 +51,7 @@ import oscar.util.StringUtils;
 public class EctDisplayConReportAction extends EctDisplayAction {
     private static final String cmd = "conReport";
 
-    BillingreferralDao brDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+    ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
     DemographicDao demographicDao = (DemographicDao)SpringUtils.getBean("demographicDao");
 
  public boolean getInfo(EctSessionBean bean, HttpServletRequest request, NavBarDisplayDAO Dao, MessageResources messages) {
@@ -94,10 +95,11 @@ public class EctDisplayConReportAction extends EctDisplayAction {
 
     List<EyeformConsultationReport> crs = crDao.getByDemographic(Integer.parseInt(bean.demographicNo));
     for(EyeformConsultationReport cr:crs) {
-    	NavBarDisplayDAO.Item item = Dao.Item();
+    	NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
     	item.setDate(cr.getDate());
 
-    	String title = brDao.getById(cr.getReferralId()).getFormattedName() + " - " + cr.getStatus();
+    	ProfessionalSpecialist specialist = professionalSpecialistDao.find(cr.getReferralId());
+    	String title = specialist.getFormattedName() + " - " + cr.getStatus();
     	String itemHeader = StringUtils.maxLenString(title, MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES);
         item.setLinkTitle(itemHeader);
         item.setTitle(itemHeader);

@@ -1,4 +1,22 @@
+<%--
 
+    Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+--%>
 <%
   if (session.getAttribute("user") == null) {
     response.sendRedirect("../../../logout.jsp");
@@ -16,7 +34,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ page errorPage="errorpage.jsp"%>
 <%@ page import="java.util.*,java.net.*, java.sql.*, oscar.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
@@ -34,16 +52,17 @@
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
 <%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
+<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
 <%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.oscarehr.common.model.Billingreferral" %>
 <%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
 <%@ page import="org.oscarehr.billing.model.BillingDefault"%>
 <%@ page import="org.oscarehr.billing.dao.BillingDefaultDao"%>
 <%@page import="oscar.oscarDB.*" %>
-
 <%
-	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
-	
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+
 	ProviderPreferenceDao providerPreferenceDao = (ProviderPreferenceDao)SpringUtils.getBean("providerPreferenceDao");
     ProviderPreference providerPreference = providerPreferenceDao.find(user_no);
 	BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("billingDefaultDao");
@@ -145,7 +164,7 @@
   boolean bFirst = true;
   Vector vecHistD = new Vector();
   List aL = null;
-  
+
   OscarProperties props = OscarProperties.getInstance();
   if(!props.getProperty("isNewONbilling", "").equals("true")) {
 	  
@@ -164,7 +183,7 @@
     propHist.setProperty("visitType", rs.getString("visitType"));
     propHist.setProperty("clinic_ref_code", rs.getString("clinic_ref_code"));
     vecHist.add(propHist);
-    
+
     // get the latest ref. doctor number
     if(bFirst && "checked".equals(SxmlMisc.getXmlContent(rs.getString("content"),"xml_referral")) ) {
         bFirst = false;
@@ -228,9 +247,9 @@
 			propHist.setProperty("diagnostic_code", iobj.getDx());
 			vecHistD.add(propHist);
 		}
-	  
+
   }
-  
+
   // display the fixed billing part
   // Retrieving Provider
   Vector vecProvider = new Vector();
@@ -244,7 +263,7 @@
     propT.setProperty("first_name",rs.getString("first_name"));
     propT.setProperty("proOHIP",rs.getString("provider_no"));
     vecProvider.add(propT);
-  } 
+  }
   // clinic location
   Vector vecLocation = new Vector();
   sql = "select * from clinic_location where clinic_no = 1 order by clinic_location_no";
@@ -258,9 +277,9 @@
 
   // set default value
   // use parameter -> history record
-  Billingreferral billingReferral = billingReferralDao.getByReferralNo(r_doctor_ohip);
-  if(billingReferral != null) {
-  	          	r_doctor = billingReferral.getLastName() + "," + billingReferral.getFirstName();
+  ProfessionalSpecialist specialist = professionalSpecialistDao.getByReferralNo(r_doctor_ohip);
+  if(specialist != null) {
+  	          	r_doctor = specialist.getLastName() + "," + specialist.getFirstName();
   }
 
   String paraName = request.getParameter("dxCode");
@@ -359,7 +378,7 @@ if (xml_location.indexOf("|") >= 0) {
     //propT.setProperty("headerTitle1",rs.getString("service_group_name"));
 	vecCodeCol1.add(propT);
   }
-  if(vecCodeCol1.size()>0) {
+  if(!vecCodeCol1.isEmpty()) {
 	  sql = "select service_code,status from ctl_billingservice_premium where ";
 	  for(int i=0; i<vecCodeCol1.size(); i++) {
 	  	sql += (i==0?"":" or ") + "service_code='" + ((Properties)vecCodeCol1.get(i)).getProperty("serviceCode") + "'";
@@ -383,16 +402,15 @@ if (xml_location.indexOf("|") >= 0) {
     propT.setProperty("serviceSLI", Misc.getStr(rs.getString("sliFlag"), "false"));
 	vecCodeCol2.add(propT);
   }
-  
-  if(vecCodeCol2.size() > 0) {
-	sql = "select service_code,status from ctl_billingservice_premium where ";
-	for(int i=0; i<vecCodeCol2.size(); i++) {
-		sql += (i==0?"":" or ") + "service_code='" + ((Properties)vecCodeCol2.get(i)).getProperty("serviceCode") + "'";
-	}
-	rs = dbObj.searchDBRecord(sql);
-	while (rs.next()) {
-		propPremium.setProperty(rs.getString("service_code"), "A");
-	}
+  if( !vecCodeCol2.isEmpty() ) {
+  	sql = "select service_code,status from ctl_billingservice_premium where ";
+  	for(int i=0; i<vecCodeCol2.size(); i++) {
+  		sql += (i==0?"":" or ") + "service_code='" + ((Properties)vecCodeCol2.get(i)).getProperty("serviceCode") + "'";
+  	}
+  	rs = dbObj.searchDBRecord(sql);
+  	while (rs.next()) {
+    	propPremium.setProperty(rs.getString("service_code"), "A");
+  	}
   }
 
   sql = "select c.service_group_name, c.service_order,b.service_code, b.description, b.value, b.percentage, b.sliFlag from billingservice b, ctl_billingservice c where c.service_code=b.service_code and c.status='A' and c.servicetype ='"
@@ -409,15 +427,15 @@ if (xml_location.indexOf("|") >= 0) {
 	vecCodeCol3.add(propT);
   }
   
-  if(vecCodeCol3.size() > 0) {
-	sql = "select service_code,status from ctl_billingservice_premium where ";
-	for(int i=0; i<vecCodeCol3.size(); i++) {
-		sql += (i==0?"":" or ") + "service_code='" + ((Properties)vecCodeCol3.get(i)).getProperty("serviceCode") + "'";
-	}
-	rs = dbObj.searchDBRecord(sql);
-	while (rs.next()) {
-		propPremium.setProperty(rs.getString("service_code"), "A");
-	}
+  if( !vecCodeCol3.isEmpty() ) {
+  	sql = "select service_code,status from ctl_billingservice_premium where ";
+  	for(int i=0; i<vecCodeCol3.size(); i++) {
+  		sql += (i==0?"":" or ") + "service_code='" + ((Properties)vecCodeCol3.get(i)).getProperty("serviceCode") + "'";
+  	}
+  	rs = dbObj.searchDBRecord(sql);
+  	while (rs.next()) {
+    	propPremium.setProperty(rs.getString("service_code"), "A");
+  	}
   }
 
   // create msg
@@ -428,7 +446,7 @@ if (xml_location.indexOf("|") >= 0) {
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html>
 <head>
-    <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>	
+    <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
 <title>HospitalBilling</title>
 <link rel="stylesheet" type="text/css" href="billingON.css" />
@@ -451,13 +469,13 @@ if (xml_location.indexOf("|") >= 0) {
 window.focus();
 
 function checkSli() {
-	var needsSli = false; 
-    jQuery("input[name^=code_xml_]:checked").each(function() { 
-            needsSli = needsSli || eval(jQuery("input[name='sli_xml_" + this.name.substring(9) + "']").val());     
-    }); 
-    jQuery("input[name^=serviceDate][value!='']").each(function() { 
-            needsSli = needsSli || eval(jQuery("input[name='sli_xml_" + this.value + "']").val()); 
-    }); 
+	var needsSli = false;
+    jQuery("input[name^=code_xml_]:checked").each(function() {
+            needsSli = needsSli || eval(jQuery("input[name='sli_xml_" + this.name.substring(9) + "']").val());
+    });
+    jQuery("input[name^=serviceDate][value!='']").each(function() {
+            needsSli = needsSli || eval(jQuery("input[name='sli_xml_" + this.value + "']").val());
+    });
     return !needsSli || jQuery("select[name='xml_slicode']").get(0).selectedIndex != 0;
 }
 
@@ -485,7 +503,7 @@ function showHideLayers() { //v3.0
     function onNext() {
         //document.forms[0].submit.value="save";
         var ret = checkAllDates();
-        if (!(ret = checkSli())) {        	
+        if (!(ret = checkSli())) {
         	alert("You have selected billing codes that require an SLI code but have not provided an SLI code.");
         }
         return ret;
@@ -520,17 +538,17 @@ function showHideLayers() { //v3.0
         } else if(document.forms[0].xml_provider.value=="000000"){
         	alert("Please select a provider.");
             b = false;
-        } 
+        }
         <% if (!OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
         else if(document.forms[0].xml_visittype.options[2].selected && (document.forms[0].xml_vdate.value=="" || document.forms[0].xml_vdate.value=="0000-00-00")){
         	alert("Need an admission date.");
             b = false;
-        } 
+        }
         <% } %>
 
 		if(document.forms[0].xml_vdate.value.length>0) {
         	b = checkServiceDate(document.forms[0].xml_vdate.value);
-        } 
+        }
         if(document.forms[0].billDate.value.length>0) {
         	var billDateA = document.forms[0].billDate.value.split("\n");
         	for (var i in billDateA) {
@@ -583,7 +601,7 @@ function checkServiceDate(s) {
 		return true;
 	}
 }
-    
+
     function isInteger(s){
         var i;
         for (i = 0; i < s.length; i++){
@@ -1161,9 +1179,9 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 						<td width="30%"><b><%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.formVisitType"/> <% } %></b></td>
 						<td width="20%"><select name="xml_visittype" onChange="onBillingDefaultsDropdownChange(this);">
 						<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
-					    <% 
-					    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
-						ArrayList<ClinicNbr> nbrs = cnDao.findAll();									            
+					    <%
+					    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao");
+						ArrayList<ClinicNbr> nbrs = cnDao.findAll();
 			            ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
 			            String providerSearch = apptProvider_no.equalsIgnoreCase("none") ? user_no : apptProvider_no;
 			            Provider p = providerDao.getProvider(providerSearch);
@@ -1205,7 +1223,7 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 								<%=srtBillType.startsWith("PAT")?"selected" : ""%>><bean:message key="billing.billingCorrection.formBillTypeP"/>
 							</option>
 							<option value="WCB | Worker's Compensation Board"
-								<%=srtBillType.startsWith("WCB")?"selected" : ""%>><bean:message key="billing.billingCorrection.formBillTypeW"/></option>						
+								<%=srtBillType.startsWith("WCB")?"selected" : ""%>><bean:message key="billing.billingCorrection.formBillTypeW"/></option>
 						</select></td>
 					</tr>
 					<tr>
@@ -1294,7 +1312,7 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 							<%} else { %>
 								<option value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 							<%}%>
-							</select> 
+							</select>
 				   		</td>
 					</tr>
 				<%} else {%>
@@ -1385,7 +1403,7 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 						<td <%=serviceDesc.length()>30?"title=\""+serviceDesc+"\"":""%>><font
 							size="-1"><%=serviceDesc.length()>30?serviceDesc.substring(0,30)+"...":serviceDesc%>
 						<input type="hidden" name="desc_xml_<%=serviceCode%>"
-							value="<%=serviceDesc%>" /> 
+							value="<%=serviceDesc%>" />
 						<input type="hidden" name="sli_xml_<%=serviceCode%>" value="<%=serviceSLI%>" />
 							</font></td>
 						<td align="right"><font size="-1"><%=serviceDisp%></font> <input
@@ -1541,8 +1559,7 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 	bgcolor="#CCCCFF">
 	<tr>
 		<td colspan="6" class="RowTop"><%= demoname %> - <b><bean:message key="billing.hospitalBilling.frmBillHistory"/>
-                </b> <bean:message key="billing.hospitalBilling.frmLastFive"/>
-		</td>
+                </b> <bean:message key="billing.hospitalBilling.frmLastFive"/></td>
 	</tr>
 	<tr>
 		<td>
@@ -1664,7 +1681,8 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
       showOthers : true,
       multiple   : MA, // pass the initial or computed array of multiple dates to be initially selected
       onClose    : closed,
-      button     : "trigger"
+      button     : "trigger",
+      inputField : "billDate"
     });
   //]]>
 Calendar.setup( { inputField : "xml_vdate", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_vdate_cal", singleClick : true, step : 1 } );

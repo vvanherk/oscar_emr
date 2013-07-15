@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%
   if (session.getAttribute("user") == null)    response.sendRedirect("../logout.jsp");
@@ -14,19 +39,15 @@
   if (request.getParameter("bFirstDisp")!=null) bFirstDisp = (request.getParameter("bFirstDisp")).equals("true");
 %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
-<%@ page
-	import="oscar.oscarDemographic.data.*, java.util.*, java.sql.*, oscar.appt.*, oscar.*, java.text.*, java.net.*, org.oscarehr.common.OtherIdManager"
-	errorPage="errorpage.jsp"%>
-<%@ page import="oscar.appt.status.service.AppointmentStatusMgr"
-	errorPage="errorpage.jsp"%>
-<%@ page import="oscar.appt.status.model.AppointmentStatus"
-	errorPage="errorpage.jsp"%>
-<%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.util.SpringUtils"
-         errorPage="errorpage.jsp"%>
+<%@page import="oscar.oscarDemographic.data.*, java.util.*, java.sql.*, oscar.appt.*, oscar.*, java.text.*, java.net.*, org.oscarehr.common.OtherIdManager"%>
+<%@ page import="oscar.appt.status.service.AppointmentStatusMgr"%>
+<%@ page import="oscar.appt.status.model.AppointmentStatus"%>
+<%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.util.SpringUtils"%>
 <%@ page import="oscar.oscarEncounter.data.EctFormData"%>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
+<%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <jsp:useBean id="providerBean" class="java.util.Properties" scope="session" />
 <%@page import="org.oscarehr.common.model.DemographicCust" %>
 <%@page import="org.oscarehr.common.dao.DemographicCustDao" %>
@@ -46,32 +67,6 @@
 
   DemographicDao demographicDao = (DemographicDao)SpringUtils.getBean("demographicDao");
 %>
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
-
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.oscarehr.common.model.Site"%><html:html locale="true">
 <head>
@@ -108,7 +103,11 @@
 <% } %>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
 <title><bean:message key="appointment.editappointment.title" /></title>
-
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
+   <script>
+     jQuery.noConflict();
+   </script>
+<oscar:customInterface section="editappt"/>
 <script language="javascript">
 <!-- // start javascript
 function toggleView() {
@@ -274,6 +273,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
 	document.EDITAPPT.notes.value = "<%=apptObj.getNotes()%>";
 	document.EDITAPPT.location.value = "<%=apptObj.getLocation()%>";
 	document.EDITAPPT.resources.value = "<%=apptObj.getResources()%>";
+	document.EDITAPPT.type.value = "<%=apptObj.getType()%>";
 	if('<%=apptObj.getUrgency()%>' == 'critical') {
 		document.EDITAPPT.urgency.checked = "checked";
 	}
@@ -551,7 +551,7 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
                     width="25">
             </div>
         </li>
-			<% if(providerBean.getProperty(doctorNo)!=null) {%>
+			<% if(providerBean != null && doctorNo != null && providerBean.getProperty(doctorNo)!=null) {%>
         <li class="row weak">
             <div class="label"></div>
             <div class="input"></div>
@@ -577,7 +577,13 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
             <div class="space">&nbsp;</div>
             <div class="label">
 		<INPUT TYPE="hidden" NAME="orderby" VALUE="last_name, first_name">
-                <INPUT TYPE="hidden" NAME="search_mode" VALUE="search_name">
+<%
+    String searchMode = request.getParameter("search_mode");
+    if (searchMode == null || searchMode.isEmpty()) {
+        searchMode = OscarProperties.getInstance().getProperty("default_search_mode","search_name");
+    }
+%>
+                <INPUT TYPE="hidden" NAME="search_mode" VALUE="<%=searchMode%>">
                 <INPUT TYPE="hidden" NAME="originalpage" VALUE="../appointment/editappointment.jsp">
                 <INPUT TYPE="hidden" NAME="limit1" VALUE="0">
                 <INPUT TYPE="hidden" NAME="limit2" VALUE="5">

@@ -1,32 +1,35 @@
 <%--
-/*
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
 --%>
+
 <%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="/WEB-INF/oscarProperties-tag.tld" prefix="oscarProp" %>
 <!-- add for special encounter -->
 <%@ taglib uri="http://www.caisi.ca/plugin-tag" prefix="plugin" %>
@@ -43,11 +46,16 @@
 <%@page import="org.oscarehr.common.model.ConsultationRequestExt"%>
 <%@page import="org.oscarehr.common.dao.ConsultationRequestExtDao"%>
 
+<%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+<%@page import="org.oscarehr.common.model.Provider"%>
+
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
 <%@page import="org.oscarehr.common.model.Site"%><html:html locale="true">
 
 <%
+	ProviderDao providerDao = SpringUtils.getBean(ProviderDao.class);
+
     oscar.oscarEncounter.oscarConsultationRequest.pageUtil.EctConsultationFormRequestUtil reqFrm;
     reqFrm = new oscar.oscarEncounter.oscarConsultationRequest.pageUtil.EctConsultationFormRequestUtil ();
     reqFrm.estRequestFromId((String)request.getAttribute("reqId"));
@@ -133,55 +141,76 @@
                 vecAddressFax.add(s.getFax());
                 if (selectedSite.equals(s.getName())) {
                 	defaultSite = s;
-                }
-      		}
+            	}
+     		}
             // default address
-        if (defaultSite!=null) {
-            clinic.setClinicAddress(defaultSite.getAddress());
+	        if (defaultSite!=null) {
+	            clinic.setClinicAddress(defaultSite.getAddress());
             clinic.setClinicCity(defaultSite.getCity());
             clinic.setClinicProvince(defaultSite.getProvince());
             clinic.setClinicPostal(defaultSite.getPostal());
             clinic.setClinicPhone(defaultSite.getPhone());
             clinic.setClinicFax(defaultSite.getFax());
             clinic.setClinicName(defaultSite.getName());
-   			defaultAddrName=defaultSite.getName();
-        }
-    } else
-    if(props.getProperty("clinicSatelliteName") != null) {
-        vecAddressName = new Vector();
-        vecAddress = new Vector();
-        vecAddressPhone = new Vector();
-        vecAddressFax = new Vector();
-        vecAddressBillingNo = new Vector();
-        String[] temp0 = props.getProperty("clinicSatelliteName", "").split("\\|");
-        String[] temp1 = props.getProperty("clinicSatelliteAddress", "").split("\\|");
-        String[] temp2 = props.getProperty("clinicSatelliteCity", "").split("\\|");
-        String[] temp3 = props.getProperty("clinicSatelliteProvince", "").split("\\|");
-        String[] temp4 = props.getProperty("clinicSatellitePostal", "").split("\\|");
-        String[] temp5 = props.getProperty("clinicSatellitePhone", "").split("\\|");
-        String[] temp6 = props.getProperty("clinicSatelliteFax", "").split("\\|");
-        String[] temp7 = props.getProperty("clinicDocBillingNoList", "").split("\\|");
-        for(int i=0; i<temp0.length; i++) {
-            vecAddressName.add(temp0[i]);
-            vecAddress.add(temp1[i] + ", " + temp2[i] + ", " + temp3[i] + "  " + temp4[i]);
-            vecAddressPhone.add(temp5[i]);
-            vecAddressFax.add(temp6[i]);
-        }
-        for(int i=0; i<temp7.length; i++) {
-            vecAddressBillingNo.add(temp7[i]);
-        }
-        // default address
-        //clinic.setClinic_name();
-        clinic.setClinicAddress(temp1[0]);
-        clinic.setClinicCity(temp2[0]);
-        clinic.setClinicProvince(temp3[0]);
-        clinic.setClinicPostal(temp4[0]);
-        clinic.setClinicPhone(temp5[0]);
-        clinic.setClinicFax(temp6[0]);
-    }
+	   			defaultAddrName=defaultSite.getName();
+	        }
+    } else {
+	    if(props.getProperty("clinicSatelliteName") != null) {
+	        vecAddressName = new Vector();
+	        vecAddress = new Vector();
+	        vecAddressPhone = new Vector();
+	        vecAddressFax = new Vector();
+	        vecAddressBillingNo = new Vector();
+	        String[] temp0 = props.getProperty("clinicSatelliteName", "").split("\\|");
+	        String[] temp1 = props.getProperty("clinicSatelliteAddress", "").split("\\|");
+	        String[] temp2 = props.getProperty("clinicSatelliteCity", "").split("\\|");
+	        String[] temp3 = props.getProperty("clinicSatelliteProvince", "").split("\\|");
+	        String[] temp4 = props.getProperty("clinicSatellitePostal", "").split("\\|");
+	        String[] temp5 = props.getProperty("clinicSatellitePhone", "").split("\\|");
+	        String[] temp6 = props.getProperty("clinicSatelliteFax", "").split("\\|");
+	        String[] temp7 = props.getProperty("clinicDocBillingNoList", "").split("\\|");
+	        for(int i=0; i<temp0.length; i++) {
+	            vecAddressName.add(temp0[i]);
+	            vecAddress.add(temp1[i] + ", " + temp2[i] + ", " + temp3[i] + "  " + temp4[i]);
+	            vecAddressPhone.add(temp5[i]);
+	            vecAddressFax.add(temp6[i]);
+	        }
+	        for(int i=0; i<temp7.length; i++) {
+	            vecAddressBillingNo.add(temp7[i]);
+	        }
+	        // default address
+	        //clinic.setClinic_name();
+	        clinic.setClinicAddress(temp1[0]);
+        	clinic.setClinicCity(temp2[0]);
+	        clinic.setClinicProvince(temp3[0]);
+	        clinic.setClinicPostal(temp4[0]);
+	        clinic.setClinicPhone(temp5[0]);
+	        clinic.setClinicFax(temp6[0]);
+	    } else {
+	    	//is letterhead different?
+	    	if(!reqFrm.letterheadName.equals(clinic.getClinicName()) && !reqFrm.letterheadName.equals("-1")) {
+	    		Provider p = providerDao.getProvider(reqFrm.letterheadName);
+	    		if(p != null) {
+		    		//why, yes it is
+		    		vecAddressName = new Vector();
+			        vecAddress = new Vector();
+			        vecAddressPhone = new Vector();
+			        vecAddressFax = new Vector();
+			        vecAddressBillingNo = new Vector();
+			        
+			        vecAddressName.add(p.getFormattedName());
+			        vecAddress.add(reqFrm.letterheadAddress);
+			        vecAddressPhone.add(reqFrm.letterheadPhone);
+			        vecAddressFax.add(reqFrm.letterheadFax);
+	    		}
+		        
+	    	}
+	    }
 
+    }
     ConsultationRequestExtDao consultationRequestExtDao = (ConsultationRequestExtDao)SpringUtils.getBean("consultationRequestExtDao");
     List<ConsultationRequestExt> exts =consultationRequestExtDao.getConsultationRequestExts(Integer.parseInt((String)request.getAttribute("reqId")));
+    
 %>
     <head>
     <html:base/>
@@ -305,7 +334,7 @@
     <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.title"/>
     </title>
     </head>
-    <body>
+    <body onLoad="addressSelect();">
         <form  method="get "action="attachmentReport.jsp">
             <input type="hidden" name="reqId" value="<%=request.getAttribute("reqId")%>"/>
             <input type="hidden" name="demographicNo" value="<%=request.getParameter("demographicNo")%>"/>
@@ -352,6 +381,7 @@
             </td>
 		<% } %>
 		<% if(vecAddress != null) { %>
+			<% if(vecAddress.size()>1) { %>
             <td align="center">
                 Address
                 <select name="addressSel" id="addressSel" onChange="addressSelect()" <%=(bMultisites && selectedSite != null ? " disabled " : " ") %>>>
@@ -362,7 +392,9 @@
             <%  }%>
                 </select>
             </td>
-		<% } %>
+            <% } else { %>
+            	<input type="hidden" name="addressSel" id="addressSel" value="0"/>
+		<% } }%>
             </tr>
         </table>
         </form>
@@ -760,14 +792,13 @@ for(ConsultationRequestExt ext:exts) {
             </tr>
             <tr>
             <td class="subTitles">
-                <%-- Dr. Hunter wants the form to say "Physician" instead of "Family Physician".  This is a quick and dirty hack to make it work.  This
-                should really be rewritten more elegantly at some later point in time. --%>
-                 <%-- A more permanent, but I will not say elegant, implemenation of this "Physician" indicator by a new property and other language support. --%>
-       <% if (props.getProperty("CONSULT_PHYSICIAN_IS_REFERRING", "").startsWith("true") ) { %>
-                <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgReferringIsPhysician"/>
+                <%-- A more permanent, but I will not say elegant, implemenation of this "Physician indicator by a new property and other language support. --%>
+	   <% if (props.getProperty("CONSULT_PHYSICIAN_IS_REFERRING", "").startsWith("true") ) 
+          { 
+          	%><bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgReferringIsPhysician"/>
        <% } else if(props.getProperty("isSpecialist", "").startsWith("true")) { %>
                 Doctor
-		<% } else { %>
+	   <% } else { %>
                 <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgFamilyDoc"/>
        <% } %>
                 : <%=reqFrm.getFamilyDoctor() %>

@@ -1,35 +1,31 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version. *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
  *
- *  Jason Gallagher
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
  *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada   
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * MeasurementTemplateFlowSheetConfig.java
- *
- * Created on January 28, 2006, 10:45 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package oscar.oscarBilling.ca.bc.decisionSupport;
 
 import java.io.BufferedReader;
-import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,8 +50,8 @@ public class BillingGuidelines  {
     private static Logger log = MiscUtils.getLogger();
 
     private List<DSGuideline> billingGuideLines = null ;
-    
-   
+
+
     static BillingGuidelines measurementTemplateFlowSheetConfig = new BillingGuidelines();
     static String region = "";
 
@@ -64,8 +60,8 @@ public class BillingGuidelines  {
     String[] filenamesON= {"ON250.xml","ON428.xml"};
     String[] filenameON250 = {"ON250.xml"};
     String[] filenameON428 = {"ON428.xml"};
-   
-   
+
+
     /**
      * Creates a new instance of MeasurementTemplateFlowSheetConfig
      */
@@ -78,13 +74,11 @@ public class BillingGuidelines  {
 
     static public BillingGuidelines getInstance(String code) {
         if (measurementTemplateFlowSheetConfig.billingGuideLines == null || !code.equals(region)) {
-            try {
+
                 region = code;
                 measurementTemplateFlowSheetConfig.loadGuidelines(region);
 
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+
         }
         return measurementTemplateFlowSheetConfig;
     }
@@ -92,13 +86,11 @@ public class BillingGuidelines  {
     static public BillingGuidelines getInstance() {
         String tmpRegion = OscarProperties.getInstance().getProperty("billregion","");
         if (measurementTemplateFlowSheetConfig.billingGuideLines == null || !tmpRegion.equals(region)) {
-            try {
+
                 region = tmpRegion;
                 measurementTemplateFlowSheetConfig.loadGuidelines(region);
 
-            } catch (FileNotFoundException e) {
-                throw new RuntimeException(e);
-            }
+
         }
         return measurementTemplateFlowSheetConfig;
     }
@@ -106,9 +98,9 @@ public class BillingGuidelines  {
     /**
      * Loads all the guidelines from preset files in this package.  This will probably change to load them from a table in the database.
      */
-    void loadGuidelines(String regionCode) throws FileNotFoundException {
+    void loadGuidelines(String regionCode) {
         log.debug("LOADING FLOWSSHEETS");
-        billingGuideLines = new ArrayList();
+        billingGuideLines = new ArrayList<DSGuideline>();
 
         String[] filenames = filenameMap.get(regionCode);
         if( filenames != null ) {
@@ -142,7 +134,7 @@ public class BillingGuidelines  {
     public List<DSConsequence> evaluateAndGetConsequences(String demographicNo, String providerNo) {
         log.debug("passed in provider: " + providerNo + " demographicNo" + demographicNo);
         log.info("Decision Support 'evaluateAndGetConsequences' has been called, reading " + billingGuideLines.size() + " for this provider");
-        ArrayList<DSConsequence> allResultingConsequences = new ArrayList();
+        ArrayList<DSConsequence> allResultingConsequences = new ArrayList<DSConsequence>();
         for (DSGuideline dsGuideline: billingGuideLines) {
             try {
                 List<DSConsequence> newConsequences = dsGuideline.evaluate(demographicNo, providerNo);
@@ -157,8 +149,7 @@ public class BillingGuidelines  {
         return allResultingConsequences;
     }
 
-    
 
-    
+
+
 }
-

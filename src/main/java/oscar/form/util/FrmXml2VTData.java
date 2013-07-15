@@ -1,12 +1,35 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * Created on Nov 18, 2004
  */
 package oscar.form.util;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Calendar;
 import java.util.Properties;
 
 import noNamespace.SitePatientVisitRecordsDocument;
@@ -27,11 +50,11 @@ public class FrmXml2VTData {
 
     // HashTable:
     // "VTData":VTData; "VisitDrug":Vector-VisitDrug; "PatientContactInfo":PatientContactInfo
-    public FrmVTData getObjectFromXmlStr(String strXml) throws Exception, IOException {
-        
-        
+    public FrmVTData getObjectFromXmlStr(String strXml) throws Exception {
+
+
         FrmVTData vtData = new FrmVTData();
-        
+
         // Parse XML string.
         SitePatientVisitRecordsDocument xmlDoc = SitePatientVisitRecordsDocument.Factory.parse(strXml);
 
@@ -59,7 +82,7 @@ public class FrmXml2VTData {
         // Map xml object methods to output object methods
         Class xmlInfo = visitRec[0].getClass();
         Method[] xmlMethods = xmlInfo.getDeclaredMethods();
-        
+
         setObjectsProperty(xmlMethods, visitRec[0], vtData, vtDataC, propVtFieldName);
 
         return vtData;
@@ -130,7 +153,7 @@ public class FrmXml2VTData {
             Object tempXmlObj = xmlMethod.invoke(rec);
 
             String tempXmlType = tempXmlMethod.getReturnType().getName();
-            // Handle with types: txt_ ; b_ ; int_ ; dbl_ ; dat_ 
+            // Handle with types: txt_ ; b_ ; int_ ; dbl_ ; dat_
             if ("java.lang.String".equals(tempXmlType)) {
                 tempXmlValue = (String) tempXmlMethod.invoke(tempXmlObj);
             } else if ("boolean".equals(tempXmlType)) {
@@ -141,7 +164,7 @@ public class FrmXml2VTData {
                 tempXmlValue = "" + ((Double) tempXmlMethod.invoke(tempXmlObj)).doubleValue();
             } else {
 
-                tempXmlValue = "" + (Calendar) tempXmlMethod.invoke(tempXmlObj);
+                tempXmlValue = "" + tempXmlMethod.invoke(tempXmlObj);
             }
         } catch (Exception e) {
             // do nothing
@@ -163,7 +186,7 @@ public class FrmXml2VTData {
         }
         return ret;
     }
-    
+
     static public String getStdMethodName(String str) {
         String ret = "";
         if (str != null) {

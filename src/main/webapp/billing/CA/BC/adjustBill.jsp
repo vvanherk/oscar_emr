@@ -1,8 +1,33 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ taglib uri="/WEB-INF/rewrite-tag.tld" prefix="rewrite" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@page import="oscar.oscarBilling.ca.bc.data.*,oscar.*,org.oscarehr.common.model.*"%>
 <%@page import="java.math.*, java.util.*, java.sql.*, oscar.*, java.net.*,oscar.oscarBilling.ca.bc.MSP.*" %>
 <%@page import="org.springframework.web.context.WebApplicationContext,org.springframework.web.context.support.WebApplicationContextUtils, oscar.entities.*" %>
@@ -18,7 +43,7 @@
     response.sendRedirect("../../../logout.htm");
 
 
-  
+
 
 
   String curUser_no,userfirstname,userlastname;
@@ -100,32 +125,6 @@ if(billNoRow != null && billNoRow.length > 0){
 }
 
 %>
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
-
 <html>
 <head>
    <title>oscarBillingBC Correction</title>
@@ -134,7 +133,7 @@ if(billNoRow != null && billNoRow.length > 0){
    <script type="text/javascript" src="../../../share/calendar/lang/<bean:message key="global.javascript.calendar"/>"></script>
    <script type="text/javascript" src="../../../share/calendar/calendar-setup.js"></script>
    <script type="text/javascript" src="../../../share/javascript/prototype.js"></script>
-   <script type="text/javascript" src="../../../share/javascript/Oscar.js"></script>   
+   <script type="text/javascript" src="../../../share/javascript/Oscar.js"></script>
         <script language="JavaScript">
         if('<%=request.getAttribute("close")%>' == 'true'){
           window.close();
@@ -286,8 +285,8 @@ function checkSubmitType(){
 	       alert("Please select a WCB form");
 	       return false;
 	    }
-	}	
-	
+	}
+
     if(document.forms[0].submit.value=="Reprocess and Resubmit Bill"){
        window.close()
     }
@@ -415,13 +414,13 @@ document.body.insertAdjacentHTML('beforeEnd', WebBrowser);
 
 
     DemoNo =  ""+bill.getDemographicNo();
-    UpdateDate = bill.getUpdateDate();//  rslocation.getString("update_date");
-    BillDate = bill.getBillingDate();//  rslocation.getString("billing_date");
+    UpdateDate = MyDateFormat.getMyStandardDate(bill.getUpdateDate());//  rslocation.getString("update_date");
+    BillDate = MyDateFormat.getMyStandardDate(bill.getBillingDate());//  rslocation.getString("billing_date");
     BillType = bill.getStatus();
     Provider = bill.getProviderNo();
-    visitdate = bill.getVisitdate();  //rslocation.getString("visitdate");
-    visittype = bill.getVisittype();
- 
+    visitdate = MyDateFormat.getMyStandardDate(bill.getVisitDate());  //rslocation.getString("visitdate");
+    visittype = bill.getVisitType();
+
  BillType = allFields.getProperty("billingstatus");
  rsPatient = null;
  rsPatient = apptMainBean.queryResults(DemoNo, "search_demographic_details");
@@ -449,10 +448,10 @@ document.body.insertAdjacentHTML('beforeEnd', WebBrowser);
   <br><html:form  action="/billing/CA/BC/reprocessBill" onsubmit="return checkSubmitType()">
 <input type="hidden" name="update_date" value="<%=UpdateDate%>"/>
 <input type="hidden" name="demoNo" value="<%=DemoNo%>"/>
-<input type="hidden" name="billNumber" value="<%=allFields.getProperty("billing_no")%>"/> 
+<input type="hidden" name="billNumber" value="<%=allFields.getProperty("billing_no")%>"/>
 <table width="100%" border="0">
   <tr bgcolor="#CCCCFF">
-     <td height="21" colspan="2" class="bCellData">Patient Information<input type="hidden" name ="billingmasterNo" value="<%=billNo%>" /> 
+     <td height="21" colspan="2" class="bCellData">Patient Information<input type="hidden" name ="billingmasterNo" value="<%=billNo%>" />
 
 	 <%if(BillType.equals("A")||BillType.equals("P")){%>
 	 <a href="#" onClick="popupPage(800,800, '../../../billing/CA/BC/billingView.do?billing_no=<%=request.getAttribute("invoiceNo")%>&receipt=yes')">View Invoice</a>
@@ -516,7 +515,7 @@ document.body.insertAdjacentHTML('beforeEnd', WebBrowser);
   <tr bgcolor="#CCCCFF">
     <td colspan="2"  class="bCellData">
        Billing Information  Data Center <%=allFields.getProperty("datacenter")%> Payee Number: <%=allFields.getProperty("payee_no")%> Practitioner Number: <%=allFields.getProperty("practitioner_no")%>
-       Bill Type: <%=bill.getBillingtype()%> 
+       Bill Type: <%=bill.getBillingtype()%>
      </td>
   </tr>
 
@@ -585,7 +584,7 @@ document.body.insertAdjacentHTML('beforeEnd', WebBrowser);
               <select name="serviceLocation" style="font-size:80%;">
               <%
               for (int i = 0; i < billvisit.length; i++) {
-                oscar.oscarBilling.ca.bc.data.BillingFormData.BillingVisit visit = (oscar.oscarBilling.ca.bc.data.BillingFormData.BillingVisit)billvisit[i];
+                oscar.oscarBilling.ca.bc.data.BillingFormData.BillingVisit visit = billvisit[i];
                 String selected = serviceLocation.equals(visit.getVisitType())?"selected":"";
               %>
               <option value="<%=visit.getVisitType()%>" <%=selected%>><%=visit.getDescription()%> </option>
@@ -651,8 +650,8 @@ document.body.insertAdjacentHTML('beforeEnd', WebBrowser);
             <input type="text" name="icbcClaim" value="<%=allFields.getProperty("icbc_claim_no")%>"size="8" maxlength="8"/></td>
        </tr>
        <tr>
-           
-           
+
+
 
             <td class="bCellData">Facility Number
             <input type="text" name="facilityNum" value="<%=allFields.getProperty("facility_no")%>" size="5" maxlength="5"/></td>
@@ -862,7 +861,7 @@ if(billService != null){
             </td>
             <td class="bCellData">Insurer Code</td><!--OIN-INSURER-C0DE-->
             <td class="bCellData">
-                <select name="insurerCode2" >
+                <select name="insurerCode" >
                     <option value="" <%=allFields.getProperty("oin_insurer_code").equals("0")?"selected":""%>>None</option>
                     <option value="IN" <%=allFields.getProperty("oin_insurer_code").equals("IN")?"selected":""%>>Institutional Claim</option>
                     <option value="PP" <%=allFields.getProperty("oin_insurer_code").equals("PP")?"selected":""%>>Pay Patient</option>
@@ -903,13 +902,13 @@ if(billService != null){
       </td>
 
   </table>
-  
+
   <script type="text/javascript">
   function callReplacementWebService(url,id){
            var ran_number=Math.round(Math.random()*1000000);
            var params = "demographicNo=<%=bill.getDemographicNo()%>&wcb=&billingcode=<%=allFields.getProperty("billing_code")%>&rand="+ran_number;  //hack to get around ie caching the page
-           new Ajax.Updater(id,url, {method:'get',parameters:params,asynchronous:true}); 
-  } 
+           new Ajax.Updater(id,url, {method:'get',parameters:params,asynchronous:true});
+  }
 
   function replaceWCB(id){
         oscarLog("In replaceWCB");
@@ -917,33 +916,33 @@ if(billService != null){
         callReplacementWebService(ur,'wcbForms');
         oscarLog("replaceWCB out == "+ur);
   }
-  
+
   function toggleWCB(){
        var statusType = document.getElementById('status');
        //alert(statusType.value);
-       
+
        if(statusType.value == "W"){
           oscarLog("Replacing WCB element");
            replaceWCB('0');
        }else{
            document.getElementById('wcbForms').innerHTML = "";
-       } 
-      
+       }
+
 }
-  
-  
+
+
   <%if(bill.getBillingtype().equals("WCB")){ %>
          oscarLog("DOES THIS LOG");
       replaceWCB('<%=billingmaster.getWcbId()%>');
-  
+
   <%}%>
   </script>
   <div id="wcbForms"></div>
-  
-  
- 
-  
- 
+
+
+
+
+
        <!--<tr>
             <td>Facility Num</td><%! /*FACILITY-NUM*/ %>
             <td><input type="text" name="facilityNum" value="<%=allFields.getProperty("facility_no")%>" size="5"/></td>

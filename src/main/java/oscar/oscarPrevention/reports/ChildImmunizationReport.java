@@ -1,31 +1,27 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  Jason Gallagher
- *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
- *
- * ChildImmunizationReport.java
- *
- * Created on September 11, 2006, 4:16 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package oscar.oscarPrevention.reports;
 
@@ -38,6 +34,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.Hashtable;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
@@ -72,23 +69,27 @@ public class ChildImmunizationReport implements PreventionReport{
     }
 
 
-    public Hashtable runReport(ArrayList list,Date asofDate){
+    public Hashtable<String,Object> runReport(ArrayList<ArrayList<String>> list,Date asofDate){
         int inList = 0;
         double done= 0;
-        ArrayList returnReport = new ArrayList();
+        ArrayList<PreventionReportDisplay> returnReport = new ArrayList<PreventionReportDisplay>();
 
         int dontInclude = 0;
           for (int i = 0; i < list.size(); i ++){//for each  element in arraylist
-             ArrayList fieldList = (ArrayList) list.get(i);
+             ArrayList<String> fieldList = list.get(i);
              log.debug("list "+list.size());
-             String demo = (String) fieldList.get(0);
+             String demo = fieldList.get(0);
              log.debug("fieldList "+fieldList.size());
 
 			// search prevention_date prevention_type deleted refused
 			ArrayList<Map<String, Object>> prevs1 = PreventionData.getPreventionData("DTap-IPV", demo);
+			PreventionData.addRemotePreventions(prevs1, Integer.parseInt(demo),"DTap-IPV",null);
 			ArrayList<Map<String, Object>> prevsDtapIPVHIB = PreventionData.getPreventionData("DTaP-IPV-Hib", demo);
+			PreventionData.addRemotePreventions(prevsDtapIPVHIB, Integer.parseInt(demo),"DTaP-IPV-Hib",null);
 			ArrayList<Map<String, Object>> prevs2 = PreventionData.getPreventionData("Hib", demo);
+			PreventionData.addRemotePreventions(prevs2, Integer.parseInt(demo),"Hib",null);
 			ArrayList<Map<String, Object>> prevs4 = PreventionData.getPreventionData("MMR",demo);
+			PreventionData.addRemotePreventions(prevs4, Integer.parseInt(demo),"MMR",null);
 
              //need to compile accurate dtap numbers
 			 Map<String, Object> hDtapIpv, hDtapIpvHib;
@@ -257,7 +258,7 @@ public class ChildImmunizationReport implements PreventionReport{
 
             Collections.sort(returnReport);
 
-          Hashtable h = new Hashtable();
+          Hashtable<String,Object> h = new Hashtable<String,Object>();
 
           h.put("up2date",""+Math.round(done));
           h.put("percent",percentStr);
@@ -299,7 +300,7 @@ public class ChildImmunizationReport implements PreventionReport{
 
    private String letterProcessing(PreventionReportDisplay prd,String measurementType,Date asofDate){
        if (prd != null){
-          if (prd.state.equals("No Info") || prd.state.equals("due") ){
+          if (prd.state.equals("No Info") || prd.state.equals("due") || prd.state.equals("Overdue") ){
               // Get LAST contact method
               EctMeasurementsDataBeanHandler measurementDataHandler = new EctMeasurementsDataBeanHandler(prd.demographicNo,measurementType);
               log.debug("getting followup data for "+prd.demographicNo);
@@ -310,22 +311,67 @@ public class ChildImmunizationReport implements PreventionReport{
                   prd.nextSuggestedProcedure = this.LETTER1;
                   return this.LETTER1;
               }else{ //There has been contact
-                  EctMeasurementsDataBean measurementData = (EctMeasurementsDataBean) followupData.iterator().next();
-                  log.debug("fluData "+measurementData.getDataField());
-                  log.debug("lastFollowup "+measurementData.getDateObservedAsDate()+ " last procedure "+measurementData.getDateObservedAsDate());
-                  log.debug("toString: "+measurementData.toString());
-                  prd.lastFollowup = measurementData.getDateObservedAsDate();
-                  prd.lastFollupProcedure = measurementData.getDataField();
-
-
+            	  
                   Calendar threemonth = Calendar.getInstance();
                   threemonth.setTime(asofDate);
                   threemonth.add(Calendar.MONTH,-1);
                   Date onemon = threemonth.getTime();
                   threemonth.add(Calendar.MONTH,-2);
-                  Date threemon = threemonth.getTime();
+                  Date threemon = threemonth.getTime();               
+                  Date observationDate = null;
+                  int count = 0;
+                  int index = 0;
+                  EctMeasurementsDataBean measurementData = null;
+                  
+                  @SuppressWarnings("unchecked")
+            	  Iterator<EctMeasurementsDataBean>iterator = followupData.iterator();                                    
+                  
+                  while(iterator.hasNext()) {
+                	  measurementData =  iterator.next();
+                	  observationDate = measurementData.getDateObservedAsDate();
+                	  
+                	  if( index == 0 ) {
+                          log.debug("fluData "+measurementData.getDataField());
+                          log.debug("lastFollowup "+measurementData.getDateObservedAsDate()+ " last procedure "+measurementData.getDateObservedAsDate());
+                          log.debug("toString: "+measurementData.toString());
+                          prd.lastFollowup = observationDate;
+                          prd.lastFollupProcedure = measurementData.getDataField();
 
-                  if ( measurementData.getDateObservedAsDate().before(onemon)){
+                          if( prd.lastFollupProcedure.equals(this.PHONE1)) {
+                        	  prd.nextSuggestedProcedure = "----";
+                        	  return "----";
+                          }
+
+                	  }
+                	  
+                	  
+                	  log.debug(prd.demographicNo + " obs" + observationDate + String.valueOf(observationDate.before(onemon)) + " threeMth " + threemon + " " + String.valueOf(observationDate.after(threemon)));
+                	  if( observationDate.before(onemon) && observationDate.after(threemon)) {                		  
+                		  ++count;
+                	  }
+                	  
+                	  ++index;
+
+                  }
+                  
+                  switch (count) {
+                  case 0: 
+                   	  prd.nextSuggestedProcedure = this.LETTER1;
+                	  break;
+                  case 1:
+                	  prd.nextSuggestedProcedure = this.LETTER2;
+                	  break;
+                  case 2:
+                	  prd.nextSuggestedProcedure = this.PHONE1;
+                	  break;
+                  default:
+                	  prd.nextSuggestedProcedure = "----";
+                  }
+                  
+                  return prd.nextSuggestedProcedure;
+
+                  /*if ( measurementData.getDateObservedAsDate().before(onemon)){
+                	  
                       if (prd.lastFollupProcedure.equals(this.LETTER1)){
                                     prd.nextSuggestedProcedure = this.LETTER2;
                                     return this.LETTER2;
@@ -347,9 +393,9 @@ public class ChildImmunizationReport implements PreventionReport{
                   }else{
                       prd.nextSuggestedProcedure = "----";
                       return "----";
-                  }
+                  }*/
               }
-          }else if (prd.state.equals("Refused")  || prd.state.equals("due") || prd.state.equals("Overdue") ){  //Not sure what to do about refused
+          }else if (prd.state.equals("Refused") ){  //Not sure what to do about refused
                 //prd.lastDate = "-----";
 
               EctMeasurementsDataBeanHandler measurementDataHandler = new EctMeasurementsDataBeanHandler(prd.demographicNo,measurementType);

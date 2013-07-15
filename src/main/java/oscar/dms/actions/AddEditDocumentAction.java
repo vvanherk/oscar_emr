@@ -1,18 +1,19 @@
-/*
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -20,6 +21,7 @@
  * Hamilton
  * Ontario, Canada
  */
+
 
 package oscar.dms.actions;
 
@@ -50,7 +52,10 @@ import org.oscarehr.casemgmt.service.CaseManagementManager;
 import org.oscarehr.common.dao.DocumentStorageDao;
 import org.oscarehr.common.dao.ProviderInboxRoutingDao;
 import org.oscarehr.common.dao.QueueDocumentLinkDao;
+import org.oscarehr.common.dao.SecRoleDao;
 import org.oscarehr.common.model.DocumentStorage;
+import org.oscarehr.common.model.Provider;
+import org.oscarehr.common.model.SecRole;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SessionConstants;
 import org.oscarehr.util.SpringUtils;
@@ -248,7 +253,7 @@ public class AddEditDocumentAction extends DispatchAction {
 			// save local file
 			File file = writeLocalFile(docFile, fileName2);
 			newDoc.setContentType(docFile.getContentType());
-			
+
 
 			// if the document was added in the context of a program
 			String programIdStr = (String) request.getSession().getAttribute(SessionConstants.CURRENT_PROGRAM_ID);
@@ -258,9 +263,16 @@ public class AddEditDocumentAction extends DispatchAction {
 			if(fm.getAppointmentNo() != null && fm.getAppointmentNo().length()>0) {
 				newDoc.setAppointmentNo(Integer.parseInt(fm.getAppointmentNo()));
 			}
+			
+		 	// If a new document type is added, include it in the database to create filters 
+		 	if (!EDocUtil.getDoctypes(fm.getFunction()).contains(fm.getDocType())){ 
+		 		EDocUtil.addDocTypeSQL(fm.getDocType(),fm.getFunction());
+		 	} 
+		 	
+			
 			// ---
 			String doc_no = EDocUtil.addDocumentSQL(newDoc);
-			if(ConformanceTestHelper.enableConformanceOnlyTestFeatures){	
+			if(ConformanceTestHelper.enableConformanceOnlyTestFeatures){
 				storeDocumentInDatabase(file, Integer.parseInt(doc_no));
 			}
 			LogAction.addLog((String) request.getSession().getAttribute("user"), LogConst.ADD, LogConst.CON_DOCUMENT, doc_no, request.getRemoteAddr());
@@ -285,8 +297,13 @@ public class AddEditDocumentAction extends DispatchAction {
 				CaseManagementManager cmm = (CaseManagementManager) ctx.getBean("caseManagementManager");
 				cmn.setProviderNo("-1");// set the provider no to be -1 so the editor appear as 'System'.
 
-				String provFirstName = EDocUtil.getProviderInfo("first_name", fm.getDocCreator());
-				String provLastName = EDocUtil.getProviderInfo("last_name", fm.getDocCreator());
+				Provider provider = EDocUtil.getProvider(fm.getDocCreator());
+				String provFirstName = "";
+				String provLastName = "";
+				if(provider!=null) {
+					provFirstName=provider.getFirstName();
+					provLastName=provider.getLastName();
+				}
 
 				String strNote = "Document" + " " + docDesc + " " + "created at " + now + " by " + provFirstName + " " + provLastName + ".";
 
@@ -294,7 +311,11 @@ public class AddEditDocumentAction extends DispatchAction {
 				cmn.setSigned(true);
 				cmn.setSigning_provider_no("-1");
 				cmn.setProgram_no(prog_no);
-				cmn.setReporter_caisi_role("1");
+				
+				SecRoleDao secRoleDao = (SecRoleDao) SpringUtils.getBean("secRoleDao");
+				SecRole doctorRole = secRoleDao.findByName("doctor");		
+				cmn.setReporter_caisi_role(doctorRole.getId().toString());
+								
 				cmn.setReporter_program_team("0");
 				cmn.setPassword("NULL");
 				cmn.setLocked(false);
@@ -303,7 +324,7 @@ public class AddEditDocumentAction extends DispatchAction {
 				cmm.saveNoteSimple(cmn);
 				// Add a noteLink to casemgmt_note_link
 				CaseManagementNoteLink cmnl = new CaseManagementNoteLink();
-				cmnl.setTableName(cmnl.DOCUMENT);
+				cmnl.setTableName(CaseManagementNoteLink.DOCUMENT);
 				cmnl.setTableId(Long.parseLong(EDocUtil.getLastDocumentNo()));
 				cmnl.setNoteId(Long.parseLong(EDocUtil.getLastNoteId()));
 
@@ -348,6 +369,7 @@ public class AddEditDocumentAction extends DispatchAction {
 				}
 			}
 			EDoc newDoc = new EDoc(fm.getDocDesc(), fm.getDocType(), fileName, "", fm.getDocCreator(), fm.getResponsibleId(), fm.getSource(), 'A', fm.getObservationDate(), reviewerId, reviewDateTime, fm.getFunction(), fm.getFunctionId());
+			newDoc.setSourceFacility(fm.getSourceFacility());
 			newDoc.setDocId(fm.getMode());
 			newDoc.setDocPublic(fm.getDocPublic());
 			newDoc.setAppointmentNo(Integer.parseInt(fm.getAppointmentNo()));
@@ -362,6 +384,9 @@ public class AddEditDocumentAction extends DispatchAction {
 			} else if (docFile.getFileName().length() != 0) {
 				errors.put("uploaderror", "dms.error.uploadError");
 				throw new FileNotFoundException();
+			}
+			if(fm.getReviewDoc()) {
+				newDoc.setReviewDateTime(UtilDateUtilities.DateToString(UtilDateUtilities.now(), EDocUtil.REVIEW_DATETIME_FORMAT));
 			}
 			EDocUtil.editDocumentSQL(newDoc, fm.getReviewDoc());
 
@@ -412,7 +437,7 @@ public class AddEditDocumentAction extends DispatchAction {
 		}
 		return file;
 	}
-	
+
 	public int storeDocumentInDatabase(File file, Integer documentNo){
 		Integer ret = 0;
 		try{

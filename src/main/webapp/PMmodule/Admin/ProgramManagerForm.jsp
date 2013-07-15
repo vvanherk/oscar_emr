@@ -1,13 +1,40 @@
+<%--
+
+
+    Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for
+    Centre for Research on Inner City Health, St. Michael's Hospital,
+    Toronto, Ontario, Canada
+
+--%>
 <%@ include file="/taglibs.jsp"%>
 
 <%@ page import="org.oscarehr.PMmodule.web.formbean.*"%>
 <%@ page import="org.oscarehr.PMmodule.model.Program"%>
 <%@ page import="org.apache.struts.validator.DynaValidatorForm"%>
+<%@ page import="org.apache.commons.lang.StringUtils"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 
 <html:form action="/PMmodule/ProgramManager">
 
 	<html:hidden property="view.tab" />
+	<html:hidden property="view.subtab" />
+	<html:hidden property="vacancyOrTemplateId" />
 	<input type="hidden" name="id"
 		value="<c:out value="${requestScope.id}"/>" />
 	<input type="hidden" name="method" value="edit" />
@@ -19,7 +46,18 @@
 				function clickTab(name) {
 					document.programManagerForm.method.value='edit';
 					document.programManagerForm.elements['view.tab'].value=name;
+					document.programManagerForm.elements['view.subtab'].value=name;
 					document.programManagerForm.submit();
+				}
+				function clickTab2(tabName, subtabName) {
+					document.programManagerForm.method.value='edit';
+					document.programManagerForm.elements['view.tab'].value=tabName;
+					document.programManagerForm.elements['view.subtab'].value=subtabName;					
+					document.programManagerForm.submit();
+				}
+				function clickLink(tabName, subtabName, id) {
+					document.programManagerForm.elements['vacancyOrTemplateId'].value=id;
+					clickTab2(tabName, subtabName);
 				}
 			</script>
 
@@ -33,6 +71,10 @@
 			<div class="tabs">
 			<%
 					String selectedTab = request.getParameter("view.tab");
+					if(StringUtils.isBlank(selectedTab)) {
+						selectedTab = (String) request.getAttribute("view.tab");
+					}
+					String selectedSubtab = request.getParameter("view.subtab");
 					/*
 					if (selectedTab == null || selectedTab.trim().equals("")) {
 						selectedTab = ProgramManagerViewFormBean.tabs[0];
@@ -130,6 +172,13 @@
 						<td><a href="javascript:void(0)"
 							onclick="javascript:clickTab('<%=ProgramManagerViewFormBean.tabs[i] %>');return false;"><%=ProgramManagerViewFormBean.tabs[i]%></a></td>
 					</security:oscarSec>
+					<%} else if(ProgramManagerViewFormBean.tabs[i].equalsIgnoreCase("Vacancies")) {
+								%>
+					<security:oscarSec roleName="<%=roleName$%>"
+						objectName="_pmm_editProgram.serviceRestrictions" rights="r">
+						<td><a href="javascript:void(0)"
+							onclick="javascript:clickTab('<%=ProgramManagerViewFormBean.tabs[i] %>');return false;"><%=ProgramManagerViewFormBean.tabs[i]%></a></td>
+					</security:oscarSec>
 					<%} 
 								%>
 					<%
@@ -148,10 +197,15 @@
 				<jsp:include page="/PMmodule/Admin/ProgramEdit/general.jsp" />
 			</security:oscarSec>
 
-			<%} else { %>
-			<jsp:include
-				page='<%="/PMmodule/Admin/ProgramEdit/" + selectedTab.toLowerCase().replaceAll(" ","_") + ".jsp"%>' />
-			<%} %>
+			<%} else {
+				if (selectedSubtab != null && selectedSubtab!="" && !selectedTab.equals(selectedSubtab)) { %>
+				<jsp:include
+					page='<%="/PMmodule/Admin/ProgramEdit/" + selectedSubtab.toLowerCase().replaceAll(" ","_") + ".jsp"%>' />
+				<% } else { %>
+					<jsp:include
+						page='<%="/PMmodule/Admin/ProgramEdit/" + selectedTab.toLowerCase().replaceAll(" ","_") + ".jsp"%>' />
+				<%} 
+			}%>
 		</c:when>
 		<c:otherwise>
 			<%@ include file="/common/messages.jsp"%>

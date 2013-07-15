@@ -1,29 +1,29 @@
-<%-- @ taglib uri="../WEB-INF/taglibs-log.tld" prefix="log" --%>
 <%--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
 --%>
+<%-- @ taglib uri="../WEB-INF/taglibs-log.tld" prefix="log" --%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%
     if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
@@ -45,12 +45,12 @@ You have no rights to access the data!
 <%@ page
 	import="java.util.*, java.sql.*, java.net.*,java.text.DecimalFormat, oscar.*, oscar.oscarDemographic.data.ProvinceNames, oscar.oscarWaitingList.WaitingList"%>
 <%@page import="org.oscarehr.util.SpringUtils" %>
-<%@page import="org.oscarehr.common.model.Billingreferral" %>
-<%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
+<%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
+<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
 <%@page import="org.oscarehr.common.model.DemographicCust" %>
 <%@page import="org.oscarehr.common.dao.DemographicCustDao" %>
 <%
-	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
 	DemographicCustDao demographicCustDao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
 %>
 <jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
@@ -358,12 +358,12 @@ while (rs.next()) {
                                                       Properties prop = null;
                                                       Vector vecRef = new Vector();
 
-                                                      List<Billingreferral> billingReferrals = billingReferralDao.getBillingreferrals();
-                                                      for(Billingreferral billingReferral:billingReferrals) {
+                                                      List<ProfessionalSpecialist> specialists = professionalSpecialistDao.findAll();
+                                                      for(ProfessionalSpecialist specialist : specialists) {
                                                     	  prop = new Properties();
-                                                          prop.setProperty("referral_no",billingReferral.getReferralNo());
-                                                          prop.setProperty("last_name",billingReferral.getLastName());
-                                                          prop.setProperty("first_name",billingReferral.getFirstName());
+                                                          prop.setProperty("referral_no", specialist.getReferralNo());
+                                                          prop.setProperty("last_name", specialist.getLastName());
+                                                          prop.setProperty("first_name", specialist.getFirstName());
                                                           vecRef.add(prop);
                                                       }
 

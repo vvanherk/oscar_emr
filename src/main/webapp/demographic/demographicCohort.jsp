@@ -1,3 +1,29 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
 <%@ page import="oscar.oscarReport.data.DemographicSets, oscar.oscarDemographic.data.DemographicData" %>
 <%@ page import="java.util.ArrayList" %>
 <%@ include file="/casemgmt/taglibs.jsp" %>
@@ -11,7 +37,7 @@
             a:hover {
                 font-weight: bold;
             }
-            
+
             div.demographicSection{
                //width:49%;
                width:100%;
@@ -58,13 +84,13 @@
     </head>
     <body>
         <div class="demographicSection">
-            <%        
+            <%
             String demoNo = request.getParameter("demographic_no");
             DemographicSets demoSets = new DemographicSets();
-            ArrayList arrCurDemoSets = demoSets.getDemographicSets(demoNo);                
+            java.util.List<String> arrCurDemoSets = demoSets.getDemographicSets(demoNo);
             ArrayList arrDemo = new ArrayList();
-            arrDemo.add(demoNo);        
-            pageContext.setAttribute("curSets",arrCurDemoSets);     
+            arrDemo.add(demoNo);
+            pageContext.setAttribute("curSets",arrCurDemoSets);
             DemographicData demoData = new DemographicData();
             String setName = request.getParameter("setName");
             if( setName != null && setName.trim().length() > 0 ) {
@@ -75,17 +101,17 @@
             <p style="font-size:small; font-variant:small-caps">Saved <%=demoData.getDemographic(demoNo).getFirstName() + " " + demoData.getDemographic(demoNo).getLastName()%> to <%=setName%></p>
             <%
             }
-            }    
-            ArrayList arrDemoSets = demoSets.getDemographicSets();
+            }
+            java.util.List<String> arrDemoSets = demoSets.getDemographicSets();
             pageContext.setAttribute("arrDemoSets", arrDemoSets);
-            %>  
+            %>
             <h3>Current Patient Set(s)</h3>
             <ul>
                 <logic:iterate id="set" name="curSets">
                     <li><c:out value="${set}"/></li>
                 </logic:iterate>
             </ul>
-            
+
             <h3>Add to Patient Set:</h3>
             <ul>
                 <logic:iterate id="set" name="arrDemoSets">

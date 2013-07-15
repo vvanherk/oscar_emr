@@ -1,22 +1,22 @@
-<!--  
-/*
- * 
- * Copyright (c) 2005- OpenSoft System. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * Yi Li
- */
--->
+<%--
+
+    Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+--%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 
 <%@page import="java.util.List, java.util.Set, java.util.Collections, java.util.Comparator, java.util.Date, java.text.SimpleDateFormat, java.text.NumberFormat" %>
@@ -247,7 +247,7 @@ if("unbilled".equals(action)) {
     totalNumberOfPages = (int)Math.ceil( (double)totalResults / (double)maxPerPage);
     if (currentPage > totalNumberOfPages)
 		currentPage = totalNumberOfPages;
-		
+	
     firstResult = currentPage * maxPerPage - maxPerPage;
     
     List<Appointment> appointments = appointmentDao.getUnbilledByDateRangeAndProvider(startTime, endTime, providerview, new Integer(firstResult), new Integer(maxPerPage));    
@@ -285,9 +285,6 @@ if("unbilled".equals(action)) {
         String r_doctor_ohip = SxmlMisc.getXmlContent( family_doctor, "rdohip" ) == null ? "" : SxmlMisc.getXmlContent(family_doctor, "rdohip" );
         prop.setProperty( "rdocn", r_doctor_ohip );
         prop.setProperty( "rdocc", r_doctor      );
-        MiscUtils.getLogger().info("rdocn: " + r_doctor_ohip);
-        MiscUtils.getLogger().info("rdocc: " + r_doctor);
-        MiscUtils.getLogger().info("family_doctor: " + family_doctor);
 
         
         String tempStr = "<a href=# onClick='preventEventPropagation(event); popupPage(700,1000, \"billingOB.jsp?billForm=" 
@@ -1530,7 +1527,6 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				billTimeAsDate = (Date)formatter.parse(billTime);
 			} catch (Exception e) {}
 			
-			
 			formatAmounts(amounts);
 			formatPercents(percents);
 			String total = formatAndCalculateTotal(totals);
@@ -1571,7 +1567,16 @@ int[] saveSubmittedBills(HttpServletRequest request, OscarAppointmentDao appoint
 				newBill.setCreator( (String) request.getSession().getAttribute("user") );
 				newBill.setTotal(total);
 			} else {
-				oldBill = billingClaimDAO.getInvoice(billId);
+				Integer billIdAsInteger = null;
+			
+				try {
+					billIdAsInteger = Integer.parseInt(billId);
+				} catch (Exception e) {
+					MiscUtils.getLogger().error("Error while parsing bill Id.", e);
+					continue;
+				}
+				
+				oldBill = billingClaimDAO.getInvoice(billIdAsInteger);
 				newBill = BillingClaimHeader1.copy(oldBill);
 				
 				//String apptProvNo = newBill.getApptProvider_no();

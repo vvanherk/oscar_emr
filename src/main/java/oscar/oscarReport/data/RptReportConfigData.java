@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * Created on 2005-7-22
  */
@@ -32,7 +57,7 @@ public class RptReportConfigData {
     public boolean insertRecordWithOrder() throws SQLException {
         boolean ret = false;
         String sql = "select max(order_no) from reportConfig where report_id=" + report_id;
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         while (rs.next()) {
             order = rs.getInt(1) + 1;
         }
@@ -46,15 +71,12 @@ public class RptReportConfigData {
                 + report_id + ", '" + StringEscapeUtils.escapeSql(name) + "', '"
                 + StringEscapeUtils.escapeSql(caption) + "', " + order + ", '"
                 + StringEscapeUtils.escapeSql(table_name) + "', '" + StringEscapeUtils.escapeSql(save) + "')";
-        try {
-            ret = DBHelp.updateDBRecord(sql);
-        } catch (SQLException e) {
-            _logger.error("insertRecord() : sql = " + sql);
-        }
+        ret = DBHelp.updateDBRecord(sql);
+
         return ret;
     }
 
-    public boolean deleteRecord() throws SQLException {
+    public boolean deleteRecord()  {
         boolean ret = false;
         String sql = "delete from reportConfig where report_id=" + report_id + " and name='"
                 + StringEscapeUtils.escapeSql(name) + "' and caption='" + StringEscapeUtils.escapeSql(caption)
@@ -64,7 +86,7 @@ public class RptReportConfigData {
         return ret;
     }
 
-    public boolean updateRecordOrder(String saveAs, String reportId, String id, String newPos) throws SQLException {
+    public boolean updateRecordOrder(String saveAs, String reportId, String id, String newPos)  {
         boolean ret = false;
         String sql = "update reportConfig set order_no=order_no+1 where report_id=" + reportId + " and save='"
                 + StringEscapeUtils.escapeSql(saveAs) + "' and order_no >=" + newPos + " order by order_no desc";
@@ -80,11 +102,8 @@ public class RptReportConfigData {
     public boolean deleteRecord(int recordId) {
         boolean ret = false;
         String sql = "delete from reportConfig where id=" + recordId;
-        try {
-            ret = DBHelp.updateDBRecord(sql);
-        } catch (SQLException e) {
-            _logger.error("deleteRecord() : sql = " + sql);
-        }
+        ret = DBHelp.updateDBRecord(sql);
+
         return ret;
     }
 
@@ -95,18 +114,18 @@ public class RptReportConfigData {
         ret[1] = new Vector();
         String sql = "select * from reportConfig where report_id=" + reportId + " and save = '" + saveAs
                 + "' order by order_no, id";
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         while (rs.next()) {
 
-            if (dbObj.getString(rs,"name").matches(RptTableShadowFieldConst.fieldName)) {
+            if (DBHelp.getString(rs,"name").matches(RptTableShadowFieldConst.fieldName)) {
 
                 continue;
             }
-            ret[0].add(dbObj.getString(rs,"table_name") + "." + dbObj.getString(rs,"name"));
-            if ("".equals(dbObj.getString(rs,"caption"))) {
-                ret[1].add(dbObj.getString(rs,"name"));
+            ret[0].add(DBHelp.getString(rs,"table_name") + "." + DBHelp.getString(rs,"name"));
+            if ("".equals(DBHelp.getString(rs,"caption"))) {
+                ret[1].add(DBHelp.getString(rs,"name"));
             } else {
-                ret[1].add(dbObj.getString(rs,"caption"));
+                ret[1].add(DBHelp.getString(rs,"caption"));
             }
         }
         rs.close();
@@ -117,14 +136,14 @@ public class RptReportConfigData {
         Vector ret = new Vector();
         String sql = "select * from reportConfig where report_id=" + reportId + " and save = '" + saveAs
                 + "' order by order_no, id";
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         while (rs.next()) {
 
-            if (dbObj.getString(rs,"name").matches(RptTableShadowFieldConst.fieldName)) {
+            if (DBHelp.getString(rs,"name").matches(RptTableShadowFieldConst.fieldName)) {
 
                 continue;
             }
-            ret.add(dbObj.getString(rs,"caption") + " |" + dbObj.getString(rs,"name"));
+            ret.add(DBHelp.getString(rs,"caption") + " |" + DBHelp.getString(rs,"name"));
         }
         rs.close();
         return ret;
@@ -135,11 +154,11 @@ public class RptReportConfigData {
         Properties prop = null;
         String sql = "select * from reportConfig where report_id=" + reportId + " and save = '" + saveAs
                 + "' order by order_no, id";
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         while (rs.next()) {
             prop = new Properties();
-            prop.setProperty("name", dbObj.getString(rs,"name"));
-            prop.setProperty("caption", dbObj.getString(rs,"caption"));
+            prop.setProperty("name", DBHelp.getString(rs,"name"));
+            prop.setProperty("caption", DBHelp.getString(rs,"caption"));
             prop.setProperty("id", "" + rs.getInt("id"));
             prop.setProperty("order_no", "" + rs.getInt("order_no"));
             ret.add(prop);
@@ -153,9 +172,9 @@ public class RptReportConfigData {
         Vector ret = new Vector();
         String sql = "select distinct(table_name) from reportConfig where report_id=" + reportId
                 + " and table_name like 'form%'" + " order by table_name";
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         while (rs.next()) {
-            ret.add(dbObj.getString(rs,"table_name"));
+            ret.add(DBHelp.getString(rs,"table_name"));
         }
         rs.close();
         return ret;

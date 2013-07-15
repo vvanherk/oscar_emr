@@ -1,10 +1,20 @@
+<%--
+
+    Copyright (c) 2008-2012 Indivica Inc.
+
+    This software is made available under the terms of the
+    GNU General Public License, Version 2, 1991 (GPLv2).
+    License details are available via "indivica.ca/gplv2"
+    and "gnu.org/licenses/gpl-2.0.html".
+
+--%>
 <% long startTime = System.currentTimeMillis(); %>
 <%@page contentType="text/html"%>
 <%@page  import="oscar.oscarDemographic.data.*,java.util.*,oscar.oscarPrevention.*,oscar.oscarEncounter.oscarMeasurements.*,oscar.oscarEncounter.oscarMeasurements.bean.*,java.net.*, oscar.oscarRx.util.*"%>
 <%@page import="org.springframework.web.context.support.WebApplicationContextUtils,oscar.log.*"%>
 <%@page import="org.springframework.web.context.WebApplicationContext,oscar.oscarResearch.oscarDxResearch.bean.*"%>
-<%@page import="org.oscarehr.common.dao.FlowSheetCustomizerDAO,org.oscarehr.common.model.FlowSheetCustomization"%>
-<%@page import="org.oscarehr.common.dao.FlowSheetDrugDAO,org.oscarehr.common.model.FlowSheetDrug"%>
+<%@page import="org.oscarehr.common.dao.FlowSheetCustomizationDao,org.oscarehr.common.model.FlowSheetCustomization"%>
+<%@page import="org.oscarehr.common.dao.FlowSheetDrugDao,org.oscarehr.common.model.FlowSheetDrug"%>
 <%@page import="org.oscarehr.common.dao.UserPropertyDAO,org.oscarehr.common.model.UserProperty"%>
 
 <%@page import="org.oscarehr.common.dao.AllergyDao"%>
@@ -22,6 +32,7 @@
     if(session.getValue("user") == null) response.sendRedirect("../../logout.jsp");
     //int demographic_no = Integer.parseInt(request.getParameter("demographic_no"));
     if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
+    String project = request.getContextPath();
     String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
     String demographic_no = request.getParameter("demographic_no");
     String providerNo = (String) session.getAttribute("user");
@@ -45,10 +56,10 @@ boolean dsProblems = false;
 
 WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
 
-FlowSheetCustomizerDAO flowSheetCustomizerDAO = (FlowSheetCustomizerDAO) ctx.getBean("flowSheetCustomizerDAO");
-FlowSheetDrugDAO flowSheetDrugDAO = (FlowSheetDrugDAO) ctx.getBean("flowSheetDrugDAO");
+FlowSheetCustomizationDao flowSheetCustomizationDao = (FlowSheetCustomizationDao) ctx.getBean("flowSheetCustomizationDao");
+FlowSheetDrugDao flowSheetDrugDao = (FlowSheetDrugDao) ctx.getBean("flowSheetDrugDao");
 
-List custList = flowSheetCustomizerDAO.getFlowSheetCustomizations( temp,(String) session.getAttribute("user"),demographic_no);
+List<FlowSheetCustomization> custList = flowSheetCustomizationDao.getFlowSheetCustomizations( temp,(String) session.getAttribute("user"),demographic_no);
 
 ////Start
 MeasurementTemplateFlowSheetConfig templateConfig = MeasurementTemplateFlowSheetConfig.getInstance();
@@ -469,7 +480,7 @@ if (!medicationsResult.isEmpty()) {
 		if (medicationsResult.get(i).get("freqcode")!=null) {
 			medicationsList += " " + medicationsResult.get(i).get("freqcode").toString();
 		}
-		
+
 		if (medicationsResult.get(i).get("prn").toString().equals("1")) {
 			medicationsList += " PRN";
 		}
@@ -537,7 +548,7 @@ String date = year+"-"+month+"-"+day;
 	<table class="formTable" id="headTable">
 		<tr><th colspan="8"><oscar:nameage demographicNo="<%=demographic_no%>"/></th></tr>
 		<tr>
-			<td class="rowheader"><a class="header" href="#" onclick="popupPage('700', '1000', '/oscar/CaseManagementEntry.do?method=issuehistory&demographicNo=<%=demographic_no%>&issueIds=38'); return false;">Reminders</a></td>
+			<td class="rowheader"><a class="header" href="#" onclick="popupPage('700', '1000', '<%=project%>/CaseManagementEntry.do?method=issuehistory&demographicNo=<%=demographic_no%>&issueIds=38'); return false;">Reminders</a></td>
 			<td width="650px"><%=remindersList%></td>
 			<td>
 			<div class="highlightBox">
@@ -557,12 +568,12 @@ String date = year+"-"+month+"-"+day;
 		</tr>
 
 		<tr>
-			<td class="rowheader"><a class="header" href="#" onclick="popupPage('700', '1000', '/oscar/oscarRx/showAllergy.do?demographicNo=<%=demographic_no%>'); return false;">Allergies</a></td>
+			<td class="rowheader"><a class="header" href="#" onclick="popupPage('700', '1000', '<%=project%>/oscarRx/showAllergy.do?demographicNo=<%=demographic_no%>'); return false;">Allergies</a></td>
 			<td width="650px"><%=allergiesList%></td>
 		</tr>
 
 		<tr>
-			<td class="rowheader"><a class="header" href="#" onclick="popupPage('700', '1000', '/oscar/oscarRx/choosePatient.do?providerNo=<%=curUser_no%>&demographicNo=<%=demographic_no%>'); return false;">Medications</a></td>
+			<td class="rowheader"><a class="header" href="#" onclick="popupPage('700', '1000', '<%=project%>/oscarRx/choosePatient.do?providerNo=<%=curUser_no%>&demographicNo=<%=demographic_no%>'); return false;">Medications</a></td>
 			<td width="650px"><%=medicationsList%></td>
 			<td>
    			</td>
@@ -617,7 +628,7 @@ String date = year+"-"+month+"-"+day;
 	    			<%//This part here grabs the field name %>
 	    			<tr class="dataRow <%=currentSection%>" >
 					<td class="field">
-					<a style="color: black; text-decoration : underline;" href="javascript: function myFunction() {return false; }"  onclick="javascript:popup(465,635,'/oscar/oscarEncounter/oscarMeasurements/AddMeasurementData.jsp?measurement=<%= response.encodeURL( measure) %>&amp;demographic_no=<%=demographic_no%>&amp;template=<%= URLEncoder.encode(temp,"UTF-8") %>','addMeasurementData<%=Math.abs( ((String) h.get("name")).hashCode() ) %>')">
+					<a style="color: black; text-decoration : underline;" href="javascript: function myFunction() {return false; }"  onclick="javascript:popup(465,635,'<%=project%>/oscarEncounter/oscarMeasurements/AddMeasurementData.jsp?measurement=<%= response.encodeURL(measure) %>&amp;demographic_no=<%=demographic_no%>&amp;template=<%= URLEncoder.encode(temp,"UTF-8") %>','addMeasurementData<%=Math.abs(h.get("name").hashCode()) %>')">
 					<b><%=child.flowSheetItem.getDisplayName()%></b>
 					</a>
 					</td>
@@ -724,7 +735,7 @@ String date = year+"-"+month+"-"+day;
    							hdata.put("comments",mdb.getComments());
    							hdata.put("unixTime", Long.toString(mdb.getDateEnteredAsDate().getTime()));
    						%>
-   							<div itemtime="<%=hdata.get("unixTime")%>" class="recentBlock measurements" onclick="javascript:popup(465,635,'/oscar/oscarEncounter/oscarMeasurements/AddMeasurementData.jsp?measurement=<%= response.encodeURL( measure) %>&amp;id=<%=hdata.get("id")%>&amp;demographic_no=<%=demographic_no%>&amp;template=<%= URLEncoder.encode(temp,"UTF-8") %>','addMeasurementData')" >
+   							<div itemtime="<%=hdata.get("unixTime")%>" class="recentBlock measurements" onclick="javascript:popup(465,635,'<%=project%>/oscarEncounter/oscarMeasurements/AddMeasurementData.jsp?measurement=<%= response.encodeURL( measure) %>&amp;id=<%=hdata.get("id")%>&amp;demographic_no=<%=demographic_no%>&amp;template=<%= URLEncoder.encode(temp,"UTF-8")%>','addMeasurementData')" >
 		   		               		<b><%=hdata.get("data")%></b>; <%=hdata.get("prevention_date")%> <br>
 		   		               <b>
 		   		                    <%=hdata.get("comments")%>
@@ -754,7 +765,7 @@ String date = year+"-"+month+"-"+day;
 		            	hdata.put("unixTime", Long.toString(mdb.getDateEnteredAsDate().getTime()));
 		                %>
 
-			            	<div itemtime="<%=hdata.get("unixTime")%>" <%if (mdb.getIndicationColour()!=null) {%> <%}%> class="block measurements <%=name%>" onclick="javascript:popup(465,635,'/oscar/oscarEncounter/oscarMeasurements/AddMeasurementData.jsp?measurement=<%= response.encodeURL( measure) %>&amp;id=<%=hdata.get("id")%>&amp;demographic_no=<%=demographic_no%>&amp;template=<%= URLEncoder.encode(temp,"UTF-8") %>','addMeasurementData')" >
+			            	<div itemtime="<%=hdata.get("unixTime")%>" <%if (mdb.getIndicationColour()!=null) {%> <%}%> class="block measurements <%=name%>" onclick="javascript:popup(465,635,'<%=project%>/oscarEncounter/oscarMeasurements/AddMeasurementData.jsp?measurement=<%= response.encodeURL( measure) %>&amp;id=<%=hdata.get("id")%>&amp;demographic_no=<%=demographic_no%>&amp;template=<%= URLEncoder.encode(temp,"UTF-8") %>','addMeasurementData')" >
 			                <%if (!hdata.get("data").equals("")) { %>
 			                <b><%=hdata.get("data")%></b>, <%=hdata.get("prevention_date")%><br>
 			                <%}else{ %>

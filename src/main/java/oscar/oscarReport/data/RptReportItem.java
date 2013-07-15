@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * Created on 2005-7-20
  */
@@ -20,7 +45,7 @@ public class RptReportItem {
     int status = 1;
     DBHelp dbObj = new DBHelp();
 
-    public boolean insertRecord() throws SQLException {
+    public boolean insertRecord() {
         boolean ret = false;
         String sql = "insert into reportItem (report_name, status) values ('"
                 + StringEscapeUtils.escapeSql(report_name) + "', " + status + ")";
@@ -28,14 +53,14 @@ public class RptReportItem {
         return ret;
     }
 
-    public boolean deleteRecord(int recordId) throws SQLException {
+    public boolean deleteRecord(int recordId)  {
         boolean ret = false;
         String sql = "update reportItem set status=0 where id=" + recordId;
         ret = DBHelp.updateDBRecord(sql);
         return ret;
     }
 
-    public boolean unDeleteRecord(int recordId) throws SQLException {
+    public boolean unDeleteRecord(int recordId)  {
         boolean ret = false;
         String sql = "update reportItem set status=1 where id=" + recordId;
         ret = DBHelp.updateDBRecord(sql);
@@ -59,11 +84,11 @@ public class RptReportItem {
         Vector ret = new Vector();
         Properties prop = null;
         String sql = "select * from reportItem where status = " + n + " order by id";
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         while (rs.next()) {
             prop = new Properties();
             prop.setProperty("id", "" + rs.getInt("id"));
-            prop.setProperty("" + rs.getInt("id"), dbObj.getString(rs,"report_name"));
+            prop.setProperty("" + rs.getInt("id"), DBHelp.getString(rs,"report_name"));
             ret.add(prop);
         }
         rs.close();

@@ -1,23 +1,24 @@
-/*
- * 
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for 
- * Centre for Research on Inner City Health, St. Michael's Hospital, 
- * Toronto, Ontario, Canada 
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
 
 package org.oscarehr.casemgmt.service;
@@ -41,7 +42,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.struts.util.LabelValueBean;
 import org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager;
-import org.oscarehr.common.dao.DemographicDao;
+import org.oscarehr.PMmodule.caisi_integrator.IntegratorFallBackManager;
 import org.oscarehr.PMmodule.dao.ProgramAccessDAO;
 import org.oscarehr.PMmodule.dao.ProgramProviderDAO;
 import org.oscarehr.PMmodule.dao.ProviderDao;
@@ -52,10 +53,12 @@ import org.oscarehr.PMmodule.model.ProgramAccess;
 import org.oscarehr.PMmodule.model.ProgramProvider;
 import org.oscarehr.PMmodule.service.AdmissionManager;
 import org.oscarehr.PMmodule.service.ProgramManager;
+import org.oscarehr.PMmodule.utility.ProgramAccessCache;
+import org.oscarehr.PMmodule.utility.RoleCache;
 import org.oscarehr.caisi_integrator.ws.CachedDemographicDrug;
 import org.oscarehr.caisi_integrator.ws.CachedDemographicNote;
 import org.oscarehr.caisi_integrator.ws.CachedFacility;
-import org.oscarehr.caisi_integrator.ws.DemographicWs;
+import org.oscarehr.casemgmt.common.EChartNoteEntry;
 import org.oscarehr.casemgmt.dao.CaseManagementCPPDAO;
 import org.oscarehr.casemgmt.dao.CaseManagementIssueDAO;
 import org.oscarehr.casemgmt.dao.CaseManagementNoteDAO;
@@ -82,15 +85,16 @@ import org.oscarehr.casemgmt.model.Issue;
 import org.oscarehr.casemgmt.model.Messagetbl;
 import org.oscarehr.casemgmt.model.base.BaseHashAudit;
 import org.oscarehr.common.dao.AllergyDao;
+import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.DrugDao;
+import org.oscarehr.common.dao.DxresearchDAO;
 import org.oscarehr.common.dao.UserPropertyDAO;
 import org.oscarehr.common.model.Allergy;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.Drug;
+import org.oscarehr.common.model.Dxresearch;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.UserProperty;
-import org.oscarehr.dx.dao.DxResearchDAO;
-import org.oscarehr.dx.model.DxResearch;
 import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
@@ -130,13 +134,18 @@ public class CaseManagementManager {
 	private HashAuditDAO hashAuditDAO;
 	private EncounterWindowDAO ectWindowDAO;
 	private UserPropertyDAO userPropertyDAO;
-	private DxResearchDAO dxResearchDAO;
+	private DxresearchDAO dxresearchDAO;
 	private ProgramProviderDAO programProviderDao;
 	private ProgramAccessDAO programAccessDAO;
 
 	private boolean enabled;
 
 	private static final Logger logger = MiscUtils.getLogger();
+
+
+	public CaseManagementIssue getIssueByIssueCode(String demo, String issue_code) {
+		return this.caseManagementIssueDAO.getIssuebyIssueCode(demo, issue_code);
+	}
 
 	/*
 	 * check to see if issue has been saved for this demo beforeif it has return issue; else return null
@@ -153,8 +162,7 @@ public class CaseManagementManager {
 
 	// retrieve list of providers who have edited specific note
 	public void getEditors(CaseManagementNote note) {
-		List<Provider> providers;
-		providers = this.caseManagementNoteDAO.getEditors(note);
+		List<Provider> providers = this.caseManagementNoteDAO.getEditors(note);
 		if (providers == null) providers = new ArrayList<Provider>();
 		note.setEditors(providers);
 	}
@@ -168,6 +176,12 @@ public class CaseManagementManager {
 			if (providers == null) providers = new ArrayList<Provider>();
 			note.setEditors(providers);
 		}
+	}
+
+	public List<Provider> getAllEditors(String demographicNo) {
+		List<Provider> providers = this.caseManagementNoteDAO.getAllEditors(demographicNo);
+		if (providers == null) providers = new ArrayList<Provider>();
+		return providers;
 	}
 
 	public UserProperty getUserProperty(String provider_no, String name) {
@@ -206,22 +220,7 @@ public class CaseManagementManager {
 		String noteStr = note.getNote();
 		String noteHistory = note.getHistory();
 
-		// process noteStr, remove existing signed on string
-		// noteStr = removeSignature(noteStr);
-		/*
-		 * if (note.isSigned()) {
-		 * 
-		 * // add the time, signiture and role at the end of note String rolename=""; rolename= roleName; if (rolename == null) rolename = ""; // if have signiture setting, use signiture as username String tempS = null; //if
-		 * (providerSignitureDao.isOnSig(cproviderNo)) tempS = providerSignitureDao.getProviderSig(cproviderNo); if (tempS != null && !"".equals(tempS.trim())) userName = tempS;
-		 * 
-		 * if (userName != null && !"".equals(userName.trim())) { noteStr = noteStr + "\n[[Signed on " + dt.format(now) + " " + "by " + userName + "]]\n" ; } else noteStr = noteStr + "\n[[" + dt.format(now) + "]]\n";
-		 * 
-		 * } else {
-		 * 
-		 * // add time at the end of note noteStr = noteStr + "\n[[" + dt.format(now) + "]]\n"; }
-		 * 
-		 * / formate the "/n" in noteStr
-		 */
+
 		noteStr = noteStr.replaceAll("\r\n", "\n");
 		noteStr = noteStr.replaceAll("\r", "\n");
 
@@ -282,37 +281,44 @@ public class CaseManagementManager {
 		return caseManagementNoteDAO.getNotesByDemographic(demographic_no, issues, staleDate);
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<CaseManagementNote> getNotes(String demographic_no) {
 		return caseManagementNoteDAO.getNotesByDemographic(demographic_no);
 	}
-	
-	@SuppressWarnings("unchecked")
-    public List<CaseManagementNote> getNotes(String demographic_no, Integer maxNotes) {
+
+	public List<CaseManagementNote> getNotes(String demographic_no, Integer maxNotes) {
 		return caseManagementNoteDAO.getNotesByDemographic(demographic_no, maxNotes);
 	}
 
 	public List<CaseManagementNote> getNotes(String demographic_no, String[] issues) {
-		@SuppressWarnings("unchecked")
 		List<CaseManagementNote> notes = caseManagementNoteDAO.getNotesByDemographic(demographic_no, issues);
 		return notes;
 	}
-    
+
     public List<CaseManagementNote> getNotes(String demographic_no, String[] issues, Integer maxNotes) {
-    	@SuppressWarnings("unchecked")
-		List<CaseManagementNote> notes = caseManagementNoteDAO.getNotesByDemographic(demographic_no, issues, maxNotes);
+    	List<CaseManagementNote> notes = caseManagementNoteDAO.getNotesByDemographic(demographic_no, issues, maxNotes);
 		return notes;
+	}
+
+    public List<CaseManagementNote> getNotesWithLimit(String demographic_no, Integer offset, Integer numToReturn) {
+		return caseManagementNoteDAO.getNotesByDemographicLimit(demographic_no, offset, numToReturn);
+	}
+
+	public List<CaseManagementNote> getNotesInDateRange(String demographic_no, Date startDate, Date endDate) {
+		return caseManagementNoteDAO.getNotesByDemographicDateRange(demographic_no, startDate, endDate);
 	}
 
 	/* Return only those notes with archived set to zero */
 	public List<CaseManagementNote> getActiveNotes(String demographic_no, String[] issues) {
-		@SuppressWarnings("unchecked")
 		List<CaseManagementNote> notes = caseManagementNoteDAO.getActiveNotesByDemographic(demographic_no, issues);
 		return notes;
 	}
 
 	public List<CaseManagementIssue> getIssues(int demographic_no) {
 		return caseManagementIssueDAO.getIssuesByDemographicOrderActive(demographic_no, null);
+	}
+
+	public Issue getIssueIByCmnIssueId(int cmnIssueId) {
+		return caseManagementIssueDAO.getIssueByCmnId(cmnIssueId);
 	}
 
 	public List<CaseManagementIssue> getIssuesByNote(int noteId) {
@@ -369,6 +375,10 @@ public class CaseManagementManager {
 		return this.issueDAO.getIssue(Long.valueOf(issue_id));
 	}
 
+	public Issue getIssueByCode(String issueCode) {
+		return this.issueDAO.findIssueByCode(issueCode);
+	}
+
 	public CaseManagementNote getNote(String note_id) {
 		return this.caseManagementNoteDAO.getNote(Long.valueOf(note_id));
 	}
@@ -385,7 +395,7 @@ public class CaseManagementManager {
 		return this.caseManagementNoteExtDAO.getNoteExt(id);
 	}
 
-	public List getExtByNote(Long noteId) {
+	public List<CaseManagementNoteExt> getExtByNote(Long noteId) {
 		return this.caseManagementNoteExtDAO.getExtByNote(noteId);
 	}
 
@@ -421,15 +431,15 @@ public class CaseManagementManager {
 		return this.caseManagementNoteLinkDAO.getLinkByTableId(tableName, tableId);
 	}
 
-	public List getLinkByTableId(Integer tableName, Long tableId, String otherId) {
+	public List<CaseManagementNoteLink> getLinkByTableId(Integer tableName, Long tableId, String otherId) {
 		return this.caseManagementNoteLinkDAO.getLinkByTableId(tableName, tableId, otherId);
 	}
 
-	public List getLinkByTableIdDesc(Integer tableName, Long tableId) {
+	public List<CaseManagementNoteLink> getLinkByTableIdDesc(Integer tableName, Long tableId) {
 		return this.caseManagementNoteLinkDAO.getLinkByTableIdDesc(tableName, tableId);
 	}
 
-	public List getLinkByTableIdDesc(Integer tableName, Long tableId, String otherId) {
+	public List<CaseManagementNoteLink> getLinkByTableIdDesc(Integer tableName, Long tableId, String otherId) {
 		return this.caseManagementNoteLinkDAO.getLinkByTableIdDesc(tableName, tableId, otherId);
 	}
 
@@ -496,10 +506,24 @@ public class CaseManagementManager {
 		}
 
 		try {
-			DemographicWs demographicWs = CaisiIntegratorManager.getDemographicWs();
-			List<CachedDemographicDrug> drugs = demographicWs.getLinkedCachedDemographicDrugsByDemographicId(demographicId);
+			List<CachedDemographicDrug> remoteDrugs  = null;
+			try {
+				if (!CaisiIntegratorManager.isIntegratorOffline()){
+				   remoteDrugs = CaisiIntegratorManager.getDemographicWs().getLinkedCachedDemographicDrugsByDemographicId(demographicId);
+				}
+			} catch (Exception e) {
+				MiscUtils.getLogger().error("Unexpected error.", e);
+				CaisiIntegratorManager.checkForConnectionError(e);
+			}
 
-			for (CachedDemographicDrug cachedDrug : drugs) {
+			if(CaisiIntegratorManager.isIntegratorOffline()){
+			   remoteDrugs = IntegratorFallBackManager.getRemoteDrugs(demographicId);
+			}
+
+
+
+
+			for (CachedDemographicDrug cachedDrug : remoteDrugs) {
 				if (viewAll) {
 					prescriptions.add(getPrescriptDrug(cachedDrug));
 				} else {
@@ -551,13 +575,13 @@ public class CaseManagementManager {
 		return (null);
 	}
 
-	public List getMsgBeans(Integer demographicNo) {
-		Iterator iter = messagetblDAO.getMsgByDemoNo(demographicNo).iterator();
-		ArrayList al = new ArrayList();
+	public List<LabelValueBean> getMsgBeans(Integer demographicNo) {
+		Iterator<Messagetbl> iter = messagetblDAO.getMsgByDemoNo(demographicNo).iterator();
+		ArrayList<LabelValueBean> al = new ArrayList<LabelValueBean>();
 		int i = 0;
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy.mm.dd");
 		while (iter.hasNext()) {
-			Messagetbl mtbl = (Messagetbl) iter.next();
+			Messagetbl mtbl = iter.next();
 			al.add(new LabelValueBean(new Integer(i).toString(), mtbl.getThesubject() + "-" + sdf.format(mtbl.getThedate())));
 			i++;
 		}
@@ -610,22 +634,22 @@ public class CaseManagementManager {
 		return issueDAO.findIssueByCode(code);
 	}
 
-	public List getIssueInfoBySearch(String providerNo, String search, List accessRight) {
-		List issList = issueDAO.findIssueBySearch(search);
+	public List<Issue> getIssueInfoBySearch(String providerNo, String search, List accessRight) {
+		List<Issue> issList = issueDAO.findIssueBySearch(search);
 		// filter the issue list by role
-		List role = roleProgramAccessDAO.getAllRoleName();
-		List filteredIssue = new ArrayList();
+		List<String> role = roleProgramAccessDAO.getAllRoleName();
+		List<Issue> filteredIssue = new ArrayList<Issue>();
 
 		for (int i = 0; i < role.size(); i++) {
-			Iterator itr = issList.iterator();
-			String rl = (String) role.get(i);
+			Iterator<Issue> itr = issList.iterator();
+			String rl = role.get(i);
 			String right = rl.trim() + "issues";
 			boolean inaccessRight = inAccessRight(right, issueAccessType, accessRight);
 			if (inaccessRight) {
 
 				String iRole = rl;
 				while (itr.hasNext()) {
-					Issue iss = (Issue) itr.next();
+					Issue iss = itr.next();
 
 					if (iss.getRole().trim().equalsIgnoreCase(iRole.trim())) {
 						filteredIssue.add(iss);
@@ -738,22 +762,22 @@ public class CaseManagementManager {
 	}
 
 	/* get the filtered Notes by caisi role */
-	public List getFilteredNotes(String providerNo, String demographic_no) {
-		List allNotes = caseManagementNoteDAO.getNotesByDemographic(demographic_no);
-		List role = roleProgramAccessDAO.getAllRoleName();
-		List filteredNotes = new ArrayList();
-		Iterator itr = allNotes.iterator();
+	public List<CaseManagementIssue> getFilteredNotes(String providerNo, String demographic_no) {
+		List<CaseManagementNote> allNotes = caseManagementNoteDAO.getNotesByDemographic(demographic_no);
+		List<String> role = roleProgramAccessDAO.getAllRoleName();
+		List<CaseManagementIssue> filteredNotes = new ArrayList<CaseManagementIssue>();
+		Iterator<CaseManagementNote> itr = allNotes.iterator();
 		boolean added = false;
 		while (itr.hasNext()) {
-			CaseManagementNote note = (CaseManagementNote) itr.next();
+			CaseManagementNote note = itr.next();
 			added = false;
-			Set se = note.getIssues();
+			Set<CaseManagementIssue> se = note.getIssues();
 			if (se == null || se.size() == 0) {
-				Iterator isit = se.iterator();
+				Iterator<CaseManagementIssue> isit = se.iterator();
 				while (isit.hasNext()) {
-					CaseManagementIssue iss = (CaseManagementIssue) isit.next();
+					CaseManagementIssue iss = isit.next();
 					for (int i = 0; i < role.size(); i++) {
-						String rl = (String) role.get(i);
+						String rl = role.get(i);
 						if (iss.getIssue().getRole().trim().equalsIgnoreCase(rl.trim())) {
 							filteredNotes.add(iss);
 							added = true;
@@ -778,7 +802,7 @@ public class CaseManagementManager {
 
 	/**
 	 * Analyzes the issues attached to each note belonging to the supplied Demographic, searching for the supplied issue ID. This method searches local issues only.
-	 * 
+	 *
 	 * @param issid the desired issue ID to find
 	 * @param demoNo the desired demographic ID to find issues for
 	 * @return true if some note for this demographic is attached to this issue, false otherwise
@@ -819,7 +843,7 @@ public class CaseManagementManager {
 	}
 
 	// TODO terrible performance here. TERRIBLE. at LEAST cache this - rwd
-	public List getAccessRight(String providerNo, String demoNo, String programId) {
+	public List<AccessType> getAccessRight(String providerNo, String demoNo, String programId) {
 		List<Integer> progList = new ArrayList<Integer>();
 
 		if (programId == null) {
@@ -834,25 +858,25 @@ public class CaseManagementManager {
 			return null;
 		}
 
-		List rt = new ArrayList();
+		List<AccessType> rt = new ArrayList<AccessType>();
 		Iterator<Integer> itr = progList.iterator();
 
 		while (itr.hasNext()) {
 			Integer pId = itr.next();
 
-			List ppList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, pId.longValue());
-			List paList = programAccessDAO.getAccessListByProgramId(pId.longValue());
+			List<ProgramProvider> ppList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, pId.longValue());
+			List<ProgramAccess> paList = programAccessDAO.getAccessListByProgramId(pId.longValue());
 
 			for (int i = 0; i < ppList.size(); i++) {
-				ProgramProvider pp = (ProgramProvider) ppList.get(i);
+				ProgramProvider pp =  ppList.get(i);
 				// add default role access
-				List arList = roleProgramAccessDAO.getDefaultAccessRightByRole(pp.getRoleId());
+				List<DefaultRoleAccess> arList = roleProgramAccessDAO.getDefaultAccessRightByRole(pp.getRoleId());
 				for (int j = 0; j < arList.size(); j++) {
-					DefaultRoleAccess ar = (DefaultRoleAccess) arList.get(j);
+					DefaultRoleAccess ar = arList.get(j);
 					addrt(rt, ar.getAccess_type());
 				}
 				for (int k = 0; k < paList.size(); k++) {
-					ProgramAccess pa = (ProgramAccess) paList.get(k);
+					ProgramAccess pa = paList.get(k);
 					if (pa.isAllRoles()) {
 						addrt(rt, pa.getAccessType());
 					} else if (roleInAccess(pp.getRoleId(), pa)) {
@@ -876,12 +900,12 @@ public class CaseManagementManager {
 		return rt;
 	}
 
-	public void addrt(List rt, AccessType at) {
+	public void addrt(List<AccessType> rt, AccessType at) {
 		if (at == null) return;
 
 		boolean hasIt = false;
 		for (int i = 0; i < rt.size(); i++) {
-			AccessType ac = (AccessType) rt.get(i);
+			AccessType ac = rt.get(i);
 			if (ac.getId().compareTo(at.getId()) == 0) hasIt = true;
 		}
 		if (!hasIt) rt.add(at);
@@ -960,10 +984,10 @@ public class CaseManagementManager {
 		return this.caseManagementNoteDAO.search(searchBean);
 	}
 
-	public List filterNotesByAccess(List notes, String providerNo) {
-		List filteredNotes = new ArrayList();
-		for (Iterator iter = notes.iterator(); iter.hasNext();) {
-			CaseManagementNote note = (CaseManagementNote) iter.next();
+	public List<CaseManagementNote> filterNotesByAccess(List<CaseManagementNote> notes, String providerNo) {
+		List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
+		for (Iterator<CaseManagementNote> iter = notes.iterator(); iter.hasNext();) {
+			CaseManagementNote note = iter.next();
 			if (hasAccessRight(removeFirstSpace(getCaisiRoleById(note.getReporter_caisi_role())) + "notes", "access", providerNo, note.getDemographic_no(), note.getProgram_no())) {
 				filteredNotes.add(note);
 			}
@@ -1007,9 +1031,9 @@ public class CaseManagementManager {
 
 	/*
 	 * Get all notes which have been linked to issues
-	 * 
+	 *
 	 * @param issueIds csv of issue ids
-	 * 
+	 *
 	 * @param demoNo demographic to search for
 	 */
 	public List<CaseManagementNote> getIssueHistory(String issueIds, String demoNo) {
@@ -1017,6 +1041,7 @@ public class CaseManagementManager {
 		if (issueIds == null) return (new ArrayList<CaseManagementNote>());
 		return this.caseManagementNoteDAO.getIssueHistory(issueIds, demoNo);
 	}
+
 
 	/**
 	 * @param issues Unfiltered Set of issues
@@ -1042,16 +1067,17 @@ public class CaseManagementManager {
 		ProgramProvider pp = (ProgramProvider) ppList.get(0);
 		Secrole role = pp.getRole();
 
+		Map programAccessMap = ProgramAccessCache.getAccessMap(new Long(programId));
 		// Load up access list from program
-		@SuppressWarnings("unchecked")
-		List programAccessList = programAccessDAO.getAccessListByProgramId(new Long(programId));
-		@SuppressWarnings("unchecked")
-		Map programAccessMap = convertProgramAccessListToMap(programAccessList);
+		//@SuppressWarnings("unchecked")
+		//List programAccessList = programAccessDAO.getAccessListByProgramId(new Long(programId));
+		//@SuppressWarnings("unchecked")
+		//Map programAccessMap = convertProgramAccessListToMap(programAccessList);
 
 		// iterate through the issue list
 		for (CaseManagementNote cmNote : notes) {
 			String noteRole = cmNote.getReporter_caisi_role();
-			String noteRoleName = roleManager.getRole(noteRole).getName().toLowerCase();
+			String noteRoleName = RoleCache.getRole(Long.valueOf(noteRole)).getName().toLowerCase();
 			ProgramAccess pa = null;
 			boolean add = false;
 
@@ -1097,6 +1123,109 @@ public class CaseManagementManager {
 		if (OscarProperties.getInstance().getBooleanProperty("FILTER_ON_FACILITY", "true")) {
 			filteredNotes = notesFacilityFiltering(filteredNotes);
 		}
+
+		return filteredNotes;
+	}
+
+	/**
+	 * @param issues Unfiltered Set of issues
+	 * @param providerNo provider reading issues
+	 * @param programId program provider is logged into
+	 */
+	public List<EChartNoteEntry> filterNotes1(Collection<EChartNoteEntry> notes, String programId) {
+		LoggedInInfo loggedInInfo = LoggedInInfo.loggedInInfo.get();
+
+		List<EChartNoteEntry> filteredNotes = new ArrayList<EChartNoteEntry>();
+
+		if (notes.isEmpty()) {
+			return filteredNotes;
+		}
+
+		// Get Role - if no ProgramProvider record found, show no issues.
+		@SuppressWarnings("unchecked")
+		List ppList = programProviderDao.getProgramProviderByProviderProgramId(loggedInInfo.loggedInProvider.getProviderNo(), new Long(programId));
+		if (ppList == null || ppList.isEmpty()) {
+			for(EChartNoteEntry note:notes) {
+				if(!note.getType().equals("local_note") && !note.getType().equals("remote_note"))
+					filteredNotes.add(note);
+			}
+			return filteredNotes;
+		}
+
+		ProgramProvider pp = (ProgramProvider) ppList.get(0);
+		Secrole role = pp.getRole();
+
+		Map programAccessMap = ProgramAccessCache.getAccessMap(new Long(programId));
+
+		// iterate through the issue list
+		for (EChartNoteEntry cmNote : notes) {
+			if(!cmNote.getType().equals("local_note") && !cmNote.getType().equals("remote_note")) {
+				filteredNotes.add(cmNote);
+				continue;
+			}
+			String noteRole = null;
+			String noteRoleName = "";
+
+			if(cmNote.getType().equals("local_note")) {
+				noteRole = cmNote.getRole();
+				noteRoleName = RoleCache.getRole(Long.valueOf(noteRole)).getName().toLowerCase();
+			}
+			if(cmNote.getType().equals("remote_note")) {
+				noteRoleName = cmNote.getRole();
+			}
+			ProgramAccess pa = null;
+			boolean add = false;
+
+			// write
+			pa = null;
+			// read
+			pa = (ProgramAccess) programAccessMap.get("read " + noteRoleName + " notes");
+			if (pa != null) {
+				if (pa.isAllRoles() || isRoleIncludedInAccess(pa, role)) {
+					// filteredIssues.add(cmIssue);
+					add = true;
+				}
+			} else {
+				logger.debug(noteRoleName + " is null");
+				try {
+					if (Long.valueOf(noteRole).longValue() == role.getId().longValue()) {
+						// default
+						logger.debug("noteRole " + noteRole + " = Provider Role from secRole " + role.getId());
+						add = true;
+					}
+				} catch (NumberFormatException ex) {
+					logger.error("noteRole cannot be parsed: noteRole = " + noteRole);
+				}
+			}
+
+			// apply defaults
+			if (!add) {
+				try {
+					if (Long.valueOf(noteRole).longValue() == role.getId().longValue()) {
+						logger.debug("noteRole " + noteRole + " = Provider Role from secRole " + role.getId());
+						add = true;
+					}
+				} catch (NumberFormatException ex) {
+					logger.error("noteRole cannot be parsed: noteRole = " + noteRole);
+				}
+			}
+
+			// global default role access
+			String accessName = "read " + noteRoleName + " notes";
+			if (RoleCache.hasAccess(accessName, role.getId())) {
+				add = true;
+			}
+
+			// did it pass the test?
+			if (add) {
+				filteredNotes.add(cmNote);
+			}
+		}
+
+		// filter notes based on facility
+		//if (OscarProperties.getInstance().getBooleanProperty("FILTER_ON_FACILITY", "true")) {
+		//	filteredNotes = notesFacilityFiltering(filteredNotes);
+		//}
 
 		return filteredNotes;
 	}
@@ -1163,20 +1292,20 @@ public class CaseManagementManager {
 
 		for (Iterator iter = pa.getRoles().iterator(); iter.hasNext();) {
 			Secrole accessRole = (Secrole) iter.next();
-			if (role.getId().longValue() == accessRole.getId().longValue()) {				
+			if (role.getId().longValue() == accessRole.getId().longValue()) {
 				return true;
 			}
 		}
 		return result;
 	}
 
-	public Map convertProgramAccessListToMap(List paList) {
-		Map map = new HashMap();
+	public Map<String,ProgramAccess> convertProgramAccessListToMap(List<ProgramAccess> paList) {
+		Map<String,ProgramAccess> map = new HashMap<String,ProgramAccess>();
 		if (paList == null) {
 			return map;
 		}
-		for (Iterator iter = paList.iterator(); iter.hasNext();) {
-			ProgramAccess pa = (ProgramAccess) iter.next();
+		for (Iterator<ProgramAccess> iter = paList.iterator(); iter.hasNext();) {
+			ProgramAccess pa =  iter.next();
 			map.put(pa.getAccessType().getName().toLowerCase(), pa);
 		}
 		return map;
@@ -1188,27 +1317,27 @@ public class CaseManagementManager {
 	 * @param search
 	 * @return
 	 */
-	public List searchIssues(String providerNo, String programId, String search) {
+	public List<Issue> searchIssues(String providerNo, String programId, String search) {
 		// Get Role - if no ProgramProvider record found, show no issues.
-		List ppList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, new Long(programId));
+		List<ProgramProvider> ppList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, new Long(programId));
 		if (ppList == null || ppList.isEmpty()) {
-			return new ArrayList();
+			return new ArrayList<Issue>();
 		}
-		ProgramProvider pp = (ProgramProvider) ppList.get(0);
+		ProgramProvider pp = ppList.get(0);
 		Secrole role = pp.getRole();
 
 		// get program accesses... program allows either all roles or not all roles (does this mean no roles?)
-		List paList = programAccessDAO.getAccessListByProgramId(new Long(programId));
-		Map paMap = convertProgramAccessListToMap(paList);
+		List<ProgramAccess> paList = programAccessDAO.getAccessListByProgramId(new Long(programId));
+		Map<String,ProgramAccess> paMap = convertProgramAccessListToMap(paList);
 
 		// get all roles
-		List allRoles = this.roleManager.getRoles();
+		List<Secrole> allRoles = this.roleManager.getRoles();
 
-		List allowableSearchRoles = new ArrayList();
-		for (Iterator iter = allRoles.iterator(); iter.hasNext();) {
-			Secrole r = (Secrole) iter.next();
+		List<Secrole> allowableSearchRoles = new ArrayList<Secrole>();
+		for (Iterator<Secrole> iter = allRoles.iterator(); iter.hasNext();) {
+			Secrole r = iter.next();
 			String key = "write " + r.getName().toLowerCase() + " issues";
-			ProgramAccess pa = (ProgramAccess) paMap.get(key);
+			ProgramAccess pa = paMap.get(key);
 			if (pa != null) {
 				if (pa.isAllRoles() || isRoleIncludedInAccess(pa, role)) {
 					allowableSearchRoles.add(r);
@@ -1224,7 +1353,7 @@ public class CaseManagementManager {
 			}
 		}
 
-		List issList = issueDAO.search(search, allowableSearchRoles);
+		List<Issue> issList = issueDAO.search(search, allowableSearchRoles);
 
 		return issList;
 	}
@@ -1249,27 +1378,27 @@ public class CaseManagementManager {
 		}
 
 		// Get Role - if no ProgramProvider record found, show no issues.
-		List ppList = programProviderDao.getProgramProviderByProviderProgramId(loggedInInfo.loggedInProvider.getProviderNo(), new Long(programId));
+		List<ProgramProvider> ppList = programProviderDao.getProgramProviderByProviderProgramId(loggedInInfo.loggedInProvider.getProviderNo(), new Long(programId));
 		if (ppList == null || ppList.isEmpty()) {
-			return new ArrayList();
+			return new ArrayList<CaseManagementIssue>();
 		}
 
-		ProgramProvider pp = (ProgramProvider) ppList.get(0);
+		ProgramProvider pp = ppList.get(0);
 		Secrole role = pp.getRole();
 
 		// Load up access list from program
-		List programAccessList = programAccessDAO.getAccessListByProgramId(new Long(programId));
-		Map programAccessMap = convertProgramAccessListToMap(programAccessList);
+		List<ProgramAccess> programAccessList = programAccessDAO.getAccessListByProgramId(new Long(programId));
+		Map<String,ProgramAccess> programAccessMap = convertProgramAccessListToMap(programAccessList);
 
 		// iterate through the issue list
-		for (Iterator iter = issues.iterator(); iter.hasNext();) {
-			CaseManagementIssue cmIssue = (CaseManagementIssue) iter.next();
+		for (Iterator<CaseManagementIssue> iter = issues.iterator(); iter.hasNext();) {
+			CaseManagementIssue cmIssue = iter.next();
 			String issueRole = cmIssue.getIssue().getRole().toLowerCase();
 			ProgramAccess pa = null;
 			boolean add = false;
 
 			// write
-			pa = (ProgramAccess) programAccessMap.get("write " + issueRole + " issues");
+			pa = programAccessMap.get("write " + issueRole + " issues");
 			if (pa != null) {
 				if (pa.isAllRoles() || isRoleIncludedInAccess(pa, role)) {
 					add = true;
@@ -1289,7 +1418,7 @@ public class CaseManagementManager {
 
 			pa = null;
 			// read
-			pa = (ProgramAccess) programAccessMap.get("read " + issueRole + " issues");
+			pa = programAccessMap.get("read " + issueRole + " issues");
 			if (pa != null) {
 				if (pa.isAllRoles() || isRoleIncludedInAccess(pa, role)) {
 					// filteredIssues.add(cmIssue);
@@ -1514,8 +1643,8 @@ public class CaseManagementManager {
 		this.userPropertyDAO = dao;
 	}
 
-	public void setDxResearchDAO(DxResearchDAO dao) {
-		this.dxResearchDAO = dao;
+	public void setDxresearchDAO(DxresearchDAO dao) {
+		this.dxresearchDAO = dao;
 	}
 
 	public void saveToDx(String demographicNo, String code, String codingSystem, boolean association) {
@@ -1523,17 +1652,17 @@ public class CaseManagementManager {
 			codingSystem = "icd10";
 		}
 
-		DxResearch dx = new DxResearch();
-		dx.setCode(code);
+		Dxresearch dx = new Dxresearch();
+		dx.setDxresearchCode(code);
 		dx.setCodingSystem(codingSystem);
 		dx.setDemographicNo(Integer.parseInt(demographicNo));
 		dx.setStartDate(new Date());
 		dx.setUpdateDate(new Date());
-		dx.setStatus("A");
-		dx.setAssociation(association);
+		dx.setStatus('A');
+		dx.setAssociation(association?(byte)1:(byte)0);
 
-		if (!dxResearchDAO.entryExists(dx.getDemographicNo(), codingSystem, code)) {
-			this.dxResearchDAO.save(dx);
+		if (!dxresearchDAO.entryExists(dx.getDemographicNo(), codingSystem, code)) {
+			this.dxresearchDAO.save(dx);
 		}
 	}
 
@@ -1541,15 +1670,15 @@ public class CaseManagementManager {
 		saveToDx(demographicNo, code, null, false);
 	}
 
-	public List<DxResearch> getDxByDemographicNo(String demographicNo) {
-		return this.dxResearchDAO.getByDemographicNo(Integer.parseInt(demographicNo));
+	public List<Dxresearch> getDxByDemographicNo(String demographicNo) {
+		return this.dxresearchDAO.getByDemographicNo(Integer.parseInt(demographicNo));
 	}
 
 	/**
 	 * This method takes in a string (template) eg "Signed on ${DATE} by {$USERSIGNATURE}" it then searches the string for values surrounded by ${ }. Once a value is found it looks in the map to see if there is a value for that key. If it doesn't find a
 	 * value in the map, it looks in the in recource bundle (this allows templates to be i18n compliant). If nothing is found in the resource bundle the value is added as a blank in the returned formatted string. This is the default signing line.
 	 * ECHART_SIGN_LINE=[${oscarEncounter.class.EctSaveEncounterAction.msgSigned} ${DATE} ${oscarEncounter.class.EctSaveEncounterAction.msgSigBy} ${USERSIGNATURE}]\n
-	 * 
+	 *
 	 * @param template string with template values used to create the String that is returned
 	 * @param rc The current locale's resource bundle
 	 * @param map Values that can be subtituted in.

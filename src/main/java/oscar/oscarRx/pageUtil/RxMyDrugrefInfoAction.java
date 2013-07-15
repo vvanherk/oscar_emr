@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.oscarRx.pageUtil;
 
 import java.io.IOException;
@@ -46,7 +48,8 @@ import org.apache.struts.util.MessageResources;
 import org.apache.xmlrpc.XmlRpcClientLite;
 import org.oscarehr.PMmodule.caisi_integrator.RemoteDrugAllergyHelper;
 import org.oscarehr.common.dao.DemographicDao;
-import org.oscarehr.common.dao.UserDSMessagePrefsDAO;
+import org.oscarehr.common.dao.DemographicExtDao;
+import org.oscarehr.common.dao.UserDSMessagePrefsDao;
 import org.oscarehr.common.dao.UserPropertyDAO;
 import org.oscarehr.common.model.Allergy;
 import org.oscarehr.common.model.DemographicExt;
@@ -109,12 +112,12 @@ public final class RxMyDrugrefInfoAction extends DispatchAction {
 
         WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServlet().getServletContext());
         UserPropertyDAO  propDAO =  (UserPropertyDAO) ctx.getBean("UserPropertyDAO");
-        UserDSMessagePrefsDAO  dsmessageDAO =  (UserDSMessagePrefsDAO) ctx.getBean("UserDSMessagePrefsDAO");
+        UserDSMessagePrefsDao  dsmessageDao =  (UserDSMessagePrefsDao) ctx.getBean("userDSMessagePrefsDao");
         MiscUtils.getLogger().debug("hideResources is before "+request.getSession().getAttribute("hideResources"));
         Hashtable dsPrefs=new Hashtable();
         if (request.getSession().getAttribute("hideResources") == null){
 
-            dsPrefs = dsmessageDAO.getHashofMessages(provider,UserDSMessagePrefs.MYDRUGREF);
+            dsPrefs = dsmessageDao.getHashofMessages(provider,UserDSMessagePrefs.MYDRUGREF);
 
         }
         UserProperty prop = propDAO.getProp(provider, UserProperty.MYDRUGREF_ID);
@@ -197,7 +200,9 @@ public final class RxMyDrugrefInfoAction extends DispatchAction {
 
 
         DemographicDao demographicDao = (DemographicDao)SpringUtils.getBean("demographicDao");
-        DemographicExt demoWarn = demographicDao.getLatestDemographicExt(bean.getDemographicNo(), "rxInteractionWarningLevel");
+        DemographicExtDao demographicExtDao = SpringUtils.getBean(DemographicExtDao.class);
+
+        DemographicExt demoWarn = demographicExtDao.getLatestDemographicExt(bean.getDemographicNo(), "rxInteractionWarningLevel");
         if(demoWarn!=null) {
         	if(demoWarn.getValue()!=null&&demoWarn.getValue().length()>0) {
         		int demoLevel = Integer.valueOf(demoWarn.getValue());
@@ -305,7 +310,7 @@ public final class RxMyDrugrefInfoAction extends DispatchAction {
             if(!currentIdWarnings.contains(id)){
                 hiddenResAttribute.remove(key);
                 //update database
-                setShowDSMessage(dsmessageDAO, provider, resId, updatedatId);
+                setShowDSMessage(dsmessageDao, provider, resId, updatedatId);
             }
         }
         request.getSession().setAttribute("hideResources", hiddenResAttribute);
@@ -320,22 +325,24 @@ public final class RxMyDrugrefInfoAction extends DispatchAction {
     }
     }
 
-    private void setShowDSMessage(UserDSMessagePrefsDAO  dsmessageDAO,String provider,String resId,Date updatedatId){
-                UserDSMessagePrefs pref = dsmessageDAO.getDsMessage(provider,UserDSMessagePrefs.MYDRUGREF , resId,true);
-                pref.setId(pref.getId());
-                pref.setProviderNo(provider);
-                pref.setRecordCreated(new Date());
-                pref.setResourceId(resId);
-                pref.setResourceType(UserDSMessagePrefs.MYDRUGREF);
-                pref.setResourceUpdatedDate(updatedatId);
-                pref.setArchived(Boolean.FALSE);
-                dsmessageDAO.updateProp(pref);
+    private void setShowDSMessage(UserDSMessagePrefsDao  dsmessageDao,String provider,String resId,Date updatedatId){
+	    UserDSMessagePrefs pref = dsmessageDao.getDsMessage(provider,UserDSMessagePrefs.MYDRUGREF , resId,true);
+	    if(pref != null) {
+	    	pref.setProviderNo(provider);
+	        pref.setRecordCreated(new Date());
+	        pref.setResourceId(resId);
+	        pref.setResourceType(UserDSMessagePrefs.MYDRUGREF);
+	        pref.setResourceUpdatedDate(updatedatId);
+	        pref.setArchived(Boolean.FALSE);
+	        dsmessageDao.updateProp(pref);
+	    }
+
     }
 
     public ActionForward setWarningToHide(ActionMapping mapping,ActionForm form,HttpServletRequest request,HttpServletResponse response) {
 
         WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServlet().getServletContext());
-        UserDSMessagePrefsDAO  dsmessageDAO =  (UserDSMessagePrefsDAO) ctx.getBean("UserDSMessagePrefsDAO");
+        UserDSMessagePrefsDao  dsmessageDao =  (UserDSMessagePrefsDao) ctx.getBean("userDSMessagePrefsDao");
 
 
         String provider = (String) request.getSession().getAttribute("user");
@@ -352,7 +359,7 @@ public final class RxMyDrugrefInfoAction extends DispatchAction {
 
         if (request.getSession().getAttribute("hideResources") == null){
 
-            Hashtable dsPrefs = dsmessageDAO.getHashofMessages(provider,UserDSMessagePrefs.MYDRUGREF);
+            Hashtable dsPrefs = dsmessageDao.getHashofMessages(provider,UserDSMessagePrefs.MYDRUGREF);
             request.getSession().setAttribute("hideResources",dsPrefs);//this doesn't save values that can be used directly
         }
         Hashtable h = (Hashtable) request.getSession().getAttribute("hideResources");
@@ -369,15 +376,16 @@ public final class RxMyDrugrefInfoAction extends DispatchAction {
         pref.setArchived(Boolean.TRUE);
         request.getSession().setAttribute("hideResources", h);
 
-        dsmessageDAO.saveProp(pref);
+        dsmessageDao.saveProp(pref);
 
        return mapping.findForward("updateResources");
     }
 
+    @SuppressWarnings("unchecked")
     public ActionForward setWarningToShow(ActionMapping mapping,ActionForm form,HttpServletRequest request,HttpServletResponse response) {
 
         WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServlet().getServletContext());
-        UserDSMessagePrefsDAO  dsmessageDAO =  (UserDSMessagePrefsDAO) ctx.getBean("UserDSMessagePrefsDAO");
+        UserDSMessagePrefsDao  dsmessageDao =  (UserDSMessagePrefsDao) ctx.getBean("userDSMessagePrefsDao");
 
         String provider = (String) request.getSession().getAttribute("user");
         String resId = request.getParameter("resId");
@@ -391,13 +399,13 @@ public final class RxMyDrugrefInfoAction extends DispatchAction {
         log2.debug("post Id "+resId+"  date "+date);
 
         if (request.getSession().getAttribute("hideResources") == null){
-            Hashtable dsPrefs = dsmessageDAO.getHashofMessages(provider,UserDSMessagePrefs.MYDRUGREF);
+            Hashtable<String,Long> dsPrefs = dsmessageDao.getHashofMessages(provider,UserDSMessagePrefs.MYDRUGREF);
             request.getSession().setAttribute("hideResources",dsPrefs);//this doesn't save values that can be used directly
         }
-        Hashtable h = (Hashtable) request.getSession().getAttribute("hideResources");
+        Hashtable<String,Long> h = (Hashtable<String,Long>) request.getSession().getAttribute("hideResources");
         h.remove("mydrugref"+resId);
         MiscUtils.getLogger().debug("provider,UserDSMessagePrefs.MYDRUGREF , postId, updatedatId :"+provider+"--"+UserDSMessagePrefs.MYDRUGREF +"--"+ resId+"--"+ updatedatId);
-        setShowDSMessage(dsmessageDAO, provider, resId, updatedatId);
+        setShowDSMessage(dsmessageDao, provider, resId, updatedatId);
         request.getSession().setAttribute("hideResources", h);
 
        return mapping.findForward("updateResources");

@@ -1,31 +1,27 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  Jason Gallagher
- *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
- *
- * PHRPrescription.java
- *
- * Created on June 1, 2007, 3:31 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package org.oscarehr.phr.model;
 
@@ -51,6 +47,7 @@ import org.apache.log4j.Logger;
 import org.indivo.IndivoException;
 import org.indivo.client.ActionNotPerformedException;
 import org.indivo.xml.JAXBUtils;
+import org.indivo.xml.phr.DocumentGenerator;
 import org.indivo.xml.phr.contact.ConciseContactInformationType;
 import org.indivo.xml.phr.contact.NameType;
 import org.indivo.xml.phr.document.DocumentClassificationType;
@@ -67,7 +64,7 @@ import org.indivo.xml.phr.types.DurationType;
 import org.indivo.xml.phr.urns.ContentTypeQNames;
 import org.indivo.xml.phr.urns.DocumentClassificationUrns;
 import org.oscarehr.common.model.Drug;
-import org.oscarehr.myoscar_server.ws.MedicalDataTransfer2;
+import org.oscarehr.myoscar_server.ws.MedicalDataTransfer3;
 import org.oscarehr.myoscar_server.ws.MedicalDataType;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.XmlUtils;
@@ -98,7 +95,7 @@ public class PHRMedication extends PHRDocument {
 		parseDocument(doc, providerNo);
 	}
 
-	public PHRMedication(MedicalDataTransfer2 medicalDataTransfer, String demoId, Long receiverMyOscarUserId, String providerNo) throws Exception {
+	public PHRMedication(MedicalDataTransfer3 medicalDataTransfer, String demoId, Long receiverMyOscarUserId, String providerNo) throws Exception {
 		setReceiverInfo(demoId, receiverMyOscarUserId);
 		parseDocument(medicalDataTransfer, providerNo);
 	}
@@ -122,7 +119,7 @@ public class PHRMedication extends PHRDocument {
 	private void parseDocument(IndivoDocumentType document, String providerNo) throws Exception {
 		logger.debug("------------------start parseDocument----------------------");
 		JAXBContext docContext = JAXBContext.newInstance("org.indivo.xml.phr.document");
-		byte[] docContentBytes = JAXBUtils.marshalToByteArray((JAXBElement) new IndivoDocument(document), docContext);
+		byte[] docContentBytes = JAXBUtils.marshalToByteArray(new IndivoDocument(document), docContext);
 		String docContent = new String(docContentBytes);
 
 		logger.debug("docContent=" + docContent);
@@ -144,16 +141,16 @@ public class PHRMedication extends PHRDocument {
 		med = (MedicationType) org.indivo.xml.phr.DocumentUtils.getDocumentAnyObject(document, messageContext.createUnmarshaller());
 		createDrugFromPhrMed(providerNo);
 		this.setPhrClassification(MedicalDataType.MEDICATION.name());
-		this.setReceiverType(this.TYPE_DEMOGRAPHIC);
+		this.setReceiverType(PHRDocument.TYPE_DEMOGRAPHIC);
 		this.setSenderOscar(null);// outside provider's oscar id is not useful
-		this.setSenderType(this.TYPE_PROVIDER);
+		this.setSenderType(PHRDocument.TYPE_PROVIDER);
 		this.setSenderMyOscarUserId(Long.parseLong(phr_id));
-		this.setSent(this.STATUS_NOT_SET);// need to change
+		this.setSent(PHRDocument.STATUS_NOT_SET);// need to change
 		this.setDocContent(docContent);
 		this.setDateExchanged(new Date());
 	}
 
-	private void parseDocument(MedicalDataTransfer2 medicalDataTransfer, String providerNo) throws Exception {
+	private void parseDocument(MedicalDataTransfer3 medicalDataTransfer, String providerNo) throws Exception {
 		logger.debug("------------------start parseDocument----------------------");
 
 		if (medicalDataTransfer.getDateOfData() != null) setDateSent(medicalDataTransfer.getDateOfData().getTime());
@@ -177,17 +174,17 @@ public class PHRMedication extends PHRDocument {
 		// super();
 		IndivoDocumentType document = getPhrMedicationDocument(prov, drug);
 		JAXBContext docContext = JAXBContext.newInstance(IndivoDocumentType.class.getPackage().getName());
-		byte[] docContentBytes = JAXBUtils.marshalToByteArray((JAXBElement) new IndivoDocument(document), docContext);
+		byte[] docContentBytes = JAXBUtils.marshalToByteArray(new IndivoDocument(document), docContext);
 		String docContentStr = new String(docContentBytes);
 
 		this.setPhrClassification(MedicalDataType.MEDICATION.name());
 		this.setReceiverOscar(demographicNo);
-		this.setReceiverType(this.TYPE_DEMOGRAPHIC);
+		this.setReceiverType(PHRDocument.TYPE_DEMOGRAPHIC);
 		this.setReceiverMyOscarUserId(receiverMyOscarUserId);
 		this.setSenderOscar(prov.getProviderNo());
-		this.setSenderType(this.TYPE_PROVIDER);
+		this.setSenderType(PHRDocument.TYPE_PROVIDER);
 		this.setSenderMyOscarUserId(Long.parseLong(prov.getIndivoId()));
-		this.setSent(this.STATUS_SEND_PENDING);
+		this.setSent(PHRDocument.STATUS_SEND_PENDING);
 		this.setDocContent(docContentStr);
 	}
 
@@ -200,8 +197,8 @@ public class PHRMedication extends PHRDocument {
 		org.indivo.xml.phr.medication.ObjectFactory medFactory = new org.indivo.xml.phr.medication.ObjectFactory();
 		Medication med = medFactory.createMedication(medType);
 
-		Element element = jaxbUtils.marshalToElement(med, JAXBContext.newInstance("org.indivo.xml.phr.medication"));
-		IndivoDocumentType document = generator.generateDefaultDocument(prov.getIndivoId(), providerFullName, PHRDocument.PHR_ROLE_PROVIDER, DocumentClassificationUrns.MEDICATION, ContentTypeQNames.MEDICATION, element);
+		Element element = JAXBUtils.marshalToElement(med, JAXBContext.newInstance("org.indivo.xml.phr.medication"));
+		IndivoDocumentType document = DocumentGenerator.generateDefaultDocument(prov.getIndivoId(), providerFullName, PHRDocument.PHR_ROLE_PROVIDER, DocumentClassificationUrns.MEDICATION, ContentTypeQNames.MEDICATION, element);
 		return document;
 	}
 
@@ -339,7 +336,7 @@ public class PHRMedication extends PHRDocument {
 		else drug.setSpecial("");
 	}
 
-	public void createDrugFromMedicalDataTransfer(String providerNo, MedicalDataTransfer2 medicalDataTransfer) throws IOException, SAXException, ParserConfigurationException {
+	public void createDrugFromMedicalDataTransfer(String providerNo, MedicalDataTransfer3 medicalDataTransfer) throws IOException, SAXException, ParserConfigurationException {
 		Document doc = XmlUtils.toDocument(medicalDataTransfer.getData());
 //		XmlMapWrapper docAsMap = new XmlMapWrapper(doc);
 //

@@ -1,15 +1,42 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security" %>
 <%@ taglib uri="/WEB-INF/indivo-tag.tld" prefix="indivo" %>
 <%@ page import="oscar.oscarRx.data.*,oscar.oscarProvider.data.ProviderMyOscarIdData,oscar.oscarDemographic.data.DemographicData,oscar.OscarProperties,oscar.log.*"%>
-<%@ page import="org.oscarehr.common.model.OscarAnnotation,org.oscarehr.common.model.*" %>
+<%@ page import="org.oscarehr.common.model.*" %>
+<%@page import="java.util.Enumeration"%>
+<%@page import="org.oscarehr.common.model.ProviderPreference"%>
+<%@page import="org.oscarehr.web.admin.ProviderPreferencesUIBean"%>
 <%@page import="org.oscarehr.common.dao.ClinicDAO" %>
 <%@page import="org.oscarehr.common.model.Clinic" %>
-<%@page import="java.util.Enumeration"%>
 
 <%
 	if (session.getAttribute("userrole") == null) response.sendRedirect("../logout.jsp");
@@ -50,36 +77,29 @@ reverse="<%=true%>">
 	String[] d_route = ("Oral," + drugref_route).split(",");
 
 	String annotation_display = org.oscarehr.casemgmt.model.CaseManagementNoteLink.DISP_PRESCRIP;
+	
+	//This checks if the provider has the ExternalPresriber feature enabled, if so then a link appear for the provider to access the ExternalPrescriber
+	ProviderPreference providerPreference=ProviderPreferencesUIBean.getLoggedInProviderPreference();
+	
+	boolean eRxEnabled= false;
+	String eRx_SSO_URL = null;
+	String eRxUsername = null;
+	String eRxPassword = null;
+	String eRxFacility = null;
+	String eRxTrainingMode="0"; //not in training mode
+	
+	if(providerPreference!=null){
+		eRxEnabled = providerPreference.isERxEnabled();
+	    eRx_SSO_URL = providerPreference.getERx_SSO_URL();
+	    eRxUsername = providerPreference.getERxUsername();
+	    eRxPassword = providerPreference.getERxPassword();
+	    eRxFacility = providerPreference.getERxFacility();
+	
+	    boolean eRxTrainingModeTemp = providerPreference.isERxTrainingMode();
+	    if(eRxTrainingModeTemp) eRxTrainingMode="1";
+	}
+	
 %>
-
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
-
-
-
 <%@page import="org.oscarehr.casemgmt.service.CaseManagementManager"%>
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.util.SessionConstants"%>
@@ -568,6 +588,10 @@ List<Clinic> clinics = clinicDao.findAll();
  %> <a href="javascript:goOMD();"><bean:message key="SearchDrug.msgOMDLookup"/></a> <%
  	}
  %>
+ <%if (eRxEnabled) {%>
+	<a href="<%=eRx_SSO_URL%>User=<%=eRxUsername%>&Password=<%=eRxPassword%>&Clinic=<%=eRxFacility%>&PatientIdPMIS=<%=patient.getDemographicNo()%>&IsTraining=<%=eRxTrainingMode%>"><bean:message key="SearchDrug.eRx.msgExternalPrescriber"/></a>
+ <%}%>
+ 
 							</td>
 							<td><oscar:oscarPropertiesCheck property="drugref_route_search" value="on">
 								<bean:message key="SearchDrug.drugSearchRouteLabel" />
@@ -739,11 +763,3 @@ List<Clinic> clinics = clinicDao.findAll();
 %>
 </body>
 </html:html>
-
-
-
-
-
-
-
-

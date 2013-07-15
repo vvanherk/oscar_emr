@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@page import="org.oscarehr.common.dao.AppointmentArchiveDao" %>
@@ -34,23 +59,23 @@
 		String createdDateTime = UtilDateUtilities.DateToString(UtilDateUtilities.now(),"yyyy-MM-dd HH:mm:ss");
 		String userName = (String) session.getAttribute("userlastname") + ", " + (String) session.getAttribute("userfirstname");
 
-                param[1]=request.getParameter("appointment_date");
-                param[2]=MyDateFormat.getTimeXX_XX_XX(request.getParameter("start_time"));
-                param[3]=MyDateFormat.getTimeXX_XX_XX(request.getParameter("end_time"));
-                param[4]=request.getParameter("keyword");
-                param[5]=request.getParameter("notes");
-                param[6]=request.getParameter("reason");
-                param[7]=request.getParameter("location");
-                param[8]=request.getParameter("resources");
-                param[9]=request.getParameter("type");
-                param[10]=request.getParameter("style");
-                param[11]=request.getParameter("billing");
-                param[12]=request.getParameter("status");
-                param[13]=createdDateTime;   //request.getParameter("createdatetime");
-                param[14]=userName;  //request.getParameter("creator");
-                param[15]=request.getParameter("remarks");
-                param[17]=(String)request.getSession().getAttribute("programId_oscarView");
-                param[18]=request.getParameter("urgency");
+        param[1]=request.getParameter("appointment_date");
+        param[2]=MyDateFormat.getTimeXX_XX_XX(request.getParameter("start_time"));
+        param[3]=MyDateFormat.getTimeXX_XX_XX(request.getParameter("end_time"));
+        param[4]=request.getParameter("keyword");
+        param[5]=request.getParameter("notes");
+        param[6]=request.getParameter("reason");
+        param[7]=request.getParameter("location");
+        param[8]=request.getParameter("resources");
+        param[9]=request.getParameter("type");
+        param[10]=request.getParameter("style");
+        param[11]=request.getParameter("billing");
+        param[12]=request.getParameter("status");
+        param[13]=createdDateTime;   //request.getParameter("createdatetime");
+        param[14]=userName;  //request.getParameter("creator");
+        param[15]=request.getParameter("remarks");
+        param[17]=(String)request.getSession().getAttribute("programId_oscarView");
+        param[18]=request.getParameter("urgency");
 
 		String[] param2 = new String[7];
         for (Enumeration e = request.getParameterNames() ; e.hasMoreElements() ;) {
@@ -102,7 +127,7 @@
 	            param[0]="C";
                     param[1]=userName;   //request.getParameter("createdatetime");
 	            param[2]=request.getParameter("appointment_no" + datano);  //request.getParameter("creator");
-	            Appointment appt = appointmentDao.find(Integer.parseInt(request.getParameter("appointment_no"+datano)));	            
+	            Appointment appt = appointmentDao.find(Integer.parseInt(request.getParameter("appointment_no"+datano)));
 	            appointmentArchiveDao.archiveAppointment(appt);
 	            rowsAffected = oscarSuperManager.update("appointmentDao", "updatestatusc", param);
 			}
@@ -112,25 +137,22 @@
             	if( request.getParameter("appointment_no"+datano) != null ) {
             		Appointment appt = appointmentDao.find(Integer.parseInt(request.getParameter("appointment_no"+datano)));
             		if( appt != null ) {
-	            		appointmentArchiveDao.archiveAppointment(appt);           
-	            		rowsAffected = oscarSuperManager.update("appointmentDao", "delete",
-	            			new Object [] {request.getParameter("appointment_no" + datano)});
+	            		appointmentArchiveDao.archiveAppointment(appt);
+            			rowsAffected = oscarSuperManager.update("appointmentDao", "delete",
+            				new Object [] {request.getParameter("appointment_no" + datano)});
             		}
             	}
-            	
             }
 
-            if (request.getParameter("groupappt").equals("Group Update")) {
-            	
+            if (request.getParameter("groupappt").equals("Group Update")) {            	
             	if( request.getParameter("appointment_no"+datano) != null ) {
             		Appointment appt = appointmentDao.find(Integer.parseInt(request.getParameter("appointment_no"+datano)));
             		if( appt != null ) {
 	            		appointmentArchiveDao.archiveAppointment(appt);
-	            		rowsAffected = oscarSuperManager.update("appointmentDao", "delete",
-	            			new Object [] {request.getParameter("appointment_no" + datano)});
+            			rowsAffected = oscarSuperManager.update("appointmentDao", "delete",
+            				new Object [] {request.getParameter("appointment_no" + datano)});
             		}
             	}
-            	
 
                 String[] paramu = new String[19];
                         paramu[0]=request.getParameter("provider_no"+datano);
@@ -203,31 +225,6 @@
 	return;
   } // if (request.getParameter("groupappt") != null)
 %>
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
@@ -402,7 +399,7 @@ function onSub() {
 		} else {
 		    if (otherAppt.getProperty(other.get("provider_no")+"appt") != null)
 				appt = otherAppt.getProperty(other.get("provider_no") +"appt")+ "<br>" + appt;
-            otherAppt.setProperty(other.get("provider_no")+"appt", appt);            
+            otherAppt.setProperty(other.get("provider_no")+"appt", appt);
     	    appt = "";
 		}
     }

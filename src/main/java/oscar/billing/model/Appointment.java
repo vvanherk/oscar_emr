@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 /** Java class "Appointment.java" generated from Poseidon for UML.
  *  Poseidon for UML is developed by <A HREF="http://www.gentleware.com">Gentleware</A>.
  *  Generated with <A HREF="http://jakarta.apache.org/velocity/">velocity</A> template engine.
@@ -44,6 +46,7 @@ import oscar.billing.fat.model.FatFormularioProcedimento;
  *
  * </p>
  */
+@Deprecated
 public class Appointment {
     public static final String TODOS = "T";
     public static final String PENDENTE = "D";
@@ -127,14 +130,14 @@ public class Appointment {
      *
      * </p>
      */
-    public List procedimentoRealizado = new ArrayList(); // of type ProcedimentoRealizado
+    public List<ProcedimentoRealizado> procedimentoRealizado = new ArrayList<ProcedimentoRealizado>(); // of type ProcedimentoRealizado
 
     /**
      * <p>
      *
      * </p>
      */
-    public List diagnostico = new ArrayList(); // of type Diagnostico
+    public List<Diagnostico> diagnostico = new ArrayList<Diagnostico>(); // of type Diagnostico
 
     /**
      *
@@ -205,7 +208,7 @@ public class Appointment {
     /**
      * @return
      */
-    public List getDiagnostico() {
+    public List<Diagnostico> getDiagnostico() {
         return diagnostico;
     }
 
@@ -226,7 +229,7 @@ public class Appointment {
     /**
      * @return
      */
-    public List getProcedimentoRealizado() {
+    public List<ProcedimentoRealizado> getProcedimentoRealizado() {
         return procedimentoRealizado;
     }
 
@@ -288,7 +291,7 @@ public class Appointment {
     /**
      * @param collection
      */
-    public void setDiagnostico(List collection) {
+    public void setDiagnostico(List<Diagnostico> collection) {
         diagnostico = collection;
     }
 
@@ -309,7 +312,7 @@ public class Appointment {
     /**
      * @param collection
      */
-    public void setProcedimentoRealizado(List collection) {
+    public void setProcedimentoRealizado(List<ProcedimentoRealizado> collection) {
         procedimentoRealizado = collection;
     }
 
@@ -341,9 +344,9 @@ public class Appointment {
         status = string;
     }
 
-    public void addProcedimentos(List procedimento) {
+    public void addProcedimentos(List<FatFormularioProcedimento> procedimento) {
         for (int i = 0; i < procedimento.size(); i++) {
-            FatFormularioProcedimento formProc = (FatFormularioProcedimento) procedimento.get(i);
+            FatFormularioProcedimento formProc = procedimento.get(i);
             ProcedimentoRealizado pr = new ProcedimentoRealizado();
             pr.setAppointment(this);
             pr.setCadProcedimentos(formProc.getCadProcedimentos());
@@ -363,7 +366,7 @@ public class Appointment {
 
     public void removeProcedimentos(long id) {
         for (int i = 0; i < procedimentoRealizado.size(); i++) {
-            ProcedimentoRealizado pr = (ProcedimentoRealizado) procedimentoRealizado.get(i);
+            ProcedimentoRealizado pr = procedimentoRealizado.get(i);
             MiscUtils.getLogger().debug("pr " +
                 pr.getCadProcedimentos().getCoProcedimento());
 
@@ -375,7 +378,7 @@ public class Appointment {
 
     public void removeDiagnostico(String id) {
         for (int i = 0; i < diagnostico.size(); i++) {
-            Diagnostico diag = (Diagnostico) diagnostico.get(i);
+            Diagnostico diag = diagnostico.get(i);
 
             if (diag.getCadCid().getCoCid().toUpperCase().trim().equals(id.toUpperCase()
                                                                               .trim())) {

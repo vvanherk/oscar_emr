@@ -1,24 +1,25 @@
-/*
-* 
-* Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License. 
-* This program is free software; you can redistribute it and/or 
-* modify it under the terms of the GNU General Public License 
-* as published by the Free Software Foundation; either version 2 
-* of the License, or (at your option) any later version. * 
-* This program is distributed in the hope that it will be useful, 
-* but WITHOUT ANY WARRANTY; without even the implied warranty of 
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-* along with this program; if not, write to the Free Software 
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-* 
-* <OSCAR TEAM>
-* 
-* This software was written for 
-* Centre for Research on Inner City Health, St. Michael's Hospital, 
-* Toronto, Ontario, Canada 
-*/
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
 
 package org.oscarehr.survey.dao.oscar.hibernate;
 
@@ -72,7 +73,7 @@ public class OscarFormDAOHibernate extends HibernateDaoSupport implements
 	}
 
 	public OscarForm getOscarForm(Long formId) {
-		return (OscarForm)this.getHibernateTemplate().get(OscarForm.class,formId);
+		return this.getHibernateTemplate().get(OscarForm.class,formId);
 	}
 
 	public void saveOscarFormInstance(OscarFormInstance instance) {
@@ -217,7 +218,7 @@ public class OscarFormDAOHibernate extends HibernateDaoSupport implements
 		PrintWriter pout = new PrintWriter(out,true);
 		
 		//get form structure - output headers, and determine order to print out data elements
-		OscarForm form = (OscarForm)this.getHibernateTemplate().get(OscarForm.class,formId);
+		OscarForm form = this.getHibernateTemplate().get(OscarForm.class,formId);
 
 		//load headers
 		Map<String,String> keyMap = getHeaders(form);
@@ -259,7 +260,7 @@ public class OscarFormDAOHibernate extends HibernateDaoSupport implements
 			
 			//we need to add the client data
 			long clientId = (Long)((Object[])result.get(x))[1];			
-			Demographic demographic = (Demographic)getHibernateTemplate().get(Demographic.class, (int)clientId);
+			Demographic demographic = getHibernateTemplate().get(Demographic.class, (int)clientId);
 			if(demographic != null) {
 				Timestamp ts = (java.sql.Timestamp)((Object[])result.get(x))[2];
 				SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm");
@@ -393,7 +394,7 @@ public class OscarFormDAOHibernate extends HibernateDaoSupport implements
 		PrintWriter pout = new PrintWriter(out,true);
 		
 		//get form structure - output headers, and determine order to print out data elements
-		OscarForm form = (OscarForm)this.getHibernateTemplate().get(OscarForm.class,formId);
+		OscarForm form = this.getHibernateTemplate().get(OscarForm.class,formId);
 		
 		//get form instances, headers = instances
 		List result = this.getHibernateTemplate().find("select f.id,f.clientId,f.dateCreated from OscarFormInstance f where f.formId = ? order by f.clientId, f.dateCreated",formId);
@@ -473,7 +474,7 @@ public class OscarFormDAOHibernate extends HibernateDaoSupport implements
 	}
 	
 	public void convertFormXMLToDb(Long formId) {
-		OscarForm form = (OscarForm)this.getHibernateTemplate().get(OscarForm.class,formId);
+		OscarForm form = this.getHibernateTemplate().get(OscarForm.class,formId);
 
 		SurveyDocument model = null;
 		try {
@@ -617,4 +618,3 @@ public class OscarFormDAOHibernate extends HibernateDaoSupport implements
 			return 0;
 	}
 }
-

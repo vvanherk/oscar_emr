@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.oscarBilling.pageUtil;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,6 +37,7 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.oscarehr.util.MiscUtils;
 
+import oscar.oscarBilling.pageUtil.BillingBillingManager.BillingItem;
 import oscar.oscarDemographic.data.DemographicData;
 
 public class BillingCreateBillingAction extends Action {
@@ -63,7 +66,7 @@ public class BillingCreateBillingAction extends Action {
         String other_service3_unit = ((BillingCreateBillingForm)form).getXml_other3_unit();
         oscar.oscarBilling.pageUtil.BillingBillingManager bmanager;
         bmanager = new BillingBillingManager();
-        ArrayList billItem = bmanager.getDups2(service, other_service1, other_service2, other_service3,other_service1_unit, other_service2_unit, other_service3_unit);
+        ArrayList<BillingItem> billItem = bmanager.getDups2(service, other_service1, other_service2, other_service3,other_service1_unit, other_service2_unit, other_service3_unit);
         MiscUtils.getLogger().debug("Calling getGrandTotal");
 
         bean.setGrandtotal(bmanager.getGrandTotal(billItem));

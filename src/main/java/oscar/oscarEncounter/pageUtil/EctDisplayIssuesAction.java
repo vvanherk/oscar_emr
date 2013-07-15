@@ -1,27 +1,27 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License. 
-// * This program is free software; you can redistribute it and/or 
-// * modify it under the terms of the GNU General Public License 
-// * as published by the Free Software Foundation; either version 2 
-// * of the License, or (at your option) any later version. * 
-// * This program is distributed in the hope that it will be useful, 
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-// * along with this program; if not, write to the Free Software 
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-// * 
-// * <OSCAR TEAM>
-// * This software was written for the 
-// * Department of Family Medicine 
-// * McMaster University 
-// * Hamilton 
-// * Ontario, Canada 
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
 
 package oscar.oscarEncounter.pageUtil;
 
@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 import org.apache.struts.util.MessageResources;
 import org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager;
+import org.oscarehr.PMmodule.caisi_integrator.IntegratorFallBackManager;
 import org.oscarehr.caisi_integrator.ws.CachedDemographicIssue;
 import org.oscarehr.casemgmt.dao.IssueDAO;
 import org.oscarehr.casemgmt.model.CaseManagementIssue;
@@ -88,16 +89,16 @@ public class EctDisplayIssuesAction extends EctDisplayAction {
 		
 		
 		for (int idx = 0; idx < issues_unr.size(); ++idx) {
-			NavBarDisplayDAO.Item item = navBarDisplayDAO.Item();
+			NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
 
-			CaseManagementIssue issue = (CaseManagementIssue) issues_unr.get(idx);
+			CaseManagementIssue issue = issues_unr.get(idx);
 			String tmp = issue.getIssue().getDescription();
 
 			String strTitle = StringUtils.maxLenString(tmp, MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES);
 
 			item.setTitle(strTitle);
 			item.setLinkTitle(tmp);
-			url = "$('check_issue').value=" + issue.getIssue_id() + ";return filter();";
+			url = "setIssueCheckbox('"+issue.getId()+"');return filter(false);";
 			item.setURL(url);
 			navBarDisplayDAO.addItem(item);
 		}
@@ -109,11 +110,27 @@ public class EctDisplayIssuesAction extends EctDisplayAction {
 			try {
 				
 		
-				List<CachedDemographicIssue> remoteIssues = CaisiIntegratorManager.getDemographicWs().getLinkedCachedDemographicIssuesByDemographicId(demographicId);
+				List<CachedDemographicIssue> remoteIssues  = null;
+				try {
+					if (!CaisiIntegratorManager.isIntegratorOffline()){
+					   remoteIssues = CaisiIntegratorManager.getDemographicWs().getLinkedCachedDemographicIssuesByDemographicId(demographicId);
+					}
+				} catch (Exception e) {
+					MiscUtils.getLogger().error("Unexpected error.", e);
+					CaisiIntegratorManager.checkForConnectionError(e);
+				}
+				
+				if(CaisiIntegratorManager.isIntegratorOffline()){
+				   remoteIssues = IntegratorFallBackManager.getRemoteDemographicIssues(demographicId);	
+				}
+				
 				
 				for (CachedDemographicIssue cachedDemographicIssue : remoteIssues) {
+					if(cachedDemographicIssue.isResolved()!=null && cachedDemographicIssue.isResolved())
+						continue;
+					
 					log.info(cachedDemographicIssue.getIssueDescription());
-					NavBarDisplayDAO.Item item = navBarDisplayDAO.Item();
+					NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
 
 					String strTitle = StringUtils.maxLenString(cachedDemographicIssue.getIssueDescription(), MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES);
 					item.setTitle(strTitle);
@@ -121,10 +138,17 @@ public class EctDisplayIssuesAction extends EctDisplayAction {
 					item.setLinkTitle(cachedDemographicIssue.getIssueDescription());
 					
 					// no link for now, will make this work later ... maybe
-					url = "return fasle;";
+					url = "return false;";
 					item.setURL(url);
 					
-					navBarDisplayDAO.addItem(item);	
+					boolean skip=false;
+					for(int x=0;x<navBarDisplayDAO.numItems();x++) {
+						if(navBarDisplayDAO.getItem(x).getTitle().equals(strTitle)) {
+							skip=true;break;
+						}
+					}
+					if(!skip)
+						navBarDisplayDAO.addItem(item);	
 					
 				}
 			} catch(Exception e ) {

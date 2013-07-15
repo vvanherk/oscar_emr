@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,7 @@
  * Hamilton
  * Ontario, Canada
  */
+
 package oscar.oscarBilling.ca.bc.pageUtil;
 
 import java.sql.ResultSet;
@@ -29,7 +30,10 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.oscarehr.common.dao.DiagnosticCodeDao;
+import org.oscarehr.common.model.DiagnosticCode;
 import org.oscarehr.util.MiscUtils;
+import org.oscarehr.util.SpringUtils;
 
 import oscar.oscarDB.DBHandler;
 
@@ -47,6 +51,11 @@ import oscar.oscarDB.DBHandler;
  * @version 1.0
  */
 public class BillingAssociationPersistence {
+
+
+	private DiagnosticCodeDao diagnosticCodeDao = SpringUtils.getBean(DiagnosticCodeDao.class);
+
+
   public BillingAssociationPersistence() {
 
   }
@@ -61,9 +70,9 @@ public class BillingAssociationPersistence {
     if (mode.equals("edit")) {
       this.deleteServiceCodeAssoc(assoc.getServiceCode());
     }
-    List dxcodes = assoc.getDxCodes();
-    for (Iterator iter = dxcodes.iterator(); iter.hasNext(); ) {
-      String item = (String) iter.next();
+    List<String> dxcodes = assoc.getDxCodes();
+    for (Iterator<String> iter = dxcodes.iterator(); iter.hasNext(); ) {
+      String item = iter.next();
       if (!item.equals("")) {
         this.newServiceCodeAssoc(assoc.getServiceCode(),
                                  item);
@@ -82,9 +91,9 @@ public class BillingAssociationPersistence {
     String qry =
         "insert into ctl_servicecodes_dxcodes(service_code,dxcode) values('" +
         svc + "','" + dx + "')";
-    
+
     try {
-      
+
       ret = DBHandler.RunSQL(qry);
 
     }
@@ -102,9 +111,9 @@ public class BillingAssociationPersistence {
     boolean ret = false;
     String qry = "delete from ctl_servicecodes_dxcodes where service_code = '" +
         svcCode + "'";
-    
+
     try {
-      
+
       ret = DBHandler.RunSQL(qry);
     }
     catch (SQLException ex) {MiscUtils.getLogger().error("Error", ex);
@@ -118,13 +127,13 @@ public class BillingAssociationPersistence {
    * Retrieves a list of ServiceCodeAssociation objects
    * @return List
    */
-  public List getServiceCodeAssocs() {
-    ArrayList list = new ArrayList();
-    
+  public List<ServiceCodeAssociation> getServiceCodeAssocs() {
+    ArrayList<ServiceCodeAssociation> list = new ArrayList<ServiceCodeAssociation>();
+
     ResultSet rs = null;
     try {
       String qry = "select * from ctl_servicecodes_dxcodes";
-      
+
       rs = DBHandler.GetSQL(qry);
       String curSvcCode = "";
       ServiceCodeAssociation assoc = new ServiceCodeAssociation();
@@ -176,10 +185,12 @@ public class BillingAssociationPersistence {
    * @return boolean
    */
   public boolean dxcodeExists(String code) {
-    String qry =
-        "select diagnostic_code from diagnosticcode where diagnostic_code = '" +
-        code + "'";
-    return recordExists(qry);
+	  List<DiagnosticCode> dcode = diagnosticCodeDao.findByDiagnosticCode(code);
+	  if(dcode.size()>0) {
+		  return true;
+	  }
+
+	  return false;
   }
 
   /**
@@ -202,10 +213,10 @@ public class BillingAssociationPersistence {
    */
   public boolean recordExists(String qry) {
     boolean ret = false;
-    
+
     ResultSet rs = null;
     try {
-      
+
       rs = DBHandler.GetSQL(qry);
       if (rs.next()) {
         ret = true;
@@ -232,17 +243,17 @@ public class BillingAssociationPersistence {
    */
   public ServiceCodeAssociation getServiceCodeAssocByCode(String svcCode) {
     ServiceCodeAssociation assoc = new ServiceCodeAssociation();
-    
+
     ResultSet rs = null;
     try {
       String qry =
           "select * from ctl_servicecodes_dxcodes where service_code = '" +
           svcCode + "'";
-      
+
       rs = DBHandler.GetSQL(qry);
 
       while (rs.next()) {
-        
+
         String dxcode = rs.getString(3);
         assoc.addDXCode(dxcode);
         assoc.setServiceCode(svcCode);

@@ -1,5 +1,5 @@
-/*
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -9,13 +9,20 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. 
- * 
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
+
 package org.oscarehr.document.model;
 
 import java.io.Serializable;
@@ -44,7 +51,7 @@ public  class Document  implements Serializable {
 	public static String PROP_DOCFILENAME = "docfilename";
 	public static String PROP_ID = "id";
 	public static String PROP_DOCTYPE = "doctype";
-
+	public static String PROP_NUMBEROFPAGES = "numberOfPages";
 
 	// constructors
 	public Document () {
@@ -101,6 +108,7 @@ public  class Document  implements Serializable {
 	private java.lang.String contenttype;
 	private java.lang.Byte m_public;
 	private java.util.Date observationdate;
+	private Integer numberOfPages;
 
 
 
@@ -293,7 +301,21 @@ public  class Document  implements Serializable {
 	public void setObservationdate (java.util.Date observationdate) {
 		this.observationdate = observationdate;
 	}
+	
+	/**
+	 * Return the value associated with the column: number_of_pages
+	 */
+	public Integer getNumberOfPages() {
+		return numberOfPages;
+	}
 
+	/**
+	 * Set the value related to the column: number_of_pages
+	 * @param numberOfPages the numberOfPages value
+	 */
+	public void setNumberOfPages(Integer numberOfPages) {
+		this.numberOfPages = numberOfPages;
+	}
 
         public String toString(){
            return "doctype "+ doctype

@@ -1,38 +1,3 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- * AUTHOR: Joel Legris
- * DATE: May 13, 2005
- * DESCRIPTION:
- * This action class is responsible for receiveing input parameters from the
- Billing Reports Generation Screen. <p>The reports can be generated using the following
- criteria:</p>
- Payee: The person designated to receive a payment from BC MSP
- Practitioner: The Person responsible for providing the clinical service
- Insurer: The Organization responsible for providing medical coverage
- Start Date/End Date - Date range of the generated report records
- Account: The account that the billing transaction was performed under
-
- */
 
 package oscar.oscarBilling.ca.bc.MSP;
 
@@ -133,15 +98,15 @@ public class CreateBillingReportAction extends OscarAction {
         //COnfigure Reponse Header
         cfgHeader(response, repType, docFmt);
         //select appropriate report retrieval method
-        if (repType.equals(msp.REP_ACCOUNT_REC) || repType.equals(msp.REP_INVOICE) || repType.equals(msp.REP_WO)) {
+        if (repType.equals(MSPReconcile.REP_ACCOUNT_REC) || repType.equals(MSPReconcile.REP_INVOICE) || repType.equals(MSPReconcile.REP_WO)) {
 
             billSearch = msp.getBillsByType(account, payee, provider, startDate, endDate, !showWCB, !showMSP, !showPriv, !showICBC, repType);
             String billCnt = String.valueOf(msp.getDistinctFieldCount(billSearch.list, "billing_no"));
             String demNoCnt = String.valueOf(msp.getDistinctFieldCount(billSearch.list, "demoNo"));
-            if (repType.equals(msp.REP_ACCOUNT_REC)) {
-                reportParams.put("amtSubmitted", msp.getTotalPaidByStatus(billSearch.list, msp.SUBMITTED));
+            if (repType.equals(MSPReconcile.REP_ACCOUNT_REC)) {
+                reportParams.put("amtSubmitted", msp.getTotalPaidByStatus(billSearch.list, MSPReconcile.SUBMITTED));
             }
-            else if (repType.equals(msp.REP_WO)) {
+            else if (repType.equals(MSPReconcile.REP_WO)) {
                 oscar.entities.Provider payeeProv = msp.getProvider(payee, 1);
                 oscar.entities.Provider provProv = msp.getProvider(provider, 0);
                 reportParams.put("provider", provider.equals("ALL")?"ALL":payeeProv.getFullName());
@@ -157,14 +122,14 @@ public class CreateBillingReportAction extends OscarAction {
             osc.fillDocumentStream(reportParams, outputStream, docFmt, reportInstream, billSearch.list);
 
         }
-        else if (repType.equals(msp.REP_MSPREM)) {
+        else if (repType.equals(MSPReconcile.REP_MSPREM)) {
             oscar.entities.Provider payeeProv = msp.getProvider(payee, 1);
             reportParams.put("payee", payeeProv.getFullName());
             reportParams.put("payeeno", payee);
             String s21id = request.getParameter("rano");
             osc.fillDocumentStream(reportParams, outputStream, docFmt, reportInstream, msp.getMSPRemittanceQuery(payee, s21id));
         }
-        else if (repType.equals(msp.REP_MSPREMSUM)) {
+        else if (repType.equals(MSPReconcile.REP_MSPREMSUM)) {
             String s21id = request.getParameter("rano");
             oscar.entities.S21 s21 = msp.getS21Record(s21id);
 
@@ -206,7 +171,7 @@ public class CreateBillingReportAction extends OscarAction {
 
         }
 
-        else if (repType.equals(msp.REP_PAYREF) || repType.equals(msp.REP_PAYREF_SUM)) {
+        else if (repType.equals(MSPReconcile.REP_PAYREF) || repType.equals(MSPReconcile.REP_PAYREF_SUM)) {
             billSearch = msp.getPayments(account, payee, provider, startDate, endDate, !showWCB, !showMSP, !showPriv, !showICBC);
             oscar.entities.Provider payeeProv = msp.getProvider(payee, 1);
             oscar.entities.Provider acctProv = msp.getProvider(account, 0);
@@ -238,7 +203,7 @@ public class CreateBillingReportAction extends OscarAction {
 
         }
 
-        else if (repType.equals(msp.REP_REJ)) {
+        else if (repType.equals(MSPReconcile.REP_REJ)) {
             billSearch = msp.getBillsByType(account, payee, provider, startDate, endDate, !showWCB, !showMSP, !showPriv, !showICBC, repType);
 
             for (Iterator iter = billSearch.list.iterator(); iter.hasNext();) {

@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.common.dao;
 
 import java.util.Date;
@@ -9,6 +32,7 @@ import javax.persistence.Query;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.AppointmentArchive;
 import org.oscarehr.common.model.Facility;
+import org.oscarehr.util.MiscUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Repository;
 
@@ -352,7 +376,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 
 		return rs;
 	}
-	
+
 	/**
 	 * @return return results ordered by appointmentDate, most recent first
 	 */
@@ -379,6 +403,30 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 		return rs;
 	}
 	
+	@SuppressWarnings("unchecked")
+    public List<Appointment> findNonCancelledFutureAppointments(Integer demographicId) {
+		Query query = entityManager.createQuery("FROM Appointment appt WHERE appt.demographicNo = :demographicNo AND appt.status NOT LIKE '%C%' " +
+				" AND appt.appointmentDate >= CURRENT_DATE ORDER BY appt.appointmentDate");
+		query.setParameter("demographicNo", demographicId);
+		return query.getResultList();
+	}
+
+	public Appointment findDemoAppointmentToday(Integer demographicNo) {
+		Appointment appointment = null;
+
+		String sql = "SELECT a FROM Appointment a WHERE a.demographicNo = ? AND a.appointmentDate=DATE(NOW())";
+		Query query = entityManager.createQuery(sql);
+		query.setParameter(1, demographicNo);
+
+		try {
+			appointment = (Appointment) query.getSingleResult();
+		} catch (Exception e) {
+			MiscUtils.getLogger().info("Couldn't find appointment for demographic " + demographicNo + " today.");
+		}
+
+		return appointment;
+	}
+
 	public void updateAppointment( Appointment a ) {
         this.merge(a);
     }

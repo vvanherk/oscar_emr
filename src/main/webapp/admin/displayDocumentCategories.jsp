@@ -1,8 +1,18 @@
+<%--
+
+    Copyright (c) 2008-2012 Indivica Inc.
+
+    This software is made available under the terms of the
+    GNU General Public License, Version 2, 1991 (GPLv2).
+    License details are available via "indivica.ca/gplv2"
+    and "gnu.org/licenses/gpl-2.0.html".
+
+--%>
 <%@ page
 	import="java.util.*, oscar.dms.EDocUtil"%>
 <%@ page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request" />
 
 <% 

@@ -1,22 +1,29 @@
-<!--
-/*
- *
- * Copyright (c) 2005 Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%
     if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
@@ -31,7 +38,7 @@
 <%
     if(session.getAttribute("user") == null ) response.sendRedirect("../logout.jsp");
     String curProvider_no = (String) session.getAttribute("user");
-    
+
     boolean isSiteAccessPrivacy=false;
 %>
 
@@ -89,7 +96,7 @@
 			setfocus('password');
 			return false;
 		}
-		
+
 		<%
 			boolean ignorePasswordReq=Boolean.parseBoolean(op.getProperty("IGNORE_PASSWORD_REQUIREMENTS"));
 			if (!ignorePasswordReq)
@@ -166,7 +173,7 @@
 			key="admin.securityrecord.formPassword" />:
 		</div>
 		</td>
-		<td><input type="password" name="password" size="20" maxlength="10"> <font size="-2">(<bean:message
+		<td><input type="password" name="password" size="20" maxlength="32"> <font size="-2">(<bean:message
 			key="admin.securityrecord.msgAtLeast" />
 			<%=op.getProperty("password_min_length")%> <bean:message
 			key="admin.securityrecord.msgSymbols" />)</font></td>
@@ -176,7 +183,7 @@
 		<div align="right"><bean:message
 			key="admin.securityrecord.formConfirm" />:</div>
 		</td>
-		<td><input type="password" name="conPassword" size="20" maxlength="10"></td>
+		<td><input type="password" name="conPassword" size="20" maxlength="32"></td>
 	</tr>
 	<tr>
 		<td width="50%" align="right"><bean:message
@@ -185,7 +192,7 @@
 		<td><select name="provider_no">
 			<option value="">-- select one --</option>
 <%
-	List<Map<String,Object>> resultList ; 
+	List<Map<String,Object>> resultList ;
     if (isSiteAccessPrivacy) {
     	Object[] param =new Object[1];
     	param[0] = curProvider_no;
@@ -254,11 +261,9 @@
 	</tr>
 	<tr>
 		<td colspan="2">
-		<div align="center"><input type="hidden" name="dboperation"
-			value="security_add_record"> <input type="hidden"
-			name="displaymode" value="Security_Add_Record"> <input
-			type="submit" name="subbutton"
-			value='<bean:message key="admin.securityaddarecord.btnSubmit"/>'>
+		<div align="center">
+		<input type="hidden" name="displaymode" value="Security_Add_Record">
+		<input type="submit" name="subbutton" value='<bean:message key="admin.securityaddarecord.btnSubmit"/>'>
 		</div>
 		</td>
 	</tr>

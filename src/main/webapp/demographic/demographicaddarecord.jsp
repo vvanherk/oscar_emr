@@ -1,40 +1,47 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@ page
-	import="java.sql.*, java.util.*, oscar.oscarDB.*, oscar.MyDateFormat, oscar.oscarWaitingList.WaitingList, org.oscarehr.common.OtherIdManager"
+	import="java.sql.*, java.util.*, java.net.URLEncoder, oscar.oscarDB.*, oscar.MyDateFormat, oscar.oscarWaitingList.WaitingList, org.oscarehr.common.OtherIdManager"
 	errorPage="errorpage.jsp"%>
 <%@ page import="oscar.log.*"%>
-<%@ page import="oscar.oscarDemographic.data.*"%>
-<jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
-	scope="session" />
+<%@ page import="org.oscarehr.common.model.DemographicExt" %>
+<%@ page import="org.oscarehr.common.dao.DemographicExtDao" %>
+<%@ page import="org.oscarehr.util.SpringUtils" %>
+<%@ page import="org.oscarehr.PMmodule.model.Admission" %>
+<%@ page import="org.oscarehr.PMmodule.dao.AdmissionDao" %>
+<%@ page import="org.oscarehr.common.dao.WaitingListDao" %>
+<jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean" scope="session" />
 <% java.util.Properties oscarVariables = oscar.OscarProperties.getInstance(); %>
-
+<%
+	AdmissionDao admissionDao = (AdmissionDao)SpringUtils.getBean("admissionDao");
+	WaitingListDao waitingListDao = (WaitingListDao)SpringUtils.getBean("waitingListDao");
+	DemographicExtDao demographicExtDao = SpringUtils.getBean(DemographicExtDao.class);
+%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
-
 <%@page import="org.apache.commons.lang.StringUtils"%>
 <%@page import="org.oscarehr.util.SpringUtils" %>
 <%@page import="org.oscarehr.common.model.Demographic" %>
@@ -71,6 +78,20 @@
 		<bean:message key="demographic.demographicaddarecord.title" /></font></th>
 	</tr>
 </table>
+<form method="post" name="addappt">
+<%
+        //If this is from adding appointment screen, then back to there
+        String fromAppt = request.getParameter("fromAppt");
+        String originalPage2 = request.getParameter("originalPage");
+        String provider_no2 = request.getParameter("provider_no");
+        String bFirstDisp2 = request.getParameter("bFirstDisp");
+        String year2 = request.getParameter("year");
+        String month2 = request.getParameter("month");
+        String day2 = request.getParameter("day");
+        String start_time2 = request.getParameter("start_time");
+        String end_time2 = request.getParameter("end_time");
+        String duration2 = request.getParameter("duration");
+%>
 
 <%
     String dem = null;
@@ -79,7 +100,10 @@
 
     //check to see if new case management is request
     ArrayList users = (ArrayList)session.getServletContext().getAttribute("CaseMgmtUsers");
-    
+    boolean newCaseManagement = false;
+
+    if( users != null && users.size() > 0 )
+        newCaseManagement = true;
 
   //if action is good, then give me the result
 	  //param[0]=Integer.parseIntdemographicaddarecord((new GregorianCalendar()).get(Calendar.MILLISECOND) ); //int
@@ -160,7 +184,8 @@
 	<br>
    <a href=# onClick="history.go(-1);return false;"><b>&lt;-<bean:message key="global.btnBack" /></b></a>
    <% return; }
-
+	
+	StringBuilder bufChart = null, bufName = null, bufNo = null, bufDoctorNo = null;
     // add checking hin duplicated record, if there is a HIN number
     // added check to see if patient has a bc health card and has a version code of 66, in this case you are aloud to have dup hin
     boolean hinDupCheckException = false;
@@ -181,6 +206,11 @@
 <br>
 <a href=# onClick="history.go(-1);return false;"><b>&lt;-<bean:message key="global.btnBack" /></b></a>
 	<% return; }  }
+    
+    bufName = new StringBuilder(request.getParameter("last_name")+ ","+ request.getParameter("first_name") );
+    bufNo = new StringBuilder( (apptMainBean.getString("demographic_no")) );
+    bufChart = new StringBuilder(apptMainBean.getString("chart_no"));
+    bufDoctorNo = new StringBuilder( apptMainBean.getString("provider_no") );
 
     demographicDao.save(demographic);
 
@@ -195,22 +225,31 @@
                 if( rsProg.next() )
                     progId = rsProg.getString("id");
             }
-            String[] caisiParam = new String[4];
-            caisiParam[0] = demographic.getDemographicNo().toString();
-            caisiParam[1] = progId;
-            caisiParam[2] = request.getParameter("staff");
+            String admissionDate=null;
 
     		String yearTmp = StringUtils.trimToNull(request.getParameter("date_joined_year"));
     		String monthTmp = StringUtils.trimToNull(request.getParameter("date_joined_month"));
     		String dayTmp = StringUtils.trimToNull(request.getParameter("date_joined_date"));
     		if (yearTmp!=null && monthTmp!=null && dayTmp!=null) {
-    			caisiParam[3] = yearTmp+"-"+monthTmp+"-"+dayTmp;
+    			admissionDate = yearTmp+"-"+monthTmp+"-"+dayTmp;
     		} else {
     			GregorianCalendar cal=new GregorianCalendar();
-    			caisiParam[3]=""+cal.get(GregorianCalendar.YEAR)+'-'+(cal.get(GregorianCalendar.MONTH)+1)+'-'+cal.get(GregorianCalendar.DAY_OF_MONTH);
+    			admissionDate=""+cal.get(GregorianCalendar.YEAR)+'-'+(cal.get(GregorianCalendar.MONTH)+1)+'-'+cal.get(GregorianCalendar.DAY_OF_MONTH);
     		}
 
-            apptMainBean.queryExecuteUpdate(caisiParam, "add2caisi_admission");
+    		Admission admission = new Admission();
+    		admission.setClientId(demographic.getDemographicNo());
+    		admission.setProgramId(Integer.parseInt(progId));
+    		admission.setProviderNo(request.getParameter("staff"));
+    		admission.setAdmissionDate(MyDateFormat.getSysDate(admissionDate));
+    		admission.setAdmissionStatus("current");
+    		admission.setTeamId(0);
+    		admission.setTemporaryAdmission(false);
+    		admission.setAdmissionFromTransfer(false);
+    		admission.setDischargeFromTransfer(false);
+    		admission.setRadioDischargeReason("0");
+    		admission.setClientStatusId(0);
+            admissionDao.saveAdmission(admission);
         
 
         //add democust record for alert
@@ -228,23 +267,22 @@
         int rowsAffected=1;
 
        dem = demographic.getDemographicNo().toString();
-       DemographicExt dExt = new DemographicExt();
 
        String proNo = (String) session.getValue("user");
-       dExt.addKey(proNo, dem, "hPhoneExt", request.getParameter("hPhoneExt"), "");
-       dExt.addKey(proNo, dem, "wPhoneExt", request.getParameter("wPhoneExt"), "");
-       dExt.addKey(proNo, dem, "demo_cell", request.getParameter("cellphone"), "");
-       dExt.addKey(proNo, dem, "cytolNum",  request.getParameter("cytolNum"),  "");
+       demographicExtDao.addKey(proNo, dem, "hPhoneExt", request.getParameter("hPhoneExt"), "");
+       demographicExtDao.addKey(proNo, dem, "wPhoneExt", request.getParameter("wPhoneExt"), "");
+       demographicExtDao.addKey(proNo, dem, "demo_cell", request.getParameter("cellphone"), "");
+       demographicExtDao.addKey(proNo, dem, "cytolNum",  request.getParameter("cytolNum"),  "");
 
-       dExt.addKey(proNo, dem, "ethnicity",     request.getParameter("ethnicity"),     "");
-       dExt.addKey(proNo, dem, "area",          request.getParameter("area"),          "");
-       dExt.addKey(proNo, dem, "statusNum",     request.getParameter("statusNum"),     "");
-       dExt.addKey(proNo, dem, "fNationCom",    request.getParameter("fNationCom"),    "");
-       dExt.addKey(proNo, dem, "given_consent", request.getParameter("given_consent"), "");
+       demographicExtDao.addKey(proNo, dem, "ethnicity",     request.getParameter("ethnicity"),     "");
+       demographicExtDao.addKey(proNo, dem, "area",          request.getParameter("area"),          "");
+       demographicExtDao.addKey(proNo, dem, "statusNum",     request.getParameter("statusNum"),     "");
+       demographicExtDao.addKey(proNo, dem, "fNationCom",    request.getParameter("fNationCom"),    "");
+       demographicExtDao.addKey(proNo, dem, "given_consent", request.getParameter("given_consent"), "");
 
-       dExt.addKey(proNo, dem, "rxInteractionWarningLevel", request.getParameter("rxInteractionWarningLevel"), "");
+       demographicExtDao.addKey(proNo, dem, "rxInteractionWarningLevel", request.getParameter("rxInteractionWarningLevel"), "");
 
-       dExt.addKey(proNo, dem, "primaryEMR", request.getParameter("primaryEMR"), "");
+       demographicExtDao.addKey(proNo, dem, "primaryEMR", request.getParameter("primaryEMR"), "");
 
 
        //for the IBD clinic
@@ -254,7 +292,7 @@
        if(oscarVariables.getProperty("demographicExt") != null) {
 	       String [] propDemoExt = oscarVariables.getProperty("demographicExt","").split("\\|");
 	       for(int k=0; k<propDemoExt.length; k++) {
-	           dExt.addKey(proNo,dem,propDemoExt[k],request.getParameter(propDemoExt[k].replace(' ','_')),"");
+	    	   demographicExtDao.addKey(proNo,dem,propDemoExt[k],request.getParameter(propDemoExt[k].replace(' ','_')),"");
 	       }
        }
        // customized key
@@ -274,24 +312,38 @@
                 ResultSet rsWL = apptMainBean.queryResults(paramWLPosition, "search_waitingListPosition");
 
                 if(rsWL.next()){
-                    String[] paramWL = new String[6];
-                    paramWL[0] = request.getParameter("list_id");
-                    paramWL[1] = demographic.getDemographicNo().toString();
-                    paramWL[2] = request.getParameter("waiting_list_note");
-                    paramWL[3] = Integer.toString(rsWL.getInt("position") + 1);
-                    paramWL[4] = request.getParameter("waiting_list_referral_date");
-                    paramWL[5] = "N";
-                    if(paramWL[0]!=null && !paramWL[0].equals("") && !paramWL[0].equals("0"))
-                        apptMainBean.queryExecuteUpdate(paramWL, "add2WaitingList");
+
+                    String listId = request.getParameter("list_id");
+                    if(listId != null && !listId.equals("") && !listId.equals("0")) {
+	                    org.oscarehr.common.model.WaitingList waitingList = new org.oscarehr.common.model.WaitingList();
+	                    waitingList.setListId(Integer.parseInt(request.getParameter("list_id")));
+	                    waitingList.setDemographicNo(demographic.getDemographicNo());
+	                    waitingList.setNote(request.getParameter("waiting_list_note"));
+	                    waitingList.setPosition(rsWL.getInt("position")+1);
+	                    waitingList.setOnListSince(MyDateFormat.getSysDate(request.getParameter("waiting_list_referral_date")));
+	                    waitingList.setIsHistory("N");
+	                    waitingListDao.persist(waitingList);
+                    }
                 }
             }
 
 
         } //end of waitingl list
 
+        //if(request.getParameter("fromAppt")!=null && request.getParameter("provider_no").equals("1")) {
+        if(start_time2!=null && !start_time2.equals("null")) {
+	%>
+	<script language="JavaScript">
+	<!--
+	document.addappt.action="../appointment/addappointment.jsp?user_id=<%=request.getParameter("creator")%>&provider_no=<%=provider_no2%>&bFirstDisp=<%=bFirstDisp2%>&appointment_date=<%=request.getParameter("appointment_date")%>&year=<%=year2%>&month=<%=month2%>&day=<%=day2%>&start_time=<%=start_time2%>&end_time=<%=end_time2%>&duration=<%=duration2%>&name=<%=URLEncoder.encode(bufName.toString())%>&chart_no=<%=URLEncoder.encode(bufChart.toString())%>&bFirstDisp=false&demographic_no=<%=dem.toString()%>&messageID=<%=request.getParameter("messageId")%>&doctor_no=<%=bufDoctorNo.toString()%>&notes=<%=request.getParameter("notes")%>&reason=<%=request.getParameter("reason")%>&location=<%=request.getParameter("location")%>&resources=<%=request.getParameter("resources")%>&type=<%=request.getParameter("type")%>&style=<%=request.getParameter("style")%>&billing=<%=request.getParameter("billing")%>&status=<%=request.getParameter("status")%>&createdatetime=<%=request.getParameter("createdatetime")%>&creator=<%=request.getParameter("creator")%>&remarks=<%=request.getParameter("remarks")%>";
+	document.addappt.submit();
+	//-->
+	</SCRIPT> 
+	<% } %>
+</form>
 
 
-%>
+
 <p>
 <h2><bean:message key="demographic.demographicaddarecord.msgSuccessful" /></h2>
     <a href="demographiccontrol.jsp?demographic_no=<%=dem%>&displaymode=edit&dboperation=search_detail"><bean:message key="demographic.demographicaddarecord.goToRecord"/></a>

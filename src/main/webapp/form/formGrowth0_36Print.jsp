@@ -1,4 +1,3 @@
-
 <%@ page errorPage="errorpage.jsp" import="java.util.*"%>
 <%@ page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%

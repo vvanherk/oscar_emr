@@ -1,36 +1,31 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  Jason Gallagher
- *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
- *
- * PHRLoginAction.java
- *
- * Created on April 16, 2007, 3:28 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package org.oscarehr.phr.web;
 
-import java.util.Calendar;
-
+import javax.crypto.spec.SecretKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -39,31 +34,23 @@ import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
-import org.apache.struts.action.ActionRedirect;
 import org.apache.struts.actions.DispatchAction;
+import org.oscarehr.common.dao.ProviderPreferenceDao;
+import org.oscarehr.common.model.ProviderPreference;
 import org.oscarehr.phr.PHRAuthentication;
 import org.oscarehr.phr.service.PHRService;
+import org.oscarehr.util.EncryptionUtils;
+import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
+import org.oscarehr.util.SpringUtils;
+import org.oscarehr.util.WebUtils;
 
-/**
- *
- * @author jay
- */
 public class PHRLoginAction extends DispatchAction
 {
 	private static Logger log = MiscUtils.getLogger();
-	PHRService phrService;
 
-	/**
-	 * Creates a new instance of PHRLoginAction
-	 */
 	public PHRLoginAction()
 	{
-	}
-
-	public void setPhrService(PHRService phrService)
-	{
-		this.phrService = phrService;
 	}
 
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception
@@ -73,25 +60,21 @@ public class PHRLoginAction extends DispatchAction
 		String providerNo = (String)session.getAttribute("user");
 		PHRAuthentication phrAuth = null;
 		String forwardTo = request.getParameter("forwardto");
-		//ActionForward af = new ActionForward();
-		//af.setPath(forwardTo);
-		//af.setRedirect(true);
+
 		ActionForward ar = new ActionForward(forwardTo);
 		request.setAttribute("forwardToOnSuccess", request.getParameter("forwardToOnSuccess"));
-		//log.debug("Request URI: " + forwardTo);
-		//log.debug("from request uri: " + request.getParameter("forwardto"));
-		//log.debug("referrer header: " + request.getHeader("referer"));
-		if (!phrService.canAuthenticate(providerNo))
+
+		if (!PHRService.canAuthenticate(providerNo))
 		{
-			//TODO: Need to add message about how to set up a account
 			request.setAttribute("phrUserLoginErrorMsg", "You have not registered for MyOSCAR");
 			request.setAttribute("phrTechLoginErrorMsg", "No MyOSCAR information in the database");
 			return ar;
 		}
 
+		String myoscarPassword=request.getParameter("phrPassword");
 		try
 		{
-			phrAuth = phrService.authenticate(providerNo, request.getParameter("phrPassword"));
+			phrAuth = PHRService.authenticate(providerNo, myoscarPassword);
 
 			if (phrAuth == null)
 			{
@@ -108,12 +91,27 @@ public class PHRLoginAction extends DispatchAction
 		}
 		
 		session.setAttribute(PHRAuthentication.SESSION_PHR_AUTH, phrAuth);
-		//set next PHR Exchange for next available time
-		Calendar cal = Calendar.getInstance();
-		cal.roll(Calendar.HOUR_OF_DAY, false);
-		session.setAttribute(phrService.SESSION_PHR_EXCHANGE_TIME, cal.getTime());
-		ActionRedirect arr = new ActionRedirect(forwardTo);
+
+		boolean saveMyOscarPassword=WebUtils.isChecked(request, "saveMyOscarPassword");
+		if (saveMyOscarPassword) saveMyOscarPassword(session, myoscarPassword);
+				
 		log.debug("Correct user/pass, auth success");
-		return arr;
+		return ar;
 	}
+
+	private void saveMyOscarPassword(HttpSession session, String myoscarPassword) {
+		try {
+	        SecretKeySpec key=EncryptionUtils.getDeterministicallyMangledPasswordSecretKeyFromSession(session);
+	        byte[] encryptedMyOscarPassword=EncryptionUtils.encrypt(key, myoscarPassword.getBytes("UTF-8"));
+
+	        LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
+	        
+	        ProviderPreferenceDao providerPreferenceDao=(ProviderPreferenceDao) SpringUtils.getBean("providerPreferenceDao");
+	        ProviderPreference providerPreference=providerPreferenceDao.find(loggedInInfo.loggedInProvider.getProviderNo());
+	        providerPreference.setEncryptedMyOscarPassword(encryptedMyOscarPassword);
+	        providerPreferenceDao.merge(providerPreference);
+        } catch (Exception e) {
+	        log.error("Error saving myoscarPassword.", e);
+        }	    
+    }
 }

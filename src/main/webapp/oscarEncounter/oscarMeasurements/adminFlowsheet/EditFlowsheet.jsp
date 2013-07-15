@@ -1,29 +1,30 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <% long startTime = System.currentTimeMillis(); %>
-<!--
-/*
-*
-* Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License.
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License
-* as published by the Free Software Foundation; either version 2
-* of the License, or (at your option) any later version. *
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-*
-* <OSCAR TEAM>
-*
-* This software was written for the
-* Department of Family Medicine
-* McMaster University test2
-* Hamilton
-* Ontario, Canada
-*/
---><%@page import="oscar.oscarDemographic.data.*,java.util.*,oscar.oscarPrevention.*,oscar.oscarEncounter.oscarMeasurements.*,oscar.oscarEncounter.oscarMeasurements.bean.*,java.net.*"%>
+<%@page import="oscar.oscarDemographic.data.*,java.util.*,oscar.oscarPrevention.*,oscar.oscarEncounter.oscarMeasurements.*,oscar.oscarEncounter.oscarMeasurements.bean.*,java.net.*"%>
 <%@page import="org.jdom.Element,oscar.oscarEncounter.oscarMeasurements.data.*,org.jdom.output.Format,org.jdom.output.XMLOutputter,oscar.oscarEncounter.oscarMeasurements.util.*,java.io.*" %>
 <%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
 <%@page import="org.springframework.web.context.WebApplicationContext"%>
@@ -40,8 +41,8 @@
     //int demographic_no = Integer.parseInt(request.getParameter("demographic_no"));
     if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
     String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
-    
-    
+
+
     String temp = "diab2";//"physFunction";  //
             if (request.getParameter("flowsheet") != null) {
                 temp = request.getParameter("flowsheet");
@@ -50,20 +51,20 @@
             String demographic = request.getParameter("demographic");
             MeasurementTemplateFlowSheetConfig templateConfig = MeasurementTemplateFlowSheetConfig.getInstance();
             Hashtable<String, String> flowsheetNames = templateConfig.getFlowsheetDisplayNames();
-            
+
             WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
-            FlowSheetCustomizerDAO flowSheetCustomizerDAO = (FlowSheetCustomizerDAO) ctx.getBean("flowSheetCustomizerDAO");
-            List<FlowSheetCustomization> custList = flowSheetCustomizerDAO.getFlowSheetCustomizations( flowsheet,(String) session.getAttribute("user"),demographic);
-                        
+            FlowSheetCustomizationDao flowSheetCustomizationDao = (FlowSheetCustomizationDao) ctx.getBean("flowSheetCustomizationDao");
+            List<FlowSheetCustomization> custList = flowSheetCustomizationDao.getFlowSheetCustomizations( flowsheet,(String) session.getAttribute("user"),demographic);
+
             Enumeration en = flowsheetNames.keys();
-            
+
             EctMeasurementTypesBeanHandler hd = new EctMeasurementTypesBeanHandler();
             Vector<EctMeasurementTypesBean> vec = hd.getMeasurementTypeVector();
             String demographicStr = "";
             if (demographic != null){
                 demographicStr = "&demographic="+demographic;
             }
-            
+
                XMLOutputter outp = new XMLOutputter();
             outp.setFormat(Format.getPrettyFormat());
 
@@ -265,15 +266,15 @@ div.recommendations li{
         <table class="TopStatusBar">
             <tr>
                 <td >
-                    Flowsheet : <%=flowsheet%> 
-        
-                    Demographic : 
+                    Flowsheet : <%=flowsheet%>
+
+                    Demographic :
                     <% if (demographic!=null) { %>
                     <oscar:nameage demographicNo="<%=demographic%>"/>  <a href="EditFlowsheet.jsp?flowsheet=<%=flowsheet%>">Go to all patients</a>
                     <%}else{%>
-                        All Patients 
+                        All Patients
                     <%}%>
-                    
+
                 </td>
                 <td  >&nbsp;
 
@@ -287,24 +288,24 @@ div.recommendations li{
 </tr>
 <tr>
 <td class="MainTableLeftColumn" valign="top">
-   
+
    <ul style="width:200px; float:left;list-style-type:none;padding-left:5px;">
             <%
             MeasurementFlowSheet mFlowsheet = templateConfig.getFlowSheet(temp,custList);
             Element va = templateConfig.getExportFlowsheet(mFlowsheet);
-           
+
             List<String> measurements = mFlowsheet.getMeasurementList();
-            
+
             int count = 0;
             if (measurements != null) {
-                for (String mstring : measurements) { 
-                    
+                for (String mstring : measurements) {
+
                     count++;%>
             <li>
                 <%=count%> : <span title="<%=mstring%>"><%=mFlowsheet.getFlowSheetItem(mstring).getDisplayName()%></span>
                 <a href="UpdateFlowsheet.jsp?flowsheet=<%=temp%>&measurement=<%=mstring%><%=demographicStr%>">edit</a>
                 <a href="FlowSheetCustomAction.do?method=delete&flowsheet=<%=temp%>&measurement=<%=mstring%><%=demographicStr%>">delete</a>
-                
+
             </li>
             <%
                 }
@@ -312,11 +313,11 @@ div.recommendations li{
             }
             %>
         </ul>
-   
-   
+
+
 </td>
 
-<td valign="top" class="MainTableRightColumn">    
+<td valign="top" class="MainTableRightColumn">
 <div style="margin-left:10px;">
         <form action="FlowSheetCustomAction.do">
             <input type="hidden" name="flowsheet" value="<%=temp%>"/>
@@ -325,7 +326,7 @@ div.recommendations li{
                     <input type="hidden" name="demographic" value="<%=demographic%>"/>
             <%}%>
             <fieldset width="300px">
-                
+
                 <select name="measurement">
                     <% for (EctMeasurementTypesBean measurementTypes : vec){ %>
                     <option value="<%=measurementTypes.getType()%>" ><%=measurementTypes.getTypeDisplayName()%> (<%=measurementTypes.getType()%>) </option>
@@ -335,59 +336,59 @@ div.recommendations li{
                 Guideline:    <input type="text" name="guideline"    /><br>
                 Graphable: <select name="graphable"   >
                     <option  value="yes" >YES</option>
-                    <option  value="no">NO</option> 
+                    <option  value="no">NO</option>
                 </select><br>
                 Value Name:<input type="text" name="value_name"       /><br>
                 <div>
                     <h3>Add Rule</h3>
                     <br>
-                    Month Range: <input type="text" name="monthrange1"/>  
+                    Month Range: <input type="text" name="monthrange1"/>
                     Strength:   <select name="strength1">
                         <option value="recommendation">Recommendation</option>
                         <option value="warning">Warning</option>
                     </select>
                     Text: <input type="text" name="text1" length="100"/>
-                    
+
                     <br/>
-                    
-                    Month Range: <input type="text" name="monthrange2"/>  
+
+                    Month Range: <input type="text" name="monthrange2"/>
                     Strength:   <select name="strength2">
                         <option value="recommendation">Recommendation</option>
                         <option value="warning">Warning</option>
                     </select>
                     Text: <input type="text" name="text2" length="100"/>
-                    
+
                     <br/>
-                    
-                    Month Range: <input type="text" name="monthrange3"/>  
+
+                    Month Range: <input type="text" name="monthrange3"/>
                     Strength:   <select name="strength3">
                         <option value="recommendation">Recommendation</option>
                         <option value="warning">Warning</option>
                     </select>
                     Text: <input type="text" name="text3"  length="100"/>
-                    
+
                     <br/>
-                    
-                    
-                </div>    
-                
-                
+
+
+                </div>
+
+
                 Count: <input type="text" name="count" /> <br>
                 <input type="submit" value="Save" />
             </fieldset>
         </form>
     </div>
-    
-    
+
+
      <ul>
     <%for (FlowSheetCustomization cust :custList){%>
        <li><a href="FlowSheetCustomAction.do?method=archiveMod&id=<%=cust.getId()%>&flowsheet=<%=flowsheet%><%=demographicStr%>"><%=cust.getAction()%> -  <%=cust.getMeasurement()%> - <%=cust.getProviderNo()%> - <%=cust.getDemographicNo()%></a></li>
     <%}%>
     </ul>
-        
-        
-    
-    
+
+
+
+
 </td>
 </tr>
 <tr>
@@ -434,6 +435,6 @@ div.recommendations li{
         }
         return ret;
     }
-    
-        
+
+
 %>

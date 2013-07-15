@@ -1,3 +1,12 @@
+/**
+ * Copyright (c) 2008-2012 Indivica Inc.
+ *
+ * This software is made available under the terms of the
+ * GNU General Public License, Version 2, 1991 (GPLv2).
+ * License details are available via "indivica.ca/gplv2"
+ * and "gnu.org/licenses/gpl-2.0.html".
+ */
+
 /*
  * HL7Handler.java
  * An HL7 lab parser, structure was borrowed from GDML template. Fixed to handle TDIS reports. 
@@ -17,10 +26,10 @@ import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
-import org.oscarehr.common.model.HL7HandlerMSHMapping;
-import org.oscarehr.common.model.Hl7TextMessageInfo;
 import org.oscarehr.common.dao.HL7HandlerMSHMappingDao;
 import org.oscarehr.common.dao.Hl7TextInfoDao;
+import org.oscarehr.common.model.HL7HandlerMSHMapping;
+import org.oscarehr.common.model.Hl7TextMessageInfo;
 import org.oscarehr.util.SpringUtils;
 
 import oscar.oscarLab.ca.all.pageUtil.ORUR01Manager;
@@ -149,7 +158,7 @@ public class TDISHandler implements MessageHandler {
 	}
 
 	private ArrayList<String> getMatchingHL7Labs(String hl7Body) {
-		Base64 base64 = new Base64();
+		Base64 base64 = new Base64(0);
 		ArrayList<String> ret = new ArrayList<String>();
 		int monthsBetween = 0;
 		Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao) SpringUtils.getBean("hl7TextInfoDao");
@@ -304,8 +313,8 @@ public class TDISHandler implements MessageHandler {
 			Terser t = new Terser(msg);
 			Segment obxSeg = ((ca.uhn.hl7v2.model.v25.segment.OBX) ((ArrayList) obrSegMap.get(obrSegKeySet.get(i)))
 					.get(j));
-			String ident = getString(t.get(obxSeg, 3, 0, 1, 1));
-			String subIdent = t.get(obxSeg, 3, 0, 1, 2);
+			String ident = getString(Terser.get(obxSeg, 3, 0, 1, 1));
+			String subIdent = Terser.get(obxSeg, 3, 0, 1, 2);
 
 			if (subIdent != null)
 				ident = ident + "&" + subIdent;
@@ -395,7 +404,7 @@ public class TDISHandler implements MessageHandler {
 		try {
 			OBX obx = null;
 			Terser terser = new Terser(msg);
-			result = getString(terser.get((obx = (OBX) ((ArrayList) obrSegMap.get(obrSegKeySet.get(i))).get(j)), 5, 0,
+			result = getString(Terser.get((obx = (OBX) ((ArrayList) obrSegMap.get(obrSegKeySet.get(i))).get(j)), 5, 0,
 					1, 1));
 
 			// format the result
@@ -442,7 +451,7 @@ public class TDISHandler implements MessageHandler {
 			// which will usually contain the units as well
 
 			if (getOBXUnits(i, j).equals(""))
-				ret = getString(terser.get(obxSeg, 7, 0, 2, 1));
+				ret = getString(Terser.get(obxSeg, 7, 0, 2, 1));
 
 			// may have to fall back to original reference range if the second
 			// component is empty
@@ -482,7 +491,7 @@ public class TDISHandler implements MessageHandler {
 			// range for the units
 			if (ret.equals("")) {
 				Terser terser = new Terser(msg);
-				ret = getString(terser.get(obxSeg, 7, 0, 2, 1));
+				ret = getString(Terser.get(obxSeg, 7, 0, 2, 1));
 
 				// only display units from the formatted reference range if they
 				// have not already been displayed as the reference range
@@ -579,11 +588,11 @@ public class TDISHandler implements MessageHandler {
 			l--;
 
 			int k = 0;
-			String nextComment = terser.get(obxSeg, 5, k, 1, 1);
+			String nextComment = Terser.get(obxSeg, 5, k, 1, 1);
 			while (nextComment != null) {
 				comment = comment + nextComment.replaceAll("\\\\\\.br\\\\", "<br />");
 				k++;
-				nextComment = terser.get(obxSeg, 5, k, 1, 1);
+				nextComment = Terser.get(obxSeg, 5, k, 1, 1);
 			}
 
 		} catch (Exception e) {
@@ -608,9 +617,9 @@ public class TDISHandler implements MessageHandler {
 			OBX obxSeg = getOBX(i, j);
 			while (comment != null) {
 				count++;
-				comment = terser.get(obxSeg, 7, count, 1, 1);
+				comment = Terser.get(obxSeg, 7, count, 1, 1);
 				if (comment == null)
-					comment = terser.get(obxSeg, 7, count, 2, 1);
+					comment = Terser.get(obxSeg, 7, count, 2, 1);
 			}
 			count--;
 
@@ -633,9 +642,9 @@ public class TDISHandler implements MessageHandler {
 			Terser terser = new Terser(msg);
 			ca.uhn.hl7v2.model.v25.segment.OBX obxSeg = (ca.uhn.hl7v2.model.v25.segment.OBX) ((ArrayList) obrSegMap
 					.get(obrSegKeySet.get(i))).get(j);
-			comment = terser.get(obxSeg, 7, k, 1, 1);
+			comment = Terser.get(obxSeg, 7, k, 1, 1);
 			if (comment == null)
-				comment = terser.get(obxSeg, 7, k, 2, 1);
+				comment = Terser.get(obxSeg, 7, k, 2, 1);
 			
 			
 

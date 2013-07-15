@@ -1,37 +1,37 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
         "http://www.w3.org/TR/html4/loose.dtd">
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
 <%@page import="org.apache.commons.lang.StringUtils"%>
 <%@page import="oscar.oscarDemographic.data.*,java.util.*,oscar.oscarPrevention.*,oscar.oscarProvider.data.*,oscar.util.*,oscar.oscarReport.data.*,oscar.oscarPrevention.pageUtil.*,java.net.*,oscar.eform.*"%>
 <%@page import="oscar.OscarProperties, org.oscarehr.util.SpringUtils, org.oscarehr.billing.CA.ON.dao.BillingClaimDAO" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <jsp:useBean id="providerBean" class="java.util.Properties" scope="session" />
 <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>
 
@@ -75,6 +75,55 @@
 </style>
 
 <script type="text/javascript">
+
+//update all selected patient's records with next contact method
+//still need to generate before values are saved
+function setNextContactMethod(selectElem) {
+	var nextSelectedContactMethod = selectElem.options[selectElem.selectedIndex].value;
+	
+	var chckbxSelectedContactMethod = document.getElementsByName("nsp");
+	var displayId;
+	var currentValue;
+	var idNum;
+	var indexPos;
+	
+	if( nextSelectedContactMethod == "other" ) {
+		nextSelectedContactMethod = prompt("Enter next contact method: ");
+		if( nextSelectedContactMethod == null ) {
+			return;
+		}
+	}
+	
+	for( var idx = 0; idx < chckbxSelectedContactMethod.length; ++idx ) {
+		if( chckbxSelectedContactMethod[idx].checked ) {
+			currentValue = chckbxSelectedContactMethod[idx].value.split(",");		
+			currentValue[0] += "," + nextSelectedContactMethod;
+			chckbxSelectedContactMethod[idx].value = currentValue[0];		
+			
+			idNum = chckbxSelectedContactMethod[idx].id.substr(9);
+			
+			displayId = "nextSuggestedProcedure" + idNum;
+			$(displayId).update(nextSelectedContactMethod);
+		}
+	}
+	
+}
+
+var nspChecked = false;
+function selectAllnsp() {
+	var chckbxSelectedContactMethod = document.getElementsByName("nsp");
+	
+	for( var idx = 0; idx < chckbxSelectedContactMethod.length; ++idx ) {
+		if( nspChecked ) {
+			chckbxSelectedContactMethod[idx].checked = false;
+		}
+		else {
+			chckbxSelectedContactMethod[idx].checked = true;			
+		}
+	}
+	
+	nspChecked = !nspChecked;
+}
 
 function showHideItem(id){
     if(document.getElementById(id).style.display == 'none')
@@ -131,6 +180,30 @@ function batchBill() {
     );
 
     return false;
+}
+
+function saveContacts() {
+	var frm = document.forms["frmBatchBill"];
+	var url = "<c:out value="${ctx}"/>" + "/oscarMeasurement/AddShortMeasurement.do?method=addMeasurements";
+	
+    new Ajax.Request(
+            url,
+            {
+                method: 'post',
+                postBody: Form.serialize(frm),
+                asynchronous: true,
+                onSuccess: function(ret) {
+                    window.location.reload();
+                },
+                onFailure: function(ret) {
+                    alert( ret.status + " There was a problem saving contacts.");
+                }
+            }
+
+        );
+
+        return false;
+
 }
 
 </script>
@@ -365,7 +438,8 @@ table.ele thead {
                   if (list != null ){ %>
                   <form name="frmBatchBill" action="" method="post">
                       <input type="hidden" name="clinic_view" value="<%=OscarProperties.getInstance().getProperty("clinic_view","")%>">
-              <table class="ele" width="80%">
+                      <input type="hidden" name="followUpType" value="<%=followUpType%>">
+              <table class="ele" width="90%">
                        <tr>
                        <td>&nbsp;</td>
                        <td style="10%;">Total patients: <%=list.size()%><br/>Ineligible:<%=ineligible%></td>
@@ -375,13 +449,22 @@ table.ele thead {
                            --%>
                          <%}%>
                        </td>
-                       <%if (type != null ){ %>
-                       <td style="50%;">&nbsp;<%=request.getAttribute("patientSet")%> </td>
-                       <td><input style="float: right" type="button" value="Bill" onclick="return batchBill();"></td>
-                       <%}else{%>
-                       <td style="50%;">&nbsp;<%=request.getAttribute("patientSet")%> </td>
-                       <td style="30%;"><input style="float: right" type="button" value="Bill" onclick="return batchBill();"></td>
-                       <%}%>
+                       
+                       <td style="40%;">&nbsp;<%=request.getAttribute("patientSet")%> </td>                       
+                       <td>	
+                       		<select onchange="setNextContactMethod(this)">
+                       			<option value="----">Select Contact Method</option>
+                       			<option value="Email">Email</option>
+                       			<option value="L1">Letter 1</option>
+                       			<option value="L2">Letter 2</option>
+                       			<option value="myOSCARmsg">MyOSCAR Message</option>
+                       			<option value="Newsletter">Newsletter</option>
+                       			<option value="other">Other</option>
+                       	  	</select>
+                       	  	&nbsp;&nbsp;
+                       	  	<input type="button" value="Save Contacts" onclick="return saveContacts();">
+                       </td>                                                                                                                   
+                       <td style="10%;"><input style="float: right" type="button" value="Bill" onclick="return batchBill();"></td>
                        </tr>
              </table>
              <table id="preventionTable" class="sortable ele" width="80%">
@@ -409,6 +492,7 @@ table.ele thead {
                           <th>Last Procedure Date</th>
                           <th>Last Contact Method</th>
                           <th>Next Contact Method</th>
+                          <th class="unsortable">Select Contact<br><input type="checkbox" onclick="selectAllnsp()"></th>
                           <th>Roster Physician</th>
                           <th class="unsortable">Bill</th>
                        </tr>
@@ -499,12 +583,17 @@ table.ele thead {
                           </td>
                           <td bgcolor="<%=dis.color%>" id="nextSuggestedProcedure<%=i+1%>">
                               <%if ( dis.nextSuggestedProcedure != null && dis.nextSuggestedProcedure.equals("P1")){ %>
-                                 <a href="javascript: return false;" onclick="return completedProcedure('<%=i+1%>','<%=followUpType%>','<%=dis.nextSuggestedProcedure%>','<%=dis.demographicNo%>');"><%=dis.nextSuggestedProcedure%></a>
-                              <%}else if(dis.nextSuggestedProcedure != null){%>
-                                    <%=dis.nextSuggestedProcedure%>
+                                 <a href="javascript: return false;" onclick="return completedProcedure('<%=i+1%>','<%=followUpType%>','<%=dis.nextSuggestedProcedure%>','<%=dis.demographicNo%>');"><%=dis.nextSuggestedProcedure%></a>                              
                               <%}else{%>
-                                    ----
+                                    <%=dis.nextSuggestedProcedure%>
                               <%}%>
+                          </td>
+                          <td bgcolor="<%=dis.color%>">		
+                          	<%if( !setBill ) {%>					                          
+                          		<input type="checkbox"  id="selectnsp<%=i+1%>" name="nsp" value="<%=dis.demographicNo%>">
+                          	<%} else { %>
+                          		&nbsp;
+                          	<%} %>
                           </td>
                           <%
                           	String providerName=providerBean.getProperty(demo.getProviderNo());

@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.oscarBilling.ca.bc.pageUtil;
 
 import java.math.BigDecimal;
@@ -45,18 +47,18 @@ public class BillingBillingManager {
     try {
       String service_code;
       double units;
-      ArrayList lst = new ArrayList();
+      ArrayList<BillingItem> lst = new ArrayList<BillingItem>();
       BillingItem billingitem;
 
       lst = getDups2(service, service1, service2, service3, service1unit,
                      service2unit, service3unit);
 
       for (int i = 0; i < lst.size(); i++) {
-        BillingItem bi = (BillingItem) lst.get(i);
+        BillingItem bi = lst.get(i);
         service_code = bi.service_code;
         units = bi.units;
 
-        
+
         ResultSet rs;
         String sql =
             "SELECT b.service_code, b.description , b.value, b.percentage "
@@ -77,7 +79,7 @@ public class BillingBillingManager {
 
       }
 
-      arr = (BillingItem[]) lst.toArray(arr);
+      arr = lst.toArray(arr);
 
     }
     catch (SQLException e) {
@@ -87,10 +89,10 @@ public class BillingBillingManager {
     return arr;
   }
 
-  public ArrayList getBillView(String billing_no) {
-    ArrayList billingItemsArray = new ArrayList();
+  public ArrayList<BillingItem> getBillView(String billing_no) {
+    ArrayList<BillingItem> billingItemsArray = new ArrayList<BillingItem>();
     try {
-      
+
       ResultSet rs;
       ///is msp or wcb?
       rs = DBHandler.GetSQL("select billingtype from billing where billing_no = '" +
@@ -143,10 +145,10 @@ public class BillingBillingManager {
     return billingItemsArray;
   }
 
-  public ArrayList getDups(String[] service, String service1, String service2,
+  public ArrayList<BillingItem> getDups(String[] service, String service1, String service2,
                            String service3, String service1unit,
                            String service2unit, String service3unit) {
-    ArrayList lst = new ArrayList();
+    ArrayList<String> lst = new ArrayList<String>();
     for (int i = 0; i < service.length; i++) {
       lst.add(service[i]);
     }
@@ -175,9 +177,9 @@ public class BillingBillingManager {
       }
     }
 
-    ArrayList billingItemsArray = new ArrayList();
+    ArrayList<BillingItem> billingItemsArray = new ArrayList<BillingItem>();
     for (int i = 0; i < lst.size(); i++) {
-      String code = (String) lst.get(i);
+      String code = lst.get(i);
       BillingItem b = isBilled(billingItemsArray, code);
       if (b == null) {
         BillingItem billingItem = new BillingItem(code, "1");
@@ -193,9 +195,9 @@ public class BillingBillingManager {
 
   }
 
-  private BillingItem isBilled(ArrayList ar, String code) {
+  private BillingItem isBilled(ArrayList<BillingItem> ar, String code) {
     for (int i = 0; i < ar.size(); i++) {
-      BillingItem bi = (BillingItem) ar.get(i);
+      BillingItem bi = ar.get(i);
       if (bi.service_code.equals(code)) {
         return bi;
       }
@@ -203,10 +205,10 @@ public class BillingBillingManager {
     return null;
   }
 
-  public ArrayList getDups2(String[] service, String service1, String service2,
+  public ArrayList<BillingItem> getDups2(String[] service, String service1, String service2,
                             String service3, String service1unit,
                             String service2unit, String service3unit) {
-    ArrayList billingItemsArray = new ArrayList();
+    ArrayList<BillingItem> billingItemsArray = new ArrayList<BillingItem>();
     for (int i = 0; i < service.length; i++) {
       addBillItem(billingItemsArray, service[i], "1");
     }
@@ -238,12 +240,12 @@ public class BillingBillingManager {
 
   }
 
-  private BillingItem addBillItem(ArrayList ar, String code,
+  private BillingItem addBillItem(ArrayList<BillingItem> ar, String code,
                                   String serviceUnits) {
     boolean newCode = true;
     BillingItem bi = null;
     for (int i = 0; i < ar.size(); i++) {
-      bi = (BillingItem) ar.get(i);
+      bi = ar.get(i);
       if (bi.service_code.equals(code)) {
         newCode = false;
         bi.addUnits(serviceUnits);
@@ -258,10 +260,10 @@ public class BillingBillingManager {
     return bi;
   }
 
-  public String getGrandTotal(ArrayList ar) {
+  public String getGrandTotal(ArrayList<BillingItem> ar) {
     double grandtotal = 0.00;
     for (int i = 0; i < ar.size(); i++) {
-      BillingItem bi = (BillingItem) ar.get(i);
+      BillingItem bi = ar.get(i);
       grandtotal += bi.getLineTotal();
       MiscUtils.getLogger().debug("total:" + grandtotal);
     }
@@ -346,7 +348,7 @@ public class BillingBillingManager {
 
     public void fill(String billType) {
       try {
-        
+
         ResultSet rs;
         String sql;
 

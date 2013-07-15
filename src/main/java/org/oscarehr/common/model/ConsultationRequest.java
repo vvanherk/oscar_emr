@@ -1,6 +1,5 @@
-/*
- * Copyright (c) 2010. Department of Family Medicine, McMaster University. All Rights Reserved.
- * 
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -10,11 +9,11 @@
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. 
- * 
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -22,23 +21,25 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package org.oscarehr.common.model;
 
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.FetchType;
-import javax.persistence.CascadeType;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -82,14 +83,20 @@ public class ConsultationRequest extends AbstractModel<Integer> implements Seria
 	private String sendTo;
 	private String concurrentProblems;
 	private String urgency;
-	private boolean patientWillBook;
+	private boolean patientWillBook;	
 	
 	@Column(name = "site_name")
 	private String siteName;
         
-        @Temporal(TemporalType.DATE)
-        private Date followUpDate;
-	
+    @Temporal(TemporalType.DATE)
+    private Date followUpDate;
+    @Column(name = "signature_img")
+    private String signatureImg;
+    private String letterheadName;
+    private String letterheadAddress;
+    private String letterheadPhone;
+    private String letterheadFax;
+    
 	@Override
     public Integer getId() {
 	    return(id);
@@ -261,5 +268,45 @@ public class ConsultationRequest extends AbstractModel<Integer> implements Seria
 
     public Integer getSpecialistId() {
         return this.professionalSpecialist.getId();
+    }
+
+	public String getSignatureImg() {
+	    return signatureImg;
+    }
+
+	public void setSignatureImg(String signatureImg) {
+	    this.signatureImg = signatureImg;
+    }
+
+	public String getLetterheadName() {
+	    return letterheadName;
+    }
+
+	public void setLetterheadName(String letterheadName) {
+	    this.letterheadName = letterheadName;
+    }
+
+	public String getLetterheadAddress() {
+	    return letterheadAddress;
+    }
+
+	public void setLetterheadAddress(String letterheadAddress) {
+	    this.letterheadAddress = letterheadAddress;
+    }
+
+	public String getLetterheadPhone() {
+	    return letterheadPhone;
+    }
+
+	public void setLetterheadPhone(String letterheadPhone) {
+	    this.letterheadPhone = letterheadPhone;
+    }
+
+	public String getLetterheadFax() {
+	    return letterheadFax;
+    }
+
+	public void setLetterheadFax(String letterheadFax) {
+	    this.letterheadFax = letterheadFax;
     }
 }

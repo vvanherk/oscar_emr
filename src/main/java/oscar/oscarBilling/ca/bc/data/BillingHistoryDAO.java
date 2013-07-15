@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -43,7 +43,7 @@ import oscar.util.SqlUtils;
  * @version 1.0
  */
 public class BillingHistoryDAO {
-  
+
   public BillingHistoryDAO() {
   }
 
@@ -66,12 +66,12 @@ public class BillingHistoryDAO {
    * @param qry String - The string query
    * @return List - The List of BillHistory instances
    */
-  private List getBillHistoryHlp(String qry) {
-    List list = new ArrayList();
+  private List<BillHistory> getBillHistoryHlp(String qry) {
+    List<BillHistory> list = new ArrayList<BillHistory>();
     ResultSet rs = null;
     try {
-      
-      rs = (ResultSet) DBHandler.GetSQL(qry);
+
+      rs = DBHandler.GetSQL(qry);
       while (rs.next()) {
         BillHistory bh = new BillHistory();
         bh.setId(rs.getInt(1));
@@ -105,7 +105,7 @@ public class BillingHistoryDAO {
    * @param billingNo - The String billingNo Number
    * @return List - The List of BillHistory instances
    */
-  public List getBillHistoryByBillNo(String billingNo) {
+  public List<BillHistory> getBillHistoryByBillNo(String billingNo) {
     String qry = "select bh.id,bm.billingmaster_no,bh.billingstatus,bh.creation_date,bh.practitioner_no,bh.billingtype,bh.seqnum,bh.amount,bh.amount_received,bh.payment_type_id,bt.payment_type" +
         " from billingmaster bm,billing_history bh left join billing_payment_type bt on bh.payment_type_id = bt.id" +
         " where bh.billingmaster_no = bm.billingmaster_no" +
@@ -119,7 +119,7 @@ public class BillingHistoryDAO {
    * @param status String - The status of the BillingMaster  record
    */
   public void createBillingHistoryArchive(BillHistory history) {
-    
+
 
     String qry = "insert into billing_history(billingmaster_no,billingstatus,creation_date,practitioner_no,billingtype,seqNum,amount,amount_received,payment_type_id) values(" +
         history.getBillingMasterNo() + ",'" + history.getBillingStatus() +
@@ -128,7 +128,7 @@ public class BillingHistoryDAO {
         "','" + history.getSeqNum() + "','" + history.getAmount() + "','" +
         history.getAmountReceived() + "'," + history.getPaymentTypeId() + ")";
     try {
-      
+
     	DBHandler.RunSQL(qry);
       if(null == history.getPaymentTypeId()){
         throw new RuntimeException("Bill History: " + history.getBillingMasterNo() + " Payment type is '0'");
@@ -176,7 +176,7 @@ public class BillingHistoryDAO {
       history.setPaymentTypeId(values[4]);
       MSPReconcile rec = new MSPReconcile();
       //don't waste resources if this is a private bill
-      if (!rec.BILLTYPE_PRI.equals(history.getBillingtype())) {
+      if (!MSPReconcile.BILLTYPE_PRI.equals(history.getBillingtype())) {
         String maxSeqNum = rec.getMaxSeqNum(billMasterNo);
         history.setSeqNum(maxSeqNum);
       }
@@ -190,13 +190,13 @@ public class BillingHistoryDAO {
    * @param stat String - The status of the billingMaster records that will be archived
    */
   public void createBillingHistoryArchiveByBillNo(String billingNo) {
-    
+
     ResultSet rs = null;
     String qry =
         "SELECT billingmaster_no FROM billingmaster b WHERE b.billing_no = " +
         billingNo;
     try {
-      
+
       rs = DBHandler.GetSQL(qry);
       while (rs.next()) {
         String billMasterNo = rs.getString(1);

@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -9,7 +34,6 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -35,31 +59,31 @@ public abstract class PHRIndivoDocument extends PHRDocument {
 
     protected PHRIndivoDocument() {
     }
-    
+
     protected PHRIndivoDocument(ProviderData provider, String demographicNo, Long demographicPhrId) {
         this.setPhrClassification(getClassification());
         this.setReceiverOscar(demographicNo);
-        this.setReceiverType(this.TYPE_DEMOGRAPHIC);
+        this.setReceiverType(PHRDocument.TYPE_DEMOGRAPHIC);
         this.setReceiverMyOscarUserId(demographicPhrId);
         this.setSenderOscar(provider.getProviderNo());
-        this.setSenderType(this.TYPE_PROVIDER);
+        this.setSenderType(PHRDocument.TYPE_PROVIDER);
         this.setSenderMyOscarUserId(Long.parseLong(provider.getMyOscarId()));
-        this.setSent(this.STATUS_SEND_PENDING);
-        
+        this.setSent(PHRDocument.STATUS_SEND_PENDING);
+
     }
 
     protected abstract String getClassification();
-    
+
     protected void setDocContent(IndivoDocumentType document) throws JAXBException, IndivoException {
         JAXBContext docContext = JAXBContext.newInstance(IndivoDocumentType.class.getPackage().getName());
-        byte[] docContentBytes = JAXBUtils.marshalToByteArray((JAXBElement) new IndivoDocument(document), docContext);
+        byte[] docContentBytes = JAXBUtils.marshalToByteArray(new IndivoDocument(document), docContext);
         String docContentStr = new String(docContentBytes);
         this.setDocContent(docContentStr);
     }
-    
+
     public static PHRAction setDocContent(IndivoDocumentType document, PHRAction phrAction) throws JAXBException, IndivoException {
         JAXBContext docContext = JAXBContext.newInstance(IndivoDocumentType.class.getPackage().getName());
-        byte[] docContentBytes = JAXBUtils.marshalToByteArray((JAXBElement) new IndivoDocument(document), docContext);
+        byte[] docContentBytes = JAXBUtils.marshalToByteArray(new IndivoDocument(document), docContext);
         String docContentStr = new String(docContentBytes);
         phrAction.setDocContent(docContentStr);
         return phrAction;
@@ -69,7 +93,7 @@ public abstract class PHRIndivoDocument extends PHRDocument {
         String providerFullName = provider.getFirst_name() + " " + provider.getLast_name();
         return providerFullName;
     }
-    
+
     protected static AuthorType getAuthorType(ProviderData provider) {
         org.indivo.xml.phr.types.ObjectFactory authorObjectFactory = new org.indivo.xml.phr.types.ObjectFactory();
         AuthorType authorType = authorObjectFactory.createAuthorType();

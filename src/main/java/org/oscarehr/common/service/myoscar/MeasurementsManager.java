@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package org.oscarehr.common.service.myoscar;
 
 import java.io.IOException;
@@ -16,10 +41,11 @@ import org.oscarehr.common.model.Measurement;
 import org.oscarehr.common.model.MeasurementType;
 import org.oscarehr.common.model.SentToPHRTracking;
 import org.oscarehr.myoscar_server.ws.ItemAlreadyExistsException_Exception;
-import org.oscarehr.myoscar_server.ws.MedicalDataTransfer2;
+import org.oscarehr.myoscar_server.ws.MedicalDataTransfer3;
 import org.oscarehr.myoscar_server.ws.MedicalDataType;
 import org.oscarehr.myoscar_server.ws.NoSuchItemException_Exception;
 import org.oscarehr.myoscar_server.ws.NotAuthorisedException_Exception;
+import org.oscarehr.myoscar_server.ws.UnsupportedEncodingException_Exception;
 import org.oscarehr.phr.PHRAuthentication;
 import org.oscarehr.phr.util.MyOscarServerWebServicesManager;
 import org.oscarehr.phr.util.MyOscarUtils;
@@ -151,7 +177,7 @@ public final class MeasurementsManager {
 
 				logger.debug("sendHeightWeight : getCompositeId=" + hw.getCompositeId());
 
-				MedicalDataTransfer2 medicalDataTransfer = toHeightWeightMedicalDataTransfer(auth, hw);
+				MedicalDataTransfer3 medicalDataTransfer = toHeightWeightMedicalDataTransfer(auth, hw);
 
 				try {
 					MyOscarMedicalDataManagerUtils.addMedicalData(auth, medicalDataTransfer, OSCAR_MEASUREMENTS_DATA_TYPE, hw.getCompositeId());
@@ -164,8 +190,8 @@ public final class MeasurementsManager {
 		}
 	}
 
-	private static MedicalDataTransfer2 toHeightWeightMedicalDataTransfer(PHRAuthentication auth, HeightWeight hw) throws ParserConfigurationException, ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-		MedicalDataTransfer2 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer2(auth, hw.getDateObserved(), hw.getProviderNo(), hw.getDemographicId());
+	private static MedicalDataTransfer3 toHeightWeightMedicalDataTransfer(PHRAuthentication auth, HeightWeight hw) throws ParserConfigurationException, ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+		MedicalDataTransfer3 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer3(auth, hw.getDateObserved(), hw.getProviderNo(), hw.getDemographicId());
 
 		Document doc = toHeightWeightXml(hw);
 		medicalDataTransfer.setData(XmlUtils.toString(doc, false));
@@ -227,7 +253,7 @@ public final class MeasurementsManager {
 
 	private static void sendBloodPressure(PHRAuthentication auth, Measurement measurement) {
 		try {
-			MedicalDataTransfer2 medicalDataTransfer = toBloodPressureMedicalDataTransfer(auth, measurement);
+			MedicalDataTransfer3 medicalDataTransfer = toBloodPressureMedicalDataTransfer(auth, measurement);
 
 			try {
 				MyOscarMedicalDataManagerUtils.addMedicalData(auth, medicalDataTransfer, OSCAR_MEASUREMENTS_DATA_TYPE, measurement.getId());
@@ -239,8 +265,8 @@ public final class MeasurementsManager {
 		}
 	}
 
-	private static MedicalDataTransfer2 toBloodPressureMedicalDataTransfer(PHRAuthentication auth, Measurement measurement) throws ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserConfigurationException {
-		MedicalDataTransfer2 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer2(auth, measurement.getDateObserved(), measurement.getProviderNo(), measurement.getDemographicId());
+	private static MedicalDataTransfer3 toBloodPressureMedicalDataTransfer(PHRAuthentication auth, Measurement measurement) throws ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserConfigurationException {
+		MedicalDataTransfer3 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer3(auth, measurement.getDateObserved(), measurement.getProviderNo(), measurement.getDemographicId());
 
 		Document doc = toBloodPressureXml(measurement);
 		medicalDataTransfer.setData(XmlUtils.toString(doc, false));
@@ -271,7 +297,7 @@ public final class MeasurementsManager {
 
 	private static void sendA1C(PHRAuthentication auth, Measurement measurement) {
 		try {
-			MedicalDataTransfer2 medicalDataTransfer = toA1CMedicalDataTransfer(auth, measurement);
+			MedicalDataTransfer3 medicalDataTransfer = toA1CMedicalDataTransfer(auth, measurement);
 
 			try {
 				MyOscarMedicalDataManagerUtils.addMedicalData(auth, medicalDataTransfer, OSCAR_MEASUREMENTS_DATA_TYPE, measurement.getId());
@@ -283,8 +309,8 @@ public final class MeasurementsManager {
 		}
 	}
 
-	private static MedicalDataTransfer2 toA1CMedicalDataTransfer(PHRAuthentication auth, Measurement measurement) throws ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserConfigurationException {
-		MedicalDataTransfer2 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer2(auth, measurement.getDateObserved(), measurement.getProviderNo(), measurement.getDemographicId());
+	private static MedicalDataTransfer3 toA1CMedicalDataTransfer(PHRAuthentication auth, Measurement measurement) throws ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserConfigurationException {
+		MedicalDataTransfer3 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer3(auth, measurement.getDateObserved(), measurement.getProviderNo(), measurement.getDemographicId());
 
 		Document doc = toA1CXml(measurement);
 		medicalDataTransfer.setData(XmlUtils.toString(doc, false));
@@ -311,8 +337,8 @@ public final class MeasurementsManager {
 		// then send the measurement tied to the category.
 
 		try {
-			MedicalDataTransfer2 ohtCategory = ensureOHTCategoryExists(auth, patientMyOscarId, measurement, measurementType);
-			MedicalDataTransfer2 medicalDataTransfer = toOHTMedicalDataTransfer(auth, measurement, ohtCategory);
+			MedicalDataTransfer3 ohtCategory = ensureOHTCategoryExists(auth, patientMyOscarId, measurement, measurementType);
+			MedicalDataTransfer3 medicalDataTransfer = toOHTMedicalDataTransfer(auth, measurement, ohtCategory);
 
 			try {
 				MyOscarMedicalDataManagerUtils.addMedicalData(auth, medicalDataTransfer, OSCAR_MEASUREMENTS_DATA_TYPE, measurement.getId());
@@ -324,8 +350,8 @@ public final class MeasurementsManager {
 		}
 	}
 
-	private static MedicalDataTransfer2 toOHTMedicalDataTransfer(PHRAuthentication auth, Measurement measurement, MedicalDataTransfer2 ohtCategory) throws ParserConfigurationException, ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException {
-		MedicalDataTransfer2 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer2(auth, measurement.getDateObserved(), measurement.getProviderNo(), measurement.getDemographicId());
+	private static MedicalDataTransfer3 toOHTMedicalDataTransfer(PHRAuthentication auth, Measurement measurement, MedicalDataTransfer3 ohtCategory) throws ParserConfigurationException, ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException {
+		MedicalDataTransfer3 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer3(auth, measurement.getDateObserved(), measurement.getProviderNo(), measurement.getDemographicId());
 
 		Document doc = toOHTXml(measurement);
 		medicalDataTransfer.setData(XmlUtils.toString(doc, false));
@@ -348,31 +374,32 @@ public final class MeasurementsManager {
 
 	/**
 	 * get the oht category, create one if it doesn't already exist
+	 * @throws UnsupportedEncodingException_Exception 
 	 */
-	private static MedicalDataTransfer2 ensureOHTCategoryExists(PHRAuthentication auth, Long patientMyOscarId, Measurement measurement, MeasurementType measurementType) throws IOException, SAXException, ParserConfigurationException, NoSuchItemException_Exception, NotAuthorisedException_Exception, ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException, ItemAlreadyExistsException_Exception {
+	private static MedicalDataTransfer3 ensureOHTCategoryExists(PHRAuthentication auth, Long patientMyOscarId, Measurement measurement, MeasurementType measurementType) throws IOException, SAXException, ParserConfigurationException, NoSuchItemException_Exception, NotAuthorisedException_Exception, ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException, ItemAlreadyExistsException_Exception, UnsupportedEncodingException_Exception {
 		// we'll assume there's not more than 1024 categories.
 		int MAX_SIZE = 1024;		
-		List<Long> categoryIds = MyOscarMedicalDataManagerUtils.getMedicalDataIds(auth, patientMyOscarId, MedicalDataType.OTHER_HEALTH_TRACKER_CATEGORY.name(), true, 0, MAX_SIZE);
-		if (categoryIds.size() >= MAX_SIZE) logger.error("Some one has run into our hard coded limit for categoriy size retrieval.");
+		List<MedicalDataTransfer3> categories = MyOscarMedicalDataManagerUtils.getMedicalData(auth, patientMyOscarId, MedicalDataType.OTHER_HEALTH_TRACKER_CATEGORY.name(), true, 0, MAX_SIZE);
+		if (categories.size() >= MAX_SIZE) logger.error("Some one has run into our hard coded limit for categoriy size retrieval.");
 
-		for (Long categoryId : categoryIds) {
-			MedicalDataTransfer2 category = MyOscarMedicalDataManagerUtils.getMedicalData(auth, categoryId);
+		for (MedicalDataTransfer3 category : categories) {
+			category = MyOscarMedicalDataManagerUtils.materialiseDataIfRequired(auth, category);
 			String categoryName = getOHTCategoryName(category);
 			if (categoryName != null && categoryName.equals(measurementType.getType())) return (category);
 		}
 
 		// non exist, create one.
-		MedicalDataTransfer2 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer2(auth, new Date(), measurement.getProviderNo(), measurement.getDemographicId());
+		MedicalDataTransfer3 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer3(auth, new Date(), measurement.getProviderNo(), measurement.getDemographicId());
 		medicalDataTransfer.setCompleted(false);
 		medicalDataTransfer.setData(makeOHTCategoryXmlString(measurementType));
 		medicalDataTransfer.setMedicalDataType(MedicalDataType.OTHER_HEALTH_TRACKER_CATEGORY.name());
 		Long resultId=MyOscarMedicalDataManagerUtils.addMedicalData(auth, medicalDataTransfer, "OHT_CATEGORY", "OHT_CATEGORY");
-		medicalDataTransfer=MyOscarMedicalDataManagerUtils.getMedicalData(auth, resultId);
+		medicalDataTransfer=MyOscarMedicalDataManagerUtils.getMedicalData(auth, medicalDataTransfer.getOwningPersonId(), resultId);
 		
 		return (medicalDataTransfer);
 	}
 
-	private static String getOHTCategoryName(MedicalDataTransfer2 category) throws IOException, SAXException, ParserConfigurationException {
+	private static String getOHTCategoryName(MedicalDataTransfer3 category) throws IOException, SAXException, ParserConfigurationException {
 		String xmlDataString = category.getData();
 		Document doc = XmlUtils.toDocument(xmlDataString);
 		String result = XmlUtils.getChildNodeTextContents(doc.getFirstChild(), "Name");

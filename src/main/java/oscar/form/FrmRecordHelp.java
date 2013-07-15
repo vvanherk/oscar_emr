@@ -1,16 +1,28 @@
-/*
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. This program is free
- * software; you can redistribute it and/or modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either version 2 of the License, or (at
- * your option) any later version. * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more details. * * You should have
- * received a copy of the GNU General Public License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * <OSCAR
- * TEAM> This software was written for the Department of Family Medicine McMaster University
- * Hamilton Ontario, Canada
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
+
 package oscar.form;
 
 import java.sql.ResultSet;
@@ -32,7 +44,7 @@ import oscar.util.JDBCUtil;
 import oscar.util.UtilDateUtilities;
 
 public class FrmRecordHelp {
-    private String _dateFormat = "yyyy/MM/dd";  
+    private String _dateFormat = "yyyy/MM/dd";
     private String _newDateFormat = "yyyy-MM-dd"; //handles both date formats, but yyyy/MM/dd is displayed to avoid deprecation
 
     public void setDateFormat(String s) {// "dd/MM/yyyy"
@@ -42,7 +54,7 @@ public class FrmRecordHelp {
     public Properties getFormRecord(String sql) //int demographicNo, int existingID)
             throws SQLException {
         Properties props = new Properties();
-        
+
 
         ResultSet rs = DBHandler.GetSQL(sql);
         if (rs.next()) {
@@ -72,7 +84,7 @@ public class FrmRecordHelp {
     }
 
     public synchronized int saveFormRecord(Properties props, String sql) throws SQLException {
-        
+
 
         ResultSet rs = DBHandler.GetSQL(sql, true);
         rs.moveToInsertRow();
@@ -127,7 +139,7 @@ public class FrmRecordHelp {
 
     public ResultSet updateResultSet(Properties props, ResultSet rs, boolean bInsert) throws SQLException {
         ResultSetMetaData md = rs.getMetaData();
-        
+
         for (int i = 1; i <= md.getColumnCount(); i++) {
             String name = md.getColumnName(i);
             if (name.equalsIgnoreCase("ID")) {
@@ -137,11 +149,11 @@ public class FrmRecordHelp {
             }
 
             String value = props.getProperty(name, null);
-            
-            if (md.getColumnTypeName(i).startsWith("TINY")) {                
+
+            if (md.getColumnTypeName(i).startsWith("TINY")) {
                 if (value != null) {
                     if (value.equalsIgnoreCase("on") || value.equalsIgnoreCase("checked='checked'")) {
-                        rs.updateInt(name, 1);   
+                        rs.updateInt(name, 1);
 
                     } else {
                         rs.updateInt(name, 0);
@@ -188,13 +200,13 @@ public class FrmRecordHelp {
             else
                 rs.updateString(name, value);
         }
-        
+
         return rs;
     }
 
     //for page form
     public void updateFormRecord(Properties props, String sql) throws SQLException {
-        
+
 
         ResultSet rs = DBHandler.GetSQL(sql, true);
         //rs.relative(0);
@@ -207,7 +219,7 @@ public class FrmRecordHelp {
 
     public Properties getPrintRecord(String sql) throws SQLException {
         Properties props = new Properties();
-        
+
         ResultSet rs = DBHandler.GetSQL(sql);
         if (rs.next()) {
         	props=getResultsAsProperties(rs);
@@ -220,10 +232,10 @@ public class FrmRecordHelp {
 
         ResultSet rs = DBHandler.GetSQL(sql);
         while (rs.next()) {
-        	Properties p=getResultsAsProperties(rs);            
+        	Properties p=getResultsAsProperties(rs);
             results.add(p);
         }
-        
+
         return results;
     }
 
@@ -248,11 +260,11 @@ public class FrmRecordHelp {
             if (value != null)
                 p.setProperty(name, value);
         }
-        
+
         return(p);
     }
-    
-    public String findActionValue(String submit) throws SQLException {
+
+    public String findActionValue(String submit)  {
         if (submit != null && submit.equalsIgnoreCase("print")) {
             return "print";
         } else if (submit != null && submit.equalsIgnoreCase("save")) {
@@ -270,7 +282,7 @@ public class FrmRecordHelp {
         }
     }
 
-    public String createActionURL(String where, String action, String demoId, String formId) throws SQLException {
+    public String createActionURL(String where, String action, String demoId, String formId)  {
         String temp = null;
 
         if (action.equalsIgnoreCase("print")) {
@@ -289,19 +301,19 @@ public class FrmRecordHelp {
 
         return temp;
     }
-    
+
     public static void convertBooleanToChecked(Properties p)
     {
     	HashSet<Object> keySet=new HashSet<Object>();
     	keySet.addAll(p.keySet());
-    	
+
     	for (Object key : keySet)
     	{
     		String keyName=(String) key;
     		if (keyName.startsWith("b_"))
     		{
     			String value=StringUtils.trimToNull(p.getProperty(keyName));
-    			
+
     			if ("1".equals(value))
     			{
     				p.setProperty(keyName, "checked='checked'");

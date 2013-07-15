@@ -1,3 +1,27 @@
+<%--
+
+
+    Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for
+    Centre for Research on Inner City Health, St. Michael's Hospital,
+    Toronto, Ontario, Canada
+
+--%>
 <%@ include file="/taglibs.jsp"%>
 <%@ page import="org.oscarehr.PMmodule.model.ProgramSignature"%>
 <%@ page import="org.oscarehr.PMmodule.model.Program"%>
@@ -70,6 +94,9 @@ Program p = (Program)request.getAttribute("oldProgram");
 <table cellpadding="3" cellspacing="0" border="0">
 	<tr>
 		<th title="Programs">General Information</th>
+		<th title="Templates" class="nofocus">
+			<a onclick="javascript:clickTab2('General','Vacancy Templates');return false;" href="javascript:void(0)">Vacancy Templates</a>
+		</th>
 	</tr>
 </table>
 </div>
@@ -257,6 +284,10 @@ Program p = (Program)request.getAttribute("oldProgram");
 		<td width="20%">Enable Mandatory Transportation Time:</td>
 		<td><html:checkbox property="program.enableEncounterTransportationTime" /></td>
 	</tr>
+	<tr class="b">
+		<td width="20%">Email Notification Addresses (csv):</td>
+		<td><html:text property="program.emailNotificationAddressesCsv" /></td>
+	</tr>
 	<tr>
 		<td colspan="2"><input type="button" value="Save" onclick="return save()" /> <html:cancel /></td>
 	</tr>
@@ -287,4 +318,3 @@ Program p = (Program)request.getAttribute("oldProgram");
 		<td><c:out value="${programFirstSignature.updateDate}" /></td>
 	</tr>
 </table>
-

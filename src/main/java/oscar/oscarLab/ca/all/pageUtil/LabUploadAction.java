@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * LabUploadAction.java
  *
@@ -69,8 +94,7 @@ public class LabUploadAction extends Action {
 		String audit = "";
 		Integer httpCode = 200;
 
-		@SuppressWarnings("unchecked")
-		ArrayList clientInfo = getClientInfo(service);
+		ArrayList<Object> clientInfo = getClientInfo(service);
 		PublicKey clientKey = (PublicKey) clientInfo.get(0);
 		String type = (String) clientInfo.get(1);
 
@@ -102,20 +126,23 @@ public class LabUploadAction extends Action {
 
 
 				is = new FileInputStream(file);
-				int check = FileUploadCheck.addFile(file.getName(), is, "0");
-				if (check != FileUploadCheck.UNSUCCESSFUL_SAVE) {
-					if ((audit = msgHandler.parse(service, filePath, check)) != null) {
-						outcome = "uploaded";
-						httpCode = HttpServletResponse.SC_OK;
+				try {
+					int check = FileUploadCheck.addFile(file.getName(), is, "0");
+					if (check != FileUploadCheck.UNSUCCESSFUL_SAVE) {
+						if ((audit = msgHandler.parse(service, filePath, check)) != null) {
+							outcome = "uploaded";
+							httpCode = HttpServletResponse.SC_OK;
+						} else {
+							outcome = "upload failed";
+							httpCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+						}
 					} else {
-						outcome = "upload failed";
-						httpCode = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
+						outcome = "uploaded previously";
+						httpCode = HttpServletResponse.SC_CONFLICT;
 					}
-				} else {
-					outcome = "uploaded previously";
-					httpCode = HttpServletResponse.SC_CONFLICT;
+				} finally {
+					is.close();
 				}
-				is.close();
 			} else {
 				logger.info("failed to validate");
 				outcome = "validation failed";
@@ -147,7 +174,7 @@ public class LabUploadAction extends Action {
 	 */
 	public static InputStream decryptMessage(InputStream is, String skey, PublicKey pkey) {
 
-		Base64 base64 = new Base64();
+		Base64 base64 = new Base64(0);
 
 		// Decrypt the secret key and the message
 		try {
@@ -180,7 +207,7 @@ public class LabUploadAction extends Action {
 	 * Check that the signature 'sigString' matches the message InputStream 'msgIS' thus verifying that the message has not been altered.
 	 */
 	public static boolean validateSignature(PublicKey key, String sigString, File input) {
-		Base64 base64 = new Base64();
+		Base64 base64 = new Base64(0);
 		byte[] buf = new byte[1024];
 
 		try {
@@ -211,7 +238,7 @@ public class LabUploadAction extends Action {
 	public static ArrayList<Object> getClientInfo(String service) {
 
 		PublicKey Key = null;
-		Base64 base64 = new Base64();
+		Base64 base64 = new Base64(0);
 		String keyString = "";
 		String type = "";
 		byte[] publicKey;
@@ -227,7 +254,6 @@ public class LabUploadAction extends Action {
 			}
 
 			publicKey = base64.decode(keyString.getBytes(MiscUtils.ENCODING));
-			;
 			X509EncodedKeySpec pubKeySpec = new X509EncodedKeySpec(publicKey);
 			KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 			Key = keyFactory.generatePublic(pubKeySpec);
@@ -247,7 +273,7 @@ public class LabUploadAction extends Action {
 	private static PrivateKey getServerPrivate() {
 
 		PrivateKey Key = null;
-		Base64 base64 = new Base64();
+		Base64 base64 = new Base64(0);
 		byte[] privateKey;
 
 		try {

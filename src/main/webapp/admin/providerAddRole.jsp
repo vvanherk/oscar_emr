@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <!--
 /*
  *
@@ -24,6 +49,13 @@
 <%@ page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@ page import="oscar.login.*"%>
 <%@ page import="oscar.log.*"%>
+<%@ page import="org.oscarehr.util.SpringUtils" %>
+<%@ page import="org.oscarehr.common.model.SecRole" %>
+<%@ page import="org.oscarehr.common.dao.SecRoleDao" %>
+<%@ page import="org.oscarehr.PMmodule.utility.RoleCache" %>
+<%
+	SecRoleDao secRoleDao = SpringUtils.getBean(SecRoleDao.class);
+%>
 <%
 if(session.getAttribute("user") == null )
 	response.sendRedirect("../logout.jsp");
@@ -45,42 +77,36 @@ String curUser_no = (String)session.getAttribute("user");
   DBHelp dbObj = new DBHelp();
   if (request.getParameter("submit") != null && request.getParameter("submit").equals("Save")) {
     // check the input data
+
     if(request.getParameter("action").startsWith("edit")) {
       	// update the code
-		if(role_name.equals(request.getParameter("action").substring("edit".length()))) {
-			String	sql   = "update secRole set role_name='" + StringEscapeUtils.escapeSql(role_name) + "' ";
-			sql += "where role_name='" + StringEscapeUtils.escapeSql(role_name) + "'";
-			if(DBHelp.updateDBRecord(sql)) {
-	  			msg = role_name + " is updated.<br>" + "Type in a role name and search it first to see if it is available.";
-	  			action = "search";
-			    prop.setProperty("role_name", role_name);
-			    LogAction.addLog(curUser_no, LogConst.UPDATE, LogConst.CON_ROLE, role_name, ip);
-
-			} else {
-	  			msg = role_name + " is <font color='red'>NOT</font> updated. Action failed! Try edit it again." ;
-			    action = "edit" + role_name;
-			    prop.setProperty("role_name", role_name);
-			}
-		} else {
-      		msg = "You can <font color='red'>NOT</font> save the role  - " + role_name + ". Please search the role name first.";
+      	SecRole secRole = secRoleDao.findByName(request.getParameter("action").substring(4));
+		if(secRole != null) {
+			secRole.setName(role_name);
+			secRoleDao.merge(secRole);
+			RoleCache.reload();
+			msg = role_name + " is updated.<br>" + "Type in a role name and search it first to see if it is available.";
   			action = "search";
 		    prop.setProperty("role_name", role_name);
+		    LogAction.addLog(curUser_no, LogConst.UPDATE, LogConst.CON_ROLE, role_name, ip);
+		} else {
+			msg = role_name + " is <font color='red'>NOT</font> updated. Action failed! Try edit it again." ;
+		    action = "edit" + role_name;
+		    prop.setProperty("role_name", role_name);
 		}
+
     } else if (request.getParameter("action").startsWith("add")) {
-      	// insert into the role_name
 		if(role_name.equals(request.getParameter("action").substring("add".length()))) {
-			String	sql   = "insert into secRole (role_name) values ('";
-			sql += StringEscapeUtils.escapeSql(role_name) + "' )";
-			if(DBHelp.updateDBRecord(sql) ) {
-	  			msg = role_name + " is added.<br>" + "Type in a role name and search it first to see if it is available.";
-	  			action = "search";
-			    prop.setProperty("role_name", role_name);
-			    LogAction.addLog(curUser_no, LogConst.ADD, LogConst.CON_ROLE, role_name, ip);
-			} else {
-	  			msg = role_name + " is <font color='red'>NOT</font> added. Action failed! Try edit it again." ;
-			    action = "add" + role_name;
-			    prop.setProperty("role_name", role_name);
-			}
+			SecRole secRole = new SecRole();
+			secRole.setName(role_name);
+			secRole.setDescription(role_name);
+			secRoleDao.persist(secRole);
+			RoleCache.reload();
+
+  			msg = role_name + " is added.<br>" + "Type in a role name and search it first to see if it is available.";
+  			action = "search";
+		    prop.setProperty("role_name", role_name);
+		    LogAction.addLog(curUser_no, LogConst.ADD, LogConst.CON_ROLE, role_name, ip);
 		} else {
       		msg = "You can <font color='red'>NOT</font> save the role  - " + role_name + ". Please search the role name first.";
   			action = "search";
@@ -94,18 +120,20 @@ String curUser_no = (String)session.getAttribute("user");
     if(role_name == null || role_name.length() < 2) {
       msg = "Please type in a role name.";
     } else {
-		String	sql   = "select * from secRole where role_name='" + StringEscapeUtils.escapeSql(role_name) + "'";
-		ResultSet rs = dbObj.searchDBRecord(sql);
+    	SecRole secRole = null;
+    	try {
+    		secRole = secRoleDao.findByName(role_name);
+    	}catch(javax.persistence.NoResultException e) {}
 
-		if (rs.next()) {
-		    prop.setProperty("role_name", role_name);
+    	if(secRole != null) {
+    		prop.setProperty("role_name", secRole.getName());
 		    msg = "You can edit the role. (Please note: The change of the role may affect data in other tables.)";
 		    action = "edit" + role_name;
-		} else {
-		    prop.setProperty("role_name", role_name);
-		    msg = "It is a NEW role. You can add it.";
-		    action = "add" + role_name;
-		}
+    	} else {
+    		prop.setProperty("role_name", role_name);
+ 		    msg = "It is a NEW role. You can add it.";
+ 		    action = "add" + role_name;
+    	}
 	}
   }
 %>
@@ -235,14 +263,14 @@ String curUser_no = (String)session.getAttribute("user");
 		<td>Role Name:</td>
 	</tr>
 	<%
-String	sql   = "select * from secRole order by role_name";
-ResultSet rs = dbObj.searchDBRecord(sql);
-while (rs.next()) {
-%>
-	<tr>
-		<td><%=dbObj.getString(rs,"role_name")%></td>
-	</tr>
+	List<SecRole> secRoles = secRoleDao.findAll();
+	for(SecRole secRole:secRoles) {
+		%>
+		<tr>
+			<td><%=secRole.getName()%></td>
+		</tr>
 	<%}%>
+
 </table>
 </body>
 </html:html>

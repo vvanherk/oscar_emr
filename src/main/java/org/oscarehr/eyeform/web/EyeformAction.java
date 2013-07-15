@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package org.oscarehr.eyeform.web;
 
 import java.io.IOException;
@@ -23,7 +48,6 @@ import org.apache.struts.util.LabelValueBean;
 import org.apache.struts.validator.DynaValidatorForm;
 import org.caisi.dao.TicklerDAO;
 import org.caisi.model.Tickler;
-import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.PMmodule.dao.ProviderDao;
 import org.oscarehr.casemgmt.dao.CaseManagementNoteDAO;
 import org.oscarehr.casemgmt.dao.IssueDAO;
@@ -33,20 +57,21 @@ import org.oscarehr.casemgmt.model.Issue;
 import org.oscarehr.casemgmt.service.CaseManagementManager;
 import org.oscarehr.common.IsPropertiesOn;
 import org.oscarehr.common.dao.AllergyDao;
-import org.oscarehr.common.dao.BillingreferralDao;
 import org.oscarehr.common.dao.CaseManagementIssueNotesDao;
 import org.oscarehr.common.dao.ClinicDAO;
 import org.oscarehr.common.dao.ConsultationRequestExtDao;
 import org.oscarehr.common.dao.DemographicContactDao;
+import org.oscarehr.common.dao.DemographicDao;
+import org.oscarehr.common.dao.DemographicExtDao;
 import org.oscarehr.common.dao.DocumentResultsDao;
 import org.oscarehr.common.dao.EFormGroupDao;
 import org.oscarehr.common.dao.EFormValueDao;
 import org.oscarehr.common.dao.OscarAppointmentDao;
 import org.oscarehr.common.dao.ProfessionalSpecialistDao;
+import org.oscarehr.common.dao.BillingreferralDao;
 import org.oscarehr.common.dao.SiteDao;
 import org.oscarehr.common.model.Allergy;
 import org.oscarehr.common.model.Appointment;
-import org.oscarehr.common.model.Billingreferral;
 import org.oscarehr.common.model.Clinic;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DemographicContact;
@@ -55,6 +80,7 @@ import org.oscarehr.common.model.Document;
 import org.oscarehr.common.model.EFormGroup;
 import org.oscarehr.common.model.EFormValue;
 import org.oscarehr.common.model.ProfessionalSpecialist;
+import org.oscarehr.common.model.Billingreferral;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.Site;
 import org.oscarehr.common.service.PdfRecordPrinter;
@@ -107,12 +133,14 @@ public class EyeformAction extends DispatchAction {
 	TestBookRecordDao testBookDao = (TestBookRecordDao)SpringUtils.getBean("TestBookDAO");
 	EyeFormDao eyeFormDao = (EyeFormDao)SpringUtils.getBean("EyeFormDao");
 	MeasurementsDao measurementsDao = (MeasurementsDao) SpringUtils.getBean("measurementsDao");
-	BillingreferralDao brDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+	BillingreferralDao billingreferralDao = (BillingreferralDao) SpringUtils.getBean("billingreferralDao");
 	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
 	SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
 	TicklerDAO ticklerDao = (TicklerDAO)SpringUtils.getBean("ticklerDAOT");
 	//CppMeasurementsDao cppMeasurementsDao = (CppMeasurementsDao)SpringUtils.getBean("cppMeasurementsDao");
 	CaseManagementIssueNotesDao caseManagementIssueNotesDao=(CaseManagementIssueNotesDao)SpringUtils.getBean("caseManagementIssueNotesDao");
+	DemographicExtDao demographicExtDao = SpringUtils.getBean(DemographicExtDao.class);
 
 	   public ActionForward getConReqCC(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		   String requestId = request.getParameter("requestId");
@@ -649,9 +677,9 @@ public class EyeformAction extends DispatchAction {
 	   public void printCppItem(PdfRecordPrinter printer, String header, String issueCode, int demographicNo, int appointmentNo, boolean includePrevious) throws DocumentException {
 		   Collection<CaseManagementNote> notes = null;
 		   if(!includePrevious) {
-			    notes = filterNotesByAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, new String[] {issueCode}),appointmentNo);
+			    notes = filterNotesByAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode}),appointmentNo);
 		   } else {
-			   notes = filterNotesByPreviousOrCurrentAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, new String[] {issueCode}),appointmentNo);
+			   notes = filterNotesByPreviousOrCurrentAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode}),appointmentNo);
 		   }
 		   if(notes.size()>0) {
 			   printer.printCPPItem(header, notes);
@@ -757,7 +785,7 @@ public class EyeformAction extends DispatchAction {
 			//demographic_ext
 			String famName = new String();
 
-			DemographicExt famExt = demographicDao.getDemographicExt(demographic.getDemographicNo(),"Family_Doctor");
+			DemographicExt famExt = demographicExtDao.getDemographicExt(demographic.getDemographicNo(),"Family_Doctor");
 			if(famExt != null) {
 				famName = famExt.getValue();
 			}
@@ -803,12 +831,12 @@ public class EyeformAction extends DispatchAction {
 				request.setAttribute("newFlag", "false");
 				appNo = cp.getAppointmentNo();
 
-				Billingreferral refdoc = brDao.getById(cp.getReferralId());
-				if(refdoc != null) {
-					referraldoc = refdoc.getLastName() + "," + refdoc.getFirstName();
+				ProfessionalSpecialist specialist = professionalSpecialistDao.find(cp.getReferralId());
+				if(specialist != null) {
+					referraldoc = specialist.getLastName() + "," + specialist.getFirstName();
 					request.setAttribute("referral_doc_name", referraldoc);
-					cp.setReferralNo(refdoc.getReferralNo());
-					refNo = refdoc.getReferralNo();
+					cp.setReferralNo(specialist.getReferralNo());
+					refNo = specialist.getReferralNo();
 				}
 			}
 
@@ -820,19 +848,19 @@ public class EyeformAction extends DispatchAction {
 			//loades latest eyeform
 
 			if ("".equalsIgnoreCase(refNo)) {
-				String referal = demographic.getFamilyDoctor();
+				String referral = demographic.getFamilyDoctor();
 
-				if (referal != null && !"".equals(referal.trim())) {
-					Integer ref = getRefId(referal);
+				if (referral != null && !"".equals(referral.trim())) {
+					Integer ref = getRefId(referral);
 					cp.setReferralId(ref);
-					refNo = getRefNo(referal);
+					refNo = getRefNo(referral);
 
-					List refList = brDao.getBillingreferral(getRefNo(referal));
-					if(refList.size()>0) {
-						Billingreferral tmp = ((Billingreferral)refList.get(0));
-						referraldoc = tmp.getLastName() + "," + tmp.getFirstName();
+					List<ProfessionalSpecialist> refList = professionalSpecialistDao.findByReferralNo(refNo);
+					if(refList!=null && refList.size()>0) {
+						ProfessionalSpecialist refSpecialist = refList.get(0);
+						referraldoc = refSpecialist.getLastName() + "," + refSpecialist.getFirstName();
 						request.setAttribute("referral_doc_name", referraldoc);
-						cp.setReferralNo(tmp.getReferralNo());
+						cp.setReferralNo(refSpecialist.getReferralNo());
 					}
 				}
 			}
@@ -996,21 +1024,22 @@ public class EyeformAction extends DispatchAction {
 
 		public ActionForward saveConRequest(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 			log.info("saveConRequest");
-			ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
+                        ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
 
-			DynaValidatorForm crForm = (DynaValidatorForm) form;
-			EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
-			EyeformConsultationReport consultReport = null;
-			String id = request.getParameter("cp.id");
-			if(id != null && id.length()>0) {
-				consultReport = dao.find(Integer.parseInt(id));
-			} else {
-				consultReport = new EyeformConsultationReport();
-			}
-			BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
+                        DynaValidatorForm crForm = (DynaValidatorForm) form;
+                        EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
+                        EyeformConsultationReport consultReport = null;
+                        String id = request.getParameter("cp.id");
+                        if(id != null && id.length()>0) {
+                                consultReport = dao.find(Integer.parseInt(id));
+                        } else {
+                                consultReport = new EyeformConsultationReport();
+                        }
+                        BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
 
-			List<Billingreferral> brs = brDao.getBillingreferral(cp.getReferralNo());
-			cp.setReferralId(brs.get(0).getBillingreferralNo());
+			ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(cp.getReferralNo());
+			if (professionalSpecialist != null)
+				cp.setReferralId(professionalSpecialist.getId());
 
 			cp.setDate(new Date());
 
@@ -1051,9 +1080,9 @@ public class EyeformAction extends DispatchAction {
 				String subreferal = referal.substring(start + 8, end);
 				if (!"".equalsIgnoreCase(subreferal.trim())) {
 					ref = subreferal;
-					List refList = brDao.getBillingreferral(ref.trim());
-					if(refList.size()>0)
-						refNo = ((Billingreferral)refList.get(0)).getBillingreferralNo();
+					ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(ref.trim());
+					if(professionalSpecialist != null)
+						refNo = professionalSpecialist.getId();
 				}
 			}
 			return refNo;
@@ -1071,24 +1100,25 @@ public class EyeformAction extends DispatchAction {
 
 		public ActionForward printConRequest(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 			log.debug("printConreport");
-			ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
-			DynaValidatorForm crForm = (DynaValidatorForm) form;
-			EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
-			Demographic demographic = demographicDao.getClientByDemographicNo(cp.getDemographicNo());
-			request.setAttribute("demographic",demographic);
-			Appointment appointment = this.appointmentDao.find(cp.getAppointmentNo());
+                        ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
+                        DynaValidatorForm crForm = (DynaValidatorForm) form;
+                        EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
+                        Demographic demographic = demographicDao.getClientByDemographicNo(cp.getDemographicNo());
+                        request.setAttribute("demographic",demographic);
+                        Appointment appointment = this.appointmentDao.find(cp.getAppointmentNo());
                         EyeformConsultationReport consultReport = null;
-			String id = request.getParameter("cp.id");
-			if(id != null && id.length()>0) {
+                        String id = request.getParameter("cp.id");
+                        if(id != null && id.length()>0) {
                                 consultReport = dao.find(Integer.parseInt(id));
                         } else {
                                 consultReport = new EyeformConsultationReport();
                         }
                         BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
 
-			@SuppressWarnings("unchecked")
-			List<Billingreferral> brs = brDao.getBillingreferral(cp.getReferralNo());
-			cp.setReferralId(brs.get(0).getBillingreferralNo());
+			ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(cp.getReferralNo());
+
+			if (professionalSpecialist != null)
+				cp.setReferralId(professionalSpecialist.getId());
 			if(cp.getDate()==null){
 				cp.setDate(new Date());
 			}
@@ -1112,18 +1142,21 @@ public class EyeformAction extends DispatchAction {
 			SimpleDateFormat sf = new SimpleDateFormat("MM/dd/yyyy");
 			request.setAttribute("date", sf.format(new Date()));
 
-			String referralNo = cp.getReferralNo();
-			Billingreferral br = brDao.getByReferralNo(referralNo);
-			request.setAttribute("refer", br);
+			Billingreferral ref = billingreferralDao.getByReferralNo(String.valueOf(cp.getReferralId()));
+			request.setAttribute("refer", ref);
+		//	request.setAttribute("refer", professionalSpecialist);
 
 			request.setAttribute("cp", cp);
 
+			Provider internalProvider = null;
+			if(demographic.getProviderNo()!=null && !demographic.getProviderNo().equalsIgnoreCase("null") && demographic.getProviderNo().length()>0) {
 
-			Provider internalProvider = providerDao.getProvider(demographic.getProviderNo());
-			if(internalProvider != null) {
-				request.setAttribute("internalDrName", internalProvider.getFirstName() + " " + internalProvider.getLastName());
-			} else {
+				internalProvider = providerDao.getProvider(demographic.getProviderNo());
+				if(internalProvider != null) {
+					request.setAttribute("internalDrName", internalProvider.getFirstName() + " " + internalProvider.getLastName());
+				} else {
 //				request.setAttribute("internalDrName", );
+				}
 			}
 
 			String specialty = new String();
@@ -1197,10 +1230,13 @@ public class EyeformAction extends DispatchAction {
 
 			request.setAttribute("sateliteFlag", sateliteFlag);
 			request.setAttribute("clinic", clinic);
-			request.setAttribute("appointDate", appointment.getAppointmentDate());
+			request.setAttribute("appointDate", (appointment!=null?appointment.getAppointmentDate(): "") );
 
-			Provider apptProvider = providerDao.getProvider(appointment.getProviderNo());
-			request.setAttribute("appointmentDoctor", apptProvider.getFormattedName());
+			if(appointment!=null) {
+				Provider apptProvider = providerDao.getProvider(appointment.getProviderNo());
+				request.setAttribute("appointmentDoctor", apptProvider.getFormattedName());
+			}
+
 			return mapping.findForward("printReport");
 		}
 

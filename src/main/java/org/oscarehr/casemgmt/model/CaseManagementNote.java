@@ -1,19 +1,20 @@
-/*
+/**
  *
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for
  * Centre for Research on Inner City Health, St. Michael's Hospital,
@@ -25,9 +26,11 @@ package org.oscarehr.casemgmt.model;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.caisi.model.BaseObject;
@@ -80,8 +83,45 @@ public class CaseManagementNote extends BaseObject {
 	private Integer minuteOfEncounterTime;
 	private Integer hourOfEncTransportationTime;
 	private Integer minuteOfEncTransportationTime;
-	
+
 	CaseManagementNoteLinkDAO caseManagementNoteLinkDao = (CaseManagementNoteLinkDAO) SpringUtils.getBean("CaseManagementNoteLinkDAO");
+
+	private CaseManagementNoteLink cmnLink = null;
+	private boolean cmnLinkRetrieved = false;
+
+	public Map<String, Object> getMap() {
+		HashMap<String, Object> map = new HashMap<String, Object>();
+
+		map.put("id", id);
+		map.put("update_date", update_date);
+		map.put("create_date", create_date);
+		map.put("observation_date", observation_date);
+		map.put("demographic_no", demographic_no);
+		map.put("note", note);
+		map.put("signed", signed);
+		map.put("includeissue", includeissue);
+		map.put("provider_no", providerNo);
+		map.put("signing_provider_no", signing_provider_no);
+		map.put("encounter_type", encounter_type);
+		map.put("billing_code", billing_code);
+		map.put("program_no", program_no);
+		map.put("reporter_caisi_role", reporter_caisi_role);
+		map.put("reporter_caisi_team", reporter_program_team);
+		map.put("history", history);
+		map.put("provider", provider);
+		map.put("editors", editors);
+		map.put("role_name", roleName);
+		map.put("program_name", programName);
+		map.put("uuid", uuid);
+		map.put("revision", revision);
+		map.put("locked", locked);
+		map.put("archived", archived);
+		map.put("remote", remote);
+		map.put("facility_name", facilityName);
+		map.put("appointment_no", appointmentNo);
+
+		return map;
+	}
 
 	@Override
 	public boolean equals(Object obj) {
@@ -475,7 +515,11 @@ public class CaseManagementNote extends BaseObject {
 	}
 
 	private boolean isLinkTo(Integer tableName) {
-		CaseManagementNoteLink cmnLink = caseManagementNoteLinkDao.getLastLinkByNote(this.id);
+		if (!cmnLinkRetrieved) {
+			cmnLink = caseManagementNoteLinkDao.getLastLinkByNote(this.id);
+			cmnLinkRetrieved = true;
+		}
+
 		if (cmnLink!=null && cmnLink.getTableName().equals(tableName)) {
 			return true;
 		}
@@ -489,17 +533,14 @@ public class CaseManagementNote extends BaseObject {
             //get drug id from cmn_link table
             RxPrescriptionData rxData = new RxPrescriptionData();
             // create Prescription
-            RxPrescriptionData.Prescription[] rxs = rxData.getPrescriptionScriptsByPatientDrugId(Integer.parseInt(this.getDemographic_no()), drugId);
-            if(rxs.length>0)
-                return rxs[0];
-            else
-                return null;
-        }else
-        
-            return null;
+            RxPrescriptionData.Prescription rx = rxData.getLatestPrescriptionScriptByPatientDrugId(Integer.parseInt(this.getDemographic_no()), drugId);
+            return rx;
+        }
+
+        return null;
     }
-   
- 
+
+
 
 	public int getAppointmentNo() {
 		return appointmentNo;
@@ -540,6 +581,6 @@ public class CaseManagementNote extends BaseObject {
 	public void setMinuteOfEncTransportationTime(Integer minuteOfEncTransportationTime) {
     	this.minuteOfEncTransportationTime = minuteOfEncTransportationTime;
     }
-    
-    
+
+
 }

@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@page
 	import="org.oscarehr.common.dao.DemographicDao,org.oscarehr.caisi_integrator.ws.DemographicWs,org.oscarehr.util.SpringUtils,org.oscarehr.common.model.Demographic"%>
 <%@page
@@ -44,31 +69,6 @@ Integer localDemographicId = Integer.parseInt(request.getParameter("demographicI
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <%-- This JSP is the first page you see when you enter 'report by template' --%>
-<!--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster Unviersity 
- * Hamilton 
- * Ontario, Canada 
- */
--->
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%
     if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
@@ -80,7 +80,7 @@ Integer localDemographicId = Integer.parseInt(request.getParameter("demographicI
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://jakarta.apache.org/struts/tags-html-el"
 	prefix="html-el"%>
 
@@ -152,7 +152,7 @@ Integer localDemographicId = Integer.parseInt(request.getParameter("demographicI
 						<td><%=DateUtils.formatDate(demographic.getBirthDay(),request.getLocale())%></td>
 						<td <%=isHighlighted(highlight)%>><%=DateUtils.formatDate(demographicTransfer.getBirthDate(),request.getLocale())%></td>
 					</tr>
-					<%highlight = (demographicTransfer.getCity()!=null && !demographicTransfer.getCity().equals(demographic.getCity())); %>
+					<%highlight = (demographicTransfer.getCity()!=null && !demographicTransfer.getCity().equalsIgnoreCase(demographic.getCity())); %>
 					<tr>
 						<td>City:</td>
 						<td><%=StringUtils.noNull(demographic.getCity())%></td>

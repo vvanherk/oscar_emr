@@ -1,27 +1,26 @@
-/*
+/**
  *
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * <OSCAR TEAM>
- *
- * ProviderViewAction.java
- *
- * Created on March 9, 2009, 10:36 AM
- *
- *
- *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
+
 
 package org.oscarehr.provider.web;
 
@@ -36,7 +35,7 @@ import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.actions.DispatchAction;
-import org.oscarehr.common.dao.ViewDAO;
+import org.oscarehr.common.dao.ViewDao;
 import org.oscarehr.common.model.View;
 
 /**
@@ -44,38 +43,38 @@ import org.oscarehr.common.model.View;
  * @author rjonasz
  */
 public class ProviderViewAction extends DispatchAction {
-    
-    private ViewDAO userViewDAO;
-    
+
+    private ViewDao userViewDAO;
+
     /** Creates a new instance of ProviderViewAction */
     public ProviderViewAction() {
     }
-    
-    public void setUserViewDAO(ViewDAO userViewDAO) {
-        this.userViewDAO = userViewDAO;
+
+    public void setUserViewDAO(ViewDao viewDao) {
+        this.userViewDAO = viewDao;
     }
-    
+
      public ActionForward unspecified(ActionMapping actionmapping,
                                ActionForm actionform,
                                HttpServletRequest request,
                                HttpServletResponse response) {
-        
+
         return null;
     }
-           
+
       public ActionForward save(ActionMapping actionmapping,
                                ActionForm actionform,
                                HttpServletRequest request,
                                HttpServletResponse response) {
-          
+
          String view_name = request.getParameter("view_name");
          String role = (String)request.getSession().getAttribute("userrole");
          Map<String,View> map = this.userViewDAO.getView(view_name,role);
-         
+
          String [] names = request.getParameterValues("name");
          String [] values = request.getParameterValues("value");
          View v;
-         
+
          //first we delete any current view
          Set<String> keys = map.keySet();
          String key;
@@ -84,7 +83,7 @@ public class ProviderViewAction extends DispatchAction {
              v = map.get(key);
              this.userViewDAO.delete(v);
          }
-         
+
          //now we save new view
          for( int idx = 0; idx < names.length; ++idx ) {
              v = new View();
@@ -94,8 +93,8 @@ public class ProviderViewAction extends DispatchAction {
              v.setView_name(view_name);
              this.userViewDAO.saveView(v);
          }
-         
+
          return null;
      }
-      
+
 }

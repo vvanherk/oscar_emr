@@ -12,6 +12,8 @@ These are not necessarily requirements but the version of software used by the a
 - maven 2.2.1
 - ant 1.8.1
 
+Note: also works with maven 3.x , but you will get warnings.
+
 -----------
 Directories
 -----------
@@ -43,6 +45,10 @@ own file and run maven with -Doscar_override_properties=/<full_path>/myoverrides
 -------------
 NetBeans Note
 -------------
+If you are running the unit tests, and using your own override properties file in Netbeans, use 
+-DargLine="-Doscar_override_properties=/<full_path>/myoverrides.properties"
+
+
 Add this to a netbeans build.xml file for it to build and run.
 
 <target name="-post-compile">

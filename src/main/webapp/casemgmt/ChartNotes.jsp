@@ -1,3 +1,29 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
 <%@page import="oscar.Misc"%>
 <%@page import="oscar.util.UtilMisc"%>
 <%@include file="/casemgmt/taglibs.jsp"%>
@@ -26,7 +52,6 @@
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="oscar.oscarRx.data.RxPrescriptionData"%>
 <%@page import="org.oscarehr.casemgmt.dao.CaseManagementNoteLinkDAO"%>
-<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao"%>
 <%@page import="oscar.OscarProperties"%>
 <%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.oscarehr.PMmodule.model.Program"%>
@@ -43,16 +68,10 @@
 try
 {
 	Facility facility = org.oscarehr.util.LoggedInInfo.loggedInInfo.get().currentFacility;
-	ProfessionalSpecialistDao professionalSpecialistDao=(ProfessionalSpecialistDao)SpringUtils.getBean("professionalSpecialistDao");
-    CaseManagementManager caseManagementManager=(CaseManagementManager)SpringUtils.getBean("caseManagementManager");
 
     String pId = (String)session.getAttribute("case_program_id");
-    Program program = null;
     if (pId == null) {
         pId = "";
-    } else {
-        ProgramDao programDao=(ProgramDao)SpringUtils.getBean("programDao");
-        program = programDao.getProgram(Integer.valueOf(pId));
     }
 
 	String demographicNo = request.getParameter("demographicNo");
@@ -67,16 +86,6 @@ try
 	String provNo = bean.providerNo;
 
 	String dateFormat = "dd-MMM-yyyy H:mm";
-	long savedId = 0;
-	boolean found = false;
-	String bgColour = "color:#000000;background-color:#CCCCFF;";
-	ArrayList<Integer> lockedNotes = new ArrayList<Integer>();
-	ArrayList<Integer> unLockedNotes = new ArrayList<Integer>();
-	ArrayList<Integer> unEditableNotes = new ArrayList<Integer>();
-
-	@SuppressWarnings("unchecked")
-	ArrayList<NoteDisplay> notesToDisplay = (ArrayList<NoteDisplay>)request.getAttribute("notesToDisplay");
-	int noteSize = notesToDisplay.size();
 
 	SimpleDateFormat jsfmt = new SimpleDateFormat("MMM dd, yyyy");
 	Date dToday = new Date();
@@ -94,7 +103,6 @@ try
 
 
 <script type="text/javascript">
-    numNotes = <%=noteSize%>; //How many saved notes do we have?
     ctx = "<c:out value="${ctx}"/>";
     imgPrintgreen.src = ctx + "/oscarEncounter/graphics/printerGreen.png"; //preload green print image so firefox will update properly
     providerNo = "<%=provNo%>";
@@ -127,32 +135,13 @@ try
 
     strToday = "<%=strToday%>";
 
+	notesIncrement = parseInt("<%=OscarProperties.getInstance().getProperty("num_loaded_notes", "20") %>");
 
     jQuery(document).ready(function(){
-    	<%
-    		String singleLineFormat="false";
-	    	UserProperty slProp = (UserProperty)request.getAttribute(UserProperty.STALE_FORMAT);
-    		if(slProp != null && slProp.getValue().equals("yes")) {
-    			singleLineFormat="true";
-    		}
-    	%>
-    	if('<%=singleLineFormat%>'=='true') {
-	    	var staleIds = new Array();
-
-	        jQuery("img[id^='quitImg']").each(function(){
-	     	   if(jQuery(this).attr('src').indexOf('/oscarEncounter/graphics/triangle_down.gif')!=-1) {
-	     		   var iid = jQuery(this).attr('id');
-	     		   jQuery(this).trigger('click');
-	     		   staleIds.push(iid);
-	     	   }
-	        });
-
-	        for(var i=0;i<staleIds.length;i++) {
-	        	//alert("#"+staleIds[i]);
-	        	jQuery("#"+staleIds[i]).trigger('click');
-	        }
-    	}
+    	notesLoader(0, notesIncrement, demographicNo);
+    	notesScrollCheckInterval = setInterval('notesIncrementAndLoadMore()', 2000);
     });
+
 </script>
 
  <html:form action="/CaseManagementView" method="post">
@@ -387,7 +376,7 @@ try
 	</div>
 </html:form>
 
-<nested:form action="/CaseManagementEntry" style="display:inline; margin-top:0; margin-bottom:0;">
+<nested:form action="/CaseManagementEntry" style="display:inline; margin-top:0; margin-bottom:0; position: relative;">
 	<html:hidden property="demographicNo" value="<%=demographicNo%>" />
 	<html:hidden property="includeIssue" value="off" />
 	<%
@@ -453,7 +442,16 @@ try
 	<input type="hidden" name="pStartDate" id="pStartDate" value="">
 	<input type="hidden" name="pEndDate" id="pEndDate" value="">
 	<input type="hidden" id="annotation_attribname" name="annotation_attribname" value="">
-
+	<%
+ 	if (OscarProperties.getInstance().getBooleanProperty("note_program_ui_enabled", "true")) {
+ 	%>
+ 		<input type="hidden" name="_note_program_no" value="" />
+ 		<input type="hidden" name="_note_role_id" value="" />
+ 	<% } %>
+ 	
+	<span id="notesLoading">
+		<img src="<c:out value="${ctx}/images/DMSLoader.gif" />">Loading Notes...
+	</span>
 
 	<div id="mainContent" style="background-color: #FFFFFF; width: 100%; margin-right: -2px; display: inline; float: left;">
 	<div id="issueList" style="background-color: #FFFFFF; height: 440px; width: 350px; position: absolute; z-index: 1; display: none; overflow: auto;">
@@ -551,10 +549,6 @@ try
 				continue;
 			}
 
-			if( cmNote.getObservationDate() == null ) {
-				fullTxtFormat.add(Boolean.FALSE);
-				continue;
-			}
 			if (noteSize > numToDisplay)
 			{
 				if (uProp == null)
@@ -894,7 +888,7 @@ try
 		  								%>
 											<div id="observation<%=note.getNoteId()%>" style="font-size: 11px; float: right; margin-right: 3px;">
 													<bean:message key="oscarEncounter.encounterDate.title"/>:&nbsp;
-													<span id="obs<%=note.getNoteId()%>"><%=note.getObservationDate() != null ? DateUtils.getDate(note.getObservationDate(), dateFormat, request.getLocale()) : "N/A"%></span>
+													<span id="obs<%=note.getNoteId()%>"><%=DateUtils.getDate(note.getObservationDate(), dateFormat, request.getLocale())%></span>
 													<%
 														if (note.isCpp())
 														{
@@ -1107,16 +1101,7 @@ try
 
 			if(facility.isEnableGroupNotes()) {
 		%>
-		<script>
- function selectGroup() {
-	 	var noteId='<%=((CaseManagementEntryFormBean)session.getAttribute(frmName)).getNoteId()%>';
-	 	var noteId = document.forms["caseManagementEntryForm"].noteId.value;
-
-    	popupPage(600,700,'group','groupNoteSelect.jsp?programId='+case_program_id + '&demographicNo='+demographicNo);
-
-    }
-</script>
-			<input tabindex="16" type='image' src="<c:out value="${ctx}/oscarEncounter/graphics/group-gnote.png"/>" id="groupNoteImg" onclick="Event.stop(event);return selectGroup();" title='<bean:message key="oscarEncounter.Index.btnGroupNote"/>'>&nbsp;
+			<input tabindex="16" type='image' src="<c:out value="${ctx}/oscarEncounter/graphics/group-gnote.png"/>" id="groupNoteImg" onclick="Event.stop(event);return selectGroup(document.forms['caseManagementEntryForm'].elements['caseNote.program_no'].value,document.forms['caseManagementEntryForm'].elements['demographicNo'].value);" title='<bean:message key="oscarEncounter.Index.btnGroupNote"/>'>&nbsp;
 		<%  } %>
 			<input tabindex="17" type='image' src="<c:out value="${ctx}/oscarEncounter/graphics/media-floppy.png"/>" id="saveImg" onclick="Event.stop(event);return saveNoteAjax('save', 'list');" title='<bean:message key="oscarEncounter.Index.btnSave"/>'>&nbsp;
 			<input tabindex="18" type='image' src="<c:out value="${ctx}/oscarEncounter/graphics/document-new.png"/>" id="newNoteImg" onclick="newNote(event); return false;" title='<bean:message key="oscarEncounter.Index.btnNew"/>'>&nbsp;
@@ -1145,7 +1130,8 @@ try
 	    	</span>
     	</div>
     	<div style="padding-top: 3px;">
-    		<button type="button" onclick="return showIssues(event);"><bean:message key="oscarEncounter.Index.btnDisplayIssues"/></button> &nbsp;
+    		<button type="button" onclick="return showHideIssues(event, 'noteIssues-resolved');"><bean:message key="oscarEncounter.Index.btnDisplayResolvedIssues"/></button> &nbsp;
+    		<button type="button" onclick="return showHideIssues(event, 'noteIssues-unresolved');"><bean:message key="oscarEncounter.Index.btnDisplayUnresolvedIssues"/></button> &nbsp;
     		<button type="button" onclick="javascript:spellCheck();">Spell Check</button> &nbsp;
     		<button type="button" onclick="javascript:toggleFullViewForAll(this.form);"><bean:message key="eFormGenerator.expandAll"/> <bean:message key="Appointment.formNotes"/></button>
     	</div>
@@ -1155,93 +1141,7 @@ try
 </nested:form>
 
 
-<script type="text/javascript">
-    document.forms["caseManagementEntryForm"].noteId.value = "<%=savedId%>";
 
-
-    caseNote = "caseNote_note" + "<%=savedId%>";
-    //are we editing existing note?  if not init newNoteIdx as we are dealing with a new note
-   //save initial note to determine whether save is necessary
-   origCaseNote = $F(caseNote);
-   <%if (!bean.oscarMsg.equals(""))
-			{%>
-        $(caseNote).value +="\n\n<%=org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(bean.oscarMsg)%>";
-   <%bean.reason = "";
-				bean.oscarMsg = "";
-			}
-
-			if (request.getParameter("noteBody") != null)
-			{
-				String noteBody = request.getParameter("noteBody");
-				noteBody = noteBody.replaceAll("<br>|<BR>", "\n");%>
-        $(caseNote).value +="\n\n<%=org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(noteBody)%>";
-   <%}
-
-			if (found != true)
-			{%>
-        document.forms["caseManagementEntryForm"].newNoteIdx.value = <%=savedId%>;
-   <%}
-			else
-			{%>
-        document.forms["caseManagementEntryForm"].note_edit.value = "existing";
-    <%}%>
-    setupNotes();
-    Element.observe(caseNote, "keyup", monitorCaseNote);
-    Element.observe(caseNote, 'click', getActiveText);
-    <%Integer num;
-			Iterator<Integer> iterator = lockedNotes.iterator();
-			while (iterator.hasNext())
-			{
-				num = iterator.next();%>
-            Element.observe('n<%=num%>', 'click', unlockNote);
-    <%}
-
-			iterator = unLockedNotes.iterator();
-			while (iterator.hasNext())
-			{
-				num = iterator.next();%>
-            Element.observe('n<%=num%>', 'click', fullView);
-    <%}%>
-
-    //flag for determining if we want to submit case management entry form with enter key pressed in auto completer text box
-    var submitIssues = false;
-   //AutoCompleter for Issues
-    <c:url value="/CaseManagementEntry.do?method=issueList&demographicNo=${demographicNo}&providerNo=${param.providerNo}" var="issueURL" />
-    var issueAutoCompleter = new Ajax.Autocompleter("issueAutocomplete", "issueAutocompleteList", "<c:out value="${issueURL}"/>", {minChars: 3, indicator: 'busy', afterUpdateElement: saveIssueId, onShow: autoCompleteShowMenu, onHide: autoCompleteHideMenu});
-
-    <%int MaxLen = 20;
-			int TruncLen = 17;
-			String ellipses = "...";
-			for (int j = 0; j < bean.templateNames.size(); j++)
-			{
-				String encounterTmp = (String)bean.templateNames.get(j);
-				encounterTmp = oscar.util.StringUtils.maxLenString(encounterTmp, MaxLen, TruncLen, ellipses);
-				encounterTmp = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(encounterTmp);%>
-     autoCompleted["<%=encounterTmp%>"] = "ajaxInsertTemplate('<%=encounterTmp%>')";
-     autoCompList.push("<%=encounterTmp%>");
-     itemColours["<%=encounterTmp%>"] = "99CCCC";
-   <%}%>
-   //set default event for assigning issues
-   //we do this here so we can change event listener when changing diagnosis
-   var obj = { };
-   makeIssue = "makeIssue";
-   defaultDiv = "sig<%=savedId%>";
-   changeIssueFunc;  //set in changeDiagnosis function above
-   addIssueFunc = updateIssues.bindAsEventListener(obj, makeIssue, defaultDiv);
-   Element.observe('asgnIssues', 'click', addIssueFunc);
-   new Autocompleter.Local('enTemplate', 'enTemplate_list', autoCompList, { colours: itemColours, afterUpdateElement: menuAction }  );
-
-   //start timer for autosave
-   setTimer();
-
-    //$("encMainDiv").scrollTop = $("n<%=savedId%>").offsetTop - $("encMainDiv").offsetTop;
-    reason = "<%=insertReason(request)%>";    //function defined bottom of file
-
-    if(typeof messagesLoaded == 'function') {
- 	     messagesLoaded('<%=savedId%>');
- 	 }
-
-</script>
 <%
 }
 catch (Exception e)
@@ -1250,71 +1150,3 @@ catch (Exception e)
 }
 %>
 
-<%!/*
-																						 *Insert encounter reason for new note
-																						 */
-	protected String insertReason(HttpServletRequest request)
-	{
-		if(OscarProperties.getInstance().isPropertyActive("encounter.empty_new_note")) {
-			return new String();
-		}
-		String encounterText = "";
-		String apptDate = request.getParameter("appointmentDate");
-		String reason = request.getParameter("reason");
-
-		if( reason == null ) {
-			reason = "";
-		}
-
-		if( apptDate == null || apptDate.equals("") || apptDate.equalsIgnoreCase("null") ) {
-			encounterText = "\n[" + oscar.util.UtilDateUtilities.DateToString(oscar.util.UtilDateUtilities.Today(), "dd-MMM-yyyy", request.getLocale()) + " .: " + reason + "] \n";
-		}
-		else {
-			apptDate = convertDateFmt(apptDate);
-			encounterText = "\n[" + apptDate + " .: " + reason + "]\n";
-		}
-
-		encounterText = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(encounterText);
-		return encounterText;
-	}
-
-	protected String convertDateFmt(String strOldDate)
-	{
-		String strNewDate = "";
-		if (strOldDate != null && strOldDate.length() > 0)
-		{
-			SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
-			try
-			{
-
-				Date tempDate = fmt.parse(strOldDate);
-				strNewDate = new SimpleDateFormat("dd-MMM-yyyy").format(tempDate);
-
-			}
-			catch (ParseException ex)
-			{
-				MiscUtils.getLogger().error("Error", ex);
-			}
-		}
-
-		return strNewDate;
-	}
-
-	protected boolean largeNote(String note)
-	{
-		final int THRESHOLD = 10;
-		boolean isLarge = false;
-		int pos = -1;
-
-		for (int count = 0; (pos = note.indexOf("\n", pos + 1)) != -1; ++count)
-		{
-			if (count == THRESHOLD)
-			{
-				isLarge = true;
-				break;
-			}
-		}
-
-		return isLarge;
-	}
-%>

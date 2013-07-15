@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,7 @@
  * Hamilton
  * Ontario, Canada
  */
+
 
 package oscar.util;
 
@@ -213,7 +214,7 @@ public class SqlUtils {
 	/**
 	 * A simple and convenient method for retrieving object by criteria from the database. The ActiveRecord pattern is assumed whereby and object represents a row in the database.
 	 * <p>
-	 * 
+	 *
 	 * @param qry
 	 *            String
 	 * @param classType
@@ -224,10 +225,10 @@ public class SqlUtils {
 		ArrayList rec = new ArrayList();
 		int colCount = 0;
 		ResultSet rs = null;
-		
+
 		try {
-			
-			rs = (ResultSet) DBHandler.GetSQL(qry);
+
+			rs = DBHandler.GetSQL(qry);
 			ResultSetMetaData rsmd = rs.getMetaData();
 			colCount = rsmd.getColumnCount();
 
@@ -344,19 +345,19 @@ public class SqlUtils {
 
 	/**
 	 * Returns a List of String[] which contain the results of the specified arbitrary query.
-	 * 
+	 *
 	 * @param qry
 	 *            String - The String SQL Query
-	 * @return List - The List of Srting[] results or null if no results were yielded
+	 * @return List - The List of String[] results or null if no results were yielded
 	 */
-	public static List getQueryResultsList(String qry) {
-		ArrayList records = null;
+	public static List<String[]> getQueryResultsList(String qry) {
+		ArrayList<String[]> records = null;
 		ResultSet rs = null;
-		
+
 		try {
-			records = new ArrayList();
-			
-			rs = (ResultSet) DBHandler.GetSQL(qry);
+			records = new ArrayList<String[]>();
+
+			rs = DBHandler.GetSQL(qry);
 			int cols = rs.getMetaData().getColumnCount();
 			while (rs.next()) {
 				String[] record = new String[cols];
@@ -386,16 +387,16 @@ public class SqlUtils {
 
 	/**
 	 * Returns a single row(the first row) from a quesry result Generally should only be used with queries that return a single result Returns null if there is no result
-	 * 
+	 *
 	 * @param qry
 	 *            String
 	 * @return String[]
 	 */
 	public static String[] getRow(String qry) {
 		String ret[] = null;
-		List list = getQueryResultsList(qry);
+		List<String[]> list = getQueryResultsList(qry);
 		if (list != null) {
-			ret = (String[]) list.get(0);
+			ret = list.get(0);
 		}
 		return ret;
 	}
@@ -403,19 +404,19 @@ public class SqlUtils {
 	/**
 	 * Returns a List of Map objects which contain the results of the specified arbitrary query. The key contains the field names of the table and the value, the field value of the
 	 * record
-	 * 
+	 *
 	 * @param qry
 	 *            String - The String SQL Query
 	 * @return List - The List of String Map results or null if no results were yielded
 	 */
-	public static List getQueryResultsMapList(String qry) {
-		List records = null;
+	public static List<Properties> getQueryResultsMapList(String qry) {
+		List<Properties> records = null;
 		ResultSet rs = null;
-		
+
 		try {
-			records = new ArrayList();
-			
-			rs = (ResultSet) DBHandler.GetSQL(qry);
+			records = new ArrayList<Properties>();
+
+			rs = DBHandler.GetSQL(qry);
 			int cols = rs.getMetaData().getColumnCount();
 			while (rs.next()) {
 				Properties record = new Properties();
@@ -452,7 +453,7 @@ public class SqlUtils {
 
 	/**
 	 * Creates an 'in' clause segment of an sql query. This is handy in cases where the criteria of a query is dynamic/unknown
-	 * 
+	 *
 	 * @param criteria
 	 *            String[] - he string array of criteria used to construct the query segment
 	 * @param type
@@ -612,7 +613,7 @@ public class SqlUtils {
 	}
 
 	/**
-	 * deprecated use jpa native queries instead 
+	 * deprecated use jpa native queries instead
 	 */
 	public static List<Integer> selectIntList(String sqlCommand) {
 		Connection c = null;
@@ -639,7 +640,7 @@ public class SqlUtils {
 	}
 
 	/**
-	 * deprecated use jpa native queries instead 
+	 * deprecated use jpa native queries instead
 	 */
 	public static List<String> selectStringList(String sqlCommand) {
 		Connection c = null;

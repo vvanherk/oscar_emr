@@ -1,19 +1,23 @@
 /**
- * Copyright (c) 2007-2008. CAISI, Toronto. All Rights Reserved.
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for
- * CAISI,
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
  * Toronto, Ontario, Canada
  */
 
@@ -21,6 +25,7 @@ package org.oscarehr.common.dao;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -39,7 +44,7 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 	public BillingServiceDao() {
 		super(BillingService.class);
 	}
-	
+
 	public boolean codeRequiresSLI(String code) {
 		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.serviceCode like (:code) and sliFlag = TRUE");
 		query.setParameter("code", code + "%");
@@ -70,6 +75,14 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 		return list;
 	}
 
+	public List<BillingService> findByServiceCode(String code) {
+		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.serviceCode = ? order by bs.billingserviceDate desc");
+		query.setParameter(1, code);
+
+		@SuppressWarnings("unchecked")
+		List<BillingService> list = query.getResultList();
+		return list;
+	}
 	public List<BillingService> findBillingCodesByCode(String code, String region, int order) {
 		return findBillingCodesByCode(code, region, new Date(), order);
 	}
@@ -90,6 +103,19 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 		return list;
 	}
 
+	public String searchDescBillingCode(String code, String region) {
+		
+		Query query = entityManager.createQuery("select bs  from BillingService bs where bs.description <> '' AND bs.description <> '----' AND bs.region = (:region) and bs.serviceCode like (:code) and bs.billingserviceDate = (select max(b2.billingserviceDate) from BillingService b2 where b2.serviceCode = bs.serviceCode and b2.billingserviceDate <= (:billDate))  order by bs.billingserviceDate desc");
+		query.setParameter("region", region);
+		query.setParameter("code", code + "%");
+		query.setParameter("billDate", Calendar.getInstance().getTime());
+
+		@SuppressWarnings("unchecked")
+		List<BillingService> list = query.getResultList();
+		if (list.size() == 0) { return "----"; }
+		return list.get(0).getDescription();
+	}
+	
 	public List<BillingService> search(String str, String region,Date billingDate) {
 
 		Query query = entityManager.createQuery("select bs from BillingService bs where (bs.region = (:region) or bs.region is null) and (bs.serviceCode like (:searchString) or bs.description like (:searchString)) and bs.billingserviceDate = (select max(b2.billingserviceDate) from BillingService b2 where b2.serviceCode = bs.serviceCode and b2.billingserviceDate <= (:billDate))");
@@ -206,13 +232,13 @@ public class BillingServiceDao extends AbstractDao<BillingService> {
 			return null;
 		}
 	}
-	
+
 	@SuppressWarnings("unchecked")
     public List<BillingService> findBillingCodesByFontStyle(Integer styleId) {
 		String sql = "select bs from BillingService bs where bs.displayStyle = ?";
 		Query query = entityManager.createQuery(sql);
 		query.setParameter(1, styleId);
-		
+
 		return query.getResultList();
 	}
 

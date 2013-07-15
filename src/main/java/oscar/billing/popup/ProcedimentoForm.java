@@ -1,26 +1,4 @@
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
+
 package oscar.billing.popup;
 
 import java.util.ArrayList;
@@ -34,17 +12,17 @@ import org.apache.struts.action.ActionMapping;
 
 import oscar.billing.cad.model.CadProcedimentos;
 
-
+@Deprecated
 public class ProcedimentoForm extends ActionForm {
     private String dispatch;
     private int strutsAction;
     private String strutsButton = "";
-    private List procedimentos;
+    private List<CadProcedimentos> procedimentos;
     private String codigoProc;
     private String descProc;
 
     public ProcedimentoForm() {
-        this.procedimentos = new ArrayList();
+        this.procedimentos = new ArrayList<CadProcedimentos>();
     }
 
     public int getStrutsAction() {
@@ -101,7 +79,7 @@ public class ProcedimentoForm extends ActionForm {
     }
 
     public CadProcedimentos getProcedimento(int i) {
-        return (CadProcedimentos) this.procedimentos.get(i);
+        return this.procedimentos.get(i);
     }
 
     /**
@@ -121,7 +99,7 @@ public class ProcedimentoForm extends ActionForm {
     /**
      * @return
      */
-    public List getProcedimentos() {
+    public List<CadProcedimentos> getProcedimentos() {
         return procedimentos;
     }
 
@@ -142,7 +120,7 @@ public class ProcedimentoForm extends ActionForm {
     /**
      * @param list
      */
-    public void setProcedimentos(List list) {
+    public void setProcedimentos(List<CadProcedimentos> list) {
         procedimentos = list;
     }
 }

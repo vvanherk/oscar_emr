@@ -30,6 +30,7 @@ INSERT INTO `access_type` VALUES (1,'write doctor issues','access'),(2,'read doc
 (13,'write csw issues','access'),(14,'read csw issues','access'),(15,'read csw notes','access'),(16,'read csw ticklers','access')
 ;
 
+
 INSERT INTO `access_type` (name,type) VALUES ('Write Ticklers','Action'),('prescription Write','access'),('billing','access'),('medical encounter','access'),('immunization','access'),('prevention','access'),('oscarcomm','access'),('disease registry','access'),('medical form','access'),('measurements','access'),('eform','access'),('lab','access'),('prescription Read','access'),('read ticklers','access'),('master file','access'),('Service restriction override on referral','access'),('Service restriction override on admission','access'),('Create service restriction','access'),('Disable service restriction','access');
 
 insert into access_type (name, type) values("read ticklers assigned to a doctor","access");
@@ -136,6 +137,13 @@ insert into access_type (name, type) values("perform bed assignments","access");
 insert into access_type (name, type) values("print bed rosters and reports","access");
 insert into access_type	(name, type) values("Run Report Runner","access");
 insert into access_type	(name, type) values("Design Reports","access");
+
+insert into access_type (name,type) values('read receptionist notes','access');
+insert into access_type (name,type) values('write receptionist notes','access');
+insert into access_type (name,type) values('write receptionist issues','access');
+insert into access_type (name,type) values('read receptionist issues','access');
+insert into access_type (name,type) values('read receptionist ticklers','access');
+
 
 -- default role access (global) (doctor gets all)
 insert into default_role_access (role_id,access_id) values ((select role_no from secRole where role_name ='doctor'),(select access_id from access_type where name='read ticklers assigned to a doctor'));
@@ -247,6 +255,12 @@ insert into default_role_access (role_id,access_id) values ((select role_no from
 
 insert into default_role_access (role_id,access_id) values ((select role_no from secRole where role_name ='doctor'),(select access_id from access_type where name='read nurse issues'));
 insert into default_role_access (role_id,access_id) values ((select role_no from secRole where role_name ='doctor'),(select access_id from access_type where name='write nurse issues'));
+
+
+insert into default_role_access (role_id,access_id) values ((select role_no from secRole where role_name ='doctor'),(select access_id from access_type where name='read receptionist issues'));
+insert into default_role_access (role_id,access_id) values ((select role_no from secRole where role_name ='doctor'),(select access_id from access_type where name='read receptionist notes'));
+insert into default_role_access (role_id,access_id) values ((select role_no from secRole where role_name ='doctor'),(select access_id from access_type where name='write receptionist issues'));
+insert into default_role_access (role_id,access_id) values ((select role_no from secRole where role_name ='doctor'),(select access_id from access_type where name='write receptionist notes'));
 
 
 insert into default_role_access (role_id,access_id) values ((select role_no from secRole where role_name ='psychiatrist'),(select access_id from access_type where name='read ticklers assigned to a doctor'));
@@ -1394,8 +1408,10 @@ INSERT INTO `program` (id,facilityId,name,description,address,phone,fax,url,emai
 INSERT INTO `program` (id,facilityId,name,description,address,phone,fax,url,email,emergencyNumber,type,location,maxAllowed,holdingTank,allowBatchAdmission,allowBatchDischarge,hic,programStatus,userDefined) VALUES (10012,1,'Deceased','Deceased','','','','','','','community','',99999,0,0,0,0,'active',1);
 INSERT INTO `program` (id,facilityId,name,description,address,phone,fax,url,email,emergencyNumber,type,location,maxAllowed,holdingTank,allowBatchAdmission,allowBatchDischarge,hic,programStatus,userDefined) VALUES (10013,1,'Community Shelter','Community Shelter','','','','','','','community','',99999,0,0,0,0,'active',1);
 INSERT INTO `program` (id,facilityId,name,description,address,phone,fax,url,email,emergencyNumber,type,location,maxAllowed,holdingTank,allowBatchAdmission,allowBatchDischarge,hic,programStatus,userDefined) VALUES (10014,1,'Other','Other','','','','','','','community','',99999,0,0,0,0,'active',1);
-
 INSERT INTO `program` (id,facilityId,name,description,address,phone,fax,url,email,emergencyNumber,type,location,maxAllowed,holdingTank,allowBatchAdmission,allowBatchDischarge,hic,programStatus,exclusiveView,defaultServiceRestrictionDays,userDefined) VALUES (10015,1,'Outside on Street','Outside on Street','','','','','','','community','',99999,0,0,0,0,'active','no',30,1);
+update `program` set enableEncounterTime=0, enableEncounterTransportationTime=0 where id >= 10001 AND id <=10015;
+update program set defaultServiceRestrictionDays = 0 where defaultServiceRestrictionDays is null;
+
 
 update program set enableEncounterTime=0;
 update program set enableEncounterTransportationTime=0;

@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package org.oscarehr.common.service.myoscar;
 
 import java.util.Date;
@@ -13,7 +38,7 @@ import org.oscarehr.common.dao.SentToPHRTrackingDao;
 import org.oscarehr.common.model.Allergy;
 import org.oscarehr.common.model.SentToPHRTracking;
 import org.oscarehr.myoscar_server.ws.ItemAlreadyExistsException_Exception;
-import org.oscarehr.myoscar_server.ws.MedicalDataTransfer2;
+import org.oscarehr.myoscar_server.ws.MedicalDataTransfer3;
 import org.oscarehr.myoscar_server.ws.MedicalDataType;
 import org.oscarehr.phr.PHRAuthentication;
 import org.oscarehr.phr.util.MyOscarServerWebServicesManager;
@@ -45,7 +70,7 @@ public final class AllergiesManager {
 			logger.debug("sendAllergiesToMyOscar : allergyId=" + allergy.getId());
 
 			try {
-				MedicalDataTransfer2 medicalDataTransfer = toMedicalDataTransfer(auth, allergy);
+				MedicalDataTransfer3 medicalDataTransfer = toMedicalDataTransfer(auth, allergy);
 				try {
 					MyOscarMedicalDataManagerUtils.addMedicalData(auth, medicalDataTransfer, OSCAR_ALLERGIES_DATA_TYPE, allergy.getId());
 				} catch (ItemAlreadyExistsException_Exception e) {
@@ -131,7 +156,7 @@ public final class AllergiesManager {
 	/**
 	 * This method may return null for invalid allergy entries... we have some of those, specifically when no provider can be identified to be responsible for this send.
 	 */
-	private static MedicalDataTransfer2 toMedicalDataTransfer(PHRAuthentication auth, Allergy allergy) throws ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserConfigurationException {
+	private static MedicalDataTransfer3 toMedicalDataTransfer(PHRAuthentication auth, Allergy allergy) throws ClassCastException, ClassNotFoundException, InstantiationException, IllegalAccessException, ParserConfigurationException {
 
 		// okay big anomaly here, some records do not have providers numbers. This is really invalid data.
 		// Our attempt will be to check for a provider number, if none exists, we'll try to use the person who is sending - if it's a person
@@ -147,7 +172,7 @@ public final class AllergiesManager {
 		}
 
 		if (providerNo != null) {
-			MedicalDataTransfer2 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer2(auth, allergy.getEntryDate(), providerNo, allergy.getDemographicNo());
+			MedicalDataTransfer3 medicalDataTransfer = MyOscarMedicalDataManagerUtils.getEmptyMedicalDataTransfer3(auth, allergy.getEntryDate(), providerNo, allergy.getDemographicNo());
 			// don't ask me why but allergies are currently changeable in oscar, therefore, they're never completed.
 			medicalDataTransfer.setCompleted(false);
 

@@ -1,21 +1,22 @@
-<!--  
-/*
- * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * Yi Li
- */
- -->
+<%--
+
+    Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+--%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%@ page import="oscar.login.DBHelp"%>
 
@@ -117,9 +118,21 @@ if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
 			//			 get the current year's billing disk filenames
 			BillingReviewPrep prep = new BillingReviewPrep();
 			Vector mriList = (Vector) prep.getMRIList(thisyear + "/01/01 00:00:01", thisyear + "/12/31 23:59:59","'U'");
+			
+			String xml_vdate=request.getParameter("xml_vdate") == null?"":request.getParameter("xml_vdate");
+			String xml_appointment_date = request.getParameter("xml_appointment_date")==null? UtilDateUtilities.DateToString(UtilDateUtilities.now(), "yyyy-MM-dd") : request.getParameter("xml_appointment_date");
 			%>
 <script language="JavaScript" type="text/JavaScript">
 <!--
+function validateGroupReport() {
+	var e = document.getElementsByName('provider')[0];
+	var val = e.options[e.selectedIndex].value;
+	if(val == 'all') {
+		alert("This function will create the billing for the selected provider's group. No applicable to 'All Providers'");
+		return false;
+	}
+	return true;
+}
 
 var checkSubmitFlg = false;
 function checkSubmit() {
@@ -134,7 +147,8 @@ function recreate(si) {
     ret = confirm("Are you sure you want to do the action?");
 	if(ret) {
 		ss=document.forms[0].billcenter[document.forms[0].billcenter.selectedIndex].value;
-		location.href="onregenreport.jsp?diskId="+si+"&billcenter="+ss;
+		var su = document.forms[0].useProviderMOH.checked;
+		location.href="onregenreport.jsp?diskId="+si+"&billcenter="+ss+"&useProviderMOH="+su;		
 	}
 }
 
@@ -161,6 +175,19 @@ obj.visibility=v; }
 }
 //-->
 </script>
+
+<!-- calendar stylesheet -->
+<link rel="stylesheet" type="text/css" media="all"
+	href="../../../share/calendar/calendar.css" title="win2k-cold-1" />
+<!-- main calendar program -->
+<script type="text/javascript" src="../../../share/calendar/calendar.js"></script>
+<!-- language for the calendar -->
+<script type="text/javascript"
+	src="../../../share/calendar/lang/calendar-en.js"></script>
+<!-- the following script defines the Calendar.setup helper function, which makes
+       adding a calendar a matter of 1 or 2 lines of code. -->
+<script type="text/javascript"
+	src="../../../share/calendar/calendar-setup.js"></script>	
 
 <script>
 var providerBillCenterMap = new Object();
@@ -286,14 +313,34 @@ function setBillingCenter( providerNo ) {
 
 		</select></td>
 		<td><input type="submit" name="Submit" value="Create Report">
+		
 		<input type="hidden" name="monthCode" value="<%=monthCode%>">
 		<input type="hidden" name="verCode" value="V03"> <input
 			type="hidden" name="curUser" value="<%=user_no%>"> <input
 			type="hidden" name="curDate" value="<%=nowDate%>"></td>
 	</tr>
+	<tr>
+		<td><font face="Arial, Helvetica, sans-serif" size="2"><b>
+		Service Date: </b></font></td>
+		<td><font size="1" face="Arial, Helvetica, sans-serif">
+		From:</font> <input type="text" id="xml_vdate" name="xml_vdate" size="10"
+			maxlength="10" value="<%=xml_vdate%>" readonly> <img
+			src="../../../images/cal.gif" id="xml_vdate_cal"></td>
+		<td><font size="1" face="Arial, Helvetica, sans-serif">
+		To:</font> <input type="text" id="xml_appointment_date"
+			name="xml_appointment_date" size="10" maxlength="10"
+			value="<%=xml_appointment_date%>" readonly> <img
+			src="../../../images/cal.gif" id="xml_appointment_date_cal"></td>
+			<td colspan="3">
+			<input type="checkbox" name="useProviderMOH" id="useProviderMOH" <%=("true".equals(request.getParameter("useProviderMOH")) ? "checked" : "") %>><label for="useProviderMOH"> Use individual provider's bill center setting (will use above bill center if provider does not have one set.)</label>
+		</td>		
+	</tr>	
 	</form>
 </table>
-
+<script type="text/javascript">
+Calendar.setup({ inputField : "xml_vdate", ifFormat : "%Y/%m/%d", showsTime :false, button : "xml_vdate_cal", singleClick : true, step : 1 });
+Calendar.setup({ inputField : "xml_appointment_date", ifFormat : "%Y/%m/%d", showsTime :false, button : "xml_appointment_date_cal", singleClick : true, step : 1 });
+</script>
 <table width="100%" border="0" cellspacing="1" cellpadding="1"
 	class="myIvory">
 	<tr class="myYellow">

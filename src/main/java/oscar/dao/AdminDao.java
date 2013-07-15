@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package oscar.dao;
 
 import java.util.Map;
@@ -9,9 +32,9 @@ import org.springframework.jdbc.core.RowMapper;
  * Oscar Admin DAO implementation created to extract database access code
  * from admin related JSP files. This class contains only actual sql
  * queries and row mappers.
- * 
+ *
  * @author Eugene Petruhin
- * 
+ *
  */
 public class AdminDao extends OscarSuperDao {
 
@@ -20,15 +43,8 @@ public class AdminDao extends OscarSuperDao {
 	public AdminDao() {
 	}
 
-	private String [][] dbQueries = new String[][] { 
-		{"security_add_record", "insert into security (user_name,password,provider_no,pin,b_ExpireSet,date_ExpireDate,b_LocalLockSet,b_RemoteLockSet) values(?,?,?,?,?,?,?,?)" },
-	    {"security_search_detail", "select * from security where security_no=?"},
-	    {"security_delete", "delete from security where security_no=? and provider_no!='super'"},
-	    {"security_update_record", "update security set user_name=?,password=?,provider_no=?,pin=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },   
-	    {"security_update_record2", "update security set user_name=?,password=?,provider_no=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
-	    {"security_update_record3", "update security set user_name=?,provider_no=?,pin=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
-	    {"security_update_record4", "update security set user_name=?,provider_no=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },    
-
+	private String [][] dbQueries = new String[][] {
+		{"security_search_detail", "select * from security where security_no=?"},
 	    {"provider_search_providerno", "select provider_no, first_name, last_name from provider order by last_name"},
 	};
 

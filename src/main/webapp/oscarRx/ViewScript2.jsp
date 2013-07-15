@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@ page import="oscar.oscarProvider.data.*, oscar.oscarRx.data.*,oscar.OscarProperties, oscar.oscarClinic.ClinicData, java.util.*"%>
 <%@ page import="org.oscarehr.common.model.PharmacyInfo" %>
 <%@ page import="org.oscarehr.common.model.DemographicPharmacy" %>
@@ -6,36 +31,13 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security" %>
 <%@ taglib uri="/WEB-INF/indivo-tag.tld" prefix="indivo" %>
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
-
+<%@ page import="org.oscarehr.util.DigitalSignatureUtils"%>
+<%@ page import="org.oscarehr.util.LoggedInInfo"%>
+<%@ page import="org.oscarehr.ui.servlet.ImageRenderingServlet"%>
 <%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 
@@ -164,10 +166,20 @@ pharmacy = pharmacyData.getPharmacyFromDemographic(Integer.toString(bean.getDemo
 String prefPharmacy = "";
 String prefPharmacyId="";
 if (pharmacy != null) {
-    prefPharmacy = pharmacy.getName();
+    prefPharmacy = pharmacy.getName().replace("'", "\\'");
     prefPharmacyId=String.valueOf(pharmacy.getId2());
     prefPharmacy=prefPharmacy.trim();
     prefPharmacyId=prefPharmacyId.trim();
+}
+
+String userAgent = request.getHeader("User-Agent");
+String browserType = "";
+if (userAgent != null) {
+	if (userAgent.toLowerCase().indexOf("ipad") > -1) {
+		browserType = "IPAD";
+	} else {
+		browserType = "ALL";
+	}
 }
 %>
 <link rel="stylesheet" type="text/css" href="styles.css" />
@@ -251,9 +263,9 @@ function addNotes(){
     var ran_number=Math.round(Math.random()*1000000);
     var comment = encodeURIComponent(document.getElementById('additionalNotes').value);
     var params = "scriptNo=<%=request.getAttribute("scriptId")%>&comment="+comment+"&rand="+ran_number;  //]
-    new Ajax.Request(url, {method: 'post',parameters:params});
-    frames['preview'].document.getElementById('additNotes').innerHTML =  document.getElementById('additionalNotes').value;
-    frames['preview'].document.getElementsByName('additNotes')[0].value=  document.getElementById('additionalNotes').value;
+    new Ajax.Request(url, {method: 'post',parameters:params});        
+    frames['preview'].document.getElementById('additNotes').innerHTML =  document.getElementById('additionalNotes').value.replace(/\n/g, "<br>");
+    frames['preview'].document.getElementsByName('additNotes')[0].value=  document.getElementById('additionalNotes').value.replace(/\n/g, "\r\n");
 }
 
 
@@ -279,7 +291,8 @@ function printIframe(){
 	}
 
 
-function printPaste2Parent(){
+function printPaste2Parent(print){
+
     //console.log("in printPaste2Parent");
    try{
       text =""; // "****<%=oscar.oscarProvider.data.ProviderData.getProviderName(bean.getProviderNo())%>********************************************************************************";
@@ -307,7 +320,7 @@ function printPaste2Parent(){
    }catch (e){
       alert ("ERROR: could not paste to EMR");
    }
-   printIframe();
+   if (print) { printIframe(); }
 }
 
 
@@ -331,6 +344,79 @@ function addressSelect() {
 
 }
 
+
+
+function popupPrint(vheight,vwidth,varpage) { //open a new popup window
+	  var page = "" + varpage;
+	  windowprops = "height="+vheight+",width="+vwidth+",location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,screenX=0,screenY=0,top=0,left=0";//360,680
+	  var popup=window.open(page, "groupno", windowprops);
+	  if (popup != null) {
+	    if (popup.opener == null) {
+	      popup.opener = self;
+	    }
+	    popup.focus();
+	}
+}
+
+function resizeFrame(height) {
+	document.getElementById("preview").height = (parseInt(height) + 10) + "px";
+}
+
+</script>
+<%
+String signatureRequestId = "";
+String imageUrl = "";
+signatureRequestId = DigitalSignatureUtils.generateSignatureRequestId(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
+imageUrl = request.getContextPath()+"/imageRenderingServlet?source="+ImageRenderingServlet.Source.signature_preview.name()+"&"+DigitalSignatureUtils.SIGNATURE_REQUEST_ID_KEY+"="+signatureRequestId;
+%>
+<script type="text/javascript">
+var POLL_TIME=1500;
+var counter=0;
+
+function refreshImage()
+{
+	counter=counter+1;
+	frames["preview"].document.getElementById("signature").src="<%=imageUrl%>&rand="+counter;
+	frames['preview'].document.getElementById('imgFile').value='<%=System.getProperty("java.io.tmpdir")%>/signature_<%=signatureRequestId%>.jpg';	
+}
+
+function sendFax()
+{
+	frames['preview'].document.getElementById('pdfId').value='<%=signatureRequestId%>';	
+	frames['preview'].onPrint2('oscarRxFax');
+	frames['preview'].document.FrmForm.submit();	
+	window.onbeforeunload = null;
+}
+
+function unloadMess(){
+    mess = "Signature found, but fax has not been sent.";
+    if (isSignatureDirty) { mess = "Signature changed, but not saved and fax not sent."; }
+    return mess;
+}
+
+
+var isSignatureDirty = false;
+var isSignatureSaved = false;
+function signatureHandler(e) {
+	<% if (OscarProperties.getInstance().isRxFaxEnabled()) { %>
+	var hasFaxNumber = <%= pharmacy != null && pharmacy.fax.trim().length() > 0 ? "true" : "false" %>;
+	<% } %>
+	isSignatureDirty = e.isDirty;
+	isSignatureSaved = e.isSave;
+	e.target.onbeforeunload = null;
+	<% if (OscarProperties.getInstance().isRxFaxEnabled()) { //%>
+	e.target.document.getElementById("faxButton").disabled = !hasFaxNumber || !e.isSave;
+	<% } %>
+	if (e.isSave) {
+		<% if (OscarProperties.getInstance().isRxFaxEnabled()) { //%>
+		if (hasFaxNumber) {
+			e.target.onbeforeunload = unloadMess;
+		}
+		<% } %>
+		refreshImage();			
+	}
+}
+var requestIdKey = "<%=signatureRequestId %>";
 
 </script>
 </head>
@@ -524,8 +610,15 @@ function toggleView(form) {
 						<td><span><input type=button
 							<%=reprint.equals("true")?"disabled='true'":""%> value="<bean:message key="ViewScript.msgPrintPasteEmr"/>"
 							class="ControlPushButton" style="width: 150px"
-							onClick="javascript:printPaste2Parent();" /></span></td>
+							onClick="javascript:printPaste2Parent(true);" /></span></td>
 					</tr>
+					<% if (OscarProperties.getInstance().isRxFaxEnabled()) { %>
+					<tr>                            
+                            <td><span><input type=button value="Fax & Paste into EMR"
+                                    class="ControlPushButton" id="faxButton" style="width: 150px"
+                                    onClick="printPaste2Parent(false);sendFax();" disabled/></span></td>
+                    </tr>
+                    <% } %>
 					<tr>
 						<!--td width=10px></td-->
 						<td><span><input type=button
@@ -567,7 +660,19 @@ function toggleView(form) {
                                         </tr>
 
                                         <%}%>
+					<% if (OscarProperties.getInstance().isRxSignatureEnabled() && !OscarProperties.getInstance().getBooleanProperty("signature_tablet", "yes")) { %>
+                                        
+                    <tr>
+						<td colspan=2 style="font-weight: bold"><span>Signature</span></td>
+					</tr>               
 					<tr>
+                        <td>
+                            <input type="hidden" name="<%=DigitalSignatureUtils.SIGNATURE_REQUEST_ID_KEY%>" value="<%=signatureRequestId%>" />
+                            <iframe style="width:500px; height:132px;"id="signatureFrame" src="<%= request.getContextPath() %>/signature_pad/tabletSignature.jsp?inWindow=true&<%=DigitalSignatureUtils.SIGNATURE_REQUEST_ID_KEY%>=<%=signatureRequestId%>" ></iframe>
+                        </td>
+					</tr>
+		            <%}%>
+                    <tr>
 						<td colspan=2 style="font-weight: bold"><span><bean:message key="ViewScript.msgDrugInfo"/></span></td>
 					</tr>
 					<%

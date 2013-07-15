@@ -1,25 +1,25 @@
-/*
+/**
  *
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for
  * Centre for Research on Inner City Health, St. Michael's Hospital,
  * Toronto, Ontario, Canada
  */
-
 package org.oscarehr.common.dao;
 
 import java.math.BigInteger;
@@ -60,12 +60,13 @@ import org.oscarehr.PMmodule.web.formbean.ClientListsReportFormBean;
 import org.oscarehr.PMmodule.web.formbean.ClientSearchFormBean;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DemographicExt;
+import org.oscarehr.integration.hl7.generators.HL7A04Generator;
 import org.oscarehr.util.DbConnectionFilter;
 import org.oscarehr.util.MiscUtils;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
-import oscar.OscarProperties;
 import oscar.MyDateFormat;
+import oscar.OscarProperties;
 import oscar.util.SqlUtils;
 
 import org.oscarehr.integration.hl7.generators.HL7A04Generator;
@@ -299,8 +300,29 @@ public class DemographicDao extends HibernateDaoSupport {
 
  		this.getHibernateTemplate().saveOrUpdate(demographic);
  		
- 		if (OscarProperties.getInstance().isHL7A04GenerationEnabled() && isDemographicNew(objExists, demographic))
+ 		if (OscarProperties.getInstance().isHL7A04GenerationEnabled() && !objExists)
 			(new HL7A04Generator()).generateHL7A04(demographic);
+     }
+
+public static List<Integer> getDemographicIdsAlteredSinceTime(Date value) {
+    	 Connection c = null;
+    	 try {
+    		 c = DbConnectionFilter.getThreadLocalDbConnection();
+    		 PreparedStatement ps = c.prepareStatement("SELECT DISTINCT demographic_no FROM log WHERE dateTime >= ? and action != 'read'");
+    		 ps.setDate(1, new java.sql.Date(value.getTime()));
+    		 ResultSet rs = ps.executeQuery();
+    		 ArrayList<Integer> results = new ArrayList<Integer>();
+    		 while (rs.next()){
+    			 if(rs.getInt(1) != 0){
+    			    results.add(rs.getInt(1));
+    			 }
+    		 }
+    		 return(results);
+    	 }catch (SQLException e) {
+    		 throw(new PersistenceException(e));
+    	 }finally {
+    		 SqlUtils.closeResources(c, null, null);
+    	 }
      }
 	 
 	 /**
@@ -313,7 +335,7 @@ public class DemographicDao extends HibernateDaoSupport {
 			((demo.getDemoType() & demo.DEMO_TYPE_NEW) != 0 || (demo.getDemoType() & demo.DEMO_TYPE_UNKNOWN) != 0);
 	 }
 
-     public static List<Integer> getDemographicIdsOpenedSinceTime(String value) {
+     public static List<Integer> getDemographicIdsOpenedChartSinceTime(String value) {
     	 Connection c = null;
     	 try {
     		 c = DbConnectionFilter.getThreadLocalDbConnection();
@@ -404,7 +426,8 @@ public class DemographicDao extends HibernateDaoSupport {
  	}
 
  //Quatro Merge
- 	public List search(ClientSearchFormBean bean, boolean returnOptinsOnly,boolean excludeMerged) {
+ 	@SuppressWarnings("unchecked")
+    public List<Demographic> search(ClientSearchFormBean bean, boolean returnOptinsOnly,boolean excludeMerged) {
  		Criteria criteria = getSession().createCriteria(Demographic.class);
  		String firstName = "";
  		String lastName = "";
@@ -420,8 +443,7 @@ public class DemographicDao extends HibernateDaoSupport {
 
  		String sql = "";
 
- 		//@SuppressWarnings("unchecked")
- 		List results = null;
+ 		List<Demographic> results = null;
 
  		if (bean.getFirstName() != null && bean.getFirstName().length() > 0) {
  			firstName = bean.getFirstName();
@@ -724,157 +746,7 @@ public class DemographicDao extends HibernateDaoSupport {
  		}
  	}
 
- 	public DemographicExt getDemographicExt(Integer id) {
 
- 		if (id == null || id.intValue() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		DemographicExt result = this.getHibernateTemplate().get(DemographicExt.class, id);
-
- 		if (log.isDebugEnabled()) {
- 			log.debug("getDemographicExt: id=" + id + ",found=" + (result != null));
- 		}
-
- 		return result;
- 	}
-
-     public List<DemographicExt> getDemographicExtByDemographicNo(Integer demographicNo) {
-
- 		if (demographicNo == null || demographicNo.intValue() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 	    @SuppressWarnings("unchecked")
- 		List<DemographicExt> results = this.getHibernateTemplate().find("from DemographicExt d where d.demographicNo = ?", demographicNo);
-
- 		if (log.isDebugEnabled()) {
- 			log.debug("getDemographicExtByDemographicNo: demographicNo=" + demographicNo + ",# of results=" + results.size());
- 		}
-
- 		return results;
- 	}
-
- 	public DemographicExt getDemographicExt(Integer demographicNo, String key) {
-
- 		if (demographicNo == null || demographicNo.intValue() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		if (key == null || key.length() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		List results = this.getHibernateTemplate().find("from DemographicExt d where d.demographicNo = ? and d.key = ?", new Object[] {demographicNo, key});
- 		if (results.isEmpty()) return null;
- 		DemographicExt result = (DemographicExt)results.get(0);
-
- 		if (log.isDebugEnabled()) {
- 			log.debug("getDemographicExt: demographicNo=" + demographicNo + ",key=" + key + ",found=" + (result != null));
- 		}
-
- 		return result;
- 	}
-
- 	public DemographicExt getLatestDemographicExt(Integer demographicNo, String key) {
-
- 		if (demographicNo == null || demographicNo.intValue() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		if (key == null || key.length() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		List results = this.getHibernateTemplate().find("from DemographicExt d where d.demographicNo = ? and d.key = ? order by d.dateCreated DESC", new Object[] {demographicNo, key});
- 		if (results.isEmpty()) return null;
- 		DemographicExt result = (DemographicExt)results.get(0);
-
- 		if (log.isDebugEnabled()) {
- 			log.debug("getDemographicExt: demographicNo=" + demographicNo + ",key=" + key + ",found=" + (result != null));
- 		}
-
- 		return result;
- 	}
-
- 	public void updateDemographicExt(DemographicExt de) {
-
- 		if (de == null) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		this.getHibernateTemplate().saveOrUpdate(de);
-
- 		if (log.isDebugEnabled()) {
- 			log.debug("updateDemographicExt: id=" + de.getId());
- 		}
- 	}
-
- 	public void saveDemographicExt(Integer demographicNo, String key, String value) {
-
- 		if (demographicNo == null || demographicNo.intValue() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		if (key == null || key.length() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		if (value == null) {
- 			return;
- 		}
-
- 		DemographicExt existingDe = this.getDemographicExt(demographicNo, key);
-
- 		if (existingDe != null) {
- 			existingDe.setDateCreated(new Date());
- 			existingDe.setValue(value);
- 			this.getHibernateTemplate().update(existingDe);
- 		}
- 		else {
- 			DemographicExt de = new DemographicExt();
- 			de.setDateCreated(new Date());
- 			de.setDemographicNo(demographicNo);
- 			de.setHidden(false);
- 			de.setKey(key);
- 			de.setValue(value);
- 			this.getHibernateTemplate().save(de);
- 		}
-
- 		if (log.isDebugEnabled()) {
- 			log.debug("saveDemographicExt: demographicNo=" + demographicNo + ",key=" + key + ",value=" + value);
- 		}
- 	}
-
- 	public void removeDemographicExt(Integer id) {
-
- 		if (id == null || id.intValue() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		this.getHibernateTemplate().delete(getDemographicExt(id));
-
- 		if (log.isDebugEnabled()) {
- 			log.debug("removeDemographicExt: id=" + id);
- 		}
- 	}
-
- 	public void removeDemographicExt(Integer demographicNo, String key) {
-
- 		if (demographicNo == null || demographicNo.intValue() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		if (key == null || key.length() <= 0) {
- 			throw new IllegalArgumentException();
- 		}
-
- 		this.getHibernateTemplate().delete(getDemographicExt(demographicNo, key));
-
- 		if (log.isDebugEnabled()) {
- 			log.debug("removeDemographicExt: demographicNo=" + demographicNo + ",key=" + key);
- 		}
- 	}
 
 
  	public static class ClientListsReportResults
@@ -1121,4 +993,16 @@ public class DemographicDao extends HibernateDaoSupport {
 
 		return  this.getHibernateTemplate().find(sql,params.toArray(new String[params.size()]));
 	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Demographic> getDemographicsByHealthNum(String hin) {
+		return this.getHibernateTemplate().find("from Demographic d where d.Hin=?", new Object[] { hin });
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Integer> getActiveDemographicIds() {
+		return this.getHibernateTemplate().find("select d.DemographicNo from Demographic d where d.PatientStatus=?", new Object[] { "AC" });
+	}
 }
+
+

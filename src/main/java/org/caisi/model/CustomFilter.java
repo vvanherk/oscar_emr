@@ -1,24 +1,25 @@
-/*
-* 
-* Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License. 
-* This program is free software; you can redistribute it and/or 
-* modify it under the terms of the GNU General Public License 
-* as published by the Free Software Foundation; either version 2 
-* of the License, or (at your option) any later version. * 
-* This program is distributed in the hope that it will be useful, 
-* but WITHOUT ANY WARRANTY; without even the implied warranty of 
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-* along with this program; if not, write to the Free Software 
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-* 
-* <OSCAR TEAM>
-* 
-* This software was written for 
-* Centre for Research on Inner City Health, St. Michael's Hospital, 
-* Toronto, Ontario, Canada 
-*/
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
 
 package org.caisi.model;
 
@@ -43,47 +44,47 @@ public class CustomFilter extends BaseObject {
 	private String name;
 	private String demographic_no;
 	private String demographic_webName;
-	
+
 	private Date start_date;
 	private Date end_date;
-	
+
 	private String sort_order;
-	
-	private String startDate;
-	private String endDate;
+
+
 	private String status;
 	private String priority;
-	
+
+	private String mrp;
 	private Set providers;
 	private Set assignees;
 	private Program program;
-	
+
 	private String custom;
-	
+
 	private String client;
-	
-	public static List statusList;
-	public static List priorityList;
-	
-	
-	private String providerNo;        
+
+	public static List<OptionsBean> statusList;
+	public static List<OptionsBean> priorityList;
+
+
+	private String providerNo;
     private boolean shortcut;
 	private String programId;
-	
+
 	static {
-		priorityList = new ArrayList();
+		priorityList = new ArrayList<OptionsBean>();
 		//priorityList.add(new OptionsBean(""));
 		priorityList.add(new OptionsBean("Normal"));
 		priorityList.add(new OptionsBean("High"));
 		priorityList.add(new OptionsBean("Low"));
-		
-		statusList = new ArrayList();
+
+		statusList = new ArrayList<OptionsBean>();
 		//statusList.add(new OptionsBean("",""));
 		statusList.add(new OptionsBean("Active","A"));
 		statusList.add(new OptionsBean("Completed","C"));
 		statusList.add(new OptionsBean("Deleted","D"));
 	}
-	
+
 	public CustomFilter() {
 		providers = new HashSet();
 		assignees = new HashSet();
@@ -93,6 +94,14 @@ public class CustomFilter extends BaseObject {
 		setSort_order("asc");
 	}
 	
+	public String getMrp() {
+		return mrp;
+	}
+	
+	public void setMrp(String providerNumber) {
+		mrp = providerNumber;		
+	}
+
 	public Set getAssignees() {
 		return assignees;
 	}
@@ -116,7 +125,7 @@ public class CustomFilter extends BaseObject {
 	}
 	public void setProviders(Set providers) {
 		this.providers = providers;
-	}	
+	}
 
 	public Program getProgram() {
 		return program;
@@ -132,7 +141,7 @@ public class CustomFilter extends BaseObject {
 	public void setStatus(String status) {
 		this.status = status;
 	}
-	
+
 	/* have to do this */
 	public void setStartDate(String data) {
 		if(data == null || data.length()==0) {
@@ -145,7 +154,7 @@ public class CustomFilter extends BaseObject {
 			throw new IllegalArgumentException("Invalid service date, use yyyy-MM-dd");
 		}
 	}
-	
+
 	public String getStartDate() {
 		if(getStart_date() != null) {
 			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -153,7 +162,7 @@ public class CustomFilter extends BaseObject {
 		}
 		return "";
 	}
-	
+
 	public void setEndDate(String data) {
 		if(data == null || data.length()==0) {
 			data = "8888-12-31";
@@ -165,7 +174,7 @@ public class CustomFilter extends BaseObject {
 			throw new IllegalArgumentException("Invalid service date, use yyyy-MM-dd");
 		}
 	}
-	
+
 	public String getEndDate() {
 		if(getEnd_date() != null) {
 			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
@@ -189,7 +198,7 @@ public class CustomFilter extends BaseObject {
 	public void setStart_date(Date start_date) {
 		this.start_date = start_date;
 	}
-	
+
 	public String getCustom() {
 		return custom;
 	}
@@ -287,6 +296,6 @@ public class CustomFilter extends BaseObject {
 	public void setProgramId(String programId) {
 		this.programId = programId;
 	}
-    
-    
+
+
 }

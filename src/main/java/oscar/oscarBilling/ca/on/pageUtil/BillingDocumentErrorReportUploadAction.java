@@ -1,31 +1,32 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License.
-// * This program is free software; you can redistribute it and/or
-// * modify it under the terms of the GNU General Public License
-// * as published by the Free Software Foundation; either version 2
-// * of the License, or (at your option) any later version. *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-// * along with this program; if not, write to the Free Software
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-// *
-// * <OSCAR TEAM>
-// * This software was written for the
-// * Department of Family Medicine
-// * McMaster University
-// * Hamilton
-// * Ontario, Canada
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package oscar.oscarBilling.ca.on.pageUtil;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -44,6 +45,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.struts.action.Action;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -79,17 +81,30 @@ public class BillingDocumentErrorReportUploadAction extends Action {
 		BillingDocumentErrorReportUploadForm frm = (BillingDocumentErrorReportUploadForm) form;
 		request.getSession().setAttribute("BillingDocumentErrorReportUploadForm", frm);
 		FormFile file1 = frm.getFile1();
-		ArrayList messages = new ArrayList();
 		ActionMessages errors = new ActionMessages();
 
-		if (!saveFile(file1)) {
-			errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("errors.fileNotAdded"));
-			saveErrors(request, errors);
-			return (new ActionForward(mapping.getInput()));
+		String filename = request.getParameter("filename") == null ? "null" : request.getParameter("filename");
+		
+		if (filename == "null") {
+			if (!saveFile(file1)) {
+				errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("errors.fileNotAdded"));
+				saveErrors(request, errors);
+				return (new ActionForward(mapping.getInput()));
+			} else {
+				if (getData(file1.getFileName(), "DOCUMENT_DIR", request))
+					return file1.getFileName().startsWith("L") ? mapping.findForward("outside") : mapping.findForward("success");
+				else {
+					errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("errors.incorrectFileFormat"));
+					saveErrors(request, errors);
+					return (new ActionForward(mapping.getInput()));
+				}
+			}
 		} else {
-			if (getData(file1.getFileName(), request))
-				return mapping.findForward("success");
-			else {
+			if (getData(filename, "ONEDT_INBOX", request)) {
+				return filename.startsWith("L") ? mapping.findForward("outside") : mapping.findForward("success");
+			} else if (getData(filename, "ONEDT_ARCHIVE", request)) {
+				return filename.startsWith("L") ? mapping.findForward("outside") : mapping.findForward("success");
+			} else {
 				errors.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("errors.incorrectFileFormat"));
 				saveErrors(request, errors);
 				return (new ActionForward(mapping.getInput()));
@@ -110,7 +125,6 @@ public class BillingDocumentErrorReportUploadAction extends Action {
 
 		try {
 			// retrieve the file data
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			InputStream stream = file.getInputStream();
 			OscarProperties props = OscarProperties.getInstance();
 
@@ -132,6 +146,8 @@ public class BillingDocumentErrorReportUploadAction extends Action {
 
 			// close the stream
 			stream.close();
+			FileUtils.copyFileToDirectory(new File(retVal), new File(OscarProperties.getInstance().getProperty("ONEDT_INBOX")));
+			
 		} catch (FileNotFoundException e) {
 			MiscUtils.getLogger().error("File not found", e);
 			return isAdded = false;
@@ -153,46 +169,52 @@ public class BillingDocumentErrorReportUploadAction extends Action {
 	 * @param file
 	 * @return
 	 */
-	private boolean getData(String fileName, HttpServletRequest request) {
+	private boolean getData(String fileName, String pathDir, HttpServletRequest request) {
 		boolean isGot = false;
 
 		try {
 			OscarProperties props = OscarProperties.getInstance();
 			// properties must exist
-			String filepath = props.getProperty("DOCUMENT_DIR");
+			String filepath = props.getProperty(pathDir);
 			boolean bNewBilling = props.getProperty("isNewONbilling", "").equals("true") ? true : false;
 			if (!filepath.endsWith("/"))
 				filepath = new StringBuilder(filepath).insert(filepath.length(), "/").toString();
 			FileInputStream file = new FileInputStream(filepath + fileName);
 			MiscUtils.getLogger().debug("file path: " + filepath + fileName);
 			// Assign associated report Name
-			ArrayList messages = new ArrayList();
+			ArrayList<String> messages = new ArrayList<String>();
 			String ReportName = "";
 			String ReportFlag = "";
 
-			if (fileName.substring(0, 1).compareTo("E") == 0) {
+			if (fileName.substring(0, 1).compareTo("E") == 0 || fileName.substring(0, 1).compareTo("F") == 0) {
 				ReportName = "Claims Error Report";
 				BillingClaimsErrorReportBeanHandler hd = generateReportE(file, bNewBilling, fileName);
 				request.setAttribute("claimsErrors", hd);
 				isGot = hd.verdict;
 			}
-			if (fileName.substring(0, 1).compareTo("B") == 0) {
+			else if (fileName.substring(0, 1).compareTo("B") == 0) {
 				ReportName = "Claim Batch Acknowledgement Report";
 				BillingClaimBatchAcknowledgementReportBeanHandler hd = generateReportB(file);
 				request.setAttribute("batchAcks", hd);
 				isGot = hd.verdict;
 			}
-			if (fileName.substring(0, 1).compareTo("X") == 0) {
+			else if (fileName.substring(0, 1).compareTo("X") == 0) {
 				ReportName = "Claim File Rejection Report";
 				messages = generateReportX(file);
 				request.setAttribute("messages", messages);
 				isGot = reportXIsGenerated;
 			}
-			if (fileName.substring(0, 1).compareTo("R") == 0) {
+			else if (fileName.substring(0, 1).compareTo("R") == 0) {
 				ReportName = "EDT OBEC Output Specification";
 				BillingEDTOBECOutputSpecificationBeanHandler hd = generateReportR(file);
 				request.setAttribute("outputSpecs", hd);
 				isGot = hd.verdict;
+			}
+			else if (fileName.substring(0,1).compareTo("L") == 0) {
+				ReportName = "OUTSIDE USE REPORT";
+				request.setAttribute("backupfilepath", filepath);
+				request.setAttribute("filename", fileName);
+				isGot = true;
 			}
 			request.setAttribute("ReportName", ReportName);
 		} catch (FileNotFoundException fnfe) {
@@ -246,8 +268,8 @@ public class BillingDocumentErrorReportUploadAction extends Action {
 	 */
 	private boolean reportXIsGenerated = true;
 
-	private ArrayList generateReportX(FileInputStream file) {
-		ArrayList messages = new ArrayList();
+	private ArrayList<String> generateReportX(FileInputStream file) {
+		ArrayList<String> messages = new ArrayList<String>();
 		messages.add("M01 | Message Reason         Length     Msg Type   Filler  Record Image");
 		messages.add("M02 | File:    File Name    Date:   Mail Date   Time: Mail Time     Process Date");
 		InputStreamReader reader = new InputStreamReader(file);
@@ -296,13 +318,12 @@ public class BillingDocumentErrorReportUploadAction extends Action {
 	 */
 	private BillingEDTOBECOutputSpecificationBeanHandler generateReportR(FileInputStream file) {
 		BillingEDTOBECOutputSpecificationBeanHandler hd = new BillingEDTOBECOutputSpecificationBeanHandler(file);
-		Vector outputSpecVector = hd.getEDTOBECOutputSecifiationBeanVector();
+		Vector<BillingEDTOBECOutputSpecificationBean> outputSpecVector = hd.getEDTOBECOutputSecifiationBeanVector();
 		try {
 
 
 			for (int i = 0; i < outputSpecVector.size(); i++) {
-				BillingEDTOBECOutputSpecificationBean bean = (BillingEDTOBECOutputSpecificationBean) outputSpecVector
-						.elementAt(i);
+				BillingEDTOBECOutputSpecificationBean bean = outputSpecVector.elementAt(i);
 				String hin = bean.getHealthNo();
 				String responseCode = bean.getResponseCode();
 				int responseCodeNum = -1;

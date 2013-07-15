@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -44,7 +69,7 @@ import javax.persistence.TemporalType;
     @NamedQuery(name = "Document.findByObservationdate", query = "SELECT d FROM Document d WHERE d.observationdate = :observationdate"),
     @NamedQuery(name = "Document.findByReviewer", query = "SELECT d FROM Document d WHERE d.reviewer = :reviewer"),
     @NamedQuery(name = "Document.findByReviewdatetime", query = "SELECT d FROM Document d WHERE d.reviewdatetime = :reviewdatetime"),
-    @NamedQuery(name = "Document.findByNumberOfPages", query = "SELECT d FROM Document d WHERE d.numberOfPages = :numberOfPages"),
+    @NamedQuery(name = "Document.findByNumberOfPages", query = "SELECT d FROM Document d WHERE d.numberofpages = :numberofpages"),
     @NamedQuery(name = "Document.findPhotosByAppointmentNo", query = "SELECT d FROM Document d WHERE d.appointmentNo = :appointmentNo and d.doctype='photo'")})
 public class Document extends AbstractModel<Integer> implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -57,6 +82,11 @@ public class Document extends AbstractModel<Integer> implements Serializable {
    // private Integer id;
     @Column(name = "doctype")
     private String doctype;
+
+    private String docClass;
+
+    private String docSubClass;
+
     @Basic(optional = false)
     @Column(name = "docdesc")
     private String docdesc;
@@ -74,6 +104,7 @@ public class Document extends AbstractModel<Integer> implements Serializable {
     private String responsible;
     @Column(name = "source")
     private String source;
+    private String sourceFacility;
     @Column(name = "program_id")
     private Integer programId;
     @Column(name = "updatedatetime")
@@ -98,10 +129,10 @@ public class Document extends AbstractModel<Integer> implements Serializable {
     private Date reviewdatetime;
     @Basic(optional = false)
     @Column(name = "number_of_pages")
-    private int numberOfPages;
+    private int numberofpages;
     @Column(name="appointment_no")
-    private int appointmentNo;
-    
+    private Integer appointmentNo;
+
     public Document() {
     }
 
@@ -119,10 +150,10 @@ public class Document extends AbstractModel<Integer> implements Serializable {
         this.status = status;
         this.contenttype = contenttype;
         this.public1 = public1;
-        this.numberOfPages = numberOfPages;
+        this.numberofpages = numberOfPages;
 //        this.id=this.documentNo;
     }
-    
+
     public Integer getId(){
         return documentNo;
     }
@@ -254,22 +285,46 @@ public class Document extends AbstractModel<Integer> implements Serializable {
         this.reviewdatetime = reviewdatetime;
     }
 
-    public int getNumberOfPages() {
-        return numberOfPages;
+    public int getNumberofpages() {
+        return numberofpages;
     }
 
-    public void setNumberOfPages(int numberOfPages) {
-        this.numberOfPages = numberOfPages;
+    public void setNumberofpages(int numberOfPages) {
+        this.numberofpages = numberOfPages;
     }
 
-	public int getAppointmentNo() {
+	public Integer getAppointmentNo() {
 		return appointmentNo;
 	}
 
-	public void setAppointmentNo(int appointmentNo) {
+	public void setAppointmentNo(Integer appointmentNo) {
 		this.appointmentNo = appointmentNo;
-	}   
-    
-    
+	}
+
+	public String getDocClass() {
+    	return docClass;
+    }
+
+	public void setDocClass(String docClass) {
+    	this.docClass = docClass;
+    }
+
+	public String getDocSubClass() {
+    	return docSubClass;
+    }
+
+	public void setDocSubClass(String docSubClass) {
+    	this.docSubClass = docSubClass;
+    }
+
+	public String getSourceFacility() {
+    	return sourceFacility;
+    }
+
+	public void setSourceFacility(String sourceFacility) {
+    	this.sourceFacility = sourceFacility;
+    }
+
+
 
 }

@@ -1,5 +1,30 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.casemgmt.web;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
@@ -22,7 +47,8 @@ import oscar.oscarRx.data.RxPrescriptionData.Prescription;
 public class NoteDisplayNonNote implements NoteDisplay {
 
 	private static ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
-
+	SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+	
 	private Integer noteId;
 	private Date date;
 	private String note;
@@ -33,7 +59,12 @@ public class NoteDisplayNonNote implements NoteDisplay {
 	private String linkInfo;
 
 	public NoteDisplayNonNote(HashMap<String, ? extends Object> eform) {
-		date = (Date) eform.get("formDateAsDate");
+		try {
+			date = (formatter.parse((String)eform.get("formDate") + " " + (String)eform.get("formTime")));
+		}catch(ParseException e) {
+			date = (Date) eform.get("formDateAsDate");			
+		}
+		
 		note = eform.get("formName") + " : " + eform.get("formSubject");
 		provider = providerDao.getProvider((String) eform.get("providerNo"));
 		isEformData = true;
@@ -41,6 +72,8 @@ public class NoteDisplayNonNote implements NoteDisplay {
 	}
 
 	public NoteDisplayNonNote(PatientForm patientForm) {
+		//SimpleDateFormat sdf = new SimpleDateFormat("yy/MM/dd HH:mm:ss");
+		
 		date = patientForm.edited;
 		if( date == null ) {
 			date = patientForm.created;

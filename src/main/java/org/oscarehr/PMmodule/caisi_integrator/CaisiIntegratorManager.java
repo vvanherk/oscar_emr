@@ -1,43 +1,52 @@
-/*
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for
  * Centre for Research on Inner City Health, St. Michael's Hospital,
  * Toronto, Ontario, Canada
  */
+
 package org.oscarehr.PMmodule.caisi_integrator;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
 
+import javax.servlet.http.HttpSession;
+
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.lang.time.DateUtils;
 import org.apache.cxf.endpoint.Client;
 import org.apache.cxf.frontend.ClientProxy;
 import org.oscarehr.caisi_integrator.ws.CachedDemographicNote;
+import org.oscarehr.caisi_integrator.ws.CachedDemographicPrevention;
+import org.oscarehr.caisi_integrator.ws.CachedDemographicNoteCompositePk;
 import org.oscarehr.caisi_integrator.ws.CachedFacility;
+import org.oscarehr.caisi_integrator.ws.CachedMeasurement;
 import org.oscarehr.caisi_integrator.ws.CachedProgram;
 import org.oscarehr.caisi_integrator.ws.CachedProvider;
 import org.oscarehr.caisi_integrator.ws.ConnectException_Exception;
 import org.oscarehr.caisi_integrator.ws.DemographicTransfer;
-import org.oscarehr.caisi_integrator.ws.DemographicWs;
 import org.oscarehr.caisi_integrator.ws.DemographicWsService;
 import org.oscarehr.caisi_integrator.ws.DuplicateHinExceptionException;
 import org.oscarehr.caisi_integrator.ws.FacilityConsentPair;
@@ -56,6 +65,7 @@ import org.oscarehr.caisi_integrator.ws.ProviderWsService;
 import org.oscarehr.caisi_integrator.ws.ReferralWs;
 import org.oscarehr.caisi_integrator.ws.ReferralWsService;
 import org.oscarehr.caisi_integrator.ws.SetConsentTransfer;
+import org.oscarehr.caisi_integrator.ws.DemographicWs;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.Facility;
 import org.oscarehr.common.model.IntegratorConsent;
@@ -66,6 +76,7 @@ import org.oscarehr.util.CxfClientUtils;
 import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.QueueCache;
+import org.oscarehr.util.SessionConstants;
 
 /**
  * This class is a manager for integration related functionality. <br />
@@ -86,6 +97,33 @@ public class CaisiIntegratorManager {
 	
 	/** data put here should be segmented by the requesting provider as part of the cache key */
 	private static QueueCache<String, Object> segmentedDataCache=new QueueCache<String, Object>(4, 100, DateUtils.MILLIS_PER_HOUR);
+	
+	public static void setIntegratorOffline(boolean status){
+		HttpSession session = LoggedInInfo.loggedInInfo.get().session;
+		if(status){
+		session.setAttribute(SessionConstants.INTEGRATOR_OFFLINE,true);
+		}else{
+			session.removeAttribute(SessionConstants.INTEGRATOR_OFFLINE);
+		}
+	}
+	
+	public static void checkForConnectionError(Throwable exception){
+		Throwable rootException = ExceptionUtils.getRootCause(exception);
+		MiscUtils.getLogger().debug("Exception: "+exception.getClass().getName()+" --- "+rootException.getClass().getName());
+				
+		if (rootException instanceof java.net.ConnectException){
+			setIntegratorOffline(true);
+		}
+	}
+	
+	public static boolean isIntegratorOffline(){
+		HttpSession session = LoggedInInfo.loggedInInfo.get().session;
+		Object object = session.getAttribute(SessionConstants.INTEGRATOR_OFFLINE);
+		if (object != null){
+			return true;
+		}
+		return false;
+	}
 	
 	public static boolean isEnableIntegratedReferrals() {
 		Facility facility = LoggedInInfo.loggedInInfo.get().currentFacility;
@@ -113,12 +151,38 @@ public class CaisiIntegratorManager {
 		return (port);
 	}
 
-    public static List<CachedFacility> getRemoteFacilities() throws MalformedURLException {
+	
+
+	public static boolean haveAllRemoteFacilitiesSyncedIn(int seconds) throws MalformedURLException {
+		return haveAllRemoteFacilitiesSyncedIn(seconds,true);
+	}
+    		
+	public static boolean haveAllRemoteFacilitiesSyncedIn(int seconds,boolean useCachedData) throws MalformedURLException {
+		boolean synced = true;
+		Calendar timeConsideredStale = Calendar.getInstance();
 		
-    	@SuppressWarnings("unchecked")
-		List<CachedFacility> results=(List<CachedFacility>) basicDataCache.get("ALL_FACILITIES");
+		timeConsideredStale.add(Calendar.SECOND, -seconds);
+		
+		List<CachedFacility> remoteFacilities=  getRemoteFacilities(useCachedData);
+		for(CachedFacility remoteFacility : remoteFacilities){
+			Calendar lastDataUpdate = remoteFacility.getLastDataUpdate();
+			if( lastDataUpdate == null || timeConsideredStale.after(lastDataUpdate)){
+				return false;
+			}
+		}
+		return synced;
+	}
+
+	public static List<CachedFacility> getRemoteFacilities() throws MalformedURLException {
+		return getRemoteFacilities(true);
+	}
+	
+    public static List<CachedFacility> getRemoteFacilities(boolean useCachedData) throws MalformedURLException {
     	
-    	if (results==null)
+		@SuppressWarnings("unchecked")
+		List<CachedFacility> results=(List<CachedFacility>) basicDataCache.get("ALL_FACILITIES");
+    	    	
+    	if (!useCachedData  || results==null)
     	{
 			FacilityWs facilityWs = getFacilityWs();
 			results = Collections.unmodifiableList(facilityWs.getAllFacility());
@@ -126,9 +190,10 @@ public class CaisiIntegratorManager {
     	}
     	
 		return (results);
-	}
-
-	public static CachedFacility getRemoteFacility(int remoteFacilityId) throws MalformedURLException {
+	}	
+    
+	
+   public static CachedFacility getRemoteFacility(int remoteFacilityId) throws MalformedURLException {
 		for (CachedFacility facility : getRemoteFacilities()) {
 			if (facility.getIntegratorFacilityId().equals(remoteFacilityId)) return (facility);
 		}
@@ -368,7 +433,7 @@ public class CaisiIntegratorManager {
     public static List<CachedDemographicNote> getLinkedNotes(Integer demographicNo) throws MalformedURLException 
     {
  		LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
-		String sessionCacheKey="LINKED_NOTES:"+loggedInInfo.currentFacility.getId()+":"+loggedInInfo.loggedInProvider.getPractitionerNo()+":"+demographicNo;
+		String sessionCacheKey="LINKED_NOTES:"+loggedInInfo.currentFacility.getId()+":"+loggedInInfo.loggedInProvider.getProviderNo()+":"+demographicNo;
 
 		@SuppressWarnings("unchecked")
 		List<CachedDemographicNote> linkedNotes=(List<CachedDemographicNote>) segmentedDataCache.get(sessionCacheKey);
@@ -377,6 +442,79 @@ public class CaisiIntegratorManager {
 		{
 			DemographicWs demographicWs = getDemographicWs();
 			linkedNotes = Collections.unmodifiableList(demographicWs.getLinkedCachedDemographicNotes(demographicNo));
+			segmentedDataCache.put(sessionCacheKey, linkedNotes);
+		}
+		
+		return (linkedNotes);
+	}
+    
+    
+  
+      public static List<CachedDemographicPrevention> getLinkedPreventions(Integer demographicNo) throws MalformedURLException{
+ 		LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
+		String sessionCacheKey="LINKED_PREVS:"+loggedInInfo.currentFacility.getId()+":"+loggedInInfo.loggedInProvider.getProviderNo()+":"+demographicNo;
+
+		@SuppressWarnings("unchecked")
+		List<CachedDemographicPrevention> remotePreventions=(List<CachedDemographicPrevention>) segmentedDataCache.get(sessionCacheKey);
+		
+		if (remotePreventions==null)
+		{
+			DemographicWs demographicWs = getDemographicWs();
+			remotePreventions = Collections.unmodifiableList(demographicWs.getLinkedCachedDemographicPreventionsByDemographicId(demographicNo));
+			segmentedDataCache.put(sessionCacheKey, remotePreventions);
+		}
+		
+		return (remotePreventions);
+	} 
+      
+      public static List<CachedMeasurement> getLinkedMeasurements(Integer demographicNo) throws MalformedURLException{
+   		LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
+  		String sessionCacheKey="LINKED_MEASUREMENTS:"+loggedInInfo.currentFacility.getId()+":"+loggedInInfo.loggedInProvider.getProviderNo()+":"+demographicNo;
+
+  		@SuppressWarnings("unchecked")
+  		List<CachedMeasurement> remoteMeasurements=(List<CachedMeasurement>) segmentedDataCache.get(sessionCacheKey);
+  		
+  		if (remoteMeasurements==null)
+  		{
+  			DemographicWs demographicWs = getDemographicWs();
+  			remoteMeasurements = Collections.unmodifiableList(demographicWs.getLinkedCachedDemographicMeasurementByDemographicId(demographicNo));
+  			segmentedDataCache.put(sessionCacheKey, remoteMeasurements);
+  		}
+  		
+  		return (remoteMeasurements);
+  	}   
+      
+  
+    public static List<CachedDemographicNote> getLinkedNotesMetaData(Integer demographicNo) throws MalformedURLException 
+    {
+ 		LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
+		String sessionCacheKey="LINKED_NOTES_META:"+loggedInInfo.currentFacility.getId()+":"+loggedInInfo.loggedInProvider.getPractitionerNo()+":"+demographicNo;
+
+		@SuppressWarnings("unchecked")
+		List<CachedDemographicNote> linkedNotes=(List<CachedDemographicNote>) segmentedDataCache.get(sessionCacheKey);
+		
+		if (linkedNotes==null)
+		{
+			DemographicWs demographicWs = getDemographicWs();
+			linkedNotes = Collections.unmodifiableList(demographicWs.getLinkedCachedDemographicNoteMetaData(demographicNo));
+			segmentedDataCache.put(sessionCacheKey, linkedNotes);
+		}
+		
+		return (linkedNotes);
+	}
+    
+    public static List<CachedDemographicNote> getLinkedNotes(List<CachedDemographicNoteCompositePk> ids) throws MalformedURLException 
+    {
+ 		LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
+		String sessionCacheKey="LINKED_NOTES_META:"+loggedInInfo.currentFacility.getId()+":"+loggedInInfo.loggedInProvider.getPractitionerNo()+":"+ids;
+
+		@SuppressWarnings("unchecked")
+		List<CachedDemographicNote> linkedNotes=(List<CachedDemographicNote>) segmentedDataCache.get(sessionCacheKey);
+		
+		if (linkedNotes==null)
+		{
+			DemographicWs demographicWs = getDemographicWs();
+			linkedNotes = Collections.unmodifiableList(demographicWs.getLinkedCachedDemographicNotesByIds(ids));
 			segmentedDataCache.put(sessionCacheKey, linkedNotes);
 		}
 		

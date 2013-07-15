@@ -1,3 +1,20 @@
+/**
+ * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
 package oscar.oscarBilling.ca.on.pageUtil;
 
 import java.math.BigDecimal;
@@ -92,11 +109,11 @@ public class BillingCorrectionPrep {
 			ch1Obj.setCreator((String) requestData.getSession().getAttribute(
 					"user"));
 			
-			ch1Obj.setClinic((String)requestData.getParameter("site"));
+			ch1Obj.setClinic(requestData.getParameter("site"));
 			
-			ch1Obj.setProvince((String)requestData.getParameter("hc_type"));
+			ch1Obj.setProvince(requestData.getParameter("hc_type"));
 			
-			ch1Obj.setLocation((String)requestData.getParameter("xml_slicode"));
+			ch1Obj.setLocation(requestData.getParameter("xml_slicode"));
 			ret = dbObj.updateBillingClaimHeader(ch1Obj);
 		}
 		
@@ -329,8 +346,8 @@ public class BillingCorrectionPrep {
 				bStatusChange = true;
 			}
 
-			if (!oldObj.getSer_num().equals((String) vecUnit.get(i))
-					|| !oldObj.getFee().equals((String) vecFee.get(i))
+			if (!oldObj.getSer_num().equals(vecUnit.get(i))
+					|| !oldObj.getFee().equals(vecFee.get(i))
 					|| !oldObj.getDx().equals(sDx)
 					|| !oldObj.getService_date().equals(serviceDate)
 					|| bStatusChange) {
@@ -367,7 +384,7 @@ public class BillingCorrectionPrep {
 		for (int i = 0; i < lItemObj.size(); i++) {
 			oldObj = (BillingItemData) lItemObj.get(i);
 
-			if (sName.equals((String) oldObj.getService_code())) {
+			if (sName.equals(oldObj.getService_code())) {
 
 				ret = false;
 				break;

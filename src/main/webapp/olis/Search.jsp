@@ -1,4 +1,14 @@
-	<%@page contentType="text/html"%>
+<%--
+
+    Copyright (c) 2008-2012 Indivica Inc.
+
+    This software is made available under the terms of the
+    GNU General Public License, Version 2, 1991 (GPLv2).
+    License details are available via "indivica.ca/gplv2"
+    and "gnu.org/licenses/gpl-2.0.html".
+
+--%>
+<%@page contentType="text/html"%>
 	<%@page import="java.util.*,oscar.oscarDB.DBHandler,java.sql.ResultSet, org.oscarehr.common.dao.DemographicDao, 
 		org.oscarehr.common.model.Demographic, org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.common.model.Provider,
 		org.oscarehr.olis.dao.OLISRequestNomenclatureDao, org.oscarehr.olis.dao.OLISResultNomenclatureDao,

@@ -1,19 +1,21 @@
-/*
- * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved. *
+/**
+ * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * Yi Li
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
 package oscar.oscarBilling.ca.on.data;
 
 import java.io.BufferedReader;
@@ -30,28 +32,16 @@ import org.apache.log4j.Logger;
 
 import oscar.util.UtilDateUtilities;
 
-import oscar.SxmlMisc;
-
 public class JdbcBillingRAImpl {
 	private static final Logger _logger = Logger.getLogger(JdbcBillingRAImpl.class);
 	BillingONDataHelp dbObj = new BillingONDataHelp();
 
 	public int addOneRADtRecord(BillingRAData val) {
 		int retval = 0;
-		String sql = "insert into radetail values(\\N, " 
-				+ " " + val.raheader_no + " ," 
-				+ "'" + val.providerohip_no + "'," 
-				+ "'" + val.billing_no + "'," 
-				+ "'" + val.provider_group_billing_no + "'," 
-				+ "'" + val.service_code + "'," 
-				+ "'" + val.service_count + "',"
-				+ "'" + val.hin + "'," 
-				+ "'" + val.amountclaim + "'," 
-				+ "'" + val.amountpay + "'," 
-				+ "'" + val.service_date + "'," 
-				+ "'" + val.error_code + "'," 
-				+ "'" + val.billtype + "'," 
-				+ "'" + val.claim_no + "')";
+		String sql = "insert into radetail values(\\N, " + " " + val.raheader_no + " ," + "'" + val.providerohip_no
+				+ "'," + "'" + val.billing_no + "'," + "'" + val.service_code + "'," + "'" + val.service_count + "',"
+				+ "'" + val.hin + "'," + "'" + val.amountclaim + "'," + "'" + val.amountpay + "'," + "'"
+				+ val.service_date + "'," + "'" + val.error_code + "'," + "'" + val.billtype + "','" + val.claim_no + "')";
 		_logger.info("addOneRADtRecord(sql = " + sql + ")");
 		retval = dbObj.saveBillingRecord(sql);
 
@@ -183,16 +173,6 @@ public class JdbcBillingRAImpl {
 								+ UtilDateUtilities.DateToString(UtilDateUtilities.now(), "yyyy/MM/dd") + "','"
 								+ "<xml_cheque>" + total + "</xml_cheque>" + "')";
 						raNo = "" + dbObj.saveBillingRecord(sql);
-						// int rowsAffected =
-						// apptMainBean.queryExecuteUpdate(param, "save_rahd");
-
-						// rsdemo = null;
-						// rsdemo = apptMainBean.queryResults(param2,
-						// "search_rahd");
-						// can't make sure the record has only one result here
-						// while (rsdemo.next()) {
-						// raNo = rsdemo.getString("raheader_no");
-						// }
 					}
 				} // ends with "1"
 
@@ -307,10 +287,6 @@ public class JdbcBillingRAImpl {
 								+ claimno
 								+ "')";
 						int rowsAffected3 = dbObj.saveBillingRecord(sql);
-						// {"save_radt", "insert into radetail
-						// values('\\N',?,?,?,?,?,?,?,?,?,?,?)"},
-						// int rowsAffected3 =
-						// apptMainBean.queryExecuteUpdate(param4, "save_radt");
 					}
 				}
 
@@ -566,10 +542,9 @@ public class JdbcBillingRAImpl {
 			providerGroupBillingConditional = " and provider_group_billing_no = '" + providerGroupBillingNo + "'";
 		
 		List ret = new Vector();
-		String sql = "select * from radetail where raheader_no=" + raNo + " and providerohip_no='" + providerOhipNo + "'"
-				+ providerGroupBillingConditional
-				+ " and error_code<>'' and error_code not in(" + notErrorCode + ") ";
-		 _logger.info("getRAErrorReport(sql = " + sql + ")");
+		String sql = "select * from radetail where raheader_no=" + raNo + " and providerohip_no='" + providerOhipNo
+				+ "' and error_code<>'' and error_code not in(" + notErrorCode + ") ";
+		//_logger.info("getRAErrorReport(sql = " + sql + ")");
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
 		try {
 			while (rsdemo.next()) {
@@ -779,11 +754,10 @@ public class JdbcBillingRAImpl {
 				prop.setProperty("demo_name", demo_name);
 				prop.setProperty("demo_hin", demo_hin);
                 prop.setProperty("demo_doc",famProviderNo);
-                
-                if( site != null ) {
-                	prop.setProperty("site", site);
-                }
-               
+                prop.setProperty("claimNo",rsdemo.getString("claim_no"));
+                if(site==null) 
+                	site="";
+                prop.setProperty("site", site);
 				ret.add(prop);
 			}
 			rsdemo.close();

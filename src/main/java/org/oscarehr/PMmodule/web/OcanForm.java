@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.PMmodule.web;
 
 import java.util.ArrayList;
@@ -877,10 +900,9 @@ public class OcanForm {
 		
 		int doReassessment = 0;
 		
-		List<Demographic> demographicList = demographicDao.getDemographics();
-		ocanStaffFormDao.findAllByFacility(facilityId);
-		for(Demographic demographic: demographicList) {
-			Integer clientId = demographic.getDemographicNo();
+	
+		List<Integer> demographicList = ocanStaffFormDao.findClientsWithOcan(facilityId);
+		for(Integer clientId: demographicList) {
 			if(isItTimeToDoReassessment(facilityId, clientId)){
 				messages.append(clientId+" , ");
 				doReassessment ++;
@@ -898,16 +920,15 @@ public class OcanForm {
 		
 		boolean result = false;
 		
-		OcanStaffForm ocanStaffForm1 = ocanStaffFormDao.findLatestCompletedInitialOcan(facilityId,clientId);	
+		Object[] ocanStaffForm1 = ocanStaffFormDao.findLatestCompletedInitialOcan_startDates(facilityId,clientId);	
 		
-		OcanStaffForm ocanStaffForm = null;
-		ocanStaffForm = ocanStaffFormDao.findLatestCompletedReassessment(facilityId,clientId);	
+		Object[] ocanStaffForm = ocanStaffFormDao.findLatestCompletedReassessment_startDates(facilityId,clientId);	
 				
 		Date startDate = null;
 		if(ocanStaffForm!=null) {
-			startDate = OcanForm.getAssessmentStartDate(ocanStaffForm.getStartDate(),ocanStaffForm.getClientStartDate());
+			startDate = OcanForm.getAssessmentStartDate((Date)ocanStaffForm[0],(Date)ocanStaffForm[1]);
 		} else if(ocanStaffForm1!=null) {			
-			startDate = OcanForm.getAssessmentStartDate(ocanStaffForm1.getStartDate(),ocanStaffForm1.getClientStartDate());			
+			startDate = OcanForm.getAssessmentStartDate((Date)ocanStaffForm1[0],(Date)ocanStaffForm1[1]);			
 		} else {
 			return result;
 		}

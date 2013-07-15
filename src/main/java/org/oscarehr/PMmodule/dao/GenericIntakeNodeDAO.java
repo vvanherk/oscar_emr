@@ -1,21 +1,26 @@
 /**
- * Copyright (C) 2007.
- * Centre for Research on Inner City Health, St. Michael's Hospital, Toronto, Ontario, Canada.
- * 
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
  * of the License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
+
 package org.oscarehr.PMmodule.dao;
 
 import java.sql.Connection;
@@ -56,7 +61,7 @@ public class GenericIntakeNodeDAO extends HibernateDaoSupport {
 					"intakeNodeId must be non-null and greater than 0");
 		}
 
-		IntakeNode intakeNode = (IntakeNode) getHibernateTemplate().load(
+		IntakeNode intakeNode = getHibernateTemplate().load(
 				IntakeNode.class, intakeNodeId);
 		getChildren(intakeNode);
 
@@ -154,7 +159,7 @@ public class GenericIntakeNodeDAO extends HibernateDaoSupport {
 	}
 
 	public List<IntakeNode> getIntakeNodeByEqToId(Set<IntakeNode> iNodes)
-			throws SQLException {
+			 {
 		if (iNodes == null) {
 			throw new IllegalArgumentException(
 					"Parameters iNodes must be non-null");
@@ -189,9 +194,9 @@ public class GenericIntakeNodeDAO extends HibernateDaoSupport {
 			throw new IllegalArgumentException(
 					"intakeNodeLabelId must be non-null and greater than 0");
 		}
-		//in case the node with intakenodelabel id doesn't exist 
+		//in case the node with intakenodelabel id doesn't exist
 		try {
-			intakeNodeLabel = (IntakeNodeLabel) getHibernateTemplate().get(
+			intakeNodeLabel = getHibernateTemplate().get(
 					IntakeNodeLabel.class, intakeNodeLabelId);
 		} catch (ObjectNotFoundException onfe) {
 			LOG.warn("no node found for : " + intakeNodeLabelId);
@@ -204,7 +209,7 @@ public class GenericIntakeNodeDAO extends HibernateDaoSupport {
 			throw new IllegalArgumentException(
 					"intakeNodeTemplateId must be non-null and greater than 0");
 		}
-		IntakeNodeTemplate intakeNodeTemplate = (IntakeNodeTemplate) getHibernateTemplate()
+		IntakeNodeTemplate intakeNodeTemplate = getHibernateTemplate()
 				.get(IntakeNodeTemplate.class, intakeNodeTemplateId);
 		return intakeNodeTemplate;
 	}
@@ -249,7 +254,7 @@ public class GenericIntakeNodeDAO extends HibernateDaoSupport {
 	public void deleteIntakeNode(IntakeNode intakeNode) {
 		getHibernateTemplate().delete(intakeNode);
 	}
-	
+
 	public List<IntakeNodeJavascript> getIntakeNodeJavascriptLocation(String questionId) {
 		List<IntakeNodeJavascript> js = getHibernateTemplate().find("FROM IntakeNodeJavascript j where j.questionId=?",questionId);
 		return js;

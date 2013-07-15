@@ -1,16 +1,28 @@
-/*
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. This program is free
- * software; you can redistribute it and/or modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either version 2 of the License, or (at
- * your option) any later version. * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more details. * * You should have
- * received a copy of the GNU General Public License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * <OSCAR
- * TEAM> This software was written for the Department of Family Medicine McMaster University
- * Hamilton Ontario, Canada
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
+
 package oscar.form;
 
 import java.io.ByteArrayInputStream;
@@ -23,16 +35,23 @@ import java.util.Properties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager;
+import org.oscarehr.PMmodule.caisi_integrator.IntegratorFallBackManager;
 import org.oscarehr.caisi_integrator.ws.CachedDemographicForm;
+import org.oscarehr.caisi_integrator.ws.CachedProgram;
+import org.oscarehr.caisi_integrator.ws.CachedProvider;
+import org.oscarehr.caisi_integrator.ws.DemographicTransfer;
 import org.oscarehr.caisi_integrator.ws.DemographicWs;
 import org.oscarehr.caisi_integrator.ws.FacilityIdIntegerCompositePk;
+import org.oscarehr.caisi_integrator.ws.FacilityIdStringCompositePk;
 import org.oscarehr.common.dao.ClinicDAO;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.model.Clinic;
 import org.oscarehr.common.model.Demographic;
+import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 
+import oscar.OscarProperties;
 import oscar.oscarDB.DBHandler;
 import oscar.util.UtilDateUtilities;
 
@@ -99,7 +118,6 @@ public class FrmLabReq07Record extends FrmRecord {
         ResultSet rs = null;
         String sql = null;
 
-        if (!demoProvider.equals("")) {
 
             if (demoProvider.equals(provNo) ) {
                 // from provider table
@@ -146,22 +164,24 @@ public class FrmLabReq07Record extends FrmRecord {
                 }
                 rs.close();
 
-                // from provider table
-                sql = "SELECT CONCAT(last_name, ', ', first_name) AS provName, ohip_no FROM provider WHERE provider_no = "
-                        + demoProvider;
-                rs = DBHandler.GetSQL(sql);
-
-                if (rs.next()) {
-                    if( num.equals("") ) {
-                        num = oscar.Misc.getString(rs, "ohip_no");
-                        props.setProperty("practitionerNo", "0000-"+num+"-00");
-                    }
-                    props.setProperty("provName", oscar.Misc.getString(rs, "provName"));
-
+                if (!demoProvider.equals("")) {
+	                // from provider table
+	                sql = "SELECT CONCAT(last_name, ', ', first_name) AS provName, ohip_no FROM provider WHERE provider_no = "
+	                        + demoProvider;
+	                rs = DBHandler.GetSQL(sql);
+	
+	                if (rs.next()) {
+	                    if( num.equals("") ) {
+	                        num = oscar.Misc.getString(rs, "ohip_no");
+	                        props.setProperty("practitionerNo", "0000-"+num+"-00");
+	                    }
+	                    props.setProperty("provName", oscar.Misc.getString(rs, "provName"));
+	
+	                }
+	                rs.close();
                 }
-                rs.close();
             }
-        }
+        
         //get local clinic information
        	Clinic clinic = clinicDao.getClinic();
     	if(clinic != null) {
@@ -171,7 +191,50 @@ public class FrmLabReq07Record extends FrmRecord {
     		props.setProperty("clinicCity",clinic.getClinicCity());
     		props.setProperty("clinicPC",clinic.getClinicPostal());
     	}
-
+    	
+    	//lab_req_override=true
+    	OscarProperties oscarProps = OscarProperties.getInstance();
+    	if(oscarProps.getProperty("lab_req_provider","").length()>0) {
+    		props.setProperty("reqProvName", oscarProps.getProperty("lab_req_provider"));
+    	}
+    	if(oscarProps.getProperty("lab_req_billing_no","").length()>0) {
+    		props.setProperty("practitionerNo", oscarProps.getProperty("lab_req_billing_no"));
+    	}
+    	
+    	if (LoggedInInfo.loggedInInfo.get().currentFacility.isIntegratorEnabled()) {
+    	//if patient was from integrator link up doc from other site
+	    	try{
+		    	Integer localDemographicId = Integer.parseInt(props.getProperty("demographic_no"));
+		    	DemographicWs demographicWs = CaisiIntegratorManager.getDemographicWs();
+		    	List<DemographicTransfer> directLinks=demographicWs.getDirectlyLinkedDemographicsByDemographicId(localDemographicId);
+		    		
+		    	if (directLinks.size()>0){
+		    		props.setProperty("copy2clinician", "checked");
+		    		DemographicTransfer  demographicTransfer=directLinks.get(0);
+		    		        	
+		        	FacilityIdStringCompositePk providerPk=new FacilityIdStringCompositePk();
+		        	providerPk.setIntegratorFacilityId(demographicTransfer.getIntegratorFacilityId());
+		        	providerPk.setCaisiItemId(demographicTransfer.getLastUpdateUser());
+		        	CachedProvider p = CaisiIntegratorManager.getProvider(providerPk);
+		        	if(p != null){
+			            props.setProperty("copyLname", p.getLastName());
+			            props.setProperty("copyFname", p.getFirstName());
+			    		
+			    		List<CachedProgram> cps = CaisiIntegratorManager.getAllPrograms();
+			    		for(CachedProgram cp:cps){
+			    			if(providerPk.getIntegratorFacilityId() == cp.getFacilityIdIntegerCompositePk().getIntegratorFacilityId() && "OSCAR".equals(cp.getName()) &&  cp.getAddress() != null){
+			    				props.setProperty("copyAddress", cp.getAddress());  
+			    			}
+			    		}
+			    		
+		        	}
+		    	}
+		    	
+	    	}catch(Exception e){
+	    		logger.error("error",e);
+	    	}		
+    	}
+    	
         return props;
     }
 
@@ -201,14 +264,34 @@ public class FrmLabReq07Record extends FrmRecord {
     }
 
 
-    public static Properties getRemoteRecordProperties(Integer remoteFacilityId, Integer formId) throws IOException
+    public static Properties getRemoteRecordProperties(Integer remoteFacilityId, Integer formId,Integer demoNo) throws IOException
     {
     	FacilityIdIntegerCompositePk pk=new FacilityIdIntegerCompositePk();
     	pk.setIntegratorFacilityId(remoteFacilityId);
     	pk.setCaisiItemId(formId);
 
-    	DemographicWs demographicWs=CaisiIntegratorManager.getDemographicWs();
-    	CachedDemographicForm form=demographicWs.getCachedDemographicForm(pk);
+    	CachedDemographicForm form = null;
+    	try {
+			if (!CaisiIntegratorManager.isIntegratorOffline()){
+				DemographicWs demographicWs=CaisiIntegratorManager.getDemographicWs();
+			    form=demographicWs.getCachedDemographicForm(pk);
+			}
+		} catch (Exception e) {
+			logger.error("Unexpected error.", e);
+			CaisiIntegratorManager.checkForConnectionError(e);
+		}
+    	
+    	
+		if(CaisiIntegratorManager.isIntegratorOffline()){
+			Integer demographicNo = 0;
+			List<CachedDemographicForm> forms = IntegratorFallBackManager.getRemoteForms(demoNo, "formLabReq07");
+			for(CachedDemographicForm f:forms){
+				if (f.getFacilityIdIntegerCompositePk().getCaisiItemId() == pk.getCaisiItemId() && f.getFacilityIdIntegerCompositePk().getIntegratorFacilityId() == pk.getIntegratorFacilityId()){
+					form = f;
+					break;
+				}
+			}
+		}
 
     	ByteArrayInputStream bais=new ByteArrayInputStream(form.getFormData().getBytes());
 

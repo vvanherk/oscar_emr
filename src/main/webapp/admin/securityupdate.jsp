@@ -1,36 +1,40 @@
-<!--
-/*
- *
- * Copyright (c) 2005 Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
-<%@ page
-	import="java.sql.*, java.util.*,java.security.*,oscar.*,oscar.oscarDB.*, oscar.util.SqlUtils"
-	errorPage="errorpage.jsp"%>
+<%@ page import="java.sql.*, java.util.*,java.security.*,oscar.*,oscar.oscarDB.*, oscar.util.SqlUtils" errorPage="errorpage.jsp"%>
 <%@ page import="oscar.log.LogAction,oscar.log.LogConst"%>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
+<%@ page import="org.oscarehr.util.SpringUtils" %>
+<%@ page import="com.quatro.model.security.Security" %>
+<%@ page import="com.quatro.dao.security.SecurityDao" %>
+<%
+	SecurityDao securityDao = (SecurityDao)SpringUtils.getBean("securityDao");
+%>
 
 <html:html locale="true">
 <head>
@@ -57,61 +61,28 @@
     if (OscarProperties.getInstance().isPINEncripted()) sPin = Misc.encryptPIN(request.getParameter("pin"));
 
     int rowsAffected =0;
-    
-  String sDboperation=request.getParameter("dboperation");
-  if( ("*********".equals(request.getParameter("password")) || request.getParameter("password")==null) && 
-        ("****".equals(request.getParameter("pin")) || request.getParameter("pin")==null)){
-      sDboperation = sDboperation + "4";  // no password and PIN update
-      Object[] param =new Object[7];
-	  param[0]=request.getParameter("user_name");
-//      param[1]=sbTemp.toString();
-	  param[1]=request.getParameter("provider_no");
-//	  param[3]=sPin;
-      param[2]=request.getParameter("b_ExpireSet")==null?"0":request.getParameter("b_ExpireSet");
-	  param[3]=MyDateFormat.getSysDate(request.getParameter("date_ExpireDate"));
-	  param[4]=request.getParameter("b_LocalLockSet")==null?"0":request.getParameter("b_LocalLockSet");
-	  param[5]=request.getParameter("b_RemoteLockSet")==null?"0":request.getParameter("b_RemoteLockSet");
-	  param[6]=Integer.parseInt(request.getParameter("security_no"));
-      rowsAffected = oscarSuperManager.update("adminDao", sDboperation, param);
-  }else if("*********".equals(request.getParameter("password")) || request.getParameter("password")==null){
-      sDboperation = sDboperation + "3";  // no password update
-      Object[] param =new Object[8];
-	  param[0]=request.getParameter("user_name");
-//      param[1]=sbTemp.toString();
-	  param[1]=request.getParameter("provider_no");
-	  param[2]=sPin;
-      param[3]=request.getParameter("b_ExpireSet")==null?"0":request.getParameter("b_ExpireSet");
-	  param[4]=MyDateFormat.getSysDate(request.getParameter("date_ExpireDate"));
-	  param[5]=request.getParameter("b_LocalLockSet")==null?"0":request.getParameter("b_LocalLockSet");
-	  param[6]=request.getParameter("b_RemoteLockSet")==null?"0":request.getParameter("b_RemoteLockSet");
-	  param[7]=Integer.parseInt(request.getParameter("security_no"));
-      rowsAffected = oscarSuperManager.update("adminDao", sDboperation, param);
-  }else if("****".equals(request.getParameter("pin")) || request.getParameter("pin")==null){
-      sDboperation = sDboperation + "2";  //no PIN update
-      Object[] param =new Object[8];
-	  param[0]=request.getParameter("user_name");
-      param[1]=sbTemp.toString();
-	  param[2]=request.getParameter("provider_no");
-//	  param[3]=sPin;
-      param[3]=request.getParameter("b_ExpireSet")==null?"0":request.getParameter("b_ExpireSet");
-	  param[4]=MyDateFormat.getSysDate(request.getParameter("date_ExpireDate"));
-	  param[5]=request.getParameter("b_LocalLockSet")==null?"0":request.getParameter("b_LocalLockSet");
-	  param[6]=request.getParameter("b_RemoteLockSet")==null?"0":request.getParameter("b_RemoteLockSet");
-	  param[7]=Integer.parseInt(request.getParameter("security_no"));
-      rowsAffected = oscarSuperManager.update("adminDao", sDboperation, param);
-  }else{
-      Object[] param =new Object[9];
-	  param[0]=request.getParameter("user_name");
-      param[1]=sbTemp.toString();
-	  param[2]=request.getParameter("provider_no");
-	  param[3]=sPin;
-      param[4]=request.getParameter("b_ExpireSet")==null?"0":request.getParameter("b_ExpireSet");
-	  param[5]=MyDateFormat.getSysDate(request.getParameter("date_ExpireDate"));
-	  param[6]=request.getParameter("b_LocalLockSet")==null?"0":request.getParameter("b_LocalLockSet");
-	  param[7]=request.getParameter("b_RemoteLockSet")==null?"0":request.getParameter("b_RemoteLockSet");
-	  param[8]=Integer.parseInt(request.getParameter("security_no"));
-      rowsAffected = oscarSuperManager.update("adminDao", sDboperation, param);
-  }
+
+    Security s = securityDao.findById(Integer.parseInt(request.getParameter("security_no")));
+    if(s != null) {
+    	s.setUserName(request.getParameter("user_name"));
+	    s.setProviderNo(request.getParameter("provider_no"));
+	    s.setBExpireset(request.getParameter("b_ExpireSet")==null?0:Integer.parseInt(request.getParameter("b_ExpireSet")));
+	    s.setDateExpiredate(MyDateFormat.getSysDate(request.getParameter("date_ExpireDate")));
+	    s.setBLocallockset(request.getParameter("b_LocalLockSet")==null?0:Integer.parseInt(request.getParameter("b_LocalLockSet")));
+	    s.setBRemotelockset(request.getParameter("b_RemoteLockSet")==null?0:Integer.parseInt(request.getParameter("b_RemoteLockSet")));
+
+    	if(request.getParameter("password")==null || !"*********".equals(request.getParameter("password"))){
+    		s.setPassword(sbTemp.toString());
+    	}
+
+    	if(request.getParameter("pin")==null || !"****".equals(request.getParameter("pin"))) {
+    		s.setPin(sPin);
+    	}
+    	securityDao.saveOrUpdate(s);
+    	rowsAffected=1;
+    }
+
+
   if (rowsAffected ==1) {
       LogAction.addLog((String) request.getSession().getAttribute("user"), LogConst.UPDATE, LogConst.CON_SECURITY,
     		request.getParameter("security_no") + "->" + request.getParameter("user_name"), request.getRemoteAddr());

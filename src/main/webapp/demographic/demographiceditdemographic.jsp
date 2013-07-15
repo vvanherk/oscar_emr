@@ -1,43 +1,49 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%-- @ taglib uri="../WEB-INF/taglibs-log.tld" prefix="log" --%>
-<%--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
---%>
 <%@page import="org.oscarehr.phr.util.MyOscarUtils"%>
+<%@page import="org.oscarehr.util.LoggedInInfo" %>
 <%@page import="org.oscarehr.PMmodule.caisi_integrator.ConformanceTestHelper"%>
+<%@page import="org.oscarehr.common.dao.DemographicExtDao" %>
+<%@page import="org.oscarehr.util.SpringUtils" %>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%
-    if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
+	if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
     String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
     String demographic$ = request.getParameter("demographic_no") ;
 
     WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
-    CountryCodeDAO ccDAO =  (CountryCodeDAO) ctx.getBean("countryCodeDAO");
+    CountryCodeDao ccDAO =  (CountryCodeDao) ctx.getBean("countryCodeDao");
+    UserPropertyDAO pref = (UserPropertyDAO) ctx.getBean("UserPropertyDAO");                       
     List<CountryCode> countryList = ccDAO.getAllCountryCodes();
-    %>
+
+    DemographicExtDao demographicExtDao = SpringUtils.getBean(DemographicExtDao.class);
+%>
 <security:oscarSec roleName="<%=roleName$%>" objectName="_demographic"
 	rights="r" reverse="<%=true%>">
 	<% response.sendRedirect("../noRights.html"); %>
@@ -47,7 +53,7 @@
 	objectName='<%="_demographic$"+demographic$%>' rights="o"
 	reverse="<%=false%>">
 <bean:message key="demographic.demographiceditdemographic.accessDenied"/>
-<% response.sendRedirect("../noRights.html"); %>
+<% response.sendRedirect("../acctLocked.html"); %>
 </security:oscarSec>
 
 <%@ page import="java.util.*, java.sql.*, java.net.*,java.text.DecimalFormat, oscar.*, oscar.oscarDemographic.data.ProvinceNames, oscar.oscarWaitingList.WaitingList, oscar.oscarReport.data.DemographicSets,oscar.log.*"%>
@@ -63,12 +69,12 @@
 <%@ page import="org.oscarehr.casemgmt.model.CaseManagementNoteLink" %>
 <%@ page import="org.oscarehr.casemgmt.service.CaseManagementManager" %>
 <%@ page import="org.oscarehr.util.SpringUtils"%>
-<%@page import="org.oscarehr.common.model.Billingreferral" %>
-<%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
+<%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
+<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
 <%@page import="org.oscarehr.common.model.DemographicCust" %>
 <%@page import="org.oscarehr.common.dao.DemographicCustDao" %>
 <%
-	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
 	DemographicCustDao demographicCustDao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
 %>
 <jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
@@ -80,7 +86,7 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/phr-tag.tld" prefix="phr"%>
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar"%>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="http://jakarta.apache.org/struts/tags-logic"
 	prefix="logic"%>
 <%@ taglib uri="/WEB-INF/special_tag.tld" prefix="special" %>
@@ -117,9 +123,8 @@
 
         Boolean isMobileOptimized = session.getAttribute("mobileOptimized") != null;
 	ProvinceNames pNames = ProvinceNames.getInstance();
-	oscar.oscarDemographic.data.DemographicExt ext = new oscar.oscarDemographic.data.DemographicExt();
-	ArrayList arr = ext.getListOfValuesForDemo(demographic_no);
-	Hashtable demoExt = ext.getAllValuesForDemo(demographic_no);
+	List<String[]> arr = demographicExtDao.getListOfValuesForDemo(demographic_no);
+	Map<String,String> demoExt = demographicExtDao.getAllValuesForDemo(demographic_no);
 
     GregorianCalendar now=new GregorianCalendar();
     int curYear = now.get(Calendar.YEAR);
@@ -139,6 +144,13 @@
 <!-- calendar stylesheet -->
 <link rel="stylesheet" type="text/css" media="all"
 	href="../share/calendar/calendar.css" title="win2k-cold-1" />
+
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
+<% if (OscarProperties.getInstance().getBooleanProperty("workflow_enhance", "true")) { %>
+<script language="javascript" src="<%=request.getContextPath() %>/hcHandler/hcHandler.js"></script>
+<script language="javascript" src="<%=request.getContextPath() %>/hcHandler/hcHandlerUpdateDemographic.js"></script>
+<link rel="stylesheet" href="<%=request.getContextPath() %>/hcHandler/hcHandler.css" type="text/css" />
+<% } %>
 
 <!-- main calendar program -->
 <script type="text/javascript" src="../share/calendar/calendar.js"></script>
@@ -553,6 +565,16 @@ function removeAccents(s){
 
 </script>
 <script language="JavaScript">
+
+function showEdit(){
+    document.getElementById('editDemographic').style.display = 'block';
+    document.getElementById('viewDemographics2').style.display = 'none';
+    document.getElementById('updateButton').style.display = 'block';
+    document.getElementById('swipeButton').style.display = 'block';
+    document.getElementById('editBtn').style.display = 'none';
+    document.getElementById('closeBtn').style.display = 'inline';
+}
+
 function showHideDetail(){
     showHideItem('editDemographic');
     showHideItem('viewDemographics2');
@@ -614,6 +636,40 @@ function showMenu(menuNumber, eventObj) {
     return showPopup(menuId, eventObj);
 }
 
+<%if (OscarProperties.getInstance().getProperty("workflow_enhance")!=null && OscarProperties.getInstance().getProperty("workflow_enhance").equals("true")) {%>
+
+function showAppt (targetAppt, eventObj) {
+    if(eventObj) {
+	targetObjectId = 'menu' + targetAppt;
+	hideCurrentPopup();
+	eventObj.cancelBubble = true;
+	moveObject(targetObjectId, 300, 200);
+	if( changeObjectVisibility(targetObjectId, 'visible') ) {
+	    window.currentlyVisiblePopup = targetObjectId;
+	    return true;
+	} else {
+	    return false;
+	}
+    } else {
+	return false;
+    }
+} // showPopup
+
+function closeApptBox(e) {
+	if (!e) var e = window.event;
+	var tg = (window.event) ? e.srcElement : e.target;
+	if (tg.nodeName != 'DIV') return;
+	var reltg = (e.relatedTarget) ? e.relatedTarget : e.toElement;
+	while (reltg != tg && reltg.nodeName != 'BODY')
+		reltg= reltg.parentNode
+	if (reltg== tg) return;
+
+	// Mouseout took place when mouse actually left layer
+	// Handle event
+	hideCurrentPopup();
+}
+<%}%>
+
 function add2url(txt) {
     var reasonLabel = "reason=";
     var encTypeLabel = "encType=";
@@ -666,6 +722,20 @@ function addToPatientSet(demoNo, patientSet) {
 </security:oscarSec>
 
 var demographicNo='<%=demographic_no%>';
+
+
+function checkRosterStatus(){	
+	<oscar:oscarPropertiesCheck property="FORCED_ROSTER_INTEGRATOR_LOCAL_STORE" value="yes">	
+	var rosterSelect = document.getElementById("roster_status");
+	if(rosterSelect.getValue() == "RO"){
+		var primaryEmr = document.getElementById("primaryEMR");
+		primaryEmr.value = "1";
+		primaryEmr.disable(true);
+	}
+	</oscar:oscarPropertiesCheck>
+	return true;
+}
+
 </script>
 
 <style type="text/css">
@@ -684,7 +754,7 @@ div.demographicSection h3 {
    background-color: #ccccff;
    font-size: 8pt;
    font-variant:small-caps;
-   font:bold;
+   font-weight:bold;
    margin-top:0px;
    padding-top:0px;
    margin-bottom:0px;
@@ -723,7 +793,7 @@ div.demographicWrapper {
     position: absolute;
     visibility: hidden;
     background-color: #6699cc;
-    layer-background-color: #6699cc;
+    /*layer-background-color: #6699cc;*/
     color: white;
     border-left: 1px solid black;
     border-top: 1px solid black;
@@ -741,7 +811,7 @@ div.demographicWrapper {
 }
 </style>
 </head>
-<body onLoad="setfocus(); checkONReferralNo(); formatPhoneNum();"
+<body onLoad="setfocus(); checkONReferralNo(); formatPhoneNum();checkRosterStatus();"
 	topmargin="0" leftmargin="0" rightmargin="0">
 <table class="MainTable" id="scrollNumber1" name="encounterTable">
 	<tr class="MainTableTopRow">
@@ -778,7 +848,8 @@ div.demographicWrapper {
                                 String birthYear="0000", birthMonth="00", birthDate="00";
 
                                 int param = Integer.parseInt(demographic_no);
-
+                                rs = apptMainBean.queryResults(param, "search_detail");
+                                rs.next();
 
                                 if(demographic==null) {
                                         out.println("failed!!!");
@@ -817,6 +888,11 @@ div.demographicWrapper {
 				<bean:message key="demographic.demographiceditdemographic.msgNextAppt"/>: <oscar:nextAppt demographicNo='<%=demographic.getDemographicNo().toString()%>' />
 				</span>
 
+				<%LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
+				if (loggedInInfo.currentFacility.isIntegratorEnabled()){%>
+        		<jsp:include page="../admin/IntegratorStatus.jspf"></jsp:include>
+        		<%}%>
+				
 				</td>
 			</tr>
 		</table>
@@ -1047,11 +1123,20 @@ if(wLReadonly.equals("")){
                             <td> <a href="#" onclick="popup(300,300,'demographicCohort.jsp?demographic_no=<%=demographic.getDemographicNo()%>', 'cohort'); return false;"><bean:message key="demographic.demographiceditdemographic.msgAddPatientSet"/></a>
                             </td>
                         </tr>
+                        
+           <%
+           	if(LoggedInInfo.loggedInInfo.get().currentFacility.isIntegratorEnabled()) {
+           %>             
+           <tr>
+               <td> <a href="#" onclick="popup(500,500,'../integrator/manage_linked_clients.jsp?demographicId=<%=demographic.getDemographicNo()%>', 'manage_linked_clients'); return false;">Integrator Linking</a>
+               </td>
+           </tr>
+           <% } %>
 			<oscar:oscarPropertiesCheck property="MY_OSCAR" value="yes">
 				<phr:indivoRegistered provider="<%=curProvider_no%>"
 					demographic="<%=demographic_no%>">
                                 <tr class="Header">
-				     <td style="font-weight: bold">f<bean:message key="global.personalHealthRecord"/></td>
+				     <td style="font-weight: bold"><bean:message key="global.personalHealthRecord"/></td>
                                 </tr>
 					<tr>
 						<td>
@@ -1100,12 +1185,20 @@ if(wLReadonly.equals("")){
               	</tr>
                  </special:SpecialPlugin>
                  <special:SpecialPlugin moduleName="inboxmnger" reverse="true">
-			<tr>
-				<td><!--th><a href="javascript: function myFunction() {return false; }" onClick="popupPage(500,600,'demographicsummary.jsp?demographic_no=<%=demographic.getDemographicNo()%>')">Patient Summary</a> </th-->
+			<tr><td>
 				<a href="javascript: function myFunction() {return false; }"
 					onClick="popupPage(710,970,'../dms/documentReport.jsp?function=demographic&doctype=lab&functionid=<%=demographic.getDemographicNo()%>&curUser=<%=curProvider_no%>')"><bean:message
 					key="demographic.demographiceditdemographic.msgDocuments" /></a></td>
 			</tr>
+                        <%
+                        UserProperty upDocumentBrowserLink = pref.getProp(curProvider_no, UserProperty.EDOC_BROWSER_IN_MASTER_FILE);
+                        if ( upDocumentBrowserLink != null && upDocumentBrowserLink.getValue() != null && upDocumentBrowserLink.getValue().equals("yes")) {%>
+                        <tr><td>
+				<a href="javascript: function myFunction() {return false; }"
+					onClick="popupPage(710,970,'../dms/documentBrowser.jsp?function=demographic&doctype=lab&functionid=<%=demographic.getDemographicNo()%>&categorykey=Private Documents')"><bean:message
+					key="demographic.demographiceditdemographic.msgDocumentBrowser" /></a></td>
+			</tr>
+                        <%}%>
 			<tr>
 				<td><a
 					href="javascript: function myFunction() {return false; }"
@@ -1210,6 +1303,88 @@ if (iviewTag!=null && !"".equalsIgnoreCase(iviewTag.trim())){
                                                    <% } %>
 						</td>
 					</tr>
+					
+					<%if (OscarProperties.getInstance().getProperty("workflow_enhance") != null && OscarProperties.getInstance().getProperty("workflow_enhance").equals("true")) {%>
+					
+					<tr bgcolor="#CCCCFF">
+                        <td colspan="4">
+                        <table border="0" width="100%" cellpadding="0" cellspacing="0">
+                            <tr>
+                                <td width="30%" valign="top">
+                                <span id="editButton1" style="display:inline;">
+                                <security:oscarSec
+                                    roleName="<%=roleName$%>" objectName="_demographic" rights="w">
+                                    <input type="button"
+                                        value="<bean:message key="demographic.demographiceditdemographic.msgEdit"/>"
+                                        onclick="showHideDetail(); return false;">
+                                </security:oscarSec>
+                                </span>
+                                <span id="cancelButton1" style="display:none;">
+                                <security:oscarSec
+                                    roleName="<%=roleName$%>" objectName="_demographic" rights="w">
+                                    <input type="button" 
+                                        value="<bean:message key="demographic.demographiceditdemographic.msgCancel"/>"
+                                        onclick="showHideDetail(); return false;">
+                                </security:oscarSec>
+                                </span>
+                                
+                                <input
+                                    type="hidden" name="displaymode" value="Update Record">
+                                <!-- security code block --> <span id="updateButton1"
+                                    style="display: none;"> <security:oscarSec
+                                    roleName="<%=roleName$%>" objectName="_demographic" rights="w">
+                                    <input type="submit"
+                                        value="<bean:message key="demographic.demographiceditdemographic.btnUpdate"/>">
+                                </security:oscarSec> </span> <!-- security code block -->
+                                <input type="hidden"
+                                    name="dboperation" value="update_record"> <%
+                                  if (vLocale.getCountry().equals("BR")) { %>
+                                <input type="hidden" name="dboperation2"
+                                    value="update_record_ptbr">
+                                  <%}%>
+                                <br><input type="button" value="<bean:message key="demographic.demographiceditdemographic.msgExport"/>"
+                                    onclick="window.open('demographicExport.jsp?demographicNo=<%=apptMainBean.getString(rs,"demographic_no")%>');">
+                                </td>
+                                <td width="30%" align='center' valign="top">
+                                <% if (OscarProperties.getInstance().getBooleanProperty("workflow_enhance", "true")) { %>
+									<span style="position: relative; float: right; font-style: italic; background: black; color: white; padding: 4px; font-size: 12px; border-radius: 3px;">
+										<span class="_hc_status_icon _hc_status_success"></span>Ready for Card Swipe
+									</span>
+								<% } %>	
+                                <% if (!OscarProperties.getInstance().getBooleanProperty("workflow_enhance", "true")) { %>
+								<span id="swipeButton" style="display: inline;"> 
+                                    <input type="button" name="Button"
+                                    value="<bean:message key="demographic.demographiceditdemographic.btnSwipeCard"/>"
+                                    onclick="window.open('zdemographicswipe.jsp','', 'scrollbars=yes,resizable=yes,width=600,height=300, top=360, left=0')">
+                                </span> <!--input type="button" name="Button" value="<bean:message key="demographic.demographiceditdemographic.btnSwipeCard"/>" onclick="javascript:window.alert('Health Card Number Already Inuse');"-->
+                                <% } %>
+                                </td>
+                                <td width="40%" align='right' valign="top">
+                                
+                                <input type="button" size="110" name="Button"
+                                    value="<bean:message key="demographic.demographiceditdemographic.btnCreatePDFEnvelope"/>"
+                                    onclick="window.location='../report/GenerateEnvelopes.do?demos=<%=apptMainBean.getString(rs,"demographic_no")%>'">
+                                <input type="button" size="110" name="Button"
+                                    value="<bean:message key="demographic.demographiceditdemographic.btnCreatePDFLabel"/>"
+                                    onclick="window.location='printDemoLabelAction.do?demographic_no=<%=apptMainBean.getString(rs,"demographic_no")%>'">
+                                <input type="button" size="110" name="Button"
+                                    value="<bean:message key="demographic.demographiceditdemographic.btnCreatePDFAddressLabel"/>"
+                                    onclick="window.location='printDemoAddressLabelAction.do?demographic_no=<%=apptMainBean.getString(rs,"demographic_no")%>'">
+                                <input type="button" size="110" name="Button"
+                                    value="<bean:message key="demographic.demographiceditdemographic.btnCreatePDFChartLabel"/>"
+                                    onclick="window.location='printDemoChartLabelAction.do?demographic_no=<%=apptMainBean.getString(rs,"demographic_no")%>'">
+                                <input type="button" name="Button" size="110"
+                                    value="<bean:message key="demographic.demographiceditdemographic.btnPrintLabel"/>"
+                                    onclick="window.location='demographiclabelprintsetting.jsp?demographic_no=<%=apptMainBean.getString(rs,"demographic_no")%>'">
+                                </td>
+                                                        </tr>
+                        </table>
+                        </td>
+                    </tr>
+					
+					
+					<%} %>
+					
 					<tr>
 						<td class="lightPurple"><!---new-->
 						<div style="display: inline;" id="viewDemographics2">
@@ -1391,7 +1566,7 @@ if ( PatStat.equals(Dead) ) {%>
 						<h3>&nbsp;<bean:message
 							key="demographic.demographiceditdemographic.rxInteractionWarningLevel" /></h3>
                               <%
-                              	String warningLevel = (String)demoExt.get("rxInteractionWarningLevel");
+                              	String warningLevel = demoExt.get("rxInteractionWarningLevel");
                               	if(warningLevel==null) warningLevel="0";
 	          					String warningLevelStr = "Not Specified";
 	          					if(warningLevel.equals("1")) {warningLevelStr="Low";}
@@ -1473,6 +1648,305 @@ if ( PatStat.equals(Dead) ) {%>
 						</ul>
 						</div>
 
+						<%if (OscarProperties.getInstance().getProperty("workflow_enhance")!=null && OscarProperties.getInstance().getProperty("workflow_enhance").equals("true")) {%>
+						<div class="demographicSection">
+                        <h3>&nbsp;<bean:message key="demographic.demographiceditdemographic.msgInternalProviders"/></h3>
+                        <div style="background-color: #EEEEFF;">
+                        <ul>
+			<%!	// ===== functions for quick appointment booking =====
+			
+			
+				
+					
+				// convert hh:nn:ss format to elapsed minutes (from 00:00:00)
+				int timeStrToMins (String timeStr) {
+					String[] temp = timeStr.split(":");
+					return Integer.parseInt(temp[0])*60+Integer.parseInt(temp[1]);
+				}
+			%>
+			<%	// ===== quick appointment booking =====
+				// database access object, data objects for looking things up
+				
+				
+				oscar.oscarBilling.ca.on.data.BillingONDataHelp dbObj = new oscar.oscarBilling.ca.on.data.BillingONDataHelp();
+				String[] twoLetterDate = {"", "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"};
+						
+				// build templateMap, which maps template codes to their associated duration
+				Map<String, String> templateMap = new HashMap<String, String>();
+				String templateSql = "select code, duration from scheduletemplatecode where bookinglimit > 0 and duration != ''";
+				ResultSet templateResult = dbObj.searchDBRecord(templateSql);
+				while (templateResult.next()) { 
+					templateMap.put(apptMainBean.getString(templateResult,"code"), apptMainBean.getString(templateResult,"duration"));
+				}
+
+				// build list of providers associated with this patient 
+				Map<String, Map<String, Map<String,String>>> provMap = new HashMap<String, Map<String, Map<String,String>>>();
+				if (rs!=null) {
+					provMap.put("doctor", new HashMap<String, Map<String,String>>());
+					provMap.get("doctor").put("prov_no", new HashMap<String, String>());
+					provMap.get("doctor").get("prov_no").put("no", apptMainBean.getString(rs,"provider_no"));
+				}
+				if (StringUtils.isNotEmpty(providerBean.getProperty(resident,""))) {
+					provMap.put("prov1", new HashMap<String, Map<String,String>>());
+					provMap.get("prov1").put("prov_no", new HashMap<String, String>());
+					provMap.get("prov1").get("prov_no").put("no", resident);
+				}
+				if (StringUtils.isNotEmpty(providerBean.getProperty(midwife,""))) {
+					provMap.put("prov2", new HashMap<String, Map<String,String>>());
+					provMap.get("prov2").put("prov_no", new HashMap<String, String>());
+					provMap.get("prov2").get("prov_no").put("no", midwife); 
+				}
+				if (StringUtils.isNotEmpty(providerBean.getProperty(nurse,""))) {
+					provMap.put("prov3", new HashMap<String, Map<String,String>>());
+					provMap.get("prov3").put("prov_no", new HashMap<String, String>());
+					provMap.get("prov3").get("prov_no").put("no", nurse);
+				}
+				
+				// precompute all data for the providers associated with this patient
+				for (String thisProv : provMap.keySet()) {
+					String thisProvNo = provMap.get(thisProv).get("prov_no").get("no");
+
+					// starting tomorrow, look for available appointment slots
+					Calendar qApptCal = new GregorianCalendar();
+					qApptCal.add(Calendar.DATE, 1);
+					int numDays = 0;
+					int maxLookahead = 90;
+
+					while ((numDays < 5) && (maxLookahead > 0)) {
+						int qApptYear = qApptCal.get(Calendar.YEAR);
+						int qApptMonth = (qApptCal.get(Calendar.MONTH)+1);
+						int qApptDay = qApptCal.get(Calendar.DAY_OF_MONTH);
+						String qApptWkDay = twoLetterDate[qApptCal.get(Calendar.DAY_OF_WEEK)];
+                                		String qCurDate = qApptYear+"-"+qApptMonth+"-"+qApptDay;
+						
+						// get timecode string template associated with this day, number of minutes each slot represents
+						String timecodeSql = "select timecode from scheduletemplate, (select hour from (select provider_no, hour, status from scheduledate where sdate='"+qCurDate+"') as df where status = 'A' and provider_no='"+thisProvNo+"') as hf where scheduletemplate.name=hf.hour and (scheduletemplate.provider_no='"+thisProvNo+"' or scheduletemplate.provider_no='Public')";
+						// String timecodeSql = "select scheduletemplate.timecode from scheduledate left join scheduletemplate on (scheduletemplate.name=scheduledate.hour) where  scheduledate.sdate='"+qCurDate+"' and scheduledate.provider_no='"+thisProvNo+"' and scheduledate.status = 'A' and (scheduletemplate.provider_no='"+thisProvNo+"' or scheduletemplate.provider_no='Public');";
+		                                ResultSet timecodeResult = dbObj.searchDBRecord(timecodeSql);
+
+						// if theres a template on this day, continue
+                                		if (timecodeResult.next()) {
+
+						String timecode = apptMainBean.getString(timecodeResult,"timecode");
+                  	             		int timecodeInterval = 1440/timecode.length();
+
+						// build schedArr, which has 1s where template slots are
+                                		int[] schedArr = new int[timecode.length()];
+                                		String schedChar;
+                                		for (int i=0; i<timecode.length(); i++) {
+                                        		schedChar = ""+timecode.charAt(i);
+                                        		if (!schedChar.equals("_")) {
+													if (templateMap.get(""+timecode.charAt(i)) != null) {
+					                                                			schedArr[i] = 1;
+													}
+                                        		}
+                                		}
+
+						// get list of appointments on this day
+						String apptListSql = "select start_time, end_time from appointment where appointment_date='"+qCurDate+"' and provider_no='"+thisProvNo+"' and status != 'N' and status != 'C'";
+						ResultSet apptListResult = dbObj.searchDBRecord(apptListSql);
+						int start_index, end_index;
+
+						// put 0s in schedArr where appointments are
+						while(apptListResult.next()) {
+							start_index = timeStrToMins(apptMainBean.getString(apptListResult,"start_time"))/timecodeInterval;
+							end_index = timeStrToMins(apptMainBean.getString(apptListResult,"end_time"))/timecodeInterval;
+							
+							// very late appts may push us past the time range we care about 
+							// trying to invalidate these times will lead to a ArrayIndexOutOfBoundsException
+							// fix this so we stay within the bounds of schedArr
+							if (end_index > (timecode.length()-1)) {
+								end_index = timecode.length()-1;
+							}
+
+							// protect against the dual case as well
+							if (start_index < 0) {
+								start_index = 0;
+							} 
+							
+							// handle appts of duration longer than template interval
+							for (int i=start_index; i<=end_index; i++) {
+								schedArr[i] = 0;
+							}
+						}
+
+						// list slots that can act as start times for appointments of template specified length
+						boolean enoughRoom;
+						boolean validDay = false;
+						int templateDuration, startHour, startMin;
+						String startTimeStr, endTimeStr, sortDateStr;
+						String timecodeChar;
+						for (int i=0; i<timecode.length(); i++) {
+							if (schedArr[i] == 1) {
+								enoughRoom = true;
+								timecodeChar = ""+timecode.charAt(i);
+								templateDuration = Integer.parseInt(templateMap.get(timecodeChar));
+								for (int n=0; n<templateDuration/timecodeInterval; n++) {
+									if (((i+n) < (schedArr.length-1)) && (schedArr[i+n] != 1)) {
+										enoughRoom=false;
+									}
+								}
+								if (enoughRoom) {
+									validDay = true;
+									sortDateStr = qApptYear+"-"+String.format("%02d",qApptMonth)+"-"+String.format("%02d",qApptDay);
+									if (!provMap.get(thisProv).containsKey(sortDateStr+","+qApptWkDay+" "+qApptMonth+"-"+qApptDay)) {
+										provMap.get(thisProv).put(sortDateStr+","+qApptWkDay+" "+qApptMonth+"-"+qApptDay, new HashMap<String, String>());
+									}
+									startHour = i*timecodeInterval / 60;
+									startMin = i*timecodeInterval % 60;
+									startTimeStr = String.format("%02d",startHour)+":"+String.format("%02d",startMin);
+									endTimeStr = String.format("%02d",startHour)+":"+String.format("%02d",startMin+timecodeInterval-1);
+
+									provMap.get(thisProv).get(sortDateStr+","+qApptWkDay+" "+qApptMonth+"-"+qApptDay).put(startTimeStr+","+timecodeChar, "../appointment/addappointment.jsp?demographic_no="+apptMainBean.getString(rs,"demographic_no")+"&name="+URLEncoder.encode(apptMainBean.getString(rs,"last_name")+","+apptMainBean.getString(rs,"first_name"))+"&provider_no="+thisProvNo+"&bFirstDisp=true&year="+qApptYear+"&month="+qApptMonth+"&day="+qApptDay+"&start_time="+startTimeStr+"&end_time="+endTimeStr+"&duration="+templateDuration+"&search=true");
+								}
+							}
+						}
+						
+						if (validDay) {
+							numDays++;
+						}
+						}
+						
+						// look at the next day
+						qApptCal.add(Calendar.DATE, 1);
+						maxLookahead--;
+					} 
+				}
+			%>
+                            <% if (apptMainBean.getString(rs,"provider_no")!=null) { %>
+                            <li>
+                            <% if(oscarProps.getProperty("demographicLabelDoctor") != null) { out.print(oscarProps.getProperty("demographicLabelDoctor","")); } else { %>
+                            <bean:message
+                                key="demographic.demographiceditdemographic.formDoctor" />
+                            <% } %>: <b><%=providerBean.getProperty(apptMainBean.getString(rs,"provider_no"),"")%></b>
+                        <% // ===== quick appointment booking for doctor =====
+                        if (provMap.get("doctor") != null) {
+				%><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%
+				boolean firstBar = true;
+                                ArrayList<String> sortedDays = new ArrayList(provMap.get("doctor").keySet());
+                                Collections.sort(sortedDays);
+                                for (String thisDate : sortedDays) {
+                                        if (!thisDate.equals("prov_no")) {
+                                                if (!firstBar) {%>|<%}; firstBar = false;
+	                                        String[] thisDateArr = thisDate.split(",");
+						String thisDispDate = thisDateArr[1];
+						%>
+                                                <a style="text-decoration: none;" href="#" onclick="return !showAppt('_doctor_<%=thisDateArr[0]%>', event);"><b><%=thisDispDate%></b></a>
+                                                <div id='menu_doctor_<%=thisDateArr[0]%>' class='menu' onclick='event.cancelBubble = true;' >
+                                                <h3 style='text-align: center; color: black;'>Available Appts. (<%=thisDispDate%>)</h3>
+						<ul>
+                                                <%
+                                                ArrayList<String> sortedTimes = new ArrayList(provMap.get("doctor").get(thisDate).keySet());
+                                                Collections.sort(sortedTimes);
+                                                for (String thisTime : sortedTimes) {
+							String[] thisTimeArr = thisTime.split(",");
+                                                        %><li>[<%=thisTimeArr[1]%>] <a href="#" onClick="popupPage(400,780,'<%=provMap.get("doctor").get(thisDate).get(thisTime) %>');return false;"><%= thisTimeArr[0] %></a></li><%
+                                                }
+                                                %></ul></div><%                                        }
+                                }
+                        }
+                        %>
+                            </li>
+                            <% } if (StringUtils.isNotEmpty(providerBean.getProperty(resident,""))) { %>
+                            <li>Alt. Provider 1: <b><%=providerBean.getProperty(resident,"")%></b>
+                        <% // ===== quick appointment booking for prov1 =====
+                        if (provMap.get("prov1") != null) {
+				%><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%
+				boolean firstBar = true;
+                                ArrayList<String> sortedDays = new ArrayList(provMap.get("prov1").keySet());
+                                Collections.sort(sortedDays);
+                                for (String thisDate : sortedDays) {
+                                        if (!thisDate.equals("prov_no")) {
+                                                if (!firstBar) {%>|<%}; firstBar = false;
+	                                        String[] thisDateArr = thisDate.split(",");
+						String thisDispDate = thisDateArr[1];
+						%>
+                                                <a style="text-decoration: none;" href="#" onclick="return !showAppt('_prov1_<%=thisDateArr[0]%>', event);"><b><%=thisDispDate%></b></a>
+                                                <div id='menu_prov1_<%=thisDateArr[0]%>' class='menu' onclick='event.cancelBubble = true;'>
+                                                <h3 style='text-align: center; color: black;'>Available Appts. (<%=thisDispDate%>)</h3> 
+                                                <ul>
+                                                <%
+                                                ArrayList<String> sortedTimes = new ArrayList(provMap.get("prov1").get(thisDate).keySet());
+                                                Collections.sort(sortedTimes);
+                                                for (String thisTime : sortedTimes) {
+							String[] thisTimeArr = thisTime.split(",");
+                                                        %><li>[<%=thisTimeArr[1]%>] <a href="#" onClick="popupPage(400,780,'<%=provMap.get("prov1").get(thisDate).get(thisTime) %>');return false;"><%= thisTimeArr[0] %></a></li><%
+                                                }
+                                                %></ul></div><%
+                                        }
+                                }
+                        }
+                        %>
+                            </li>
+                            <% } if (StringUtils.isNotEmpty(providerBean.getProperty(midwife,""))) { %>
+                            <li>Alt. Provider 2: <b><%=providerBean.getProperty(midwife,"")%></b>
+                        <% // ===== quick appointment booking for prov2 =====
+                        if (provMap.get("prov2") != null) {
+							%><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%
+							boolean firstBar = true;
+                            	ArrayList<String> sortedDays = new ArrayList(provMap.get("prov2").keySet());
+                            	Collections.sort(sortedDays);
+                            	   for (String thisDate : sortedDays) {
+                                        if (!thisDate.equals("prov_no")) {
+                                                if (!firstBar) {%>|<%}; firstBar = false;
+	                                        String[] thisDateArr = thisDate.split(",");
+						String thisDispDate = thisDateArr[1];
+						%>
+                                                <a style="text-decoration: none;" href="#" onclick="return !showAppt('_prov2_<%=thisDateArr[0]%>', event);"><b><%=thisDispDate%></b></a>
+                                                <div id='menu_prov2_<%=thisDateArr[0]%>' class='menu' onclick='event.cancelBubble = true;'>
+                                                <h3 style='text-align: center; color: black;'>Available Appts. (<%=thisDispDate%>)</h3> 
+                                                <ul>
+                                                <%
+                                                ArrayList<String> sortedTimes = new ArrayList(provMap.get("prov2").get(thisDate).keySet());
+                                                Collections.sort(sortedTimes);
+                                                for (String thisTime : sortedTimes) {
+							String[] thisTimeArr = thisTime.split(",");
+                                                        %><li>[<%=thisTimeArr[1]%>] <a href="#" onClick="popupPage(400,780,'<%=provMap.get("prov2").get(thisDate).get(thisTime) %>');return false;"><%= thisTimeArr[0] %></a></li><%
+                                                }
+                                                %></ul></div><%
+                                        }
+                                }
+                        }
+                        %>
+                            </li>
+                            <% } if (StringUtils.isNotEmpty(providerBean.getProperty(nurse,""))) { %>
+                            <li>Alt. Provider 3: <b><%=providerBean.getProperty(nurse,"")%></b>
+                        <% // ===== quick appointment booking for prov3 =====
+                        if (provMap.get("prov3") != null) {
+							%><br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<%
+							boolean firstBar = true;
+                                ArrayList<String> sortedDays = new ArrayList(provMap.get("prov3").keySet());
+                                Collections.sort(sortedDays);
+                                for (String thisDate : sortedDays) {
+                                        if (!thisDate.equals("prov_no")) {
+                                                if (!firstBar) {%>|<%}; firstBar = false;
+	                                        String[] thisDateArr = thisDate.split(",");
+						String thisDispDate = thisDateArr[1];
+						%>
+                                                <a style="text-decoration: none;" href="#" onclick="return !showAppt('_prov3_<%=thisDateArr[0]%>', event);"><b><%=thisDispDate%></b></a>
+                                                <div id='menu_prov3_<%=thisDateArr[0]%>' class='menu' onclick='event.cancelBubble = true;'>
+                                                <h3 style='text-align: center; color: black;'>Available Appts. (<%=thisDispDate%>)</h3> 
+                                                <ul>
+                                                <%
+                                                ArrayList<String> sortedTimes = new ArrayList(provMap.get("prov3").get(thisDate).keySet());
+                                                Collections.sort(sortedTimes);
+                                                for (String thisTime : sortedTimes) {
+							String[] thisTimeArr = thisTime.split(",");
+                                                        %><li>[<%=thisTimeArr[1]%>] <a href="#" onClick="popupPage(400,780,'<%=provMap.get("prov3").get(thisDate).get(thisTime) %>');return false;"><%= thisTimeArr[0] %></a></li><%
+                                                }
+                                                %></ul></div><%
+                                        }
+                                }
+                        }
+                        %>
+                            </li>
+                            <% } %> 
+                         </ul>
+                         </div>
+                         </div>
+						
+						<%} %>
+						
 						<div class="demographicSection" id="patientClinicStatus">
 						<h3>&nbsp;<bean:message key="demographic.demographiceditdemographic.msgPatientClinicStatus"/></h3>
 						<ul>
@@ -1480,7 +1954,11 @@ if ( PatStat.equals(Dead) ) {%>
 							<% if(oscarProps.getProperty("demographicLabelDoctor") != null) { out.print(oscarProps.getProperty("demographicLabelDoctor","")); } else { %>
 							<bean:message
 								key="demographic.demographiceditdemographic.formDoctor" />
-                                                    <% } %>:</span><span class="info"><%=providerBean.getProperty(demographic.getProviderNo(),"")%></span>
+                                                    <% } %>:</span><span class="info">
+                                                    <%if(demographic != null && demographic.getProviderNo() != null){%>	
+                                                           <%=providerBean.getProperty(demographic.getProviderNo(),"")%>
+                                                    <%}%>
+                                                    </span>
 							</li>
                                                     <li><span class="label"><bean:message
                                                             key="demographic.demographiceditdemographic.formNurse" />:</span><span class="info"><%=providerBean.getProperty(resident,"")%></span>
@@ -1517,9 +1995,9 @@ if ( PatStat.equals(Dead) ) {%>
 						</div>
 
 						<% // customized key
-if(oscarVariables.getProperty("demographicExt") != null) {
-	String [] propDemoExt = oscarVariables.getProperty("demographicExt","").split("\\|");
-%>
+						if(oscarVariables.getProperty("demographicExt") != null) {
+							String [] propDemoExt = oscarVariables.getProperty("demographicExt","").split("\\|");
+						%>
 						<div class="demographicSection" id="special">
 						<h3>&nbsp;Special</h3>
 						<% 	for(int k=0; k<propDemoExt.length; k++) {%> <%=propDemoExt[k]+": <b>" + apptMainBean.getString(demoExt.get(propDemoExt[k].replace(' ', '_'))) +"</b>"%>
@@ -1527,14 +2005,9 @@ if(oscarVariables.getProperty("demographicExt") != null) {
 						</div>
 						<% } %>
 						</div>
-						
 
-						<!--
-							For some reason, on some demographics, div open/close tags become unbalanced, which causes the editDemographic table to not show. 
-							This extra closing div fixes it - and it doesn't look like it unbalances div tags if it is not required.						
-						-->
-						</div>
-						
+
+
 
 						<!--newEnd-->
 
@@ -2076,12 +2549,12 @@ if(oscarVariables.getProperty("demographicExt") != null) {
                                   		// drop down list
 									  Properties prop = null;
 									  Vector vecRef = new Vector();
-                                      List<Billingreferral> billingReferrals = billingReferralDao.getBillingreferrals();
-                                      for(Billingreferral billingReferral:billingReferrals) {
+									  List<ProfessionalSpecialist> specialists = professionalSpecialistDao.findAll();
+                                      for(ProfessionalSpecialist specialist : specialists) {
                                     	  prop = new Properties();
-                                          prop.setProperty("referral_no",billingReferral.getReferralNo());
-                                          prop.setProperty("last_name",billingReferral.getLastName());
-                                          prop.setProperty("first_name",billingReferral.getFirstName());
+                                          prop.setProperty("referral_no", specialist.getReferralNo());
+                                          prop.setProperty("last_name", specialist.getLastName());
+                                          prop.setProperty("first_name", specialist.getFirstName());
                                           vecRef.add(prop);
                                       }
 
@@ -2138,7 +2611,7 @@ document.updatedelete.r_doctor_ohip.value = refNo;
                                   }
                                   %>
                                 <input type="hidden" name="initial_rosterstatus" value="<%=rosterStatus%>"/>
-								<select name="roster_status" style="width: 120" <%=getDisabled("roster_status")%>>
+								<select id="roster_status" name="roster_status" style="width: 120px" <%=getDisabled("roster_status")%> onchange="checkRosterStatus()">
 									<option value=""></option>
 									<option value="RO"
 										<%=rosterStatus.equals("RO")?" selected":""%>>
@@ -2243,7 +2716,7 @@ document.updatedelete.r_doctor_ohip.value = refNo;
                                   	 <input type="text" name="patient_status" value="<%=pacStatus%>"> <% } else {
                                 String patientStatus = demographic.getPatientStatus(); %>
                                 <input type="hidden" name="initial_patientstatus" value="<%=patientStatus%>">
-								<select name="patient_status" style="width: 120" <%=getDisabled("patient_status")%>>
+								<select name="patient_status" style="width: 120px" <%=getDisabled("patient_status")%>>
 									<option value="AC"
 										<%=patientStatus.equals("AC")?" selected":""%>>
 									<bean:message key="demographic.demographiceditdemographic.optActive"/></option>
@@ -2376,7 +2849,7 @@ document.updatedelete.r_doctor_ohip.value = refNo;
 								<td align="left">
 								<%
 
-                                 String date_joined = demographic.getDateJoined() != null  ? sdf.format(demographic.getDateJoined()) : null;
+								String date_joined = demographic.getDateJoined() != null  ? sdf.format(demographic.getDateJoined()) : null;
                                  String dateJoinedYear = "";
                                  String dateJoinedMonth = "";
                                  String dateJoinedDay = "";
@@ -2485,11 +2958,11 @@ if(oscarVariables.getProperty("demographicExtJScript") != null) { out.println(os
 						<option value="3" <%=(warningLevel.equals("3")?"selected=\"selected\"":"") %>>High</option>
 						<option value="4" <%=(warningLevel.equals("4")?"selected=\"selected\"":"") %>>None</option>
 					</select>
-					<oscar:oscarPropertiesCheck property="INTEGRATOR.LOCAL.STORE" value="yes">
+					<oscar:oscarPropertiesCheck property="INTEGRATOR_LOCAL_STORE" value="yes">
 					<b><bean:message key="demographic.demographiceditdemographic.primaryEMR" />:</b>
 
 				    <%
-				       	String primaryEMR = (String)demoExt.get("primaryEMR");
+				       	String primaryEMR = demoExt.get("primaryEMR");
 				       	if(primaryEMR==null) primaryEMR="0";
 				    %>
 					<input type="hidden" name="primaryEMROrig" value="<%=apptMainBean.getString(demoExt.get("primaryEMR"))%>" />
@@ -2634,4 +3107,3 @@ function callEligibilityWebService(url,id){
 }
 
 %>
-

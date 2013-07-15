@@ -51,7 +51,7 @@
 <link rel="stylesheet" type="text/css"
 	href="../oscarEncounter/encounterStyles.css">
 
-<title>Set Default Provider for New Demographics</title>
+<title>Set Default Provider for New Demographic</title>
 
 <script type="text/javascript">
     function validate() {       
@@ -163,7 +163,7 @@ br {
             <html:form action="/SetNewDemDefPrv.do">
 
 			<span style="color:blue">
-                Select the default selected provider for new demographics. 
+				Select the default selected provider for new demographics. 
 				<br/>
 				<% if( provno.equals("") ){
 					%>There is currently no default set<%

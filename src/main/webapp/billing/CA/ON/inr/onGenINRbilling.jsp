@@ -1,22 +1,22 @@
-<!-- 
- *
- * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * Yi Li
- */
--->
+<%--
 
+    Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+--%>
 <%//
 			if (session.getAttribute("user") == null)
 				response.sendRedirect("../../../../logout.jsp");
@@ -155,17 +155,6 @@
 					int nNo = dbObj.addOneClaimHeaderRecord(claim1Header);
 					String billNo = "" + nNo;
 
-					//int rowsAffected = apptMainBean.queryExecuteUpdate(param, "save_bill");
-					//String billNo = null;
-					//String[] param4 = new String[2];
-					//param4[0] = demono;
-					//param4[1] = "0";
-					//rsdemo = null;
-					//rsdemo = apptMainBean.queryResults(param4, "search_billing_no_by_appt");
-					//while (rsdemo.next()) {
-					//	billNo = rsdemo.getString("billing_no");
-					//}
-
 					int recordAffected = 0;
 					String[] param3 = new String[3];
 					param3[0] = "A";
@@ -185,7 +174,6 @@
 						param2[6] = "O";
 						param2[7] = billing_unit;
 
-						//recordAffected = apptMainBean.queryExecuteUpdate(param2, "save_bill_record");
 					}
 
 					BillingItemData[] claimItem = new BillingItemData[recordCount];

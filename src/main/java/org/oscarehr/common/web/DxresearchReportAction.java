@@ -1,3 +1,21 @@
+/**
+ * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -5,13 +23,18 @@
 
 package org.oscarehr.common.web;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
+import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.beanutils.DynaBean;
+import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
@@ -19,31 +42,33 @@ import org.apache.struts.actions.DispatchAction;
 import org.oscarehr.common.dao.DxresearchDAO;
 import org.oscarehr.common.dao.MyGroupDao;
 import org.oscarehr.common.model.DxRegistedPTInfo;
+import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import oscar.OscarDocumentCreator;
 import oscar.oscarResearch.oscarDxResearch.bean.dxCodeSearchBean;
 import oscar.oscarResearch.oscarDxResearch.bean.dxQuickListBeanHandler;
 import oscar.oscarResearch.oscarDxResearch.bean.dxQuickListItemsHandler;
 import oscar.oscarResearch.oscarDxResearch.util.dxResearchCodingSystem;
-
 /**
  *
  * @author toby
  */
 @Transactional(propagation=Propagation.REQUIRES_NEW)
 public class DxresearchReportAction extends DispatchAction {
-
+    private static final Logger logger = MiscUtils.getLogger();
     private final static String SUCCESS = "success";
     private final static String EDIT_DESC = "editdesc";
     private DxresearchDAO dxresearchdao ;
     private MyGroupDao mygroupdao = (MyGroupDao)SpringUtils.getBean("myGroupDao");
+    private static final String REPORTS_PATH = "org/oscarehr/common/web/DxResearchReport.jrxml";
 
     public void setDxresearchdao(DxresearchDAO dxresearchdao) {
         this.dxresearchdao = dxresearchdao;
     }
-   
+
 
     @Override
     protected ActionForward unspecified(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -58,7 +83,7 @@ public class DxresearchReportAction extends DispatchAction {
 
     public ActionForward patientRegistedAll(ActionMapping mapping, ActionForm  form,
             HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
+             {
 
         List<String> providerNoList = new ArrayList<String>();
         String providerNo = request.getParameter("provider_no");
@@ -81,9 +106,47 @@ public class DxresearchReportAction extends DispatchAction {
         return mapping.findForward(SUCCESS);
     }
 
+    public ActionForward patientExcelReport(ActionMapping mapping, ActionForm  form,
+            HttpServletRequest request, HttpServletResponse response)
+             {
+        ServletOutputStream outputStream = getServletOstream(response);
+
+        List<DxRegistedPTInfo> patients = null;
+
+        if(request.getSession().getAttribute("listview").getClass().getCanonicalName().contains("ArrayList")) {
+            patients = (List<DxRegistedPTInfo>) request.getSession().getAttribute("listview");
+        } else if(request.getSession().getAttribute("listview").getClass().getCanonicalName().contains("DxRegistedPTInfo")) {
+        	patients = new ArrayList<DxRegistedPTInfo>();
+        	DxRegistedPTInfo info = (DxRegistedPTInfo) request.getSession().getAttribute("listview");
+        	patients.add(info);
+        }
+
+        String providerNo = request.getParameter("provider_no");
+
+        if (providerNo.startsWith("_grp_")){
+            providerNo=providerNo.replaceFirst("_grp_", "");
+        }
+
+        String mode = (String) request.getSession().getAttribute("radiovaluestatus");
+
+    	OscarDocumentCreator osc = new OscarDocumentCreator();
+        HashMap<String,String> reportParams = new HashMap<String,String>();
+        reportParams.put("provider", providerNo);
+        reportParams.put("mode", mode);
+
+        InputStream reportInstream = this.getClass().getClassLoader().getResourceAsStream(REPORTS_PATH);
+
+    	response.setContentType("application/excel");
+    	response.setHeader( "Content-disposition", "inline; filename=dxResearchReport.xls");
+
+    	osc.fillDocumentStream(reportParams, outputStream, OscarDocumentCreator.EXCEL, reportInstream, patients);
+
+        return null;
+    }
+
     public ActionForward patientRegistedDistincted(ActionMapping mapping, ActionForm  form,
             HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
+             {
 
         List<String> providerNoList = new ArrayList<String>();
         String providerNo = request.getParameter("provider_no");
@@ -105,9 +168,19 @@ public class DxresearchReportAction extends DispatchAction {
         return mapping.findForward(SUCCESS);
     }
 
+    protected ServletOutputStream getServletOstream(HttpServletResponse response) {
+        ServletOutputStream outputStream = null;
+        try {
+          outputStream = response.getOutputStream();
+        } catch (IOException ex) {
+		MiscUtils.getLogger().warn("Warning",ex);
+        }
+        return outputStream;
+    }
+
     public ActionForward patientRegistedDeleted(ActionMapping mapping, ActionForm  form,
             HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
+            {
 
         List<String> providerNoList = new ArrayList<String>();
         String providerNo = request.getParameter("provider_no");
@@ -131,7 +204,7 @@ public class DxresearchReportAction extends DispatchAction {
 
     public ActionForward patientRegistedActive(ActionMapping mapping, ActionForm  form,
             HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
+             {
 
         List<String> providerNoList = new ArrayList<String>();
         String providerNo = request.getParameter("provider_no");
@@ -155,7 +228,7 @@ public class DxresearchReportAction extends DispatchAction {
 
     public ActionForward patientRegistedResolve(ActionMapping mapping, ActionForm  form,
             HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
+             {
 
         List<String> providerNoList = new ArrayList<String>();
         String providerNo = request.getParameter("provider_no");
@@ -179,7 +252,7 @@ public class DxresearchReportAction extends DispatchAction {
 
     public ActionForward editDesc( ActionMapping mapping, ActionForm  form,
                                 HttpServletRequest request, HttpServletResponse response)
-                                throws Exception
+
     {
       String editingCodeType = request.getParameter( "editingCodeType" );
       String editingCodeCode = request.getParameter( "editingCodeCode" );
@@ -245,7 +318,7 @@ public class DxresearchReportAction extends DispatchAction {
 
     public ActionForward clearSearchCode(ActionMapping mapping, ActionForm  form,
             HttpServletRequest request, HttpServletResponse response)
-            throws Exception {
+             {
 
         DynaBean lazyForm = (DynaBean) form;
 

@@ -1,23 +1,24 @@
-/*
- * 
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for 
- * Centre for Research on Inner City Health, St. Michael's Hospital, 
- * Toronto, Ontario, Canada 
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
 
 package org.oscarehr.PMmodule.dao;
@@ -133,8 +134,8 @@ public class ProgramDao extends HibernateDaoSupport {
         if (programId == null || programId.intValue() <= 0) {
             return null;
         }
-		
-        Program program = (Program) getHibernateTemplate().get(Program.class, programId);
+
+        Program program = getHibernateTemplate().get(Program.class, programId);
 
         return program;
     }
@@ -156,7 +157,7 @@ public class ProgramDao extends HibernateDaoSupport {
 
         return result;
     }
-    
+
     public String getProgramName(Integer programId) {
         String name = null;
 
@@ -164,7 +165,7 @@ public class ProgramDao extends HibernateDaoSupport {
             return null;
         }
 
-        Program program = (Program) getHibernateTemplate().get(Program.class, programId);
+        Program program = getHibernateTemplate().get(Program.class, programId);
 
         if (program != null) {
             name = program.getName();
@@ -190,12 +191,12 @@ public class ProgramDao extends HibernateDaoSupport {
     		return null;
     	}
     }
-    
-    public List getAllPrograms(String programStatus, String type, Integer facilityId, String providerNo,Integer shelterId)
+
+    public List<Program> getAllPrograms(String programStatus, String type, Integer facilityId, String providerNo,Integer shelterId)
     {
     	return getAllPrograms(programStatus, type,facilityId,null,providerNo,shelterId);
     }
-    public List getAllPrograms(String programStatus, String type, Integer facilityId, Integer clientId, String providerNo,Integer shelterId)
+    public List<Program> getAllPrograms(String programStatus, String type, Integer facilityId, Integer clientId, String providerNo,Integer shelterId)
     {
     	Criteria c = getSession().createCriteria(Program.class);
     	if (!(Utility.IsEmpty(programStatus))) {
@@ -213,10 +214,11 @@ public class ProgramDao extends HibernateDaoSupport {
     	}
     	c.add(Restrictions.sqlRestriction("id in " + Utility.getUserOrgSqlString(providerNo, shelterId)));
     	c.addOrder(Order.asc("name"));
-    	List list = c.list();
+    	@SuppressWarnings("unchecked")
+        List<Program> list = c.list();
     	for(int i=0; i<list.size(); i++)
     	{
-    		Program p = (Program) list.get(i);
+    		Program p = list.get(i);
     		if(p.getType().equals(KeyConstants.PROGRAM_TYPE_Service)) p.setNumOfMembers(p.getNumOfIntakes());
     	}
     	return 	list;
@@ -263,6 +265,15 @@ public class ProgramDao extends HibernateDaoSupport {
  
     public List<Program> getPrograms() {
         String queryStr = "FROM Program p WHERE p.type != 'community' ORDER BY p.name";
+
+        @SuppressWarnings("unchecked")
+        List<Program> rs = getHibernateTemplate().find(queryStr);
+
+        return rs;
+    }
+    
+    public List<Program> getActivePrograms() {
+        String queryStr = "FROM Program p WHERE p.type != 'community' and p.programStatus='active'";
 
         @SuppressWarnings("unchecked")
         List<Program> rs = getHibernateTemplate().find(queryStr);
@@ -326,8 +337,8 @@ public class ProgramDao extends HibernateDaoSupport {
         return (Program[]) list.toArray(new Program[list.size()]);
     }
 
-    public List<?> getServicePrograms() {
-        List<?> rs = getHibernateTemplate().find("FROM Program p WHERE p.type = 'Service' ORDER BY p.name");
+    public List<Program> getServicePrograms() {
+        List<Program> rs = getHibernateTemplate().find("FROM Program p WHERE p.type = 'Service' ORDER BY p.name");
 
         if (log.isDebugEnabled()) {
             log.debug("getServicePrograms: # of programs: " + rs.size());
@@ -389,7 +400,7 @@ public class ProgramDao extends HibernateDaoSupport {
         }
     }
 
-    public List search(Program program) {
+    public List<Program> search(Program program) {
         if (program == null) {
             throw new IllegalArgumentException();
         }
@@ -466,7 +477,7 @@ public class ProgramDao extends HibernateDaoSupport {
         return results;
     }
 
-    public List searchByFacility(Program program, Integer facilityId) {
+    public List<Program> searchByFacility(Program program, Integer facilityId) {
         if (program == null) {
             throw new IllegalArgumentException();
         }

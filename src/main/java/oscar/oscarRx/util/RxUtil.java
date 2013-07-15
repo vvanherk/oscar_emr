@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.oscarRx.util;
 
 import java.sql.ResultSet;
@@ -417,7 +419,7 @@ public class RxUtil {
                     rx.setUnitName(qUnit);
                     return null; //if a quantity unit is specified, can't calculate duration.
                 } else {
-                    double takeMax = (double) rx.getTakeMax();
+                    double takeMax = rx.getTakeMax();
                     double nPerDay = findNPerDay(rx.getFrequencyCode());
                     double nDays = findNDays(rx.getDurationUnit());
                     p("qtyD--takeMax--nPerDay--nDays--" + qtyD + " " + takeMax + " " + nPerDay + " " + nDays);
@@ -561,7 +563,7 @@ public class RxUtil {
         } else {
         	//do we have some policies/restrictions we want to run?
         	policyViolations.addAll(RxInstructionPolicy.checkInstructions(instructions.trim()));
-        	
+
             String[] prns = {"\\s(?i)prn$", "^(?i)prn\\s+", "\\s+(?i)prn\\s+"};
             for (String s : prns) {
                 Pattern prnP = Pattern.compile(s);
@@ -649,7 +651,7 @@ public class RxUtil {
                     frequency = (instructions.substring(matcher.start(), matcher.end())).trim();
                     frequency=changeToStandardFrequencyCode(frequency);
                     String origFrequency = (instructions.substring(matcher.start(), matcher.end())).trim();
-                    
+
                     Pattern p2 = Pattern.compile("\\s*\\d*\\.*\\d+\\s+" + origFrequency); //allow to detect decimal number.
                     Matcher m2 = p2.matcher(instructions);
 
@@ -1009,7 +1011,7 @@ public class RxUtil {
             rx.setUnitName(null);
         }
         rx.setPolicyViolations(policyViolations);
-        
+
         p("below set special");
         HashMap hm = new HashMap();
         hm.put("takeMin", rx.getTakeMin());
@@ -1096,26 +1098,30 @@ public class RxUtil {
         special = m.replaceAll("");
         MiscUtils.getLogger().debug("after trimming mitte special=" + special);
         //assume drug name is before method and drug name is the first part of the instruction.
-        if (special.indexOf("Take") != -1) {
-            special = special.substring(special.indexOf("Take"));
-        } else if (special.indexOf("take") != -1) {
-            special = special.substring(special.indexOf("take"));
-        } else if (special.indexOf("TAKE") != -1) {
-            special = special.substring(special.indexOf("TAKE"));
-        } else if (special.indexOf("Apply") != -1) {
-            special = special.substring(special.indexOf("Apply"));
-        } else if (special.indexOf("apply") != -1) {
-            special = special.substring(special.indexOf("apply"));
-        } else if (special.indexOf("APPLY") != -1) {
-            special = special.substring(special.indexOf("APPLY"));
-        } else if (special.indexOf("Rub well in") != -1) {
-            special = special.substring(special.indexOf("Rub well in"));
-        } else if (special.indexOf("rub well in") != -1) {
-            special = special.substring(special.indexOf("rub well in"));
-        } else if (special.indexOf("RUB WELL IN") != -1) {
-            special = special.substring(special.indexOf("RUB WELL IN"));
-        } else if (special.indexOf("Rub Well In") != -1) {
-            special = special.substring(special.indexOf("Rub Well In"));
+        String rx_enhance = OscarProperties.getInstance().getProperty("rx_enhance");
+        //rx_enhance changes the behavior by not deleting anything up to the words Take, apply..
+        if (!(rx_enhance != null && rx_enhance.equals("true"))) {
+	        if (special.indexOf("Take") != -1) {
+	            special = special.substring(special.indexOf("Take"));
+	        } else if (special.indexOf("take") != -1) {
+	            special = special.substring(special.indexOf("take"));
+	        } else if (special.indexOf("TAKE") != -1) {
+	            special = special.substring(special.indexOf("TAKE"));
+	        } else if (special.indexOf("Apply") != -1) {
+	            special = special.substring(special.indexOf("Apply"));
+	        } else if (special.indexOf("apply") != -1) {
+	            special = special.substring(special.indexOf("apply"));
+	        } else if (special.indexOf("APPLY") != -1) {
+	            special = special.substring(special.indexOf("APPLY"));
+	        } else if (special.indexOf("Rub well in") != -1) {
+	            special = special.substring(special.indexOf("Rub well in"));
+	        } else if (special.indexOf("rub well in") != -1) {
+	            special = special.substring(special.indexOf("rub well in"));
+	        } else if (special.indexOf("RUB WELL IN") != -1) {
+	            special = special.substring(special.indexOf("RUB WELL IN"));
+	        } else if (special.indexOf("Rub Well In") != -1) {
+	            special = special.substring(special.indexOf("Rub Well In"));
+	        }
         }
 
         return special.trim();
@@ -1351,7 +1357,7 @@ public class RxUtil {
     public static void setSpecialQuantityRepeat(RxPrescriptionData.Prescription rx) {
 
         try {
-            
+
             ResultSet rs;
             if (rx.getRegionalIdentifier() != null && rx.getRegionalIdentifier().length() > 1) {
                 p("if1");
@@ -1394,7 +1400,7 @@ public class RxUtil {
                         rs = DBHandler.GetSQL(sql3);
                         if (rs.first()) {
                             setResultSpecialQuantityRepeat(rx, rs);
-                        } else {                            
+                        } else {
                         	setDefaultSpecialQuantityRepeat(rx);
                         }
                     } else {
@@ -1420,7 +1426,7 @@ public class RxUtil {
         String sql = "SELECT max(drugid) FROM drugs WHERE archived=0 AND archived_reason='' AND BN='" + StringEscapeUtils.escapeSql(rx.getBrandName()) + "' AND GN='" + StringEscapeUtils.escapeSql(rx.getGenericName()) + "' AND demographic_no=" + rx.getDemographicNo();
 
         try {
-            
+
             ResultSet rs;
             rs = DBHandler.GetSQL(sql);
             if (rs.next()) {
@@ -1449,7 +1455,7 @@ public class RxUtil {
         boolean discontinuedLatest = false;
         String sql = "SELECT * FROM drugs WHERE archived=1 AND archived_reason<>'' AND ATC='" + rx.getAtcCode() + "' AND regional_identifier='" + rx.getRegionalIdentifier() + "' AND demographic_no=" + rx.getDemographicNo() + " order by drugid desc";
         try {
-            
+
             ResultSet rs;
             rs = DBHandler.GetSQL(sql);
             if (rs.next()) {//get the first result which has the largest drugid and hence the most recent result.
@@ -1541,7 +1547,7 @@ public class RxUtil {
         String sql ="SELECT distinct special_instruction from drugs where special_instruction!='NULL'";
         List<String> resultSpecInst=new ArrayList<String>();
         try {
-            
+
             ResultSet rs;
             rs = DBHandler.GetSQL(sql);
             while(rs.next()){
@@ -1677,7 +1683,7 @@ public class RxUtil {
         return returnRx;
 
     }
-    private static Vector getMyDrugrefInfo(String command, Vector drugs,String myDrugrefId) throws Exception {
+    private static Vector getMyDrugrefInfo(String command, Vector drugs,String myDrugrefId) {
         MiscUtils.getLogger().debug("3in getMyDrugrefInfo");
         RxMyDrugrefInfoAction.removeNullFromVector(drugs);
         Vector params = new Vector();

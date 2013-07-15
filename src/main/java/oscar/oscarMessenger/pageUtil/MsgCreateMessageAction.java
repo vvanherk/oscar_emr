@@ -1,27 +1,28 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License. 
-// * This program is free software; you can redistribute it and/or 
-// * modify it under the terms of the GNU General Public License 
-// * as published by the Free Software Foundation; either version 2 
-// * of the License, or (at your option) any later version. * 
-// * This program is distributed in the hope that it will be useful, 
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-// * along with this program; if not, write to the Free Software 
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-// * 
-// * <OSCAR TEAM>
-// * This software was written for the 
-// * Department of Family Medicine 
-// * McMaster University 
-// * Hamilton 
-// * Ontario, Canada 
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package oscar.oscarMessenger.pageUtil;
 import java.io.IOException;
 
@@ -34,6 +35,7 @@ import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 
+import oscar.oscarMessenger.data.MsgProviderData;
 import oscar.oscarMessenger.util.MsgDemoMap;
 
 public class MsgCreateMessageAction extends Action {
@@ -60,8 +62,8 @@ public class MsgCreateMessageAction extends Action {
             String currLoco     = null;
             String messageId    = null;
             String demographic_no = ((MsgCreateMessageForm)form).getDemographic_no();
-            
-            java.util.ArrayList providerListing, localProviderListing, remoteProviderListing;
+
+            java.util.ArrayList<MsgProviderData> providerListing, localProviderListing, remoteProviderListing;
 
 
             subject.trim();
@@ -95,10 +97,10 @@ public class MsgCreateMessageAction extends Action {
                 remoteMessageData.start();
 
             }
-            
+
             //link msg and demogrpahic if both messageId and demographic_no are not null
             if (demographic_no != null && (demographic_no.equals("") || demographic_no.equals("null")) ){
-               demographic_no = null;               
+               demographic_no = null;
             }
             if(messageId!=null && demographic_no!=null){
                 MsgDemoMap msgDemoMap = new MsgDemoMap();

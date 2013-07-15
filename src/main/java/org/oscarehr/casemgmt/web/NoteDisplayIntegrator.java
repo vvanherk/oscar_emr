@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.casemgmt.web;
 
 import java.util.ArrayList;
@@ -9,6 +32,7 @@ import org.oscarehr.caisi_integrator.ws.CachedDemographicNote;
 import org.oscarehr.caisi_integrator.ws.CachedFacility;
 import org.oscarehr.caisi_integrator.ws.CachedProgram;
 import org.oscarehr.caisi_integrator.ws.CachedProvider;
+import org.oscarehr.caisi_integrator.ws.CodeType;
 import org.oscarehr.caisi_integrator.ws.FacilityIdIntegerCompositePk;
 import org.oscarehr.caisi_integrator.ws.FacilityIdStringCompositePk;
 import org.oscarehr.caisi_integrator.ws.NoteIssue;
@@ -57,7 +81,16 @@ public class NoteDisplayIntegrator implements NoteDisplay {
 	    	// issue descriptions
 			for (NoteIssue noteIssue : cachedDemographicNote.getIssues())
 			{
-				Issue issue=issueDao.findIssueByTypeAndCode(noteIssue.getCodeType().name().toLowerCase(), noteIssue.getIssueCode());
+				String ct = "";
+				if(noteIssue.getCodeType() == CodeType.ICD_10) {
+					ct = "icd10";
+				}
+				else if(noteIssue.getCodeType() == CodeType.ICD_9) {
+					ct = "icd9";
+				} else {
+					ct = noteIssue.getCodeType().name().toLowerCase();
+				}
+				Issue issue=issueDao.findIssueByTypeAndCode(ct, noteIssue.getIssueCode());
 				if (issue!=null) issueDescriptions.add(issue.getDescription());
 				else issueDescriptions.add(noteIssue.getCodeType().name()+':'+noteIssue.getIssueCode());
 			}

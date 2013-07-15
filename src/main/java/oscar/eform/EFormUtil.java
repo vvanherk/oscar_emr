@@ -1,18 +1,19 @@
-/*
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -20,6 +21,7 @@
  * Hamilton
  * Ontario, Canada
  */
+
 
 package oscar.eform;
 
@@ -34,6 +36,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
 import java.util.UUID;
@@ -54,14 +57,17 @@ import org.oscarehr.casemgmt.model.Issue;
 import org.oscarehr.casemgmt.service.CaseManagementManager;
 import org.oscarehr.common.dao.EFormDataDao;
 import org.oscarehr.common.dao.EFormValueDao;
+import org.oscarehr.common.dao.SecRoleDao;
 import org.oscarehr.common.model.EFormData;
 import org.oscarehr.common.model.EFormValue;
+import org.oscarehr.common.model.SecRole;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 
 import oscar.OscarProperties;
 import oscar.dms.EDoc;
 import oscar.dms.EDocUtil;
+import oscar.eform.actions.DisplayImageAction;
 import oscar.eform.data.EForm;
 import oscar.eform.data.EFormBase;
 import oscar.oscarDB.DBHandler;
@@ -175,13 +181,13 @@ public class EFormUtil {
 		return (results);
 	}
 
-	public static ArrayList listSecRole() {
+	public static ArrayList<String> listSecRole() {
 		// sends back a list of forms that were uploaded (those that can be added to the patient)
 		String sql = "";
 		sql = "SELECT role_name FROM secRole";
 
 		ResultSet rs = getSQL(sql);
-		ArrayList results = new ArrayList();
+		ArrayList<String> results = new ArrayList<String>();
 		try {
 			while (rs.next()) {
 				results.add(rsGetString(rs, "role_name"));
@@ -193,14 +199,14 @@ public class EFormUtil {
 		return (results);
 	}
 
-	public static ArrayList listImages() {
+	public static ArrayList<String> listImages() {
 		String imagePath = OscarProperties.getInstance().getProperty("eform_image");
 		logger.debug("Img Path: " + imagePath);
 		File dir = new File(imagePath);
 		String[] files = dir.list();
-		ArrayList fileList;
-		if (files != null) fileList = new ArrayList(Arrays.asList(files));
-		else fileList = new ArrayList();
+		ArrayList<String> fileList;
+		if (files != null) fileList = new ArrayList<String>(Arrays.asList(files));
+		else fileList = new ArrayList<String>();
 
 		return fileList;
 	}
@@ -237,6 +243,7 @@ public class EFormUtil {
 				curht.put("formName", eFormData.getFormName());
 				curht.put("formSubject", eFormData.getSubject());
 				curht.put("formDate", eFormData.getFormDate().toString());
+				curht.put("formTime", eFormData.getFormTime().toString());
 				curht.put("formDateAsDate", eFormData.getFormDate());
 				curht.put("roleType", eFormData.getRoleType());
 				curht.put("providerNo", eFormData.getProviderNo());
@@ -248,11 +255,108 @@ public class EFormUtil {
 		return (results);
 	}
 
-	public static Hashtable loadEForm(String fid) {
+	public static ArrayList<HashMap<String,? extends Object>> listPatientIndependentEForms(String sortBy, String deleted) {
+
+		Boolean current = null;
+		if (deleted.equals("deleted")) current = false;
+		else if (deleted.equals("current")) current = true;
+
+		List<EFormData> allEformDatas = eFormDataDao.findPatientIndependent(current);
+
+		if (NAME.equals(sortBy)) Collections.sort(allEformDatas, EFormData.FORM_NAME_COMPARATOR);
+		else if (SUBJECT.equals(sortBy)) Collections.sort(allEformDatas, EFormData.FORM_SUBJECT_COMPARATOR);
+		else Collections.sort(allEformDatas, EFormData.FORM_DATE_COMPARATOR);
+
+		ArrayList<HashMap<String, ? extends Object>> results = new ArrayList<HashMap<String, ? extends Object>>();
+		try {
+			for (EFormData eFormData : allEformDatas) {
+				HashMap<String, Object> curht = new HashMap<String, Object>();
+				curht.put("fdid", eFormData.getId().toString());
+				curht.put("fid", eFormData.getFormId().toString());
+				curht.put("formName", eFormData.getFormName());
+				curht.put("formSubject", eFormData.getSubject());
+				curht.put("formDate", eFormData.getFormDate().toString());
+				curht.put("formTime", eFormData.getFormTime().toString());
+				curht.put("formDateAsDate", eFormData.getFormDate());
+				curht.put("roleType", eFormData.getRoleType());
+				curht.put("providerNo", eFormData.getProviderNo());
+				results.add(curht);
+			}
+		} catch (Exception sqe) {
+			logger.error("Error", sqe);
+		}
+		return (results);
+	}
+	
+	public static ArrayList<HashMap<String,? extends Object>> listPatientEFormsNoData(String demographic_no, String userRoles) {
+
+		Boolean current = true;
+		
+		List<Map<String,Object>> allEformDatas = eFormDataDao.findByDemographicIdCurrentPatientIndependentNoData(Integer.parseInt(demographic_no), current, false);
+		
+
+		ArrayList<HashMap<String, ? extends Object>> results = new ArrayList<HashMap<String, ? extends Object>>();
+		try {
+			for (Map<String,Object> eFormData : allEformDatas) {
+				// filter eform by role type
+				String tempRole = StringUtils.trimToNull((String)eFormData.get("roleType"));
+				if (userRoles != null && tempRole != null) {
+					// ojectName: "_admin,_admin.eform"
+					// roleName: "doctor,admin"
+					String objectName = "_eform." + tempRole;
+					Vector v = OscarRoleObjectPrivilege.getPrivilegeProp(objectName);
+					if (!OscarRoleObjectPrivilege.checkPrivilege(userRoles, (Properties) v.get(0), (Vector) v.get(1))) {
+						continue;
+					}
+				}
+				HashMap<String, Object> curht = new HashMap<String, Object>();
+				curht.put("fdid", String.valueOf(eFormData.get("id")));
+				curht.put("fid",  String.valueOf(eFormData.get("formId")));
+				curht.put("formName", eFormData.get("formName"));
+				curht.put("formSubject", eFormData.get("subject"));
+				curht.put("formDate",  String.valueOf(eFormData.get("formDate")));
+				curht.put("formTime",  String.valueOf(eFormData.get("formTime")));
+				curht.put("formDateAsDate", eFormData.get("formDate"));
+				curht.put("roleType", eFormData.get("roleType"));
+				curht.put("providerNo", eFormData.get("providerNo"));
+				results.add(curht);
+			}
+		} catch (Exception sqe) {
+			logger.error("Error", sqe);
+		}
+		return (results);
+	}
+	
+	public static ArrayList<HashMap<String,? extends Object>> loadEformsByFdis(List<Integer> ids) {
+
+		List<EFormData> allEformDatas = eFormDataDao.findByFdids(ids);
+
+		ArrayList<HashMap<String, ? extends Object>> results = new ArrayList<HashMap<String, ? extends Object>>();
+		try {
+			for (EFormData eFormData : allEformDatas) {				
+				HashMap<String, Object> curht = new HashMap<String, Object>();
+				curht.put("fdid", eFormData.getId().toString());
+				curht.put("fid", eFormData.getFormId().toString());
+				curht.put("formName", eFormData.getFormName());
+				curht.put("formSubject", eFormData.getSubject());
+				curht.put("formDate", eFormData.getFormDate().toString());
+				curht.put("formTime", eFormData.getFormTime().toString());
+				curht.put("formDateAsDate", eFormData.getFormDate());
+				curht.put("roleType", eFormData.getRoleType());
+				curht.put("providerNo", eFormData.getProviderNo());
+				results.add(curht);
+			}
+		} catch (Exception sqe) {
+			logger.error("Error", sqe);
+		}
+		return (results);
+	}
+
+	public static Hashtable<String,Object> loadEForm(String fid) {
 		// opens an eform that was uploaded (used to fill out patient data)
 		String sql = "SELECT * FROM eform where fid=" + fid + " LIMIT 1";
 		ResultSet rs = getSQL(sql);
-		Hashtable curht = new Hashtable();
+		Hashtable<String,Object> curht = new Hashtable<String,Object>();
 		try {
 			rs.next();
 			// must have FID and form_name otherwise throws null pointer on the hashtable
@@ -341,17 +445,17 @@ public class EFormUtil {
 		runSQL(sql);
 	}
 
-	public static ArrayList getValues(ArrayList names, String sql) {
+	public static ArrayList<String> getValues(ArrayList<String> names, String sql) {
 		// gets the values for each column name in the sql (used by DatabaseAP)
 		ResultSet rs = getSQL(sql);
-		ArrayList values = new ArrayList();
+		ArrayList<String> values = new ArrayList<String>();
 		try {
 			while (rs.next()) {
-				values = new ArrayList();
+				values = new ArrayList<String>();
 				for (int i = 0; i < names.size(); i++) {
 					try {
-						values.add(oscar.Misc.getString(rs, (String) names.get(i)));
-						logger.debug("VALUE ====" + rs.getObject((String) names.get(i)) + "|");
+						values.add(oscar.Misc.getString(rs, names.get(i)));
+						logger.debug("VALUE ====" + rs.getObject(names.get(i)) + "|");
 					} catch (Exception sqe) {
 						values.add("<(" + names.get(i) + ")NotFound>");
 						logger.error("Error", sqe);
@@ -439,14 +543,14 @@ public class EFormUtil {
 	}
 
 	// --------------eform groups---------
-	public static ArrayList getEFormGroups() {
+	public static ArrayList<Hashtable<String,String>> getEFormGroups() {
 		String sql;
 		sql = "SELECT DISTINCT eform_groups.group_name, count(*)-1 AS 'count' FROM eform_groups " + "LEFT JOIN eform ON eform.fid=eform_groups.fid WHERE eform.status=1 OR eform_groups.fid=0 " + "GROUP BY eform_groups.group_name;";
-		ArrayList al = new ArrayList();
+		ArrayList<Hashtable<String,String>> al = new ArrayList<Hashtable<String,String>>();
 		try {
 			ResultSet rs = getSQL(sql);
 			while (rs.next()) {
-				Hashtable curhash = new Hashtable();
+				Hashtable<String,String> curhash = new Hashtable<String,String>();
 				curhash.put("groupName", oscar.Misc.getString(rs, "group_name"));
 				curhash.put("count", oscar.Misc.getString(rs, "count"));
 				al.add(curhash);
@@ -457,14 +561,14 @@ public class EFormUtil {
 		return al;
 	}
 
-	public static ArrayList getEFormGroups(String demographic_no) {
+	public static ArrayList<Hashtable<String,String>> getEFormGroups(String demographic_no) {
 		String sql;
 		sql = "SELECT eform_groups.group_name, count(*)-1 AS 'count' FROM eform_groups " + "LEFT JOIN eform_data ON eform_data.fid=eform_groups.fid " + "WHERE (eform_data.status=1 AND eform_data.demographic_no=" + demographic_no + ") OR eform_groups.fid=0 " + "GROUP BY eform_groups.group_name";
-		ArrayList al = new ArrayList();
+		ArrayList<Hashtable<String,String>> al = new ArrayList<Hashtable<String,String>>();
 		try {
 			ResultSet rs = getSQL(sql);
 			while (rs.next()) {
-				Hashtable curhash = new Hashtable();
+				Hashtable<String,String> curhash = new Hashtable<String,String>();
 				curhash.put("groupName", oscar.Misc.getString(rs, "group_name"));
 				curhash.put("count", oscar.Misc.getString(rs, "count"));
 				al.add(curhash);
@@ -482,7 +586,7 @@ public class EFormUtil {
 
 	public static void addEFormToGroup(String groupName, String fid) {
 		try {
-			
+
 			String sql1 = "SELECT eform_groups.fid FROM eform_groups, eform WHERE eform_groups.fid=" + fid + " AND eform_groups.fid=eform.fid AND eform.status=1 AND eform_groups.group_name='" + groupName + "'";
 			ResultSet rs = DBHandler.GetSQL(sql1);
 			if (!rs.next()) {
@@ -571,7 +675,7 @@ public class EFormUtil {
 		return (results);
 	}
 
-	public static void writeEformTemplate(ArrayList paramNames, ArrayList paramValues, EForm eForm, String fdid, String programNo, String context_path) {
+	public static void writeEformTemplate(ArrayList<String> paramNames, ArrayList<String> paramValues, EForm eForm, String fdid, String programNo, String context_path) {
 		String text = eForm != null ? eForm.getTemplate() : null;
 		if (blank(text)) return;
 
@@ -686,7 +790,7 @@ public class EFormUtil {
 	// ------------------private
 	private static void runSQL(String sql) {
 		try {
-			
+
 			DBHandler.RunSQL(sql);
 		} catch (SQLException sqe) {
 			logger.error("Error", sqe);
@@ -695,7 +799,7 @@ public class EFormUtil {
 
 	private static String runSQLinsert(String sql) {
 		try {
-			
+
 			DBHandler.RunSQL(sql);
 			sql = "SELECT LAST_INSERT_ID()";
 			ResultSet rs = DBHandler.GetSQL(sql);
@@ -712,7 +816,7 @@ public class EFormUtil {
 	private static ResultSet getSQL(String sql) {
 		ResultSet rs = null;
 		try {
-			
+
 			rs = DBHandler.GetSQL(sql);
 		} catch (SQLException sqe) {
 			logger.error("Error", sqe);
@@ -731,7 +835,7 @@ public class EFormUtil {
 		Matcher m_return = null;
 		if (blank(key) || blank(htmlTag)) return m_return;
 
-		Pattern p = Pattern.compile("\\b[^ '\"=>]+[ ]*=[ ]*\"[^\"]*\"|\\b[^ '\"=>]+[ ]*=[ ]*'[^']*'|\\b[^ '\"=>]+[ ]*=[ ]*[^ >]*|\\b[^ >]+", Pattern.CASE_INSENSITIVE);
+		Pattern p = Pattern.compile("\\b[^\\s'\"=>]+[ ]*=[ ]*\"[^\"]*\"|\\b[^\\s'\"=>]+[ ]*=[ ]*'[^']*'|\\b[^\\s'\"=>]+[ ]*=[ ]*[^ >]*|\\b[^\\s>]+", Pattern.CASE_INSENSITIVE);
 		Matcher m = p.matcher(htmlTag);
 
 		while (m.find()) {
@@ -748,7 +852,7 @@ public class EFormUtil {
 		return m_return;
 	}
 
-	private static String putTemplateValues(ArrayList paramNames, ArrayList paramValues, String template) {
+	private static String putTemplateValues(ArrayList<String> paramNames, ArrayList<String> paramValues, String template) {
 		if (blank(template)) return template;
 
 		String tag = "$t{";
@@ -761,7 +865,7 @@ public class EFormUtil {
 			pointer = fieldEnd + 1;
 			String field = template.substring(fieldBegin + tag.length(), fieldEnd);
 			if (paramNames.contains(field)) {
-				nwTemplate += (String) paramValues.get(paramNames.indexOf(field));
+				nwTemplate +=  paramValues.get(paramNames.indexOf(field));
 			} else {
 				nwTemplate += "{" + field + "}";
 				logger.error("EForm Template Error! Cannot find input name {" + field + "} in eform");
@@ -865,7 +969,11 @@ public class EFormUtil {
 		cmNote.setSigning_provider_no(providerNo);
 		cmNote.setSigned(true);
 		cmNote.setHistory("");
-		cmNote.setReporter_caisi_role("1"); // caisi_role for "doctor"
+		
+		SecRoleDao secRoleDao = (SecRoleDao) SpringUtils.getBean("secRoleDao");
+		SecRole doctorRole = secRoleDao.findByName("doctor");		
+		cmNote.setReporter_caisi_role(doctorRole.getId().toString());		
+		
 		cmNote.setReporter_program_team("0");
 		cmNote.setProgram_no(programNo);
 		cmNote.setUuid(UUID.randomUUID().toString());
@@ -890,8 +998,8 @@ public class EFormUtil {
 		return sCmIssu;
 	}
 
-	private static ArrayList getFieldIndices(String fieldtag, String s) {
-		ArrayList fieldIndexList = new ArrayList();
+	private static ArrayList<Integer> getFieldIndices(String fieldtag, String s) {
+		ArrayList<Integer> fieldIndexList = new ArrayList<Integer>();
 		if (blank(fieldtag) || blank(s)) return fieldIndexList;
 
 		fieldtag = fieldtag.toLowerCase();
@@ -927,8 +1035,8 @@ public class EFormUtil {
 		return content;
 	}
 
-	private static ArrayList getWithin(String tag, String s) {
-		ArrayList within = new ArrayList();
+	private static ArrayList<String> getWithin(String tag, String s) {
+		ArrayList<String> within = new ArrayList<String>();
 		if (blank(tag) || blank(s)) return within;
 
 		ArrayList<String> w = getWhole(tag, s);
@@ -940,8 +1048,8 @@ public class EFormUtil {
 		return within;
 	}
 
-	private static ArrayList getWhole(String tag, String s) {
-		ArrayList whole = new ArrayList();
+	private static ArrayList<String> getWhole(String tag, String s) {
+		ArrayList<String> whole = new ArrayList<String>();
 		if (blank(tag) || blank(s)) return whole;
 
 		String sBegin = "<" + tag;
@@ -1017,6 +1125,20 @@ public class EFormUtil {
 			}
 		}
 		return sentWho;
+	}
+	
+	public static ArrayList<String> listRichTextLetterTemplates() {
+		String imagePath = OscarProperties.getInstance().getProperty("eform_image");
+		MiscUtils.getLogger().debug("Img Path: " + imagePath);
+		File dir = new File(imagePath);
+		String[] files = DisplayImageAction.getRichTextLetterTemplates(dir);
+		ArrayList<String> fileList;
+		if( files != null )
+			fileList = new ArrayList<String>(Arrays.asList(files));
+		else
+			fileList = new ArrayList<String>();
+
+		return fileList;
 	}
 
 }

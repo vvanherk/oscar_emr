@@ -1,31 +1,27 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
  *
- *  Jason Gallagher
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
  *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * FluReport.java
- *
- * Created on September 11, 2006, 3:27 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package oscar.oscarPrevention.reports;
 
@@ -62,20 +58,21 @@ public class FluReport implements PreventionReport {
     public FluReport() {
     }
 
-    public Hashtable runReport(ArrayList list,Date asofDate){
+    public Hashtable<String,Object> runReport(ArrayList<ArrayList<String>> list,Date asofDate){
         int inList = 0;
         double done= 0;
-        ArrayList returnReport = new ArrayList();
+        ArrayList<PreventionReportDisplay> returnReport = new ArrayList<PreventionReportDisplay>();
 
         for (int i = 0; i < list.size(); i ++){//for each  element in arraylist
-             ArrayList fieldList = (ArrayList) list.get(i);
-             String demo = (String) fieldList.get(0);
+             ArrayList<String> fieldList = list.get(i);
+             String demo = fieldList.get(0);
 
              log.debug("processing patient : "+demo);
 
              //search   prevention_date prevention_type  deleted   refused
 
              ArrayList<Map<String,Object>>  prevs = PreventionData.getPreventionData("Flu",demo);
+             PreventionData.addRemotePreventions(prevs, Integer.parseInt(demo),"Flu",null);
 
              LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
              if (loggedInInfo.currentFacility.isIntegratorEnabled()) {
@@ -149,7 +146,9 @@ public class FluReport implements PreventionReport {
                 Date prevDate = null;
                 try{
                    prevDate = formatter.parse(prevDateStr);
-                }catch (Exception e){}
+                }catch (Exception e){
+                	//empty
+                }
 
 
 
@@ -237,10 +236,10 @@ public class FluReport implements PreventionReport {
              }else{
                 EctMeasurementsDataBeanHandler measurementData = new EctMeasurementsDataBeanHandler(prd.demographicNo,"FLUF");
                 log.debug("getting FLUF data for "+prd.demographicNo);
-                Collection fluFollowupData = measurementData.getMeasurementsDataVector();
+                Collection<EctMeasurementsDataBean> fluFollowupData = measurementData.getMeasurementsDataVector();
 
                 if ( fluFollowupData.size() > 0 ){
-                      EctMeasurementsDataBean fluData = (EctMeasurementsDataBean) fluFollowupData.iterator().next();
+                      EctMeasurementsDataBean fluData = fluFollowupData.iterator().next();
                       log.debug("fluData "+fluData.getDataField());
                       log.debug("lastFollowup "+fluData.getDateObservedAsDate()+ " last procedure "+fluData.getDateObservedAsDate());
 
@@ -264,7 +263,7 @@ public class FluReport implements PreventionReport {
 
           Collections.sort(returnReport);
 
-          Hashtable h = new Hashtable();
+          Hashtable<String,Object> h = new Hashtable<String,Object>();
 
           h.put("up2date",""+Math.round(done));
           h.put("percent",percentStr);
@@ -283,18 +282,18 @@ public class FluReport implements PreventionReport {
 
 
 
-    boolean ineligible(Hashtable h){
+    boolean ineligible(Hashtable<String,String> h){
        boolean ret =false;
-       if ( h.get("refused") != null && ((String) h.get("refused")).equals("2")){
+       if ( h.get("refused") != null && ( h.get("refused")).equals("2")){
           ret = true;
        }
        return ret;
    }
 
 
-   boolean ineligible(ArrayList list){
+   boolean ineligible(ArrayList<Hashtable<String,String>> list){
        for (int i =0; i < list.size(); i ++){
-           Hashtable h = (Hashtable) list.get(i);
+           Hashtable<String,String> h = list.get(i);
            if (ineligible(h)){
                return true;
            }
@@ -367,7 +366,9 @@ public class FluReport implements PreventionReport {
             Date prevDate = null;
             try{
                 prevDate = formatter.parse(prevDateStr);
-            }catch (Exception e){}
+            }catch (Exception e){
+            	//empty
+            }
 
             if (prevDate != null && prevDate.before(asOfDate)){
                noFutureItems.add(map);
@@ -401,14 +402,14 @@ public class FluReport implements PreventionReport {
               EctMeasurementsDataBeanHandler measurementData = new EctMeasurementsDataBeanHandler(prd.demographicNo,"FLUF");
               log.debug("getting FLUF data for "+prd.demographicNo);
 
-              Collection fluFollowupData = measurementData.getMeasurementsDataVector();
+              Collection<EctMeasurementsDataBean> fluFollowupData = measurementData.getMeasurementsDataVector();
               //NO Contact
 
               if ( fluFollowupData.size() == 0 ){
                   prd.nextSuggestedProcedure = this.LETTER1;
                   return this.LETTER1;
               }else{ //There has been contact
-                  EctMeasurementsDataBean fluData = (EctMeasurementsDataBean) fluFollowupData.iterator().next();
+                  EctMeasurementsDataBean fluData = fluFollowupData.iterator().next();
                   log.debug("fluData "+fluData.getDataField());
                   log.debug("lastFollowup "+fluData.getDateObservedAsDate()+ " last procedure "+fluData.getDateObservedAsDate());
                   log.debug("CUTTOFF DATE : "+cuttoffDate);
@@ -422,8 +423,8 @@ public class FluReport implements PreventionReport {
                   }else{ //AFTER CUTOFF DATE
                       //IS Last
                       Calendar today = Calendar.getInstance();
-                      int num = UtilDateUtilities.getNumMonths(fluData.getDateObservedAsDate(),today.getTime());
-                      if (num > 1 && prd.lastFollupProcedure.equals(this.LETTER1)){
+                      long num = UtilDateUtilities.getNumDays(fluData.getDateObservedAsDate(),today.getTime());
+                      if (num >= 28 && !prd.lastFollupProcedure.equals(this.PHONE1)){
                           prd.nextSuggestedProcedure = this.PHONE1;
                           log.debug("returning PHONE 1");
                           return this.PHONE1;
@@ -441,10 +442,10 @@ public class FluReport implements PreventionReport {
           }else if ("Refused".equals(prd.state)){  //Not sure what to do about refused
               EctMeasurementsDataBeanHandler measurementData = new EctMeasurementsDataBeanHandler(prd.demographicNo,"FLUF");
               log.debug("getting FLUF data for "+prd.demographicNo);
-              Collection fluFollowupData = measurementData.getMeasurementsDataVector();
+              Collection<EctMeasurementsDataBean> fluFollowupData = measurementData.getMeasurementsDataVector();
 
               if ( fluFollowupData.size() > 0 ){
-                  EctMeasurementsDataBean fluData = (EctMeasurementsDataBean) fluFollowupData.iterator().next();
+                  EctMeasurementsDataBean fluData = fluFollowupData.iterator().next();
                   log.debug("fluData "+fluData.getDataField());
                   log.debug("lastFollowup "+fluData.getDateObservedAsDate()+ " last procedure "+fluData.getDateObservedAsDate());
                   log.debug("CUTTOFF DATE : "+cuttoffDate);
@@ -458,10 +459,10 @@ public class FluReport implements PreventionReport {
                 //Do nothing
               EctMeasurementsDataBeanHandler measurementDataHandler = new EctMeasurementsDataBeanHandler(prd.demographicNo,"FLUF");
               log.debug("getting followup data for "+prd.demographicNo);
-              Collection followupData = measurementDataHandler.getMeasurementsDataVector();
+              Collection<EctMeasurementsDataBean> followupData = measurementDataHandler.getMeasurementsDataVector();
 
               if ( followupData.size() > 0 ){
-                  EctMeasurementsDataBean measurementData = (EctMeasurementsDataBean) followupData.iterator().next();
+                  EctMeasurementsDataBean measurementData = followupData.iterator().next();
                   prd.lastFollowup = measurementData.getDateObservedAsDate();
                   prd.lastFollupProcedure = measurementData.getDataField();
               }

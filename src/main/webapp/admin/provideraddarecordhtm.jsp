@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/caisi-tag.tld" prefix="caisi"%>
@@ -22,11 +47,11 @@
 
   java.util.Locale vLocale =(java.util.Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
 
-  ArrayList<Hashtable> list = ProviderData.getProviderListOfAllTypes(true);
+  ArrayList<Hashtable<String,String>> list = ProviderData.getProviderListOfAllTypes(true);
   ArrayList<Integer> providerList = new ArrayList<Integer>();
-  for (Hashtable h : list) {
+  for (Hashtable<String,String> h : list) {
 	  try{
-      String pn = (String)h.get("providerNo");
+      String pn = h.get("providerNo");
       providerList.add(Integer.valueOf(pn));
 	  }catch(Exception alphaProviderNumber){} /*No need to do anything. Just want to avoid a NumberFormatException from provider numbers with alphanumeric Characters*/
   }
@@ -43,7 +68,7 @@
 <%
 	if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
     String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
-    
+
     boolean isSiteAccessPrivacy=false;
 %>
 
@@ -52,32 +77,6 @@
 		isSiteAccessPrivacy=true;
 	%>
 </security:oscarSec>
-
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/global.js"></script>
@@ -97,7 +96,7 @@ function onsub() {
      document.searchprovider.provider_type.value==""  ) {
      alert("<bean:message key="global.msgInputKeyword"/>");
      return false;
-  } 
+  }
   if(!(document.searchprovider.provider_no.value=="-new-" || document.searchprovider.provider_no.value.match(/^\d+$/))){
   		alert("Provider No. must be a number.");
   		return false;
@@ -105,7 +104,7 @@ function onsub() {
   else {
     	return true;
   }
- 
+
 }
 function upCaseCtrl(ctrl) {
   ctrl.value = ctrl.value.toUpperCase();
@@ -156,7 +155,7 @@ function upCaseCtrl(ctrl) {
 		<td><input type="text" name="first_name" maxlength="30">
 		</td>
 	</tr>
-	
+
 <%
 		if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
 	%>
@@ -167,9 +166,9 @@ function upCaseCtrl(ctrl) {
 		<td>
 <%
 	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-List<Site> sites = ( isSiteAccessPrivacy ? siteDao.getActiveSitesByProviderNo(curProvider_no) : siteDao.getAllActiveSites()); 
+List<Site> sites = ( isSiteAccessPrivacy ? siteDao.getActiveSitesByProviderNo(curProvider_no) : siteDao.getAllActiveSites());
 for (int i=0; i<sites.size(); i++) {
-%>		
+%>
 	<input type="checkbox" name="sites" value="<%=sites.get(i).getSiteId()%>"><%=sites.get(i).getName()%><br />
 <%
 	}
@@ -178,8 +177,8 @@ for (int i=0; i<sites.size(); i++) {
 	</tr>
 <%
 	}
-%>	
-	
+%>
+
 	<tr>
 		<td align="right"><bean:message key="admin.provider.formType" /><font
 			color="red">:</font></td>
@@ -345,7 +344,7 @@ for (int i=0; i<sites.size(); i++) {
 			%>
 				<option value="<%=tempNbr.getNbrValue()%>" ><%=valueString%></option>
 			<%}%>
-			
+
 			</select>
 			</td>
 		</tr>
@@ -355,7 +354,7 @@ for (int i=0; i<sites.size(); i++) {
 			<td align="right">Bill Center:</td>
 			<td><select name="billcenter">
 				<option value=""></option>
-				<% 
+				<%
                     ProviderBillCenter billCenter = new ProviderBillCenter();
                     String billCode = "";
                     String codeDesc = "";
@@ -363,7 +362,7 @@ for (int i=0; i<sites.size(); i++) {
 //                    Enumeration keys = billCenter.getAllBillCenter().propertyNames();
                     for(int i=0;i<billCenter.getAllBillCenter().size();i++){
                         billCode=(String)keys.nextElement();
-                        codeDesc=(String)billCenter.getAllBillCenter().getProperty(billCode);
+                        codeDesc=billCenter.getAllBillCenter().getProperty(billCode);
                 %>
 				<option value=<%= billCode %>><%= codeDesc%></option>
 				<%
@@ -402,7 +401,6 @@ for (int i=0; i<sites.size(); i++) {
 		<td colspan="2">
 		<div align="center"><%-- not quite sure why we need both dboperation and displaymode set to the same thing, but
                  that's the way I found it so that's the way I'll leave it... --%>
-		<input type="hidden" name="dboperation" value="provider_add_record">
 		<input type="hidden" name="displaymode" value="Provider_Add_Record">
 		<input type="submit" name="submitbtn"
 			value="<bean:message key="admin.provideraddrecordhtm.btnProviderAddRecord"/>">

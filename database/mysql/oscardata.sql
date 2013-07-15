@@ -367,7 +367,7 @@ INSERT INTO ctl_specialinstructions VALUES (26,'Insert in both eyes');
 --
 
 INSERT INTO eform VALUES (1,'letter','','letter generator','2010-05-02','10:00:00',NULL,1,'<html><head>\r\n<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\r\n\r\n<title>Rich Text Letter</title>\r\n<style type=\"text/css\">\r\n.butn {width: 140px;}\r\n</style>\r\n\r\n<style type=\"text/css\" media=\"print\">\r\n.DoNotPrint {display: none;}\r\n\r\n</style>\r\n\r\n<script language=\"javascript\">\r\nvar needToConfirm = false;\r\n\r\n//keypress events trigger dirty flag for the iFrame and the subject line\r\ndocument.onkeyup=setDirtyFlag\r\n\r\n\r\nfunction setDirtyFlag() {\r\n	needToConfirm = true; \r\n}\r\n\r\nfunction releaseDirtyFlag() {\r\n	needToConfirm = false; //Call this function if dosent requires an alert.\r\n	//this could be called when save button is clicked\r\n}\r\n\r\n\r\nwindow.onbeforeunload = confirmExit;\r\n\r\nfunction confirmExit() {\r\n	if (needToConfirm)\r\n	return \"You have attempted to leave this page. If you have made any changes without clicking the Submit button, your changes will be lost. Are you sure you want to exit this page?\";\r\n}\r\n\r\n</script>\r\n\r\n\r\n\r\n</head><body onload=\"Start()\" bgcolor=\"FFFFFF\">\r\n\r\n\r\n<!-- START OF EDITCONTROL CODE --> \r\n\r\n<script language=\"javascript\" type=\"text/javascript\" src=\"${oscar_image_path}editControl.js\"></script>\r\n      \r\n<script language=\"javascript\">\r\n\r\n    //put any of the optional configuration variables that you want here\r\n    cfg_width = \'640\';                    //editor control width in pixels\r\n    cfg_height = \'520\';                   //editor control height in pixels\r\n    cfg_editorname = \'edit\';                //the handle for the editor                  \r\n    cfg_isrc = \'${oscar_image_path}\';         //location of the button icon files\r\n    cfg_filesrc = \'${oscar_image_path}\';         //location of the html files\r\n    cfg_template = \'blank.html\';	    //default style and content template\r\n    cfg_formattemplate = \'<option value=\"\">&mdash; template &mdash;</option>  <option value=\"blank\">blank</option>  <option value=\"consult\">consult</option> <option value=\"certificate\">work note</option> <option value=\"narcotic\">narcotic contract</option> <option value=\"MissedAppointment\">missed appt</option> <option value=\"custom\">custom</option></select>\';\r\n    //cfg_layout = \'[all]\';             //adjust the format of the buttons here\r\n    cfg_layout = \r\n\'<table style=\"background-color:#ccccff; width:640px\"><tr id=control1><td>[bold][italic][underlined][strike][subscript][superscript]|[left][center][full][right]|[unordered][ordered][rule]|[undo][redo]|[indent][outdent][select-all][clean]|[table]</td></tr><tr id=control2><td>[select-block][select-face][select-size][select-template]|[image][clock][date][spell][help]</td></tr></table>[edit-area]\';\r\n    insertEditControl(); // Initialise the edit control and sets it at this point in the webpage\r\n\r\n    function Start() {\r\n        // set eventlistener for the iframe to flag changes in the text displayed \r\n	var agent=navigator.userAgent.toLowerCase(); //for non IE browsers\r\n        if ((agent.indexOf(\"msie\") == -1) || (agent.indexOf(\"opera\") != -1)){\r\n		document.getElementById(cfg_editorname).contentWindow.addEventListener(\'keypress\',setDirtyFlag, true);\r\n	}\r\n\r\n	if (document.getElementById(\'recent_rx\').value.length<1){\r\n		//document.RichTextLetter.RecentMedications.style.visibility=\"hidden\";\r\n		document.getElementById(\'RecentMedications\').style.display = \"none\";\r\n	}\r\n\r\n        // reformat values of multiline database values from \\n lines to <br>\r\n        htmlLine(\'label\');\r\n        htmlLine(\'reminders\');\r\n        htmlLine(\'ongoingconcerns\');\r\n        htmlLine(\'medical_history\');document.getElementById(\'allergies_des\').value\r\n        htmlLine(\'other_medications_history\');  //family history  ... don\'t ask\r\n        htmlLine(\'social_family_history\');  //social history\r\n        htmlLine(\'address\');\r\n        htmlLine(\'NameAddress\');\r\n        htmlLine(\'clinic_label\');\r\n        htmlLine(\'clinic_address\');\r\n        htmlLine(\'druglist_generic\');\r\n        htmlLine(\'druglist_trade\');\r\n        htmlLine(\'recent_rx\');\r\n\r\n	var gender=document.getElementById(\'sex\').value; \r\n	if (gender==\'F\'){\r\n		document.getElementById(\'he_she\').value=\'she\'; \r\n		document.getElementById(\'his_her\').value=\'her\';\r\n		document.getElementById(\'gender\').value=\'female\';\r\n	}\r\n	var mySplitResult = document.getElementById(\'referral_name\').value.toString().split(\',\'); \r\n	document.getElementById(\'referral_nameL\').value=mySplitResult[0];\r\n\r\n	document.getElementById(\'letterhead\').value= genericLetterhead();\r\n\r\n	\r\n        // set the HTML contents of this edit control from the value saved in Oscar (if any)\r\n	var contents=document.getElementById(\'Letter\').value\r\n	if (contents.length==0){\r\n		parseTemplate();\r\n	} else {\r\n		seteditControlContents(cfg_editorname,contents);\r\n	}\r\n    }\r\n \r\n    function htmlLine(theelement) { \r\n	var temp = new Array();\r\n	if (document.getElementById(theelement).value.length>0){\r\n		temp=document.getElementById(theelement).value.split(\'\\n\'); \r\n		contents=\'\';\r\n		var x;\r\n		for (x in temp) {\r\n			contents += temp[x]+\'<br>\';\r\n			}\r\n		document.getElementById(theelement).value=contents;\r\n		}\r\n    }\r\n\r\n    function genericLetterhead() {\r\n        // set the HTML contents of the letterhead\r\n	var address = \'<table border=0><tbody><tr><td><font size=6>\'+document.getElementById(\'clinic_name\').value+\'</font></td></tr><tr><td><font size=2>\'+ document.getElementById(\'clinic_addressLineFull\').value+ \' Fax: \'+document.getElementById(\'clinic_fax\').value+\' Phone: \'+document.getElementById(\'clinic_phone\').value+\'</font><hr></td></tr></tbody></table><br>\'\r\n	if ((document.getElementById(\'clinic_name\').value.toLowerCase()).indexOf(\'amily health team\',0)>-1){\r\n		address=fhtLetterhead();\r\n	}\r\n	return address;\r\n    }\r\n\r\n    function fhtLetterhead() {\r\n        // set the HTML contents of the letterhead using FHT colours\r\n	var address = document.getElementById(\'clinic_addressLineFull\').value+ \'<br>Fax:\'+document.getElementById(\'clinic_fax\').value+\' Phone:\'+document.getElementById(\'clinic_phone\').value ;\r\n	if (document.getElementById(\'doctor\').value.indexOf(\'zapski\')>0){address=\'293 Meridian Avenue, Haileybury, ON P0J 1K0<br> Tel 705-672-2442 Fax 705-672-2384\'};\r\n	address=\'<table style=\\\'text-align: right;\\\' border=\\\'0\\\'><tbody><tr style=\\\'font-style: italic; color: rgb(71, 127, 128);\\\'><td><font size=\\\'+2\\\'>\'+document.getElementById(\'clinic_name\').value+\'</font> <hr style=\\\'width: 100%; height: 3px; color: rgb(212, 118, 0); background-color: rgb(212, 118, 0);\\\'></td> </tr> <tr style=\\\'color: rgb(71, 127, 128);\\\'> <td><font size=\\\'+1\\\'>Family Health Team<br> &Eacute;quipe Sant&eacute; Familiale</font></td> </tr> <tr style=\\\'color: rgb(212, 118, 0); \\\'> <td><small>\'+address+\'</small></td> </tr> </tbody> </table>\';\r\n	return address;\r\n    }\r\n</script>\r\n\r\n<!-- END OF EDITCONTROL CODE -->\r\n\r\n\r\n<form method=\"post\" action=\"\" name=\"RichTextLetter\" >\r\n\r\n<!-- START OF DATABASE PLACEHOLDERS -->\r\n\r\n<input type=\"hidden\" name=\"clinic_name\" id=\"clinic_name\" oscarDB=clinic_name>\r\n<input type=\"hidden\" name=\"clinic_address\" id=\"clinic_address\" oscarDB=clinic_address>\r\n<input type=\"hidden\" name=\"clinic_addressLine\" id=\"clinic_addressLine\" oscarDB=clinic_addressLine>\r\n<input type=\"hidden\" name=\"clinic_addressLineFull\" id=\"clinic_addressLineFull\" oscarDB=clinic_addressLineFull>\r\n<input type=\"hidden\" name=\"clinic_label\" id=\"clinic_label\" oscarDB=clinic_label>\r\n<input type=\"hidden\" name=\"clinic_fax\" id=\"clinic_fax\" oscarDB=clinic_fax>\r\n<input type=\"hidden\" name=\"clinic_phone\" id=\"clinic_phone\" oscarDB=clinic_phone>\r\n<input type=\"hidden\" name=\"clinic_city\" id=\"clinic_city\" oscarDB=clinic_city>\r\n<input type=\"hidden\" name=\"clinic_province\" id=\"clinic_province\" oscarDB=clinic_province>\r\n<input type=\"hidden\" name=\"clinic_postal\" id=\"clinic_postal\" oscarDB=clinic_postal>\r\n\r\n<input type=\"hidden\" name=\"patient_name\" id=\"patient_name\" oscarDB=patient_name>\r\n<input type=\"hidden\" name=\"first_last_name\" id=\"first_last_name\" oscarDB=first_last_name>\r\n<input type=\"hidden\" name=\"patient_nameF\" id=\"patient_nameF\" oscarDB=patient_nameF >\r\n<input type=\"hidden\" name=\"patient_nameL\" id=\"patient_nameL\" oscarDB=patient_nameL >\r\n<input type=\"hidden\" name=\"label\" id=\"label\" oscarDB=label>\r\n<input type=\"hidden\" name=\"NameAddress\" id=\"NameAddress\" oscarDB=NameAddress>\r\n<input type=\"hidden\" name=\"address\" id=\"address\" oscarDB=address>\r\n<input type=\"hidden\" name=\"addressline\" id=\"addressline\" oscarDB=addressline>\r\n<input type=\"hidden\" name=\"phone\" id=\"phone\" oscarDB=phone>\r\n<input type=\"hidden\" name=\"phone2\" id=\"phone2\" oscarDB=phone2>\r\n<input type=\"hidden\" name=\"province\" id=\"province\" oscarDB=province>\r\n<input type=\"hidden\" name=\"city\" id=\"city\" oscarDB=city>\r\n<input type=\"hidden\" name=\"postal\" id=\"postal\" oscarDB=postal>\r\n<input type=\"hidden\" name=\"dob\" id=\"dob\" oscarDB=dob>\r\n<input type=\"hidden\" name=\"dobc\" id=\"dobc\" oscarDB=dobc>\r\n<input type=\"hidden\" name=\"dobc2\" id=\"dobc2\" oscarDB=dobc2>\r\n<input type=\"hidden\" name=\"hin\" id=\"hin\" oscarDB=hin>\r\n<input type=\"hidden\" name=\"hinc\" id=\"hinc\" oscarDB=hinc>\r\n<input type=\"hidden\" name=\"hinversion\" id=\"hinversion\" oscarDB=hinversion>\r\n<input type=\"hidden\" name=\"ageComplex\" id=\"ageComplex\" oscarDB=ageComplex >\r\n<input type=\"hidden\" name=\"age\" id=\"age\" oscarDB=age >\r\n<input type=\"hidden\" name=\"sex\" id=\"sex\" oscarDB=sex >\r\n<input type=\"hidden\" name=\"chartno\" id=\"chartno\" oscarDB=chartno >\r\n\r\n<input type=\"hidden\" name=\"medical_history\" id=\"medical_history\" oscarDB=medical_history>\r\n<input type=\"hidden\" name=\"recent_rx\" id=\"recent_rx\" oscarDB=recent_rx>\r\n<input type=\"hidden\" name=\"druglist_generic\" id=\"druglist_generic\" oscarDB=druglist_generic>\r\n<input type=\"hidden\" name=\"druglist_trade\" id=\"druglist_trade\" oscarDB=druglist_trade>\r\n<input type=\"hidden\" name=\"druglist_line\" id=\"druglist_line\" oscarDB=druglist_line>\r\n<input type=\"hidden\" name=\"social_family_history\" id=\"social_family_history\" oscarDB=social_family_history>\r\n<input type=\"hidden\" name=\"other_medications_history\" id=\"other_medications_history\" oscarDB=other_medications_history>\r\n<input type=\"hidden\" name=\"reminders\" id=\"reminders\" oscarDB=reminders>\r\n<input type=\"hidden\" name=\"ongoingconcerns\" id=\"ongoingconcerns\" oscarDB=ongoingconcerns >\r\n\r\n<input type=\"hidden\" name=\"provider_name_first_init\" id=\"provider_name_first_init\" oscarDB=provider_name_first_init >\r\n<input type=\"hidden\" name=\"current_user\" id=\"current_user\" oscarDB=current_user >\r\n<input type=\"hidden\" name=\"doctor_work_phone\" id=\"doctor_work_phone\" oscarDB=doctor_work_phone >\r\n<input type=\"hidden\" name=\"doctor\" id=\"doctor\" oscarDB=doctor >\r\n\r\n<input type=\"hidden\" name=\"today\" id=\"today\" oscarDB=today>\r\n\r\n<input type=\"hidden\" name=\"allergies_des\" id=\"allergies_des\" oscarDB=allergies_des >\r\n\r\n<!-- PLACE REFERRAL PLACEHOLDERS HERE WHEN BC APCONFIG FIXED -->\r\n<input type=\"hidden\" name=\"referral_name\" id=\"referral_name\" oscarDB=referral_name>\r\n<input type=\"hidden\" name=\"referral_address\" id=\"referral_address\" oscarDB=referral_address>\r\n<input type=\"hidden\" name=\"referral_phone\" id=\"referral_phone\" oscarDB=referral_phone>\r\n<input type=\"hidden\" name=\"referral_fax\" id=\"referral_fax\" oscarDB=referral_fax>\r\n\r\n<!-- END OF DATABASE PLACEHOLDERS -->\r\n\r\n\r\n<!-- START OF MEASUREMENTS PLACEHOLDERS -->\r\n\r\n<input type=\"hidden\" name=\"BP\" id=\"BP\" oscarDB=m$BP#value>\r\n<input type=\"hidden\" name=\"WT\" id=\"WT\" oscarDB=m$WT#value>\r\n<input type=\"hidden\" name=\"smoker\" id=\"smoker\" oscarDB=m$SMK#value>\r\n<input type=\"hidden\" name=\"dailySmokes\" id=\"dailySmokes\" oscarDB=m$NOSK#value>\r\n<input type=\"hidden\" name=\"A1C\" id=\"A1C\" oscarDB=m$A1C#value>\r\n\r\n<!-- END OF MEASUREMENTS PLACEHOLDERS -->\r\n\r\n\r\n<!-- START OF DERIVED PLACEHOLDERS -->\r\n\r\n<input type=\"hidden\" name=\"he_she\" id=\"he_she\" value=\"he\">\r\n<input type=\"hidden\" name=\"his_her\" id=\"his_her\" value=\"his\">\r\n<input type=\"hidden\" name=\"gender\" id=\"gender\" value=\"male\">\r\n<input type=\"hidden\" name=\"referral_nameL\" id=\"referral_nameL\" value=\"Referring Doctor\">\r\n<input type=\"hidden\" name=\"letterhead\" id=\"letterhead\" value=\"Letterhead\">\r\n\r\n<!-- END OF DERIVED PLACEHOLDERS -->\r\n\r\n\r\n<textarea name=\"Letter\" id=\"Letter\" style=\"width:600px; display: none;\"></textarea>\r\n\r\n<div class=\"DoNotPrint\" id=\"control3\" style=\"position:absolute; top:20px; left: 660px;\">\r\n<input type=\"button\" class=\"butn\" name=\"AddLetterhead\" id=\"AddLetterhead\" value=\"Letterhead\" \r\n	onclick=\"doHtml(document.getElementById(\'letterhead\').value);\">\r\n\r\n<br>\r\n<!--\r\n<input type=\"button\" class=\"butn\" name=\"certificate\" value=\"Work Note\" \r\n	onclick=\"document.RichTextLetter.AddLetterhead.click();\r\n 	doHtml(\'<p>\'+doDate()+\'<p>This is to certify that I have today examined <p>\');\r\n	document.RichTextLetter.AddLabel.click();\r\n	doHtml(\'In my opinion, \'+document.getElementById(\'he_she\').value+\' will be unfit for \'+document.getElementById(\'his_her\').value+\' normal work from today to * inclusive.\');\r\n	document.RichTextLetter.Closing.click();\">\r\n<br>\r\n\r\n<input type=\"button\" class=\"butn\" name=\"consult\" value=\"Consult Letter\" \r\n	onclick=\"  var ref=document.getElementById(\'referral_name\').value.toString(); var mySplitResult = ref.split(\',\');\r\n	var gender=document.getElementById(\'sex\').value; if (gender==\'M\'){gender=\'male\';}; if (gender==\'F\'){gender=\'female\';};\r\n	var years=document.getElementById(\'ageComplex\').value; if (years==\'\'){years=document.getElementById(\'age\').value + \'yo\';};\r\n	document.RichTextLetter.AddLetterhead.click();\r\n	doHtml(\'<p>\'+doDate()+\'<p>\');\r\n	document.RichTextLetter.AddReferral.click();\r\n	doHtml(\'<p>RE:&nbsp\');\r\n	document.RichTextLetter.AddLabel.click();\r\n	doHtml(\'<p>Dear Dr. \'+mySplitResult[0]+\'<p>Thank you for asking me to see this \'+years+ \' \' +gender);\r\n	document.RichTextLetter.Closing.click(); \">\r\n<br>\r\n-->\r\n<input type=\"button\" class=\"butn\" name=\"AddReferral\" id=\"AddReferral\" value=\"Referring Block\" \r\n	onclick=\"doHtml(document.getElementById(\'referral_name\').value+\'<br>\'+ document.getElementById(\'referral_address\').value +\'<br>CANADA<br> Tel: \'+ document.getElementById(\'referral_phone\').value+\'<br>Fax:  \'+document.getElementById(\'referral_fax\').value);\">\r\n\r\n<br>\r\n\r\n<input type=\"button\" class=\"butn\" name=\"AddLabel\" id=\"AddLabel\" value=\"Patient Block\" \r\n	onclick=\"doHtml(document.getElementById(\'label\').value);\">\r\n\r\n<br>\r\n\r\n<br>\r\n<input type=\"button\"  class=\"butn\" name=\"MedicalHistory\" value=\"Recent History\" width=30\r\n	onclick=\"var hist=parseText(document.getElementById(\'medical_history\').value); doHtml(hist);\">\r\n<br>\r\n<input type=\"button\"  class=\"butn\" name=\"AddMedicalHistory\" value=\"Full History\" width=30\r\n	onclick=\"doHtml(document.getElementById(\'medical_history\').value); \">\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"RecentMedications\" id=\"RecentMedications\" value=\"Recent Prescriptions\"\r\n	onclick=\"doHtml(document.getElementById(\'recent_rx\').value);\">\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"Medlist\" id=\"Medlist\" value=\"Medication List\"\r\n	onclick=\"doHtml(document.getElementById(\'druglist_trade\').value);\">\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"Allergies\" id=\"Allergies\" value=\"Meds & Allergies\"\r\n	onclick=\"var allergy=document.getElementById(\'allergies_des\').value; if (allergy.length>0){allergy=\'<br>Allergies: \'+allergy};doHtml(\'Medications: \'+document.getElementById(\'druglist_line\').value+allergy);\">\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"OtherMedicationsHistory\" value=\"Family History\"\r\n	onclick=\"var hist=parseText(document.getElementById(\'other_medications_history\').value); doHtml(hist);\">\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"AddOtherMedicationsHistory\" value=\"Full Family Hx\"\r\n	onclick=\"doHtml(document.getElementById(\'other_medications_history\').value); \">\r\n\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"AddSocialFamilyHistory\" value=\"Social History\" \r\n	onclick=\"var hist=parseText(document.getElementById(\'social_family_history\').value); doHtml(hist);\">\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"AddReminders\" value=\"Reminders\"\r\n	onclick=\"var hist=parseText(document.getElementById(\'reminders\').value); doHtml(hist);\">\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"AddOngoingConcerns\" value=\"Ongoing Concerns\"\r\n	onclick=\"var hist=parseText(document.getElementById(\'ongoingconcerns\').value); doHtml(hist);\">\r\n<br>\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"Patient\" value=\"Patient Name\"\r\n	onclick=\" doHtml(document.getElementById(\'first_last_name\').value);\">\r\n\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"PatientAge\" value=\"Patient Age\"\r\n	onclick=\"var hist=document.getElementById(\'ageComplex\').value; if (hist==\'\'){hist=document.getElementById(\'age\').value;}; doHtml(hist);\">\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"label\" value=\"Patient Label\"\r\n	onclick=\"var hist=document.getElementById(\'label\').value; doHtml(hist);\">\r\n\r\n\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"PatientSex\" value=\"Patient Gender\"\r\n	onclick=\"doHtml(document.getElementById(\'sex\').value);\">\r\n<br>\r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"Closing\" value=\"Closing Salutation\" \r\n	onclick=\" doHtml(\'<p>Yours Sincerely<p>&nbsp;<p>\'+ document.getElementById(\'provider_name_first_init\').value+\', MD\');\">\r\n \r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"User\" value=\"Current User\"\r\n	onclick=\"var hist=document.getElementById(\'current_user\').value; doHtml(hist);\">\r\n \r\n<br>\r\n<input type=\"button\" class=\"butn\" name=\"Doctor\" value=\"Attending Doctor\"\r\n	onclick=\"var hist=document.getElementById(\'doctor\').value; doHtml(hist);\">\r\n<br>\r\n<br>\r\n\r\n\r\n<br>\r\n</div>\r\n\r\n\r\n<div class=\"DoNotPrint\" >\r\n<input onclick=\"viewsource(this.checked)\" type=\"checkbox\">\r\nHTML Source\r\n<input onclick=\"usecss(this.checked)\" type=\"checkbox\">\r\nUse CSS\r\n	<table><tr><td>\r\n		 Subject: <input name=\"subject\" id=\"subject\" size=\"40\" type=\"text\">\r\n		 <input value=\"Submit\" name=\"SubmitButton\" type=\"submit\" onclick=\"needToConfirm=false;document.getElementById(\'Letter\').value=editControlContents(\'edit\');  document.RichTextLetter.submit()\">\r\n		 <input value=\"Reset\" name=\"ResetButton\" type=\"reset\">\r\n		 <input value=\"Print\" name=\"PrintButton\" type=\"button\" onclick=\"document.getElementById(\'edit\').contentWindow.print();\">\r\n		 <input value=\"Print & Save\" name=\"PrintSaveButton\" type=\"button\" onclick=\"document.getElementById(\'edit\').contentWindow.print();needToConfirm=false;document.getElementById(\'Letter\').value=editControlContents(\'edit\');  setTimeout(\'document.RichTextLetter.submit()\',1000);\">\r\n	 </td></tr></table>\r\n </div>\r\n </form>\r\n\r\n</body></html>\r\n',0,NULL);
-
+INSERT INTO eform VALUES (2,'Rich Text Letter',NULL,'Rich Text Letter Generator','2012-06-01','10:00:00',NULL,0,'<html><head>\n<meta http-equiv=\"content-type\" content=\"text/html; charset=UTF-8\">\n\n<title>Rich Text Letter</title>\n<style type=\"text/css\">\n.butn {width: 140px;}\n</style>\n\n<style type=\"text/css\" media=\"print\">\n.DoNotPrint {display: none;}\n\n</style>\n<script language=\"javascript\" type=\"text/javascript\" src=\"${oscar_javascript_path}jquery/jquery-1.4.2.js\"></script>\n\n<script language=\"javascript\">\nvar needToConfirm = false;\n\n//keypress events trigger dirty flag for the iFrame and the subject line\ndocument.onkeyup=setDirtyFlag\n\n\nfunction setDirtyFlag() {\n	needToConfirm = true; \n}\n\nfunction releaseDirtyFlag() {\n	needToConfirm = false; //Call this function if dosent requires an alert.\n	//this could be called when save button is clicked\n}\n\n\nwindow.onbeforeunload = confirmExit;\n\nfunction confirmExit() {\n	if (needToConfirm)\n	return \"You have attempted to leave this page. If you have made any changes without clicking the Submit button, your changes will be lost. Are you sure you want to exit this page?\";\n}\n\n</script>\n\n\n\n</head><body bgcolor=\"FFFFFF\" onload=\"Start();\">\n\n\n<!-- START OF EDITCONTROL CODE --> \n\n<script language=\"javascript\" type=\"text/javascript\" src=\"${oscar_javascript_path}eforms/editControl.js\"></script>\n<script language=\"javascript\" type=\"text/javascript\" src=\"${oscar_javascript_path}eforms/APCache.js\"></script>\n<script language=\"javascript\" type=\"text/javascript\" src=\"${oscar_javascript_path}eforms/imageControl.js\"></script>\n<script language=\"javascript\" type=\"text/javascript\" src=\"${oscar_javascript_path}eforms/faxControl.js\"></script>\n<script language=\"javascript\" type=\"text/javascript\" src=\"${oscar_javascript_path}eforms/signatureControl.jsp\"></script>\n<script language=\"javascript\" type=\"text/javascript\" src=\"${oscar_javascript_path}eforms/printControl.js\"></script>\n\n<script language=\"javascript\">\n	//put any of the optional configuration variables that you want here\n	cfg_width = \'840\'; //editor control width in pixels\n	cfg_height = \'520\'; //editor control height in pixels\n	cfg_editorname = \'edit\'; //the handle for the editor                  \n	cfg_isrc = \'../eform/displayImage.do?imagefile=\'; //location of the button icon files\n	cfg_filesrc = \'../eform/displayImage.do?imagefile=\'; //location of the html files\n	cfg_template = \'blank.rtl\'; //default style and content template\n	cfg_formattemplate = \'<option value=\"\"> loading... </option></select>\';\n	//cfg_layout = \'[all]\';             //adjust the format of the buttons here\n	cfg_layout = \'<table style=\"background-color:ccccff; width:840px\"><tr id=control1><td>[bold][italic][underlined][strike][subscript][superscript]|[left][center][full][right]|[unordered][ordered][rule]|[undo][redo]|[indent][outdent][select-all][clean]|[table]</td></tr><tr id=control2><td>[select-block][select-face][select-size][select-template]|[image][clock][date][spell][help]</td></tr></table>[edit-area]\';\n	insertEditControl(); // Initialise the edit control and sets it at this point in the webpage\n\n	\n	function gup(name, url)\n	{\n		if (url == null) { url = window.location.href; }\n		name = name.replace(/[\\[]/,\"\\\\\\[\").replace(/[\\]]/,\"\\\\\\]\");\n		var regexS = \"[\\\\?&]\"+name+\"=([^&#]*)\";\n		var regex = new RegExp(regexS);\n		var results = regex.exec(url);\n		if (results == null) { return \"\"; }\n		else { return results[1]; }\n	}\n	var demographicNo =\"\";\n\n	jQuery(document).ready(function(){\n		demographicNo = gup(\"demographic_no\");\n		if (demographicNo == \"\") { demographicNo = gup(\"efmdemographic_no\", jQuery(\"form\").attr(\'action\')); }\n		if (typeof signatureControl != \"undefined\") {\n			signatureControl.initialize({\n				sigHTML:\"../signature_pad/tabletSignature.jsp?inWindow=true&saveToDB=true&demographicNo=\",\n				demographicNo:demographicNo,\n				refreshImage: function (e) {\n					var html = \"<img src=\'\"+e.storedImageUrl+\"&r=\"+ Math.floor(Math.random()*1001) +\"\'></img>\";\n					doHtml(html);		\n				},\n				signatureInput: \"#signatureInput\"	\n			});\n		}		\n	});\n		\n	var cache = createCache({\n		defaultCacheResponseHandler: function(type) {\n			if (checkKeyResponse(type)) {\n				doHtml(cache.get(type));\n			}			\n			\n		},\n		cacheResponseErrorHandler: function(xhr, error) {\n			alert(\"Please contact an administrator, an error has occurred.\");			\n			\n		}\n	});	\n	\n	function checkKeyResponse(response) {		\n		if (cache.isEmpty(response)) {\n			alert(\"The requested value has no content.\");\n			return false;\n		}\n		return true;\n	}\n	\n	function printKey (key) {\n		var value = cache.lookup(key); \n		if (value != null && checkKeyResponse(key)) { doHtml(cache.get(key)); } 		  \n	}\n	\n	function submitFaxButton() {\n		document.getElementById(\'faxEForm\').value=true;\n		needToConfirm=false;\n		document.getElementById(\'Letter\').value=editControlContents(\'edit\');\n		setTimeout(\'document.RichTextLetter.submit()\',1000);\n	}\n	\n	cache.addMapping({\n		name: \"_SocialFamilyHistory\",\n		values: [\"social_family_history\"],\n		storeInCacheHandler: function(key,value) {\n			cache.put(this.name, cache.get(\"social_family_history\").replace(/(<br>)+/g,\"<br>\"));\n		},\n		cacheResponseHandler:function () {\n			if (checkKeyResponse(this.name)) {				\n				doHtml(cache.get(this.name));\n			}	\n		}\n	});\n	\n	\n	cache.addMapping({name: \"template\", cacheResponseHandler: populateTemplate});	\n	\n	cache.addMapping({\n		name: \"_ClosingSalutation\", \n		values: [\"provider_name_first_init\"],	\n		storeInCacheHandler: function (key,value) {\n			if (!cache.isEmpty(\"provider_name_first_init\")) {\n				cache.put(this.name, \"<p>Yours Sincerely<p>&nbsp;<p>\" + cache.get(\"provider_name_first_init\") + \", MD\");\n			}\n		},\n		cacheResponseHandler:function () {\n			if (checkKeyResponse(this.name)) {				\n				doHtml(cache.get(this.name));\n			}	\n		}\n	});\n	\n	cache.addMapping({\n		name: \"_ReferringBlock\", \n		values: [\"referral_name\", \"referral_address\", \"referral_phone\", \"referral_fax\"], 	\n		storeInCacheHandler: function (key, value) {\n			var text = \n				(!cache.isEmpty(\"referral_name\") ? cache.get(\"referral_name\") + \"<br>\" : \"\") \n			  + (!cache.isEmpty(\"referral_address\") ? cache.get(\"referral_address\") + \"<br>\" : \"\")\n			  + (!cache.isEmpty(\"referral_phone\") ? \"Tel: \" + cache.get(\"referral_phone\") + \"<br>\" : \"\")\n			  + (!cache.isEmpty(\"referral_fax\") ? \"Fax: \" + cache.get(\"referral_fax\") + \"<br>\" : \"\");						  						 \n			cache.put(this.name, text)\n		},\n		cacheResponseHandler: function () {\n			if (checkKeyResponse(this.name)) {\n				doHtml(cache.get(this.name));\n			}\n		}\n	});\n	\n	cache.addMapping({\n		name: \"letterhead\", \n		values: [\"clinic_name\", \"clinic_fax\", \"clinic_phone\", \"clinic_addressLineFull\", \"doctor\", \"doctor_contact_phone\", \"doctor_contact_fax\", \"doctor_contact_addr\"], \n		storeInCacheHandler: function (key, value) {\n			var text = genericLetterhead();\n			cache.put(\"letterhead\", text);\n		},\n		cacheResponseHandler: function () {\n			if (checkKeyResponse(this.name)) {\n				doHtml(cache.get(this.name));\n			}\n		}\n	});\n	\n	cache.addMapping({\n		name: \"referral_nameL\", \n		values: [\"referral_name\"], \n		storeInCacheHandler: function(_key,_val) { \n		if (!cache.isEmpty(\"referral_name\")) {\n				var mySplitResult =  cache.get(\"referral_name\").toString().split(\",\");\n				cache.put(\"referral_nameL\", mySplitResult[0]);\n			} \n		}\n	});\n	\n	cache.addMapping({\n		name: \"complexAge\", \n		values: [\"complexAge\"], \n		cacheResponseHandler: function() {\n			if (cache.isEmpty(\"complexAge\")) { \n				printKey(\"age\"); \n			}\n			else {\n				if (checkKeyResponse(this.name)) {\n					doHtml(cache.get(this.name));\n				}\n			}\n		}\n	});\n	\n	// Setting up many to one mapping for derived gender keys.\n	var genderKeys = [\"he_she\", \"his_her\", \"gender\"];	\n	var genderIndex;\n	for (genderIndex in genderKeys) {\n		cache.addMapping({ name: genderKeys[genderIndex], values: [\"sex\"]});\n	}\n	cache.addMapping({name: \"sex\", values: [\"sex\"], storeInCacheHandler: populateGenderInfo});\n	\n	function isGenderLookup(key) {\n		var y;\n		for (y in genderKeys) { if (genderKeys[y] == key) { return true; } }\n		return false;\n	}\n	\n	function populateGenderInfo(key, val){\n		if (val == \'F\') {\n			cache.put(\"sex\", \"F\");\n			cache.put(\"he_she\", \"she\");\n			cache.put(\"his_her\", \"her\");\n			cache.put(\"gender\", \"female\");				\n		}\n		else {\n			cache.put(\"sex\", \"M\");\n			cache.put(\"he_she\", \"he\");\n			cache.put(\"his_her\", \"him\");\n			cache.put(\"gender\", \"male\");				\n		}\n	}\n	\n	function Start() {\n		\n			$.ajax({\n				url : \"efmformrtl_templates.jsp\",\n				success : function(data) {\n					$(\"#template\").html(data);\n					loadDefaultTemplate();\n				}\n			});\n	\n			$(\".cacheInit\").each(function() { \n				cache.put($(this).attr(\'name\'), $(this).val());\n				$(this).remove();				\n			});\n			\n			// set eventlistener for the iframe to flag changes in the text displayed \n			var agent = navigator.userAgent.toLowerCase(); //for non IE browsers\n			if ((agent.indexOf(\"msie\") == -1) || (agent.indexOf(\"opera\") != -1)) {\n				document.getElementById(cfg_editorname).contentWindow\n						.addEventListener(\'keypress\', setDirtyFlag, true);\n			}\n				\n			// set the HTML contents of this edit control from the value saved in Oscar (if any)\n			var contents = document.getElementById(\'Letter\').value\n			if (contents.length == 0) {\n				parseTemplate();\n			} else {\n				seteditControlContents(cfg_editorname, contents);\n			}\n	}\n\n	function htmlLine(text) {\n		return text.replace(/\\r?\\n/g,\"<br>\");\n	}\n\n	function genericLetterhead() {\n		// set the HTML contents of the letterhead\n		var address = \'<table border=0><tbody><tr><td><font size=6>\'\n				+ cache.get(\'clinic_name\')\n				+ \'</font></td></tr><tr><td><font size=2>\'\n				+ cache.get(\'doctor_contact_addr\')\n				+ \' Fax: \' + cache.get(\'doctor_contact_fax\')\n				+ \' Phone: \' + cache.get(\'doctor_contact_phone\')\n				+ \'</font><hr></td></tr></tbody></table><br>\';\n		\n		return address;\n	}\n\n	function fhtLetterhead() {\n		// set the HTML contents of the letterhead using FHT colours\n		var address = cache.get(\'clinic_addressLineFull\')\n				+ \'<br>Fax:\' + cache.get(\'clinic_fax\')\n				+ \' Phone:\' + cache.get(\'clinic_phone\');\n		if (cache.contains(\"doctor\") && cache.get(\'doctor\').indexOf(\'zapski\') > 0) {\n			address = \'293 Meridian Avenue, Haileybury, ON P0J 1K0<br> Tel 705-672-2442 Fax 705-672-2384\';\n		}\n		address = \'<table style=\\\'text-align: right;\\\' border=\\\'0\\\'><tbody><tr style=\\\'font-style: italic; color: rgb(71, 127, 128);\\\'><td><font size=\\\'+2\\\'>\'\n				+ cache.get(\'clinic_name\')\n				+ \'</font> <hr style=\\\'width: 100%; height: 3px; color: rgb(212, 118, 0); background-color: rgb(212, 118, 0);\\\'></td> </tr> <tr style=\\\'color: rgb(71, 127, 128);\\\'> <td><font size=\\\'+1\\\'>Family Health Team<br> &Eacute;quipe Sant&eacute; Familiale</font></td> </tr> <tr style=\\\'color: rgb(212, 118, 0); \\\'> <td><small>\'\n				+ address + \'</small></td> </tr> </tbody> </table>\';\n		return address;\n	}\n\n	var formIsRTL = true;\n\n</script>\n\n<!-- END OF EDITCONTROL CODE -->\n\n\n<form method=\"post\" action=\"\" name=\"RichTextLetter\" >\n\n<textarea name=\"Letter\" id=\"Letter\" style=\"width:600px; display: none;\"></textarea>\n\n<div class=\"DoNotPrint\" id=\"control3\" style=\"position:absolute; top:20px; left: 860px;\">\n\n<!-- Letter Head -->\n<input type=\"button\" class=\"butn\" name=\"AddLetterhead\" id=\"AddLetterhead\" value=\"Letterhead\" onclick=\"printKey(\'letterhead\');\">\n<br>\n\n<!-- Referring Block -->\n<input type=\"button\" class=\"butn\" name=\"AddReferral\" id=\"AddReferral\" value=\"Referring Block\" onclick=\"printKey(\'_ReferringBlock\');\">\n<br>\n\n<!-- Patient Block -->\n<input type=\"button\" class=\"butn\" name=\"AddLabel\" id=\"AddLabel\" value=\"Patient Block\" onclick=\"printKey(\'label\');\">\n<br>\n<br> \n\n<!-- Social History -->\n<input type=\"button\" class=\"butn\" name=\"AddSocialFamilyHistory\" value=\"Social History\" onclick=\"var hist=\'_SocialFamilyHistory\';printKey(hist);\">\n<br>\n\n<!--  Medical History -->\n<input type=\"button\"  class=\"butn\" name=\"AddMedicalHistory\" value=\"Medical History\" width=30 onclick=\"printKey(\'medical_history\'); \">\n<br>\n\n<!--  Ongoing Concerns -->\n\n<input type=\"button\" class=\"butn\" name=\"AddOngoingConcerns\" value=\"Ongoing Concerns\" onclick=\"var hist=\'ongoingconcerns\'; printKey(hist);\">\n<br>\n\n<!-- Reminders -->\n<input type=\"button\" class=\"butn\" name=\"AddReminders\" value=\"Reminders\"\n	onclick=\"var hist=\'reminders\'; printKey(hist);\">\n<br>\n\n<!-- Allergies -->\n<input type=\"button\" class=\"butn\" name=\"Allergies\" id=\"Allergies\" value=\"Allergies\" onclick=\"printKey(\'allergies_des\');\">\n<br>\n\n<!-- Prescriptions -->\n<input type=\"button\" class=\"butn\" name=\"Medlist\" id=\"Medlist\" value=\"Prescriptions\"	onclick=\"printKey(\'druglist_trade\');\">\n<br>\n\n<!-- Other Medications -->\n<input type=\"button\" class=\"butn\" name=\"OtherMedicationsHistory\" value=\"Other Medications\" onclick=\"printKey(\'other_medications_history\'); \">\n\n<br>\n\n<!-- Risk Factors -->\n<input type=\"button\" class=\"butn\" name=\"RiskFactors\" value=\"Risk Factors\" onclick=\"printKey(\'riskfactors\'); \">\n<br>\n\n<!-- Family History -->\n<input type=\"button\" class=\"butn\" name=\"FamilyHistory\" value=\"Family History\" onclick=\"printKey(\'family_history\'); \">\n<br>\n<br>\n\n<!-- Patient Name --> \n<input type=\"button\" class=\"butn\" name=\"Patient\" value=\"Patient Name\" onclick=\"printKey(\'first_last_name\');\">\n<br>\n\n<!-- Patient Age -->\n<input type=\"button\" class=\"butn\" name=\"PatientAge\" value=\"Patient Age\" onclick=\"var hist=\'ageComplex\'; printKey(hist);\">\n\n<br>\n\n<!-- Patient Label -->\n<input type=\"button\" class=\"butn\" name=\"label\" value=\"Patient Label\" onclick=\"hist=\'label\';printKey(hist);\">\n<br>\n\n<input type=\"button\" class=\"butn\" name=\"PatientSex\" value=\"Patient Gender\" onclick=\"printKey(\'sex\');\">\n<br>\n<br>\n\n<!-- Closing Salutation -->\n<input type=\"button\" class=\"butn\" name=\"Closing\" value=\"Closing Salutation\" onclick=\"printKey(\'_ClosingSalutation\');\">\n<br>\n\n<!--  Current User -->\n<input type=\"button\" class=\"butn\" name=\"User\" value=\"Current User\" onclick=\"var hist=\'current_user\'; printKey(hist);\">\n<br>\n\n<!-- Attending Doctor -->\n<input type=\"button\" class=\"butn\" name=\"Doctor\" value=\"Doctor (MRP)\" onclick=\"var hist=\'doctor\'; printKey(hist);\">\n<br>\n<br>\n\n</div>\n\n\n<div class=\"DoNotPrint\" >\n<input onclick=\"viewsource(this.checked)\" type=\"checkbox\">\nHTML Source\n<input onclick=\"usecss(this.checked)\" type=\"checkbox\">\nUse CSS\n	<table><tr><td>\n		 Subject: <input name=\"subject\" id=\"subject\" size=\"40\" type=\"text\">		 \n	 </td></tr></table>\n\n \n <div id=\"signatureInput\">&nbsp;</div>\n\n <div id=\"faxControl\">&nbsp;</div>\n \n<br>\n\n<input value=\"Submit\" name=\"SubmitButton\" type=\"submit\" onclick=\"needToConfirm=false;document.getElementById(\'Letter\').value=editControlContents(\'edit\');  document.RichTextLetter.submit()\">\n<input value=\"Print\" name=\"PrintSaveButton\" type=\"button\" onclick=\"document.getElementById(\'edit\').contentWindow.print();needToConfirm=false;document.getElementById(\'Letter\').value=editControlContents(\'edit\');  setTimeout(\'document.RichTextLetter.submit()\',1000);\">\n<input value=\"Reset\" name=\"ResetButton\" type=\"reset\">\n<input value=\"Print\" name=\"PrintButton\" type=\"button\" onclick=\"document.getElementById(\'edit\').contentWindow.print();\">\n\n\n    	</div>\n\n</form>\n\n</body></html>',0,NULL);
 
 --
 -- Dumping data for table 'eform_data'
@@ -424,7 +424,9 @@ INSERT INTO encounterForm VALUES ('Vascular Tracker', '../form/SetupForm.do?form
 INSERT INTO encounterForm VALUES ('Growth 0-36m', '../form/formGrowth0_36.jsp?demographic_no=','formGrowth0_36',0);
 INSERT INTO encounterForm VALUES ('Letterhead', '../form/formConsultant.jsp?demographic_no=', 'formConsult', 0);
 INSERT INTO `encounterForm`(`form_name`,`form_value`,`form_table`,`hidden`) VALUES ('CHF','../form/formchf.jsp?demographic_no=','formchf',0);
-
+INSERT INTO `encounterForm`(`form_name`,`form_value`,`form_table`,`hidden`) VALUES ('Health Passport', '../form/formbchp.jsp?demographic_no=', 'formBCHP', 0);
+insert into encounterForm values ('ON AR Enhanced','../form/formonarenhanced.jsp?demographic_no=','formONAREnhanced',0);
+INSERT INTO `encounterForm` (`form_name`, `form_value`, `form_table`, `hidden`) VALUES ('HMP Form','../form/HSFOForm2.do?demographic_no=','form_hsfo2_visit',1);
 
 --
 -- Dumping data for table 'encountertemplate'
@@ -1133,41 +1135,261 @@ INSERT INTO ichppccode VALUES ('203','650','Uncomplicated Pregnancy, normal deli
 -- Dumping data for table 'measurementType'
 --
 
-INSERT INTO measurementType(type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("HT", "HT", "Height", "in cm",  "5", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("WT", "WT", "Weight", "in kg", "5", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("WT", "WT", "Weight", "in BMI", "4", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("BP", "BP", "Blood Pressure", "sitting position", "6", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("HbAi", "HbAic", "Glucose HbAic", "HbAic", "1", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("FBS", "FBS", "Glucose FBS", "FBS", "3", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("MACA", "Macroalbuminuria", "Renal Macrobalbumnuria", "q 3-6 months", "3", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("UALB", "Urine alb", "Renal Urine alb", "Create ratio yearly", "3", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("24UR", "24-hr Urine cr clearance & albuminuria", "Renal 24-hr Urine cr clearance & albuminuria", "q 6-12 months, unit mg", "3", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("TG", "TG", "LIPIDS TG", "monitor every 1-3 year", "3", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("LDL", "LDL", "LIPIDS LDL", "monitor every 1-3 year", "3", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("TCHD", "TC/HDL", "LIPIDS TD/HDL", "monitor every 1-3 year", "3", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("FEET", "FEET", "Feet Check skin", "sensation (Yes/No)", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("FEET", "FEET", "Feet Check skin", "vibration (Yes/No)", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("FEET", "FEET", "Feet Check skin", "reflexes (Yes/No)", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("FEET", "FEET", "Feet Check skin", "pulses (Yes/No)", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("FEET", "FEET", "Feet Check skin", "infection (Yes/No)", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("SMK", "Smoking", "Smoking", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("EXE", "Exercise", "Exercise", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("ALC", "Alcohol", "Alcohol", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("SEXF", "Sexual Function", "Sexual Function", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("DIET", "Diet", "Diet", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("DMSM", "Diabetes Self Management Goals", "Diabetes Self Management Goals", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("DT1", "Type I", "Diabetes Type 1", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("DT2", "Type II", "Diabetes Type 2", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("DIFB", "Impaired FB", "Impaired FB", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("DIGT", "Impaired GT", "Impaired Glucose Tolerance", "Yes/No", "7", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("DARB", "ACE AARB", "ACE AARB", "Yes/No", "7", now());
-
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("FLUF", "Flu Follow up", "flu prevention follow up", "", "11", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("PAPF", "Pap prevention follow up", "Pap Follow up", "", "11", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("MAMF", "Mammogram prevention follow up", "Mammogram Follow Up", "", "11", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("CIMF", "Child Immunization prevention follow up", "Child Immunization Follow up", "", "11", now());
-INSERT INTO measurementType (type, typeDisplayName,  typeDescription, measuringInstruction, validation, createDate) VALUES("FOBF", "FOBT prevention follow up", "FOBT Immunization Follow up", "", "11", now());
-
+INSERT INTO `measurementType` (`type`, `typeDisplayName`, `typeDescription`, `measuringInstruction`, `validation`, `createDate`) VALUES
+( '02', 'Oxygen Saturatifn', 'Oxygen Saturation', 'percent', '4', '2013-02-01 00:00:00'),
+( '24UA', '24 hour urine albumin', '24 hour urine albumin', 'mg/24h (nnn.n) Range:0-500 Interval:12mo.', '14', '2013-02-01 00:00:00'),
+( '24UR', '24-hr Urine cr clearance & albuminuria', 'Renal 24-hr Urine cr clearance & albuminuria', 'q 6-12 months, unit mg', '3', '2013-02-01 00:00:00'),
+( '5DAA', '5 Day Adherence if on ART', '5 Day Adherence if on ART', 'number', '4', '2013-02-01 00:00:00'),
+( 'A1C', 'A1C', 'A1C', 'Range:0.040-0.200', '3', '2013-02-01 00:00:00'),
+( 'AACP', 'Asthma Action Plan ', 'Asthma Action Plan ', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ACOS', 'Asthma Coping Strategies', 'Asthma Coping Strategies', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ACR', 'Alb creat ratio', 'ACR', 'in mg/mmol', '5', '2013-02-01 00:00:00'),
+( 'ACS', 'Acute Conronary Syndrome', 'Acute Conronary Syndrome', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'AEDR', 'Asthma Education Referral', 'Asthma Education Referral', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'AELV', 'Exacerbations since last visit requiring clincal evaluation', 'Exacerbations since last visit requiring clincal evaluation', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'AENC', 'Asthma Environmental Control', 'Asthma Environmental Control', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'AHGM', 'Anit-hypoglycemic Medication', 'Anit-hypoglycemic Medication', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'AIDU', 'Active Intravenous Drug Use', 'Active Intravenous Drug Use', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ALC', 'Alcohol', 'Alcohol', 'Yes/No/X', '12', '2013-02-01 00:00:00'),
+( 'ALPA', 'Asthma Limits Physical Activity', 'Asthma Limits Physical Activity', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ALT', 'ALT', 'ALT', 'in U/L', '5', '2013-02-01 00:00:00'),
+( 'Ang', 'Angina', 'Angina', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ANR', 'Asthma Needs Reliever   ', 'Asthma Needs Reliever   ', 'frequency per week', '14', '2013-02-01 00:00:00'),
+( 'ANSY', 'Asthma Night Time Symtoms', 'Asthma Night Time Symtoms', 'frequency per week', '14', '2013-02-01 00:00:00'),
+( 'AORA', 'ACE-I OR ARB', 'ACE-I OR ARB', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ARAD', 'Review Asthma Definition', 'Review Asthma Definition', 'Review Asthma Definition', '7', '2013-02-01 00:00:00'),
+( 'ARDT', 'Asthma  Review Device Technique optimal', 'Asthma  Review Device Technique optimal', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ARMA', 'Asthma Review Med Adherence', 'Asthma Review Med Adherence', 'Asthma Review Med Adherence', '7', '2013-02-01 00:00:00'),
+( 'ASAU', 'ASA Use', 'ASA Use', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ASPR', 'Asthma Specialist Referral', 'Asthma Specialist Referral', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'AST', 'AST', 'AST', 'in U/L', '4', '2013-02-01 00:00:00'),
+( 'ASTA', 'Asthma Trigger Avoidance', 'Asthma Trigger Avoidance', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ASWA', 'Asthma Absence School Work', 'Asthma Absence School Work', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ASYM', 'Asthma Symptoms', 'Asthma Symptoms', 'frequency per week', '14', '2013-02-01 00:00:00'),
+( 'BCTR', 'Birth Control', 'Birth Control', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'BG', 'Blood Glucose', 'Blood Glucose', 'in mmol/L (nn.n) Range:1.5-30.0', '7', '2013-02-01 00:00:00'),
+( 'BMED', 'Blood Pressure Medication Changes', 'BP Med Changes', 'Changed', '7', '2013-02-01 00:00:00'),
+( 'BMI', 'Body Mass Index', 'BMI', 'BMI', '4', '2013-02-01 00:00:00'),
+( 'BP', 'BP', 'Blood Pressure', 'BP Tru', '6', '2013-02-01 00:00:00'),
+( 'BP', 'BP', 'Blood Pressure', 'supine', '6', '2013-02-01 00:00:00'),
+( 'BP', 'BP', 'Blood Pressure', 'standing position', '6', '2013-02-01 00:00:00'),
+( 'BP', 'BP', 'Blood Pressure', 'sitting position', '6', '2013-02-01 00:00:00'),
+( 'CASA', 'Consider ASA', 'Consider ASA', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'CD4', 'CD4', 'CD4', 'in x10e9/l', '14', '2013-02-01 00:00:00'),
+( 'CD4P', 'CD4 Percent', 'CD4 Percent', 'in %', '4', '2013-02-01 00:00:00'),
+( 'CDMP', 'Attended CDM Self Management Program', 'Attended CDM Self Management Program', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'CEDE', 'Education Exercise', 'Education Exercise', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'CEDM', 'Education Patient Meds', 'Education Patient Meds', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'CEDS', 'Education Salt fluid ', 'Education Salt fluid ', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'CEDW', 'Education Daily Weight Monitoring', 'Education Daily Weight Monitoring', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'CERV', 'ER visits for HF', 'ER visits for HF', 'integer', '2', '2013-02-01 00:00:00'),
+( 'CGSD', 'Collaborative Goal Setting', 'Collaborative Goal Setting', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'CIMF', 'Child Immunization recall', 'Child Immunization Follow up', 'Patient Contacted by Letter or Phone', '11', '2013-02-01 00:00:00'),
+( 'CMVI', 'CMV IgG', 'CMV IgG', 'Positive', '7', '2013-02-01 00:00:00'),
+( 'CODC', 'COD Classification', 'COD Classification', 'null', '11', '2013-02-01 00:00:00'),
+( 'COPE', 'Provide COP Education Materials ', 'Provide COP Education Materials ', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'COPM', 'Review COP Med use and Side effects', 'Review COP Med use and Side effects', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'COPS', 'COP Specialist Referral', 'COP Specialist Referral', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'COUM', 'Warfarin Weekly Dose', 'WarfarinDose', 'Total mg Warfarin per week', '5', '2013-02-01 00:00:00'),
+( 'CRCL', 'Creatinine Clearance', 'Creatinine Clearance', 'in ml/h', '5', '2013-02-01 00:00:00'),
+( 'CVD', 'CVD', 'Cerebrovascular disease', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'CXR', 'CXR', 'CXR', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DARB', 'ACE AARB', 'ACE AARB', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DEPR', 'Depression', 'Depression', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DESM', 'Dental Exam Every 6 Months', 'Dental Exam Every 6 Months', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DiaC', 'Diabetes Counseling Given', 'Diabetes Counseling Given', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DIER', 'Diet and Exercise', 'Diet and Exercise', 'Reviewed', '7', '2013-02-01 00:00:00'),
+( 'DIET', 'Diet', 'Diet', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DIFB', 'Impaired FB', 'Impaired FB', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DIGT', 'Impaired GT', 'Impaired Glucose Tolerance', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DM', 'DM', 'Diabetes', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DMED', 'Diabetes Medication Changes', 'DM Med Changes', 'Changed', '7', '2013-02-01 00:00:00'),
+( 'DMME', 'Diabetes Education', 'Diabetes Education', 'Discussed', '7', '2013-02-01 00:00:00'),
+( 'DMSM', 'Diabetes Self Management Goals', 'Diabetes Self Management Goals', 'Discussed', '7', '2013-02-01 00:00:00'),
+( 'DOLE', 'Date of last Exacerbation', 'Date of last Exacerbation', 'yyyy-mm-dd', '13', '2013-02-01 00:00:00'),
+( 'DpSc', 'Depression Screen', 'Feeling Sad, blue or depressed for 2 weeks or more', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DRCO', 'Drug Coverage', 'Drug Coverage', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DRPW', 'Drinks per Week', 'Drinks per Week', 'Number of Drinks per week', '5', '2013-02-01 00:00:00'),
+( 'DT1', 'Type I', 'Diabetes Type 1', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DT2', 'Type II', 'Diabetes Type 2', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'DTYP', 'Diabetes Type', 'Diabetes Type', '1 or 2', '10', '2013-02-01 00:00:00'),
+( 'ECG', 'ECG', 'ECG', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'EDC', 'EDC', 'Expected Date of Confinement', 'yyyy-mm-dd', '13', '2013-02-01 00:00:00'),
+( 'EDDD', 'Education Diabetes', 'Education Diabetes', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'EDF', 'EDF', 'Erectile Dysfunction', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'EDGI', 'Autonomic Neuropathy', 'Autonomic Neuropathy', 'Present', '7', '2013-02-01 00:00:00'),
+( 'EDND', 'Education Nutrition Diabetes', 'Education Nutrition Diabetes', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'EDNL', 'Education Nutrition Lipids', 'Education Nutrition Lipids', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'EGFR', 'EGFR', 'EGFR', 'in ml/min', '5', '2013-02-01 00:00:00'),
+( 'EPR', 'Exacerbation plan in place or reviewed', 'Exacerbation plan in place or reviewed', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'EXE', 'Exercise', 'Exercise', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'ExeC', 'Exercise Counseling Given', 'Exercise Counseling Given', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'Exer', 'Exercise', 'Exercise', '[min/week 0-1200]', '14', '2013-02-01 00:00:00'),
+( 'EYEE', 'Dilated Eye Exam', 'Eye Exam', 'Exam Done', '7', '2013-02-01 00:00:00'),
+( 'FAHS', 'Risk of Falling', 'Risk of Falling', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'FBPC', '2 hr PC BG', '2 hr PC BG', 'in mmol/L', '3', '2013-02-01 00:00:00'),
+( 'FBS', 'FBS', 'Glucose FBS', 'FBS', '3', '2013-02-01 00:00:00'),
+( 'FEET', 'FEET', 'Feet Check skin', 'sensation (Yes/No)', '7', '2013-02-01 00:00:00'),
+( 'FEET', 'FEET', 'Feet Check skin', 'vibration (Yes/No)', '7', '2013-02-01 00:00:00'),
+( 'FEET', 'FEET', 'Feet Check skin', 'reflexes (Yes/No)', '7', '2013-02-01 00:00:00'),
+( 'FEET', 'FEET', 'Feet Check skin', 'pulses (Yes/No)', '7', '2013-02-01 00:00:00'),
+( 'FEET', 'FEET', 'Feet Check skin', 'infection (Yes/No)', '7', '2013-02-01 00:00:00'),
+( 'FEV1', 'Forced Expiratory Volume 1 Second', 'Forced Expiratory Volume 1 Second', 'Forced Expiratory Volume 1 Second', '14', '2013-02-01 00:00:00'),
+( 'FGLC', 'Fasting Glucose meter , lab comparison', 'Fasting glucose meter, lab comparison', 'Within 20 percent', '7', '2013-02-01 00:00:00'),
+( 'FICO', 'Financial Concerns', 'Financial Concerns', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'FLUF', 'Flu Recall', 'Flu Recall Documentation', 'Patient Contacted by Letter or Phone', '11', '2013-02-01 00:00:00'),
+( 'FOBF', 'FOBT prevention recall', 'FOBT Immunization Follow up', 'Patient Contacted by Letter or Phone', '11', '2013-02-01 00:00:00'),
+( 'FRAM', 'Framingham 10 year CAD', 'Framingham 10 year CAD', 'percent', '11', '2013-02-01 00:00:00'),
+( 'FTE', 'Foot Exam', 'Foot Exam', 'Normal', '7', '2013-02-01 00:00:00'),
+( 'FTEx', 'Foot Exam: Significant Pathology', 'Significant Pathology', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'FTIn', 'Foot Exam: Infection', 'Infection', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'FTIs', 'Foot Exam: Ischemia', 'Ischemia', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'FTLS', 'Foot Exam  Test loss of Sensation', 'Foot Exam  Loss of Sensation', 'Normal', '7', '2013-02-01 00:00:00'),
+( 'FTNe', 'Foot Exam: Neuropathy', 'Neuropathy', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'FTOt', 'Foot Exam: Other Vascular abnomality', 'Other Vascular abnomality', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'FTRe', 'Foot Exam: Referral made', 'Referral made', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'FTST', 'Free Testost', 'Free Testost', 'in nmol/L', '14', '2013-02-01 00:00:00'),
+( 'FTUl', 'Foot Exam: Ulcer', 'Ulcer', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'G', 'Gravida', 'Gravida', 'Gravida', '3', '2013-02-01 00:00:00'),
+( 'G6PD', 'G6PD', 'G6PD', 'Positive', '7', '2013-02-01 00:00:00'),
+( 'Hb', 'Hb', 'Hb', 'in g/L', '5', '2013-02-01 00:00:00'),
+( 'HIP', 'Hip Circ.', 'Hip Circumference', 'at 2 cm above navel', '14', '2013-02-01 00:00:00'),
+( 'Hchl', 'Hypercholesterolemia', 'Hypercholesterolemia', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HDL', 'HDL', 'High Density Lipid', 'in mmol/L (n.n) Range:0.4-4.0', '2', '2013-02-01 00:00:00'),
+( 'HEAD', 'Head circumference', 'Head circumference', 'in cm (nnn) Range:30-70 Interval:2mo.', '4', '2013-02-01 00:00:00'),
+( 'HFCG', 'HF Collaorative Goal Setting', 'HF Collaorative Goal Setting', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HFCS', 'HF Self Management Challenge', 'HF Self Management Challenge', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HFMD', 'HF Mod Risk Factor Diabetes', 'HF Mod Risk Factor Diabetes', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HFMH', 'HF Mod Risk Factor Hyperlipidemia', 'HF Mod Risk Factor Hyperlipidemia', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HFMO', 'HF Mod Risk Factor Overweight', 'HF Mod Risk Factor Overweight', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HFMS', 'HF Mod Risk Factor Smoking', 'HF Mod Risk Factor Smoking', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HFMT', 'HF Mod Risk Factor Hypertension', 'HF Mod Risk Factor Hypertension', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HIVG', 'HIV genotype', 'HIV genotype', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HLA', 'HLA B5701', 'HLA B5701', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HpAI', 'Hep A IgG', 'Hep A IgG', 'Positive', '7', '2013-02-01 00:00:00'),
+( 'HpBA', 'Hep BS Ab', 'Hep BS Ab', 'Positive', '7', '2013-02-01 00:00:00'),
+( 'HPBC', 'Hep B CAb', 'Hep B CAb', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HPBP', 'Hep B PCR', 'Hep B PCR', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HpBS', 'Hep BS Ag', 'Hep BS Ag', 'Positive', '7', '2013-02-01 00:00:00'),
+( 'HpCA', 'Hep C Ab', 'Hep C Ab', 'Positive', '7', '2013-02-01 00:00:00'),
+( 'HPCG', 'Hep C Genotype', 'Hep C Genotype', 'integer Range 1-7', '2', '2013-02-01 00:00:00'),
+( 'HPCP', 'Hep C PCR', 'Hep C PCR', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HR', 'P', 'Heart Rate', 'in bpm (nnn) Range:40-180', '5', '2013-02-01 00:00:00'),
+( 'HRMS', 'Review med use and side effects', 'HTN Review of Medication use and side effects', 'null', '11', '2013-02-01 00:00:00'),
+( 'HSMC', 'Self Management Challenges', 'HTN Self Management Challenges', 'null', '11', '2013-02-01 00:00:00'),
+( 'HSMG', 'Self Management Goal', 'HTN Self Management Goal', 'null', '11', '2013-02-01 00:00:00'),
+( 'HT', 'HT', 'Height', 'in cm', '5', '2013-02-01 00:00:00'),
+( 'HTN', 'HTN', 'Hypertension', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'HYPE', 'Hypoglycemic Episodes', 'Number of Hypoglycemic Episodes', 'since last visit', '3', '2013-02-01 00:00:00'),
+( 'HYPM', 'Hypoglycemic Management', 'Hypoglycemic Management', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'IART', 'Currently On ART', 'Currently On ART', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'iDia', 'Eye Exam: Diabetic Retinopathy', 'Diabetic Retinopathy', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'iEx', 'Eye Exam: Significant Pathology', 'Significant Pathology', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'iHyp', 'Eye Exam: Hypertensive Retinopathy', 'Hypertensive Retinopathy', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'INR', 'INR', 'INR', 'INR Blood Work', '5', '2013-02-01 00:00:00'),
+( 'INSL', 'Insulin', 'Insulin', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'iOth', 'Eye Exam: Other Vascular Abnomality', 'Other Vascular Abnormality', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'iRef', 'Eye Exam: Refferal Made', 'Refferal Made', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'JVPE', 'JPV Elevation', 'JPV Elevation', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'Kpl', 'Potassium', 'Potassium', 'in mmol/L', '2', '2013-02-01 00:00:00'),
+( 'LcCt', 'Locus of Control Screen', 'Feeling lack of control over daily life', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'LDL', 'LDL', 'Low Density Lipid', 'monitor every 1-3 year', '2', '2013-02-01 00:00:00'),
+( 'LEFP', 'LEFS Pain', 'Lower Extremity Functional Scale - Pain', 'number', '5', '2013-02-01 00:00:00'),
+( 'LETH', 'Lethargy', 'Lethargic', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'LHAD', 'Lung Related Hospital Admission', 'Lung Related Hospital Admission', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'LMED', 'Lipid Lowering Medication Changes', 'Lipid Med Changes', 'Changed', '7', '2013-02-01 00:00:00'),
+( 'LMP', 'Last Menstral Period', 'LMP', 'date', '13', '2013-02-01 00:00:00'),
+( 'LUCR', 'Lung Crackles', 'Lung Crackles', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MACA', 'Macroalbuminuria', 'Renal Macrobalbumnuria', 'q 3-6 months', '3', '2013-02-01 00:00:00'),
+( 'MACC', 'MAC culture', 'MAC culture', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MAMF', 'MAM Recall', 'Mammogram Recall Documentation', 'Patient Contacted by Letter or Phone', '11', '2013-02-01 00:00:00'),
+( 'MCCE', 'Motivation Counseling Compeleted Exercise', 'Motivation Counseling Compeleted Exercise', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MCCN', 'Motivation Counseling Compeleted Nutrition', 'Motivation Counseling Compeleted Nutrition', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MCCO', 'Motivation Counseling Compeleted Other', 'Motivation Counseling Compeleted Other', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MCCS', 'Motivation Counseling Compeleted Smoking Cessation', 'Motivation Counseling Compeleted Smoking Cessation', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MedA', 'Medication adherence access barriers', 'Difficulty affording meds or getting refills on time', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MedG', 'Medication adherence general problem', 'Any missed days or doses of meds', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MedN', 'Medication adherence negative beliefs', 'Concerns about side effects or medication is not working', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MedR', 'Medication adherence recall barriers', 'Difficulty remembering to take meds', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'MI', 'MI', 'MI', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'Napl', 'Sodium', 'Sodium', 'in mmol/L', '5', '2013-02-01 00:00:00'),
+( 'NDIP', 'CMCC NDI Pain', 'CMCC Neck Disability Index - Pain', 'number', '5', '2013-02-01 00:00:00'),
+( 'NDIS', 'CMCC NDI Score', 'CMCC Neck Disability Index - Score', 'number', '5', '2013-02-01 00:00:00'),
+( 'NOSK', 'Number of Cigarettes per day', 'Smoking', 'Cigarettes per day', '5', '2013-02-01 00:00:00'),
+( 'NOVS', 'Need for nocturnal ventilated support', 'Need for nocturnal ventilated support', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'NtrC', 'Diet/Nutrition Counseling Given', 'Diet/Nutrition Counseling Given', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'NYHA', 'NYHA Functional Capacity Classification', 'NYHA Functional Capacity Classification', 'Class 1-4', '9', '2013-02-01 00:00:00'),
+( 'OSWP', 'Oswestry BDI Pain', 'Oswestry Back Disability Index - Pain', 'number', '5', '2013-02-01 00:00:00'),
+( 'OSWS', 'Oswestry BDI Score', 'Oswestry Back Disability Index - Score', 'number', '5', '2013-02-01 00:00:00'),
+( 'OTCO', 'Other Concerns', 'Other Concerns', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'OthC', 'Other Counseling Given', 'Other Counseling Given', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'OUTR', 'Outside Spirometry Referral', 'Outside Spirometry Referral', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'P', 'Para', 'Para', 'Para', '3', '2013-02-01 00:00:00'),
+( 'PANE', 'Painful Neuropathy', 'Painful Neuropathy', 'Present', '7', '2013-02-01 00:00:00'),
+( 'PAPF', 'Pap Recall', 'Pap Recall Documentation', 'Patient Contacted by Letter or Phone', '11', '2013-02-01 00:00:00'),
+( 'PEDE', 'Pitting Edema', 'Pitting Edema', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'PEFR', 'PEFR value', 'PEFR value', 'null', '14', '2013-02-01 00:00:00'),
+( 'PHIN', 'Pharmacological Intolerance', 'Pharmacological Intolerance', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'PIDU', 'Previous Intravenous Drug Use', 'Previous Intravenous Drug Use', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'PPD', 'PPD', 'PPD', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'PRRF', 'Pulmonary Rehabilitation Referral', 'Pulmonary Rehabilitation Referral', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'PSPA', 'Patient Sets physical Activity Goal', 'Patient Sets physical Activity Goal', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'PSSC', 'Psychosocial Screening', 'Psychosocial Screening', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'PsyC', 'Psychosocial Counseling Given', 'Psychosocial Counseling Given', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'PULSE', 'P', 'Heart Rate', 'in bpm (nnn) Range:40-180', '5', '2013-02-01 00:00:00'),
+( 'PVD', 'PVD', 'Peripheral vascular disease', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'QDSH', 'QuickDASH Score', 'Disabilities of the Arm, Shoulder and Hand - Score', 'number', '5', '2013-02-01 00:00:00'),
+( 'RABG', 'Recommend ABG', 'Recommend ABG', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'REBG', 'Review Blood Glucose Records', 'Review Glucose Records', 'Reviewed', '7', '2013-02-01 00:00:00'),
+( 'RESP', 'RR', 'Respiratory Rate', 'Breaths per minute', '4', '2013-02-01 00:00:00'),
+( 'RETI', 'Retinopathy', 'null', 'Discussed', '7', '2013-02-01 00:00:00'),
+( 'RPHR', 'Review PHR', 'Review PHR', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'RPPT', 'Review Pathophysiology, Prognosis, Treatment with Patient', 'Review Pathophysiology, Prognosis, Treatment with Patient', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'RVTN', 'Revascularization', 'Revascularization', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SCR', 'Serum Creatinine', 'Creatinine', 'in umol/L', '14', '2013-02-01 00:00:00'),
+( 'SEXF', 'Sexual Function', 'Sexual Function', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SKST', 'Smoking Status', 'Smoking Status', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SMBG', 'Self monitoring BG', 'Self Monitoring Blood Glucose', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SmCC', 'Smoking Cessation Counseling Given', 'Smoking Cessation Counseling Given', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SMCD', 'Self Management Challenges', 'Self Management Challenges', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SMCP', 'Smoking Cessation Program', 'Smoking Cessation Program', 'null', '11', '2013-02-01 00:00:00'),
+( 'SMCS', 'Smoking Cessation', 'Smoking Cessation', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SMK', 'Smoking', 'Smoking', 'Yes/No/X', '12', '2013-02-01 00:00:00'),
+( 'SmkA', 'Smoking Advice', 'Advised to Quid', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SmkC', 'Cigarette Smoking Cessation', 'Cigarette Smoking Cessation', 'Date last quit (yyyy-MM-dd)', '13', '2013-02-01 00:00:00'),
+( 'SmkD', 'Daily Packs', 'Packs of Cigarets Daily', 'fraction or integer', '11', '2013-02-01 00:00:00'),
+( 'SmkF', 'Smoking Followup', 'Followup Requested', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SmkPY', 'Cigarette Smoking History', 'Cigarette Smoking History', '[Cum. pack yrs 0-110]', '5', '2013-02-01 00:00:00'),
+( 'SmkS', 'Cigarette Smoking Status', 'Cigarette Smoking Status', '[cig/day 0-80]', '4', '2013-02-01 00:00:00'),
+( 'SODI', 'Salt Intake', 'Salt Intake', 'On Low Sodium Diet', '7', '2013-02-01 00:00:00'),
+( 'SOHF', 'Symptoms of Heart Failure', 'Symptoms of Heart Failure', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SPIR', 'Spirometry', 'Spirometry', 'null', '14', '2013-02-01 00:00:00'),
+( 'SSEX', 'Practicing Safe Sex', 'Practicing Safe Sex', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'STRE', 'Stress Testing', 'Stress Testing', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'StSc', 'Stress Screen', 'Several periods of irritability, feeling filled with anxiety, or difficulty sleeping b/c of stress', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SUAB', 'Substance Use', 'Substance Use', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'SUO2', 'Need for supplemental oxygen', 'Need for supplemental oxygen', 'Yes/No', '7', '2013-02-01 00:00:00'),
+( 'TCHD', 'TC/HDL', 'LIPIDS TD/HDL', 'monitor every 1-3 year', '3', '2013-02-01 00:00:00'),
+( 'TCHL', 'Total Cholestorol', 'Total Cholestorol', 'in mmol/L (nn.n) Range:2.0-12.0', '2', '2013-02-01 00:00:00'),
+( 'TEMP', 'Temp', 'Temperature', 'degrees celcius', '3', '2013-02-01 00:00:00'),
+( 'TG', 'TG', 'LIPIDS TG', 'monitor every 1-3 year', '3', '2013-02-01 00:00:00'),
+( 'TOXP', 'Toxoplasma IgG', 'Toxoplasma IgG', 'Positive', '7', '2013-02-01 00:00:00'),
+( 'TRIG', 'Triglycerides', 'Triglycerides', 'in mmol/L (nn.n) Range:0.0-12.0', '3', '2013-02-01 00:00:00'),
+( 'TSH', 'TSH', 'Thyroid Stimulating Hormone', 'null', '4', '2013-02-01 00:00:00'),
+( 'TUG', 'Timed Up and Go', 'Timed Up and Go', 'Number of Seconds', '14', '2013-02-01 00:00:00'),
+( 'UACR', 'Alb creat ratio', 'UACR', 'in mg/mmol', '5', '2013-02-01 00:00:00'),
+( 'UAIP', 'Update AIDS defining illness in PMH', 'Update AIDS defining illness in PMH', 'Changed', '7', '2013-02-01 00:00:00'),
+( 'UALB', 'Urine alb: creat ratio', 'Urine alb: creat ratio', 'in mg/mmol (nnn.n) Rnage:0-100 Interval:12mo.', '4', '2013-02-01 00:00:00'),
+( 'UDUS', 'Update Drug Use', 'Update Drug Use', 'Changed', '7', '2013-02-01 00:00:00'),
+( 'UHTP', 'Update HIV Test History in PMH', 'Update HIV Test History in PMH', 'Changed', '7', '2013-02-01 00:00:00'),
+( 'URBH', 'Update Risk Behaviours', 'Update Risk Behaviours', 'Changed', '7', '2013-02-01 00:00:00'),
+( 'USSH', 'Update Sexual Identity in Social History', 'Update Sexual Identity in Social History', 'Changed', '7', '2013-02-01 00:00:00'),
+( 'VB12', 'Vit B12', 'Vitamin B12', 'Range >0 pmol/l', '14', '2013-02-01 00:00:00'),
+( 'VDRL', 'VDRL', 'VDRL', 'Positive', '7', '2013-02-01 00:00:00'),
+( 'VLOA', 'Viral Load', 'Viral Load', 'in x10e9/L', '14', '2013-02-01 00:00:00'),
+( 'WAIS', 'Waist', 'Waist', 'Waist Circum in cm', '5', '2013-02-01 00:00:00'),
+( 'WHR', 'Waist:Hip', 'Waist Hip Ratio', 'Range:0.5-2 Interval:3mo.', '2', '2013-02-01 00:00:00'),
+( 'WT', 'WT', 'Weight', 'in kg', '5', '2013-02-01 00:00:00');
 --
 -- Dumping data for table 'measurementCSSLocation'
 --
@@ -1371,17 +1593,21 @@ INSERT INTO specialistsJavascript VALUES (1,'1','function makeSpecialistslist(de
 -- Dumping data for table 'validations'
 --
 
-INSERT INTO validations(name, `maxValue`, `minValue`, isNumeric) VALUES ("Numeric Value: 0 to 1", "10", "0", "1");
-INSERT INTO validations(name, `maxValue`, `minValue`, isNumeric) VALUES ("Numeric Value: 0 to 10", "10", "0", "1");
-INSERT INTO validations(name, `maxValue`, `minValue`, isNumeric) VALUES ("Numeric Value: 0 to 50", "50", "0", "1");
-INSERT INTO validations(name, `maxValue`, `minValue`, isNumeric) VALUES ("Numeric Value: 0 to 100", "100", "0", "1");
-INSERT INTO validations(name, `maxValue`, `minValue`, isNumeric) VALUES ("Numeric Value: 0 to 300", "300", "0", "1");
-INSERT INTO validations(name, regularExp) VALUES ("Blood Pressure","[0-9]{2,3}/{1}[0-9]{2,3}");
-INSERT INTO validations(name, regularExp) VALUES ("Yes/No","YES|yes|Yes|Y|NO|no|No|N|NotApplicable");
-INSERT INTO validations(name, `maxValue`, `minValue`, maxLength) values( 'Integer: 1 to 5', 5, 1, 1);
-INSERT INTO validations(name, `maxValue`, `minValue`, maxLength) values( 'Integer: 1 to 4', 4, 1, 1);
-INSERT INTO validations(name, `maxValue`, `minValue`, maxLength) values( 'Integer: 1 to 3', 3, 1, 1);
-INSERT INTO validations(name, `maxValue`, `minValue`, maxLength,minLength,isNumeric,isDate) values( 'No Validations', 0, 0, 0, 0, 0, 0);
+INSERT INTO `validations` (`id`, `name`, `regularExp`, `maxValue`, `minValue`, `maxLength`, `minLength`, `isNumeric`, `isTrue`, `isDate`) VALUES
+(1, 'Numeric Value: 0 to 1', NULL, 10, 0, NULL, NULL, 1, NULL, NULL),
+(2, 'Numeric Value: 0 to 10', NULL, 10, 0, NULL, NULL, 1, NULL, NULL),
+(3, 'Numeric Value: 0 to 50', NULL, 50, 0, NULL, NULL, 1, NULL, NULL),
+(4, 'Numeric Value: 0 to 100', NULL, 100, 0, NULL, NULL, 1, NULL, NULL),
+(5, 'Numeric Value: 0 to 300', NULL, 300, 0, NULL, NULL, 1, NULL, NULL),
+(6, 'Blood Pressure', '[0-9]{2,3}/{1}[0-9]{2,3}', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(7, 'Yes/No/NA', 'YES|yes|Yes|Y|NO|no|No|N|NotApplicable|NA', NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+(8, 'Integer: 1 to 5', NULL, 5, 1, 1, NULL, NULL, NULL, NULL),
+(9, 'Integer: 1 to 4', NULL, 4, 1, 1, NULL, NULL, NULL, NULL),
+(10,'Integer: 1 to 3', NULL, 3, 1, 1, NULL, NULL, NULL, NULL),
+(11,'No Validations', NULL, 0, 0, 0, 0, 0, NULL, 0),
+(12,'Yes/No/X','YES|yes|Yes|Y|NO|no|No|N|X|x',0,0,0,0,0,NULL,0),
+(13,'Date',NULL,NULL,NULL,NULL,NULL,NULL,NULL,1),
+(14,'Numeric Value greater than or equal to 0',NULL,0,0,0,0,1,NULL,0);
 
 
 
@@ -1487,6 +1713,13 @@ insert into `secObjectName` (`objectName`) values ('_pmm_agencyList');
 insert into `secObjectName` (`objectName`) values ('_newCasemgmt.apptHistory');
 insert into `secObjectName` (`objectName`) values ('_newCasemgmt.doctorName');
 
+insert into `secObjectName` (`objectName`) values ('_day');
+insert into `secObjectName` (`objectName`) values ('_month');
+insert into `secObjectName` (`objectName`) values ('_pref');
+insert into `secObjectName` (`objectName`) values ('_edoc');
+insert into `secObjectName` (`objectName`) values ('_tickler');
+insert into `secObjectName` (`objectName`) values ('_pmm_client.BedRoomReservation');
+
 insert into `secObjPrivilege` values('receptionist', '_appointment', 'x', 0, '999998');
 insert into `secObjPrivilege` values('receptionist', '_demographic', 'x', 0, '999998');
 insert into `secObjPrivilege` values('receptionist', '_billing', 'x', 0, '999998');
@@ -1577,6 +1810,13 @@ insert into `secObjPrivilege` values('doctor','_con','x',0,'999998');
 insert into `secObjPrivilege` values('doctor','_pmm_agencyList','x',0,'999998');
 insert into `secObjPrivilege` values('doctor','_newCasemgmt.apptHistory','x',0,'999998');
 insert into `secObjPrivilege` values('doctor','_newCasemgmt.doctorName','x',0,'999998');
+insert into `secObjPrivilege` values('doctor','_day','x',0,'999998');
+insert into `secObjPrivilege` values('doctor','_month','x',0,'999998');
+insert into `secObjPrivilege` values('doctor','_pref','x',0,'999998');
+insert into `secObjPrivilege` values('doctor','_edoc','x',0,'999998');
+insert into `secObjPrivilege` values('doctor','_tickler','x',0,'999998');
+insert into `secObjPrivilege` values('doctor','_pmm_client.BedRoomReservation','x',0,'999998');
+insert into secObjPrivilege values ('doctor','_pregnancy','o',0,'999998');
 
 
 insert into `secObjPrivilege` values('admin', '_admin', 'x', 0, '999998');
@@ -1979,6 +2219,15 @@ insert into issue (code,description,role,update_date,priority,type) values ('Ocu
 insert into issue (code,description,role,update_date,priority,type) values ('PatientLog','Patient Log','nurse',now(),NULL,'system');
 insert into issue (`code`,`description`,`role`,`update_date`) Values('CurrentHistory','Current History', 'nurse', now());
 
+INSERT INTO `issue` (`code`, `description`, `role`, `update_date`, `priority`, `type`)
+VALUES
+        ('eyeformFollowUp', 'Follow-Up Item for Eyeform', 'nurse', NOW(), NULL, 'system'),
+        ('eyeformCurrentIssue', 'Current Presenting Issue Item for Eyeform', 'nurse', NOW(), NULL, 'system'),
+        ('eyeformPlan', 'Plan Item for Eyeform', 'nurse', NOW(), NULL, 'system'),
+        ('eyeformImpression', 'Impression History Item for Eyeform', 'nurse', NOW(), NULL, 'system'),
+        ('eyeformProblem', 'Problem List Item for Eyeform', 'nurse', NOW(), NULL, 'system');
+
+
 insert into HRMCategory values (null, 'General Oscar Lab', 'DEFAULT');
 insert into HRMCategory values (null, 'Oscar HRM Category CT:ABDW' ,'CT:ABDW');
 insert into HRMCategory values (null, 'Oscar HRM Category RAD:CSP5' ,'RAD:CSP5');
@@ -2056,3 +2305,171 @@ VALUES
 	(NULL, '22','R .  M .  A .', 'A'),
 	(NULL, '33','AFP Ham Surgery RMA', 'A'),
 	(NULL, '98','Bill Directs', 'A');
+
+
+INSERT INTO billing_payment_type (id, payment_type) VALUES (1,'CASH');
+INSERT INTO billing_payment_type (id, payment_type) VALUES (2,'CHEQUE');
+INSERT INTO billing_payment_type (id, payment_type) VALUES (3,'VISA');
+INSERT INTO billing_payment_type (id, payment_type) VALUES (4,'MASTERCARD');
+INSERT INTO billing_payment_type (id, payment_type) VALUES (5,'AMEX');
+INSERT INTO billing_payment_type (id, payment_type) VALUES (6,'ELECTRONIC');
+INSERT INTO billing_payment_type (id, payment_type) VALUES (7,'DEBIT');
+
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (1,'Agency','select_multiple',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (2,'Age','select_one',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (3,'Area','select_multiple',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (4,'Serious and Persistent Mental Illness','select_one',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (5,'Serious and Persistent Mental Illness Diagnosis','select_multiple',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (6,'Serious and Persistent Mental Illness Hospitalization','number','0',1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (7,'Type of Program','select_multiple',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (8,'Referral Source','select_one',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (9,'Legal History','select_multiple',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (10,'Residence','select_one',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (11,'Other Health Issues','select_multiple',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (12,'Language','select_multiple',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (13,'Gender','select_one',NULL,1,1,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (14,'Gender','select_one',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (15,'Homeless','select_one',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (16,'Mental health diagnosis','select_multiple',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (17,'Housing type','select_one',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (18,'Referral source','select_one',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (19,'Support level','select_one',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (20,'Geographic location','select_one',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (21,'Age category','select_one',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (22,'Current involvement with Criminal Justice system','select_one',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (23,'SHPPSU criteria','select_one',NULL,1,2,0);
+INSERT INTO `criteria_type` (`CRITERIA_TYPE_ID`,`FIELD_NAME`,`FIELD_TYPE`,`DEFAULT_VALUE`,`ACTIVE`,`WL_PROGRAM_ID`,`CAN_BE_ADHOC`) VALUES (24,'Accessible unit','select_one',NULL,1,2,0);
+
+/*
+-- Query: SELECT * FROM test.criteria_type_option
+LIMIT 0, 1000
+
+-- Date: 2012-04-14 15:35
+*/
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (1,2,1,'Youth – 14 – 22',NULL,14,22);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (2,2,2,'Youth  - 16-24',NULL,16,24);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (3,3,1,'North York','North York',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (4,3,2,'Scarborough','Scarborough',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (5,3,3,'East York','East York',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (6,3,4,'Old City of York','Old City of York',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (7,3,5,'North Etobicoke','North Etobicoke',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (8,3,6,'South Etobicoke','South Etobicoke',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (9,3,7,'Downtown Toronto','Downtown Toronto',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (10,3,8,'East of Yonge','East of Yonge',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (11,3,9,'West of Yonge','West of Yonge',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (12,3,10,'Toronto','Toronto',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (13,2,3,'16 Years of age or older',NULL,16,120);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (14,2,4,'18 years of age or older',NULL,18,120);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (15,4,1,'Formal Diagnosis','Formal Diagnosis',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (16,4,2,'No formal Diagnosis','No formal Diagnosis',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (19,5,1,'Test diagnosis 1','Test diagnosis 1',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (20,5,2,'Test diagnosis 2','Test diagnosis 2',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (21,7,1,'Long-Term Case Management','Long-Term Case Management',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (22,7,2,'Short-term case management','Short-term case management',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (23,7,3,'Emergency Department Diversion Program','Emergency Department Diversion Program',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (24,7,4,'Assertive Community Treatment Team','Assertive Community Treatment Team',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (25,7,5,'Mental Health Outreach Program','Mental Health Outreach Program',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (26,7,6,'Language Specific Service (Across Boundaries, CRCT, WRAP, Pathways, Passages)','Language Specific Service',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (27,7,7,'Youth Programs','Youth Programs',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (28,7,8,'Early Intervention Programs','Early Intervention Programs',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (29,7,9,'Mental Health Prevention Program (short-term case management)','Mental Health Prevention Program (short-term case management)',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (30,7,10,'Seniors Case Management','Seniors Case Management',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (31,7,11,'TCAT (Addictions case management)','TCAT (Addictions case management)',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (32,7,12,'CATCH','CATCH',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (33,7,13,'CATCH - ED','CATCH - ED',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (34,1,1,'Across Boundaries','Across Boundaries',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (35,1,2,'Bayview Community Services','Bayview Community Services',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (36,8,1,'Organizational Referral Source','Organizational Referral Source',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (37,8,2,'Accredited Professional (i.e. private psychiatrist, family doctor etc)','Accredited Professional',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (38,8,3,' Self',' Self',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (39,8,4,'Family/Friend','Family/Friend',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (40,8,5,'Hospital (List of all hospitals)','Hospital',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (41,8,6,'Ontario Review Board','Ontario Review Board',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (42,8,7,'Alternative Access Route (i.e. internal referral, pre-existing agreement, alternate access route)','Alternative Access Route',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (43,9,1,'Test legal history 1','Test legal history 1',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (44,9,2,'Test legal history 2','Test legal history 2',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (45,10,1,'Housed','Housed',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (46,10,2,'Homeless','Homeless',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (47,10,3,'Transitional','Transitional',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (48,11,1,'Concurrent Disorder','Concurrent Disorder',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (49,11,2,'Dual Diagnosis','Dual Diagnosis',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (50,11,3,'Acquired brain injury','Acquired brain injury',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (51,11,4,'Psycho-geriatric  issues','Psycho-geriatric  issues',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (52,12,1,'English','English',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (53,12,2,'French','French',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (54,12,3,'Other','Other',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (55,13,1,'Male','Male',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (56,13,2,'Female','Female',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (57,14,1,'Male','Male',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (58,14,2,'Female','Female',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (59,15,1,'Homeless','Homeless',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (60,15,2,'At risk','At risk',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (61,15,3,'Housed','Housed',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (62,16,1,'Formal Diagnosis','Formal Diagnosis',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (63,16,2,'No formal Diagnosis','No formal Diagnosis',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (65,17,1,'Shared','Shared',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (66,17,2,'Independent','Independent',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (67,18,1,'Organizational Referral Source','Organizational Referral Source',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (68,18,2,'Accredited Professional (i.e. private psychiatrist, family doctor etc)','Accredited Professional',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (69,19,1,'Test level 1','Test level 1',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (70,19,2,'Test level 2','Test level 2',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (75,22,1,'Test involvement 1','Test involvement 1',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (76,22,2,'Test involvement 2','Test involvement 2',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (77,23,1,'Test SHPPSU criteria 1','Test SHPPSU criteria 1',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (78,23,2,'Test SHPPSU criteria 2','Test SHPPSU criteria 2',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (79,24,1,'Accessible unit required','Accessible unit required',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (80,24,2,'Accessible unit not required','Accessible unit not required',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (82,1,3,'CMHA (Toronto East)','CMHA (Toronto East)',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (83,1,4,'CMHA (Toronto West)','CMHA (Toronto West)',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (84,1,5,'COTA Health','COTA Health',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (85,1,6,'Community Resource Connections of Toronto','Community Resource Connections of Toronto',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (86,1,7,'Griffin Centre & Community Support Network','Griffin Centre & Community Support Network',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (87,1,8,'North York General Hospital','North York General Hospital',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (88,1,9,'Reconnect Mental Health Services','Reconnect Mental Health Services',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (89,1,10,'Saint Elizabeth Health Care','Saint Elizabeth Health Care',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (90,1,11,'Scarborough Hospital','Scarborough Hospital',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (91,1,12,'Sunnybrook Hospital','Sunnybrook Hospital',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (92,1,13,'Toronto North Support Services','Toronto North Support Services',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (93,13,3,'Transgender','Transgender',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (94,13,4,'Transsexual','Transsexual',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (95,13,5,'Other','Other',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (96,14,3,'Transgender','Transgender',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (97,14,4,'Transsexual','Transsexual',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (98,14,5,'Other','Other',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (99,18,3,' Self',' Self',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (100,18,4,'Family/Friend','Family/Friend',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (101,18,5,'Hospital (List of all hospitals)','Hospital',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (102,18,6,'Ontario Review Board','Ontario Review Board',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (103,18,7,'Alternative Access Route (i.e. internal referral, pre-existing agreement, alternate access route)','Alternative Access Route',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (104,20,1,'West End of Toronto (Bathurst to Islington, Lawrence to Lakeshore) ','West End of Toronto',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (105,20,1,'East End of Toronto (Don Valley to Victoria Park, Lawrence to Lakeshore)','East End of Toronto',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (106,20,1,'Downtown Core of Toronto (Bathurst to Don Valley, Lawrence to Lakeshore)','Downtown Core of Toronto',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (107,20,1,'North York East (North of Lawrence, East of Yonge to Victoria Park) ','North York East',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (108,20,1,'North York West (North of Lawrence, West of Yonge to Islington)','North York West',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (109,20,1,'Etobicoke (West of Islington) ','Etobicoke',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (110,20,1,'Scarborough (East of Victoria Park)','Scarborough',NULL,NULL);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (111,21,1,'Youth – 14 – 22',NULL,14,22);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (112,21,2,'Youth  - 16-24',NULL,16,24);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (113,21,3,'16 Years of age or older',NULL,16,120);
+INSERT INTO `criteria_type_option` (`OPTION_ID`,`CRITERIA_TYPE_ID`,`DISPLAY_ORDER_NUMBER`,`OPTION_LABEL`,`OPTION_VALUE`,`RANGE_START_VALUE`,`RANGE_END_VALUE`) VALUES (114,21,4,'18 years of age or older',NULL,18,120);
+
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Advised Test Results", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Advised RTC see INFO", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Advised RTC see MD", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Advised RTC for Rx", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Advised RTC for Lab Work", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Advised RTC for immunization", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Declined treatment", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Don't call", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Letter sent", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Msg on ans. mach. to call clinic", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Msg with roomate to call clinic", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Phone - No Answer", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Notified", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Notified. Patient is asymptomatic.", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Prescription given", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Prescription phoned in to:", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Referral Booked", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Re-Booked for followup", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Returned for Lab Work", now(), "1");
+insert into tickler_text_suggest (creator, suggested_text, create_date, active) values ("-1", "Telephone Busy", now(), "1");

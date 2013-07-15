@@ -3726,5 +3726,3 @@ function calToday(field) {
 					</html:form>
 </body>
 </html:html>
-
-

@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -19,8 +44,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
-import java.util.Properties;
 import java.util.Map.Entry;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
@@ -57,7 +82,7 @@ public class EFormExportZip {
                 fileName = eForm.getFormName().replaceAll("\\s", "") + ".html"; //make fileName = formname with all spaces removed
             }
             _log.debug("after:>"+fileName+"<");
-            
+
             String directoryName = eForm.getFormName().replaceAll("\\s", "") + "/"; //formName with all spaces removed
             String html = eForm.getFormHtml();
             properties.setProperty("form.htmlFilename", fileName);
@@ -108,10 +133,10 @@ public class EFormExportZip {
 
             }
         }
-        
+
         zos.close();
     }
-    
+
     private void outputToInput(OutputStream os, InputStream is) throws IOException {
         byte[] buf = new byte[1024];
         int len;
@@ -127,9 +152,9 @@ public class EFormExportZip {
     }
 
     public List<String> importForm(InputStream importInputStream) throws IOException, Exception {
-        ArrayList<String> errors = new ArrayList();
+        ArrayList<String> errors = new ArrayList<String>();
         _log.info("Importing eforms");
-        
+
         File imageDir = ImageUploadAction.getImageFolder();
         File imageExtractDir = new File(imageDir, "extractFolder"); //do not delete this as two people may be importing at once
         //create if exists
@@ -149,9 +174,9 @@ public class EFormExportZip {
 
         ZipInputStream zis = new ZipInputStream(importInputStream);
         ZipEntry ze = null;
-        Hashtable<String, EForm> eformTable = new Hashtable(); //stores eforms constructed from eform.properties, no HTML
-        Hashtable<String, EForm> eformTableFailed = new Hashtable();  //stores eforms that are constructed from eform.properties that alredy exist and do not need to be imported
-        Hashtable<String, File> tempFiles = new Hashtable(); //references extracted files in the temp folder
+        Hashtable<String, EForm> eformTable = new Hashtable<String,EForm>(); //stores eforms constructed from eform.properties, no HTML
+        Hashtable<String, EForm> eformTableFailed = new Hashtable<String,EForm>();  //stores eforms that are constructed from eform.properties that alredy exist and do not need to be imported
+        Hashtable<String, File> tempFiles = new Hashtable<String,File>(); //references extracted files in the temp folder
         //first runthrough, get the properties files, construct eforms, cache files
         while ((ze = zis.getNextEntry()) != null) {
             File file = new File(ze.getName());

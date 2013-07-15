@@ -1,30 +1,27 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  Jason Gallagher
- *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
- *
- * 
- *
- * Created on April 27, 2007, 4:24 PM
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package org.oscarehr.phr.service;
 
@@ -58,10 +55,11 @@ import org.indivo.xml.talk.ReadDocumentHeaderListResultType;
 import org.indivo.xml.talk.ReadDocumentResultType;
 import org.indivo.xml.talk.ReadResultType;
 import org.indivo.xml.talk.SendMessageResultType;
+import org.oscarehr.common.service.myoscar.MyOscarMedicalDataManagerUtils;
+import org.oscarehr.myoscar.managers.MyOscarAccountManager;
 import org.oscarehr.myoscar_server.ws.AccountWs;
 import org.oscarehr.myoscar_server.ws.LoginResultTransfer;
-import org.oscarehr.myoscar_server.ws.LoginWs;
-import org.oscarehr.myoscar_server.ws.MedicalDataTransfer2;
+import org.oscarehr.myoscar_server.ws.MedicalDataTransfer3;
 import org.oscarehr.myoscar_server.ws.MedicalDataType;
 import org.oscarehr.myoscar_server.ws.MedicalDataWs;
 import org.oscarehr.myoscar_server.ws.MessageWs;
@@ -69,6 +67,7 @@ import org.oscarehr.myoscar_server.ws.NotAuthorisedException_Exception;
 import org.oscarehr.myoscar_server.ws.PersonTransfer;
 import org.oscarehr.myoscar_server.ws.Relation;
 import org.oscarehr.myoscar_server.ws.Role;
+import org.oscarehr.myoscar_server.ws.UnsupportedEncodingException_Exception;
 import org.oscarehr.phr.PHRAuthentication;
 import org.oscarehr.phr.dao.PHRActionDAO;
 import org.oscarehr.phr.dao.PHRDocumentDAO;
@@ -98,16 +97,11 @@ import oscar.oscarProvider.data.ProviderMyOscarIdData;
 import oscar.oscarRx.data.RxPrescriptionData;
 
 public class PHRService {
-	// What the key in the session is (value is PHRAuthentication type)
-	public static final String SESSION_PHR_EXCHANGE_TIME = "PHR_EXCHANGE_TIME";
-	// What the key in OscarProperties is - in seconds (value is int)
-	public static final String OSCAR_PROPS_EXCHANGE_INTERVAL = "MY_OSCAR_EXCHANGE_INTERVAL";
-
 	private static final Logger logger = MiscUtils.getLogger();
 	protected PHRDocumentDAO phrDocumentDAO;
 	protected PHRActionDAO phrActionDAO;
 
-	public boolean canAuthenticate(String providerNo) {
+	public static boolean canAuthenticate(String providerNo) {
 		String myOscarLoginId = ProviderMyOscarIdData.getMyOscarId(providerNo);
 		if (myOscarLoginId == null) {
 			return false;
@@ -116,7 +110,7 @@ public class PHRService {
 		}
 	}
 
-	public boolean validAuthentication(PHRAuthentication auth) {
+	public static boolean validAuthentication(PHRAuthentication auth) {
 
 		if (auth == null) {
 			return false;
@@ -133,7 +127,7 @@ public class PHRService {
 		return true;
 	}
 
-	public PHRAuthentication authenticate(String providerNo, String password) {
+	public static PHRAuthentication authenticate(String providerNo, String password) {
 		// see authenticateIndivoId for exception explanation
 		ProviderData providerData = new ProviderData();
 		providerData.setProviderNo(providerNo);
@@ -145,19 +139,14 @@ public class PHRService {
 		return phrAuth;
 	}
 
-	// used to authenticate demographics and perhaps admin account
-	private PHRAuthentication authenticateIndivoId(String indivoId, String password) {
+	private static PHRAuthentication authenticateIndivoId(String indivoId, String password) {
         try {
-    		LoginWs loginWs = MyOscarServerWebServicesManager.getLoginWs();
-    		logger.debug("MyOscar Login attempt :" + indivoId);
-
-    		LoginResultTransfer loginResult = loginWs.login2(indivoId, password);
-			logger.debug("MyOscar Login success:" + indivoId);
-
+			LoginResultTransfer loginResultTransfer=MyOscarAccountManager.login(indivoId, password);
+			
 			PHRAuthentication phrAuth = new PHRAuthentication();
 			phrAuth.setMyOscarUserName(indivoId);
-			phrAuth.setMyOscarUserId(loginResult.getPerson().getId());
-			phrAuth.setMyOscarPassword(loginResult.getSecurityTokenKey());
+			phrAuth.setMyOscarUserId(loginResultTransfer.getPerson().getId());
+			phrAuth.setMyOscarPassword(loginResultTransfer.getSecurityTokenKey());
 
 			return phrAuth;
         } catch (NotAuthorisedException_Exception e) {
@@ -323,19 +312,13 @@ public class PHRService {
 
 		int startIndex = 0;
 		int itemsToReturn = 100;
-		List<MedicalDataTransfer2> medicationTransfers = null;
+		List<MedicalDataTransfer3> medicationTransfers = null;
 		do {
-			List<Long> documentIds = medicalDataWs.getMedicalDataIds(myOscarUserId, MedicalDataType.MEDICATION.name(), true, startIndex, itemsToReturn);
-			medicationTransfers = new ArrayList<MedicalDataTransfer2>();
-			for (Long id : documentIds)
-			{
-				MedicalDataTransfer2 medicalDataTransfer=medicalDataWs.getMedicalData2(id);
-				medicationTransfers.add(medicalDataTransfer);
-			}
-
-			startIndex = startIndex + itemsToReturn;
-
-			for (MedicalDataTransfer2 medicalDataTransfer : medicationTransfers) {
+			medicationTransfers = medicalDataWs.getMedicalDataByType(myOscarUserId, MedicalDataType.MEDICATION.name(), true, startIndex, itemsToReturn);
+			
+			for (MedicalDataTransfer3 medicalDataTransfer : medicationTransfers) {
+				medicalDataTransfer=MyOscarMedicalDataManagerUtils.materialiseDataIfRequired(auth, medicalDataTransfer);
+				
 				boolean importStatus = checkImportStatus(medicalDataTransfer.getId().toString());// check if document has been imported before
 				Boolean sendByOscarBefore = isMedSentBefore(medicalDataTransfer.getId().toString());// check if this document was sent by this oscar before.
 				logger.debug("medicalDataTransfer: importStatus=" + importStatus + ", sentBefore=" + sendByOscarBefore);
@@ -345,6 +328,9 @@ public class PHRService {
 					saveMed(med);
 				}
 			}
+
+			startIndex = startIndex + itemsToReturn;
+
 		} while (medicationTransfers.size() >= itemsToReturn && startIndex < 5000); // 5000 is an arbitary limit for now
 
 		return (phrMedications);
@@ -445,7 +431,7 @@ public class PHRService {
 
 						if (doc.getDocumentHeader().getCreationDateTime() != null) dataTime = doc.getDocumentHeader().getCreationDateTime().toGregorianCalendar();
 
-						MedicalDataTransfer2 medicalDataTransfer=new MedicalDataTransfer2();
+						MedicalDataTransfer3 medicalDataTransfer=new MedicalDataTransfer3();
 						medicalDataTransfer.setActive(true);
 						medicalDataTransfer.setCompleted(true);
 						medicalDataTransfer.setData(xmlString);
@@ -458,7 +444,7 @@ public class PHRService {
 						medicalDataTransfer.setOriginalSourceId(loggedInInfo.currentFacility.getName()+":EDoc:"+edoc.getDocId());
 						medicalDataTransfer.setOwningPersonId(action.getReceiverMyOscarUserId());
 						
-						resultId = medicalDataWs.addMedicalData2(medicalDataTransfer);
+						resultId = medicalDataWs.addMedicalData3(medicalDataTransfer);
 					} else if (action.getPhrClassification().equals("ANNOTATION")) {
 						try {
 							String referenceIndex = PHRIndivoAnnotation.getAnnotationReferenceIndex(doc);// temporarily stored
@@ -500,7 +486,7 @@ public class PHRService {
 
 						if (doc.getDocumentHeader().getCreationDateTime() != null) dataTime = doc.getDocumentHeader().getCreationDateTime().toGregorianCalendar();
 
-						MedicalDataTransfer2 medicalDataTransfer=new MedicalDataTransfer2();
+						MedicalDataTransfer3 medicalDataTransfer=new MedicalDataTransfer3();
 						medicalDataTransfer.setActive(true);
 						medicalDataTransfer.setCompleted(true);
 						medicalDataTransfer.setData(xmlString);
@@ -513,7 +499,7 @@ public class PHRService {
 						medicalDataTransfer.setOriginalSourceId(loggedInInfo.currentFacility.getName()+":medication:"+action.getOscarId());
 						medicalDataTransfer.setOwningPersonId(action.getReceiverMyOscarUserId());
 
-						resultId = medicalDataWs.addMedicalData2(medicalDataTransfer);
+						resultId = medicalDataWs.addMedicalData3(medicalDataTransfer);
 					}
 
 					// AddDocumentResultType result = client.addDocument(auth.getToken(), action.getReceiverPhr(), doc);
@@ -633,7 +619,7 @@ public class PHRService {
         }	    
     }
 
-	private void sendMessage(PHRAuthentication auth, PHRAction action) throws JAXBException, IndivoException, NumberFormatException, DOMException, NotAuthorisedException_Exception {
+	private void sendMessage(PHRAuthentication auth, PHRAction action) throws JAXBException, IndivoException, NumberFormatException, DOMException, NotAuthorisedException_Exception, UnsupportedEncodingException_Exception {
 		MessageWs messageWs = MyOscarServerWebServicesManager.getMessageWs(auth.getMyOscarUserId(), auth.getMyOscarPassword());
 
 		logger.debug("Sending Add Message");

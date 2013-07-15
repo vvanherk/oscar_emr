@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.PMmodule.dao;
 
 import java.util.ArrayList;
@@ -34,7 +57,7 @@ public class ProgramClientRestrictionDAO extends HibernateDaoSupport {
     }
 
     public ProgramClientRestriction find(int restrictionId) {
-        return setRelationships((ProgramClientRestriction) getHibernateTemplate().get(ProgramClientRestriction.class, restrictionId));
+        return setRelationships(getHibernateTemplate().get(ProgramClientRestriction.class, restrictionId));
     }
 
     public Collection<ProgramClientRestriction> findForProgram(int programId) {
@@ -62,7 +85,7 @@ public class ProgramClientRestrictionDAO extends HibernateDaoSupport {
     }
 
     public Collection<ProgramClientRestriction> findForClient(int demographicNo, int facilityId) {
-        ArrayList paramList = new ArrayList();
+        ArrayList<Object> paramList = new ArrayList<Object>();
         String sSQL="from ProgramClientRestriction pcr where pcr.enabled = true and " +
   		 "pcr.demographicNo = ? and pcr.programId in (select s.id from Program s where s.facilityId = ? or s.facilityId is null) " +
          "order by pcr.programId";
@@ -80,7 +103,7 @@ public class ProgramClientRestrictionDAO extends HibernateDaoSupport {
             setRelationships(pcr);
         }
         return pcrs;
-*/        
+*/
     }
 
     public Collection<ProgramClientRestriction> findDisabledForClient(int demographicNo) {
@@ -95,7 +118,7 @@ public class ProgramClientRestrictionDAO extends HibernateDaoSupport {
         pcr.setClient(demographicDao.getDemographic("" + pcr.getDemographicNo()));
         pcr.setProgram(programDao.getProgram(pcr.getProgramId()));
         pcr.setProvider(providerDao.getProvider(pcr.getProviderNo()));
-        
+
         return pcr;
     }
 

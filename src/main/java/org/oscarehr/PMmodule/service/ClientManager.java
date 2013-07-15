@@ -1,19 +1,20 @@
-/*
+/**
  *
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for
  * Centre for Research on Inner City Health, St. Michael's Hospital,
@@ -38,6 +39,7 @@ import org.oscarehr.PMmodule.model.ProgramClientRestriction;
 import org.oscarehr.PMmodule.model.ProgramQueue;
 import org.oscarehr.PMmodule.web.formbean.ClientSearchFormBean;
 import org.oscarehr.common.dao.DemographicDao;
+import org.oscarehr.common.dao.DemographicExtDao;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DemographicExt;
 import org.springframework.beans.factory.annotation.Required;
@@ -47,6 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ClientManager {
 
     private DemographicDao dao;
+    private DemographicExtDao demographicExtDao;
     private ClientReferralDAO referralDAO;
     private JointAdmissionDAO jointAdmissionDAO;
     private ProgramQueueManager queueManager;
@@ -70,7 +73,7 @@ public class ClientManager {
         return dao.getClients();
     }
 
-    public List search(ClientSearchFormBean criteria, boolean returnOptinsOnly,boolean excludeMerged) {
+    public List<Demographic> search(ClientSearchFormBean criteria, boolean returnOptinsOnly,boolean excludeMerged) {
         return dao.search(criteria, returnOptinsOnly,excludeMerged);
     }
     public List<Demographic> search(ClientSearchFormBean criteria) {
@@ -122,7 +125,7 @@ public class ClientManager {
         }
     }
 
-    public List searchReferrals(ClientReferral referral) {
+    public List<ClientReferral> searchReferrals(ClientReferral referral) {
         return referralDAO.search(referral);
     }
 
@@ -139,7 +142,7 @@ public class ClientManager {
     }
 
     public List<Long> getDependentsList(Long clientId) {
-        List<Long> list = new ArrayList();
+        List<Long> list = new ArrayList<Long>();
         List<JointAdmission> jadms = jointAdmissionDAO.getSpouseAndDependents(clientId);
         for (JointAdmission jadm : jadms) {
             list.add(jadm.getClientId());
@@ -228,31 +231,31 @@ public class ClientManager {
     }
 
     public DemographicExt getDemographicExt(String id) {
-        return dao.getDemographicExt(Integer.valueOf(id));
+        return demographicExtDao.getDemographicExt(Integer.valueOf(id));
     }
 
     public List<DemographicExt> getDemographicExtByDemographicNo(int demographicNo) {
-        return dao.getDemographicExtByDemographicNo(demographicNo);
+        return demographicExtDao.getDemographicExtByDemographicNo(demographicNo);
     }
 
     public DemographicExt getDemographicExt(int demographicNo, String key) {
-        return dao.getDemographicExt(demographicNo, key);
+        return demographicExtDao.getDemographicExt(demographicNo, key);
     }
 
     public void updateDemographicExt(DemographicExt de) {
-        dao.updateDemographicExt(de);
+    	demographicExtDao.updateDemographicExt(de);
     }
 
     public void saveDemographicExt(int demographicNo, String key, String value) {
-        dao.saveDemographicExt(demographicNo, key, value);
+    	demographicExtDao.saveDemographicExt(demographicNo, key, value);
     }
 
     public void removeDemographicExt(String id) {
-        dao.removeDemographicExt(Integer.valueOf(id));
+    	demographicExtDao.removeDemographicExt(Integer.valueOf(id));
     }
 
     public void removeDemographicExt(int demographicNo, String key) {
-        dao.removeDemographicExt(demographicNo, key);
+    	demographicExtDao.removeDemographicExt(demographicNo, key);
     }
 
     public void setJointAdmissionDAO(JointAdmissionDAO jointAdmissionDAO) {
@@ -266,6 +269,11 @@ public class ClientManager {
     @Required
     public void setDemographicDao(DemographicDao dao) {
         this.dao = dao;
+    }
+
+    @Required
+    public void setDemographicExtDao(DemographicExtDao dao) {
+        this.demographicExtDao = dao;
     }
 
     @Required

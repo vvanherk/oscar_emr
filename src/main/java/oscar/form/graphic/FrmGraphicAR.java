@@ -1,26 +1,28 @@
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
+
 /*
  * 
  */
@@ -50,7 +52,7 @@ public class FrmGraphicAR {
         eDate = eDate.replace('/','-');
 
         GregorianCalendar s0 = getCalendarObj(fEDB);
-        s0.add(s0.DATE, -280);
+        s0.add(Calendar.DATE, -280);
 
         setWeekNum(s0.get(Calendar.YEAR)+"-"+(s0.get(Calendar.MONTH)+1)+"-"+s0.get(Calendar.DATE), eDate);
         return fWeek;
@@ -70,7 +72,7 @@ public class FrmGraphicAR {
     public Date getStartDate(String edb) {
         edb = edb.replace('/','-');
         GregorianCalendar s0 = getCalendarObj(edb);
-        s0.add(s0.DATE, -280);
+        s0.add(Calendar.DATE, -280);
         return (s0.getTime());
     }
     public String getHt(String height) {
@@ -114,9 +116,9 @@ public class FrmGraphicAR {
     private GregorianCalendar getCalendarObj(String strDate) {
         GregorianCalendar strg = new GregorianCalendar();
         strg.setTime(UtilDateUtilities.StringToDate(strDate) );
-        strg.set(strg.HOUR, 1);
-        strg.set(strg.MINUTE, 0);
-        strg.set(strg.SECOND, 0);
+        strg.set(Calendar.HOUR, 1);
+        strg.set(Calendar.MINUTE, 0);
+        strg.set(Calendar.SECOND, 0);
         return strg;
     }
 

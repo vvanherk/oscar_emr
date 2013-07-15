@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%
   if(session.getValue("user") == null) response.sendRedirect("../logout.jsp");
   String provider_name = (String) session.getAttribute("userlastname")+", "+(String) session.getAttribute("userfirstname");
@@ -13,7 +38,7 @@
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/caisi-tag.tld" prefix="caisi" %>
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ page import="java.util.*,java.text.*,java.sql.*,java.net.*" errorPage="errorpage.jsp" %>
 <%@ page import="oscar.OscarProperties" %>
 <%@ page import="org.oscarehr.common.dao.UserPropertyDAO"%>
@@ -28,32 +53,6 @@
 <%@page import="org.oscarehr.util.MiscUtils"%>
 <%@ page import="oscar.SxmlMisc" %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
-
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@page import="org.oscarehr.web.admin.ProviderPreferencesUIBean"%>
 <%@page import="org.oscarehr.util.LoggedInInfo"%>
@@ -65,9 +64,18 @@
 <head>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/jquery-1.7.1.min.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/fancybox/jquery.fancybox-1.3.4.pack.js"></script>
+<link rel="stylesheet" href="<%= request.getContextPath() %>/js/fancybox/jquery.fancybox-1.3.4.css" type="text/css" media="screen" />
 <title><bean:message key="provider.providerpreference.title" /></title>
 <script type="text/javascript" src="../share/javascript/prototype.js"></script>
 <script language="JavaScript">
+
+(function($) {
+	$(document).ready(function() {
+		$("a#popupgroup").fancybox();
+	});
+})(jQuery);
 
 function setfocus() {
   this.focus();
@@ -138,17 +146,6 @@ function checkTypeInAll() {
 	return checkin;
 }
 
-function popupPage(vheight,vwidth,varpage) { //open a new popup window
-  var page = "" + varpage;
-  windowprops = "height="+vheight+",width="+vwidth+",location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,top=5,left=5";//360,680
-  var popup=window.open(page, "<bean:message key="provider.providerpreference.titlePopup"/>", windowprops);
-  if (popup != null) {
-    if (popup.opener == null) {
-      popup.opener = self;
-    }
-  }
-}
-
 function isNumeric(strString) {
     var validNums = "0123456789";
     var strChar;
@@ -173,6 +170,9 @@ function showHideRxPrintPref() {
     $("rxPrintPrefs").toggle();
 }
 
+function showHideERxPref() {
+    /*$("eRxPref").toggle();*/
+}
 </script>
 <style type="text/css">
 	.preferenceTable td
@@ -200,7 +200,7 @@ function showHideRxPrintPref() {
 	{
 		font-size:12px;
 	}
-	
+
 	label {
 		display: block;
 		font-weight:bold;
@@ -234,6 +234,13 @@ function showHideRxPrintPref() {
         float: left;
 		width: 200px;
     }
+
+	table.eRxTableCenter
+	{
+        width:50%; 
+		margin-left:25%; 
+		margin-right:25%;
+    }
 </style>
 </head>
 
@@ -245,7 +252,7 @@ function showHideRxPrintPref() {
 	}
 %>
 
-<body bgproperties="fixed"  onLoad="setfocus();showHideBillPref();showHideRxPrintPref();" topmargin="0"leftmargin="0" rightmargin="0" style="font-family:sans-serif">
+<body bgproperties="fixed"  onLoad="setfocus();showHideBillPref();showHideRxPrintPref();showHideERxPref();" topmargin="0"leftmargin="0" rightmargin="0" style="font-family:sans-serif">
 	<FORM NAME = "UPDATEPRE" METHOD="post" ACTION="providerupdatepreference.jsp" onSubmit="return(checkTypeInAll())">
 
 		<div style="background-color:<%=deepcolor%>;text-align:center;font-weight:bold">
@@ -286,7 +293,7 @@ function showHideRxPrintPref() {
 				</td>
 				<td class="preferenceValue">
 					<INPUT TYPE="TEXT" NAME="mygroup_no" VALUE='<%=request.getParameter("mygroup_no")%>' size="12" maxlength="10">
-					<input type="button" value="<bean:message key="provider.providerpreference.viewedit" />" onClick="popupPage(360,680,'providercontrol.jsp?displaymode=displaymygroup&dboperation=searchmygroupall' );return false;" />
+					<a class='iframe' id='popupgroup' href='providercontrol.jsp?displaymode=displaymygroup&dboperation=searchmygroupall'><bean:message key="provider.providerpreference.viewedit"/></a>
 				</td>
 			</tr>
 			<caisi:isModuleLoad moduleName="ticklerplus">
@@ -531,27 +538,27 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 <caisi:isModuleLoad moduleName="NEW_CME_SWITCH">
   <oscar:oscarPropertiesCheck property="TORONTO_RFQ" value="no">
 	<tr>
-    <TD align="center"><a href=# onClick ="popupPage(230,600,'../casemgmt/newCaseManagementEnable.jsp');return false;">Enable OSCAR CME UI</a> &nbsp;&nbsp;&nbsp;
+    <TD align="center"><a class='iframe' id='popupgroup' href='../casemgmt/newCaseManagementEnable.jsp'>Enable OSCAR CME UI</a> &nbsp;&nbsp;&nbsp;
     </tr>
   </oscar:oscarPropertiesCheck>
   </caisi:isModuleLoad>
 
   <tr>
-	<td align="center"><a href=# onClick ="popupPage(230,600,'providerDefaultDxCode.jsp?provider_no=<%=request.getParameter("provider_no") %>');return false;">Edit Default Billing Diagnostic Code</a>&nbsp;&nbsp;&nbsp; </td>
+	<td align="center"><a class='iframe' id='popupgroup' href='providerDefaultDxCode.jsp?provider_no=<%=request.getParameter("provider_no") %>'>Edit Default Billing Diagnostic Code</a>&nbsp;&nbsp;&nbsp; </td>
 	</tr>
   <tr>
 
-    <TD align="center"><a href=# onClick ="popupPage(230,600,'providerchangepassword.jsp');return false;"><bean:message key="provider.btnChangePassword"/></a> &nbsp;&nbsp;&nbsp; <!--| a href=# onClick ="popupPage(350,500,'providercontrol.jsp?displaymode=savedeletetemplate');return false;"><bean:message key="provider.btnAddDeleteTemplate"/></a> | <a href=# onClick ="popupPage(200,500,'providercontrol.jsp?displaymode=savedeleteform');return false;"><bean:message key="provider.btnAddDeleteForm"/></a></td>
+    <TD align="center"><a class='iframe' id='popupgroup' href='providerchangepassword.jsp'><bean:message key="provider.btnChangePassword"/></a> &nbsp;&nbsp;&nbsp; <!--| a class='iframe' id='popupgroup' href='providercontrol.jsp?displaymode=savedeletetemplate'><bean:message key="provider.btnAddDeleteTemplate"/></a> | <a class='iframe' id='popupgroup' href='providercontrol.jsp?displaymode=savedeleteform'><bean:message key="provider.btnAddDeleteForm"/></a></td>
   </tr>
    <tr>
-    <TD align="center">  <a href="#" ONCLICK ="popupPage(550,800,'../schedule/scheduletemplatesetting1.jsp?provider_no=<%=providerNo%>&provider_name=<%=URLEncoder.encode(provider_name)%>');return false;" title="Holiday and Schedule Setting" ><bean:message key="provider.btnScheduleSetting"/></a>
-      &nbsp;&nbsp;&nbsp; | <a href="#" ONCLICK ="popupPage(550,800,'http://oscar1.mcmaster.ca:8888/oscarResource/manage?username=oscarfp&pw=oscarfp');return false;" title="Resource Management" ><bean:message key="provider.btnManageClinicalResource"/></a--> </td>
+    <TD align="center">  <a class='iframe' id='popupgroup' href='../schedule/scheduletemplatesetting1.jsp?provider_no=<%=providerNo%>&provider_name=<%=URLEncoder.encode(provider_name)%>' title="Holiday and Schedule Setting" ><bean:message key="provider.btnScheduleSetting"/></a>
+      &nbsp;&nbsp;&nbsp; | <a class='iframe' id='popupgroup' href='http://oscar1.mcmaster.ca:8888/oscarResource/manage?username=oscarfp&pw=oscarfp' title="Resource Management" ><bean:message key="provider.btnManageClinicalResource"/></a--> </td>
   </tr>
   <tr>
-      <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewDefaultSex');return false;"><bean:message key="provider.btnSetDefaultSex" /></a></td>
+      <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewDefaultSex'><bean:message key="provider.btnSetDefaultSex" /></a></td>
       </tr>
   <tr>
-    <td align="center"><a href=# onClick ="popupPage(230,860,'providerSignature.jsp');return false;"><bean:message key="provider.btnEditSignature"/></a>
+    <td align="center"><a class='iframe' id='popupgroup' href='providerSignature.jsp'><bean:message key="provider.btnEditSignature"/></a>
     </td>
   </tr>
   <oscar:oscarPropertiesCheck property="TORONTO_RFQ" value="no" defaultVal="true">
@@ -560,7 +567,7 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
     <td align="center">
 <% String br = OscarProperties.getInstance().getProperty("billregion");
    if (br.equals("BC")) { %>
-	<a href=# onClick ="popupPage(230,400,'../billing/CA/BC/viewBillingPreferencesAction.do?providerNo=<%=providerNo%>');return false;"><bean:message key="provider.btnBillPreference"/></a>
+	<a class='iframe' id='popupgroup' href='../billing/CA/BC/viewBillingPreferencesAction.do?providerNo=<%=providerNo%>'><bean:message key="provider.btnBillPreference"/></a>
 <% } else { %>
 	<a href=# onClick ="showHideBillPref();return false;"><bean:message key="provider.btnBillPreference"/></a>
 <% } %>
@@ -734,22 +741,24 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
   </tr>
 
 </security:oscarSec>
-      <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'providerPhone.jsp');return false;"><bean:message key="provider.btnEditPhoneNumber"/></a></td>
+	  <tr>
+          <td align="center"><a class='iframe' id='popupgroup' href='providerAddress.jsp'><bean:message key="provider.btnEditAddress"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'providerFax.jsp');return false;"><bean:message key="provider.btnEditFaxNumber"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='providerPhone.jsp'><bean:message key="provider.btnEditPhoneNumber"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'providerColourPicker.jsp');return false;"><bean:message key="provider.btnEditColour"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='providerFax.jsp'><bean:message key="provider.btnEditFaxNumber"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewRxPageSize');return false;"><bean:message key="provider.btnSetRxPageSize"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='providerColourPicker.jsp'><bean:message key="provider.btnEditColour"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewUseRx3');return false;"><bean:message key="provider.btnSetRx3"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewRxPageSize'><bean:message key="provider.btnSetRxPageSize"/></a></td>
       </tr>
-      
+      <tr>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewUseRx3'><bean:message key="provider.btnSetRx3"/></a></td>
+      </tr>
       <tr>
 	    <td align="center">
 			<a href=# onClick ="showHideRxPrintPref();return false;"><bean:message key="provider.btnRxPrintingPreferences"/></a>
@@ -780,76 +789,159 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 	  </tr>
       
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewCppSingleLine');return false;"><bean:message key="provider.btnSetCppSingleLine"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewCppSingleLine'><bean:message key="provider.btnSetCppSingleLine"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewShowPatientDOB');return false;"><bean:message key="provider.btnSetShowPatientDOB"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewShowPatientDOB'><bean:message key="provider.btnSetShowPatientDOB"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewDefaultQuantity');return false;"><bean:message key="provider.SetDefaultPrescriptionQuantity"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewDefaultQuantity'><bean:message key="provider.SetDefaultPrescriptionQuantity"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=view&provider_no=<%=providerNo%>');return false;"><bean:message key="provider.btnEditStaleDate"/></a></td>
-      </tr>
-
-      <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewMyDrugrefId');return false;"><bean:message key="provider.btnSetmyDrugrefID"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=view&provider_no=<%=providerNo%>'><bean:message key="provider.btnEditStaleDate"/></a></td>
       </tr>
 
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewConsultationRequestCuffOffDate');return false;"><bean:message key="provider.btnSetConsultationCutoffTimePeriod"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewMyDrugrefId'><bean:message key="provider.btnSetmyDrugrefID"/></a></td>
+      </tr>
+
+      <tr>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewConsultationRequestCuffOffDate'><bean:message key="provider.btnSetConsultationCutoffTimePeriod"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewConsultationRequestTeamWarning');return false;"><bean:message key="provider.btnSetConsultationTeam"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewConsultationRequestTeamWarning'><bean:message key="provider.btnSetConsultationTeam"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewWorkLoadManagement');return false;"><bean:message key="provider.btnSetWorkLoadManagement"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewWorkLoadManagement'><bean:message key="provider.btnSetWorkLoadManagement"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewConsultPasteFmt');return false;"><bean:message key="provider.btnSetConsultPasteFmt"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewConsultPasteFmt'><bean:message key="provider.btnSetConsultPasteFmt"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewFavouriteEformGroup');return false;"><bean:message key="provider.btnSetEformGroup"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewFavouriteEformGroup'><bean:message key="provider.btnSetEformGroup"/></a></td>
       </tr>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewHCType');return false;"><bean:message key="provider.btnSetHCType" /></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewHCType'><bean:message key="provider.btnSetHCType" /></a></td>
       </tr>
       <% if(OscarProperties.getInstance().hasProperty("ONTARIO_MD_INCOMINGREQUESTOR")){%>
       <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewOntarioMDId');return false;"><bean:message key="provider.btnSetmyOntarioMD"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewOntarioMDId'><bean:message key="provider.btnSetmyOntarioMD"/></a></td>
       </tr>
       <%}%>
   </oscar:oscarPropertiesCheck>
   <oscar:oscarPropertiesCheck property="MY_OSCAR" value="yes">
         <tr>
-            <td align="center"><a href=# onClick ="popupPage(230,860,'providerIndivoIdSetter.jsp');return false;"><bean:message key="provider.btnSetIndivoId"/></a></td>
+            <td align="center"><a class='iframe' id='popupgroup' href='providerIndivoIdSetter.jsp'><bean:message key="provider.btnSetIndivoId"/></a></td>
         </tr>
         <tr>
-            <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewUseMyMeds');return false;"><bean:message key="provider.btnSetUseMyMeds"/></a></td>
+            <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewUseMyMeds'><bean:message key="provider.btnSetUseMyMeds"/></a></td>
         </tr>
   </oscar:oscarPropertiesCheck>
   		<tr>
-          <td align="center"><a href=# onClick ="popupPage(400,860,'../provider/CppPreferences.do');return false;"><bean:message key="provider.cppPrefs" /></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../provider/CppPreferences.do'><bean:message key="provider.cppPrefs" /></a></td>
       	</tr>
 
       	<tr>
-          <td align="center"><a href=# onClick ="popupPage(400,860,'../provider/OlisPreferences.do');return false;"><bean:message key="provider.olisPrefs" /></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../provider/OlisPreferences.do'><bean:message key="provider.olisPrefs" /></a></td>
       	</tr>
       	<tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewCommentLab');return false;"><bean:message key="provider.btnDisableAckCommentLab"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewCommentLab'><bean:message key="provider.btnDisableAckCommentLab"/></a></td>
       </tr>
        <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewEncounterWindowSize');return false;"><bean:message key="provider.btnEditDefaultEncounterWindowSize"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewEncounterWindowSize'><bean:message key="provider.btnEditDefaultEncounterWindowSize"/></a></td>
       </tr>
        <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'../setProviderStaleDate.do?method=viewQuickChartSize');return false;"><bean:message key="provider.btnEditDefaultQuickChartSize"/></a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewQuickChartSize'><bean:message key="provider.btnEditDefaultQuickChartSize"/></a></td>
+      </tr>
+      <tr>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewEDocBrowserInDocumentReport'><bean:message key="provider.btnSetEDocBrowserInDocumentReport"/></a></td>
+      </tr>
+      <tr>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewEDocBrowserInMasterFile'><bean:message key="provider.btnSetEDocBrowserInMasterFile"/></a></td>
+      </tr>
+      <tr>
+          <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewPatientNameLength'><bean:message key="provider.btnEditSetPatientNameLength"/></a></td>
       </tr>
 	  <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'providerNewDemographicDefaultProvider.jsp');return false;">Set Default Provider for New Demographic</a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='providerNewDemographicDefaultProvider.jsp'>Set Default Provider for New Demographic</a></td>
       </tr>
 	  <tr>
-          <td align="center"><a href=# onClick ="popupPage(230,860,'providerBillingDefaultProvider.jsp');return false;">Set Default Provider for Billing</a></td>
+          <td align="center"><a class='iframe' id='popupgroup' href='providerBillingDefaultProvider.jsp'>Set Default Provider for Invoice Billing</a></td>
       </tr>
+
+
+	 <oscar:oscarPropertiesCheck property="util.erx.enabled" value="true">
+	 	<security:oscarSec roleName="<%=roleName$%>" objectName="_rx" rights="r">
+        <tr>
+        	<td align="center">
+            	<a href=# onClick ="showHideERxPref();return false;"><bean:message key="provider.eRx.btnPrefLink"/></a>
+            </td>
+        </tr>
+        <tr>
+			<td align="center">
+            	<div id="eRxPref">
+                <%  
+            	String eRxEnabledChecked="unchecked";
+                String eRxTrainingModeChecked="unchecked";
+                                        
+				boolean eRxEnabled = false;
+                String eRx_SSO_URL = "";
+                String eRxUsername = "";
+                String eRxPassword = "";
+                String eRxFacility = "";
+                boolean eRxTrainingMode = false;
+                                                        
+                if (providerPreference != null){                                       
+                	eRxEnabled = providerPreference.isERxEnabled();
+                    if(eRxEnabled) eRxEnabledChecked = "checked";
+                                
+                    eRx_SSO_URL = providerPreference.getERx_SSO_URL();
+                    eRxUsername = providerPreference.getERxUsername();
+                    eRxPassword = providerPreference.getERxPassword();
+                    eRxFacility = providerPreference.getERxFacility();
+                                
+                    eRxTrainingMode = providerPreference.isERxTrainingMode();
+                    if(eRxTrainingMode) eRxTrainingModeChecked = "checked";
+                                
+                    if(eRx_SSO_URL==null || "null".equalsIgnoreCase(eRx_SSO_URL)) eRx_SSO_URL=OscarProperties.getInstance().getProperty("util.erx.oscarerx_sso_url");
+                    if(eRxUsername==null || "null".equalsIgnoreCase(eRxUsername)) eRxUsername="";
+                    if(eRxPassword==null || "null".equalsIgnoreCase(eRxPassword)) eRxPassword="";
+                    if(eRxFacility==null || "null".equalsIgnoreCase(eRxFacility)) eRxFacility="";
+                }
+                %>
+                	<table class="eRxTableCenter">
+                    	<tr>
+                        	<td><bean:message key="provider.eRx.labelEnable"/>:</td>
+                          	<td><input name="erx_enable" title="Enable the External Prescriber" type="checkbox" <%=eRxEnabledChecked%> /></td>
+                        </tr>
+                        <tr>
+                          	<td><bean:message key="provider.eRx.labelUser"/>:</td>
+                      		<td><input name="erx_username" type="text" value="<%=eRxUsername%>" title="Username to access the External Prescriber"/></td>
+                        </tr>
+                        <tr>
+                          	<td><bean:message key="provider.eRx.labelPassword"/>:</td>
+                          	<td><input name="erx_password" type="password" value="<%=eRxPassword%>" title="Password to access the External Prescriber" /></td>
+                        <tr>
+                        </tr>
+                          	<td><bean:message key="provider.eRx.labelFacility"/>:</td>
+                          	<td><input name="erx_facility" type="text" value="<%=eRxFacility%>" title="The Facility ID assigned to you by the External Prescriber" /><br></td>
+                        <tr>
+                        </tr>
+                          	<td><bean:message key="provider.eRx.labelTrainingMode"/>:</td>
+                          	<td><input name="erx_training_mode" type="checkbox" title="Enable Training Mode" <%=eRxTrainingModeChecked%> /></td>
+                        </tr>
+                        <tr>
+                          	<td><bean:message key="provider.eRx.labelURL"/>:</td>
+                          	<td><input name="erx_sso_url" type="text" value="<%=eRx_SSO_URL%>" title="The URL to access the Web Interface from OSCAR Rx" /></td>
+                        </tr>
+                     </table>
+                  </div>
+              </td>
+          </tr>
+        </security:oscarSec>
+  </oscar:oscarPropertiesCheck>
+
+
 </table>
 </FORM>
 

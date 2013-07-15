@@ -1,3 +1,27 @@
+<%--
+
+
+    Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for
+    Centre for Research on Inner City Health, St. Michael's Hospital,
+    Toronto, Ontario, Canada
+
+--%>
 <!-- /PMmodule/Admin/Home.jsp -->
 
 <%
@@ -70,20 +94,11 @@ String _appPath = request.getContextPath();
 				<th></th>
 
 				<th style="vertical-align: middle">
-				<security:oscarSec objectName="<%=KeyConstants.FUN_ADMIN_USER %>" rights="<%=KeyConstants.ACCESS_READ%>">
-				<html:link	action="/PMmodule/Admin/UserSearch.do">
-					<img ID="lnkClient" src="<%=_appPath%>/images/Users-60.gif"
-						Height="60" Width="60" border="0" />
-				</html:link>
-				</security:oscarSec>
 				</th>
 				<th align="left" style="vertical-align: middle">
 				<table>
 					<tr align="left">
 						<th align="left" valign="top" class="clsHomePageLabels">
-							<security:oscarSec objectName="<%=KeyConstants.FUN_ADMIN_USER %>" rights="<%=KeyConstants.ACCESS_READ%>">
-								<html:link	action="/PMmodule/Admin/UserSearch.do">User Management</html:link>
-							</security:oscarSec>
 						</th>
 					</tr>
 				</table>
@@ -92,20 +107,11 @@ String _appPath = request.getContextPath();
 				<th></th>
 
 				<th style="vertical-align: middle">
-					<security:oscarSec objectName="<%=KeyConstants.FUN_ADMIN_ROLE %>" rights="<%=KeyConstants.ACCESS_READ%>">
-						<html:link	action="/PMmodule/Admin/RoleManager.do">
-							<img ID="lnkCare1" src="<%=_appPath%>/images/Role-60.gif"
-								Height="60" Width="60" border="0" style="vertical-align: middle" />
-						</html:link>
-					</security:oscarSec>
 				</th>
 				<th style="vertical-align: middle">
 				<table align="left">
 					<tr>
 						<th align="left" valign="top" class="clsHomePageLabels" >
-							<security:oscarSec objectName="<%=KeyConstants.FUN_ADMIN_ROLE %>" rights="<%=KeyConstants.ACCESS_READ%>">
-								<html:link	action="/PMmodule/Admin/RoleManager.do">Role Management</html:link>
-					    	</security:oscarSec>
 					    </th>
 					</tr>
 				</table>
@@ -140,20 +146,11 @@ String _appPath = request.getContextPath();
 				</th>
 				<th></th>
 				<th style="vertical-align: middle">
-					<security:oscarSec objectName="<%=KeyConstants.FUN_ADMIN_ORG %>" rights="<%=KeyConstants.ACCESS_READ%>">
-						<a id="orgAdd"	href="<c:out value='${ctx}'/>/PMmodule/Admin/ShowORGTree.do?tableId=ORG">
-						<img ID="lnkClient" src="<%=_appPath%>/images/Organization2.png"				
-							Height="60" Width="60" border="0" style="vertical-align: middle"/></a>
-					</security:oscarSec>	
 				</th>
 				<th align="left" style="vertical-align: middle">
 				<table>
 					<tr align="left">
 						<th align="left" style="vertical-align: middle" class="clsHomePageLabels">
-							<security:oscarSec objectName="<%=KeyConstants.FUN_ADMIN_ORG %>" rights="<%=KeyConstants.ACCESS_READ%>">
-								<a	id="orgAdd"	href="<c:out value='${ctx}'/>/PMmodule/Admin/ShowORGTree.do?tableId=ORG">
-								SMIS Org Chart</a>
-							</security:oscarSec>
 						</th>
 					</tr>
 				</table>
@@ -205,20 +202,11 @@ String _appPath = request.getContextPath();
 			<tr>
 				<th></th>
 				<th style="vertical-align: middle">
-					<security:oscarSec objectName="<%=KeyConstants.FUN_ADMIN_UNLOCKUSER %>" rights="<%=KeyConstants.ACCESS_READ%>">
-						<a id="lnkUnlockAccount1"	href="<c:out value='${ctx}'/>/PMmodule/Admin/UnlockAccount.do"> 
-						<img ID="imgUnlockAccount1" src="<%=_appPath%>/images/UnlockAccount.gif" Height="60"
-						Width="60" border="0" style="vertical-align: middle"/></a>
-					</security:oscarSec>		
 				</th>
 				<th style="vertical-align: middle">
 				<table align="left">
 					<tr>
 						<th align="left" style="vertical-align: middle" class="clsHomePageLabels">
-							<security:oscarSec objectName="<%=KeyConstants.FUN_ADMIN_UNLOCKUSER  %>" rights="<%=KeyConstants.ACCESS_READ%>">
-							<a	id="lnkUnlockAccount2"	href="<c:out value='${ctx}'/>/PMmodule/Admin/UnlockAccount.do">
-								Unlock User</a>
-							</security:oscarSec>
 						</th>
 					</tr>
 				</table>

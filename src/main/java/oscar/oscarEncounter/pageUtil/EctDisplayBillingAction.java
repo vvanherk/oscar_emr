@@ -1,27 +1,27 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License.
-// * This program is free software; you can redistribute it and/or
-// * modify it under the terms of the GNU General Public License
-// * as published by the Free Software Foundation; either version 2
-// * of the License, or (at your option) any later version. *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-// * along with this program; if not, write to the Free Software
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-// *
-// * <OSCAR TEAM>
-// * This software was written for the
-// * Department of Family Medicine
-// * McMaster University
-// * Hamilton
-// * Ontario, Canada
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
 
 package oscar.oscarEncounter.pageUtil;
 
@@ -55,6 +55,7 @@ public class EctDisplayBillingAction extends EctDisplayAction {
 
     private static final String cmd = "Billing";
 
+    @SuppressWarnings("unchecked")
     public boolean getInfo(EctSessionBean bean, HttpServletRequest request, NavBarDisplayDAO Dao, MessageResources messages) {
 
     	String appointmentNo = request.getParameter("appointment_no");
@@ -96,27 +97,27 @@ public class EctDisplayBillingAction extends EctDisplayAction {
                 }
                 ////
                 JdbcBillingReviewImpl dbObj = new JdbcBillingReviewImpl();
-                List aL = null;
+                List<Object> aL = null;
                 try{
                      aL   = dbObj.getBillingHist(bean.demographicNo, 10, 0, null);
                 }catch(Exception e){
 
                     MiscUtils.getLogger().error("Error", e);
                 }
-                int nItems=0;
+
                 for(int i=0; i<aL.size(); i=i+2) {
 
                         Date date = null;
-                        nItems++;
+
                         BillingClaimHeader1Data obj = (BillingClaimHeader1Data) aL.get(i);
                         BillingItemData itObj = (BillingItemData) aL.get(i+1);
 
-                        NavBarDisplayDAO.Item item = Dao.Item();
+                        NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
 
                         String dbFormat = "yyyy-MM-dd";
                         try {
                             DateFormat formatter = new SimpleDateFormat(dbFormat);
-                            date = (Date)formatter.parse(obj.getBilling_date());
+                            date = formatter.parse(obj.getBilling_date());
                         }
                         catch(ParseException e ) {
                                 MiscUtils.getLogger().debug("EctDisplayMsgAction: Error creating date " + e.getMessage());
@@ -151,7 +152,7 @@ public class EctDisplayBillingAction extends EctDisplayAction {
                 ////
                 MSPReconcile msp = new MSPReconcile();              //"ALL", "1999-01-01" ,"9999-99-99"
                 MSPReconcile.BillSearch bSearch = msp.getBills("%", null, null ,null,bean.demographicNo);//,true,true,true,true);
-                ArrayList list = bSearch.list;
+                ArrayList<MSPReconcile.Bill> list = bSearch.list;
 
                 MiscUtils.getLogger().debug("list size for bills is "+list.size());
 
@@ -163,22 +164,21 @@ public class EctDisplayBillingAction extends EctDisplayAction {
 //
 //                    MiscUtils.getLogger().error("Error", e);
 //                }
-                int nItems=0;
+
                 for(int i=0; i<list.size(); i++) {
 
                         Date date = null;
-                        nItems++;
 
-                        MSPReconcile.Bill b = (MSPReconcile.Bill) list.get(i);
+                        MSPReconcile.Bill b = list.get(i);
 
 
                         if (b != null && !b.reason.equals("D")){
-                            NavBarDisplayDAO.Item item = Dao.Item();
+                            NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
 
                             String dbFormat = "yyyy-MM-dd";
                             try {
                                 DateFormat formatter = new SimpleDateFormat(dbFormat);
-                                date = (Date)formatter.parse(b.getApptDate());
+                                date = formatter.parse(b.getApptDate());
                             }
                             catch(ParseException e ) {
                                     MiscUtils.getLogger().debug("EctDisplayMsgAction: Error creating date " + e.getMessage());

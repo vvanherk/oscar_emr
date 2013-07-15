@@ -1,19 +1,20 @@
-/*
+/**
  *
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for
  * Centre for Research on Inner City Health, St. Michael's Hospital,
@@ -40,6 +41,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -48,6 +50,8 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
+import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -60,13 +64,17 @@ import org.apache.struts.action.ActionMessages;
 import org.caisi.dao.TicklerDAO;
 import org.caisi.model.Tickler;
 import org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager;
-import org.oscarehr.common.dao.DemographicDao;
+import org.oscarehr.PMmodule.dao.ProgramProviderDAO;
+import org.oscarehr.PMmodule.dao.ProviderDao;
 import org.oscarehr.PMmodule.model.Admission;
+import org.oscarehr.PMmodule.model.Program;
+import org.oscarehr.PMmodule.model.ProgramProvider;
 import org.oscarehr.PMmodule.service.AdmissionManager;
 import org.oscarehr.PMmodule.service.ProgramManager;
 import org.oscarehr.billing.CA.dao.GstControlDao;
 import org.oscarehr.caisi_integrator.ws.CachedDemographicNote;
 import org.oscarehr.caisi_integrator.ws.DemographicWs;
+import org.oscarehr.casemgmt.common.EChartNoteEntry;
 import org.oscarehr.casemgmt.dao.CaseManagementIssueDAO;
 import org.oscarehr.casemgmt.dao.CaseManagementNoteDAO;
 import org.oscarehr.casemgmt.dao.CaseManagementNoteExtDAO;
@@ -84,12 +92,15 @@ import org.oscarehr.casemgmt.web.CaseManagementViewAction.IssueDisplay;
 import org.oscarehr.casemgmt.web.formbeans.CaseManagementEntryFormBean;
 import org.oscarehr.common.dao.AppointmentArchiveDao;
 import org.oscarehr.common.dao.BillingServiceDao;
+import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.OscarAppointmentDao;
+import org.oscarehr.common.dao.ProviderDefaultProgramDao;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DxAssociation;
 import org.oscarehr.common.model.PartialDate;
 import org.oscarehr.common.model.Provider;
+import org.oscarehr.common.model.ProviderDefaultProgram;
 import org.oscarehr.eyeform.dao.EyeFormDao;
 import org.oscarehr.eyeform.dao.FollowUpDao;
 import org.oscarehr.eyeform.dao.MacroDao;
@@ -110,6 +121,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.web.context.WebApplicationContext;
 
 import oscar.OscarProperties;
+import oscar.appt.ApptStatusData;
 import oscar.dms.EDocUtil;
 import oscar.log.LogAction;
 import oscar.log.LogConst;
@@ -125,6 +137,7 @@ import oscar.util.ConcatPDF;
 import oscar.util.UtilDateUtilities;
 
 import com.lowagie.text.DocumentException;
+import com.quatro.model.security.Secrole;
 
 /*
  * Updated by Eugene Petruhin on 12 and 13 jan 2009 while fixing #2482832 & #2494061
@@ -225,7 +238,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				String default_view = OscarProperties.getInstance().getProperty("default_view", "");
 
 				url = bsurl + "/billing.do?billRegion=" + java.net.URLEncoder.encode(province, "UTF-8") + "&billForm=" + java.net.URLEncoder.encode(default_view, "UTF-8") + "&hotclick=" + java.net.URLEncoder.encode("", "UTF-8") + "&appointment_no=" + bean.appointmentNo + "&appointment_date=" + bean.appointmentDate + "&start_time=" + Hour + ":" + Min + "&demographic_name=" + java.net.URLEncoder.encode(bean.patientLastName + "," + bean.patientFirstName, "UTF-8") + "&demographic_no=" + bean.demographicNo
-				        + "&providerview=" + bean.curProviderNo + "&user_no=" + bean.providerNo + "&apptProvider_no=" + bean.curProviderNo + "&bNewForm=1&status=t";
+				+ "&providerview=" + bean.curProviderNo + "&user_no=" + bean.providerNo + "&apptProvider_no=" + bean.curProviderNo + "&bNewForm=1&status=t";
 			}
 			session.setAttribute("billing_url", url);
 		}
@@ -406,6 +419,8 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			caseManagementViewAction.addLocalIssues(checkBoxBeanList, demographicNo, false, programId);
 			caseManagementViewAction.addRemoteIssues(checkBoxBeanList, demographicNo, false);
 
+			caseManagementViewAction.sortIssuesByOrderId(checkBoxBeanList);
+			
 			checkedList = checkBoxBeanList.toArray(new CheckBoxBean[checkBoxBeanList.size()]);
 			/*
 			 * List<CaseManagementIssue> issues = caseManagementMgr.filterIssues(caseManagementMgr.getIssues(Integer.parseInt(demono)), programIdString); checkedList = new CheckBoxBean[issues.size()]; // set issue checked list
@@ -502,6 +517,162 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		}
 	}
 
+	public ActionForward issueNoteSaveJson(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String strNote = request.getParameter("value");
+		String appointmentNo = request.getParameter("appointment_no");
+		String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
+		String noteId = request.getParameter("noteId");
+		String demographicNo = request.getParameter("demographic_no");
+		String issueCode = request.getParameter("issue_id");
+
+		String issueAlphaCode = request.getParameter("issue_code");
+
+		String archived = request.getParameter("archived");
+
+		Date noteDate = new Date();
+
+		strNote = org.apache.commons.lang.StringUtils.trimToNull(strNote);
+		if( (archived == null || !archived.equalsIgnoreCase("true")) && (strNote == null || strNote.equals("")) )
+			return null;
+
+		CaseManagementNote note = new CaseManagementNote();
+		if (!noteId.equals("0")) {
+			note = this.caseManagementMgr.getNote(noteId);
+			if ((archived == null || !archived.equalsIgnoreCase("true"))
+					&& (request.getParameter("sign") == null || !request.getParameter("sign").equalsIgnoreCase("true"))
+					&& note.getNote().equalsIgnoreCase(strNote))
+				return null;
+
+			note.setRevision(Integer.parseInt(note.getRevision())+1 + "");
+
+			if (archived != null && archived.equalsIgnoreCase("true"))
+				note.setArchived(true);
+
+		} else {
+			note.setDemographic_no(demographicNo);
+
+			CaseManagementIssue cIssue;
+			if (issueAlphaCode != null && issueAlphaCode.length() > 0)
+				cIssue = this.caseManagementMgr.getIssueByIssueCode(demographicNo, issueAlphaCode);
+			else
+				cIssue = this.caseManagementMgr.getIssueById(demographicNo,issueCode);
+
+			Set<CaseManagementIssue> issueSet = new HashSet<CaseManagementIssue>();
+			Set<CaseManagementNote> noteSet = new HashSet<CaseManagementNote>();
+
+			if( cIssue == null ) {
+				Issue issue;
+				if (issueAlphaCode != null && issueAlphaCode.length() > 0)
+					issue = this.caseManagementMgr.getIssueByCode(issueAlphaCode);
+				else
+					issue = this.caseManagementMgr.getIssue(issueCode);
+
+				cIssue = this.newIssueToCIssue(demographicNo, issue, Integer.parseInt("10016"));
+				cIssue.setNotes(noteSet);
+			}
+
+			issueSet.add(cIssue);
+			note.setIssues(issueSet);
+
+			note.setCreate_date(noteDate);
+			note.setObservation_date(noteDate);
+			note.setRevision("1");
+
+		}
+
+		try {
+			note.setAppointmentNo(Integer.parseInt(appointmentNo));
+		} catch (Exception e) {
+			// No appointment number set for this encounter
+		}
+
+		if (strNote != null)
+			note.setNote(strNote);
+
+		note.setProviderNo(providerNo);
+		note.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider);
+
+		if (request.getParameter("sign") != null && request.getParameter("sign").equalsIgnoreCase("true")) {
+			note.setSigning_provider_no(providerNo);
+			note.setSigned(true);
+			if (request.getParameter("appendSignText") != null && request.getParameter("appendSignText").equalsIgnoreCase("true")) {
+				SimpleDateFormat dt = new SimpleDateFormat("dd-MMM-yyyy H:mm", Locale.ENGLISH);
+				Date now = new Date();
+				ResourceBundle props = ResourceBundle.getBundle("oscarResources", Locale.ENGLISH);
+
+				ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+				String providerName = providerDao.getProviderName(providerNo);
+
+				String signature = "[" + props.getString("oscarEncounter.class.EctSaveEncounterAction.msgSigned") + " " + dt.format(now) + " " + props.getString("oscarEncounter.class.EctSaveEncounterAction.msgSigBy") + " " + providerName + "]";
+				note.setNote(note.getNote() + "\n" + signature);
+			}
+
+			if (request.getParameter("signAndExit") != null && request.getParameter("signAndExit").equalsIgnoreCase("true")) {
+				OscarAppointmentDao appointmentDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
+				try {
+					Appointment appointment = appointmentDao.find(Integer.parseInt(appointmentNo));
+					if (appointment != null) {
+						ApptStatusData statusData = new ApptStatusData();
+						appointment.setStatus(statusData.signStatus());
+						appointmentDao.merge(appointment);
+					}
+				} catch (Exception e) {
+					logger.error("Couldn't parse appointmentNo: " + appointmentNo, e);
+				}
+			}
+		} else if (!note.isSigned() && (archived == null || !archived.equalsIgnoreCase("true"))) {
+			note.setSigned(false);
+			note.setSigning_provider_no("");
+		}
+
+
+		// Determines what program & role to assign the note to
+		ProgramProviderDAO programProviderDao = (ProgramProviderDAO) SpringUtils.getBean("programProviderDAO");
+		ProviderDefaultProgramDao defaultProgramDao = (ProviderDefaultProgramDao) SpringUtils.getBean("providerDefaultProgramDao");
+		boolean programSet = false;
+
+		List<ProviderDefaultProgram> programs = defaultProgramDao.getProgramByProviderNo(providerNo);
+		HashMap<Program,List<Secrole>> rolesForDemo = NotePermissionsAction.getAllProviderAccessibleRolesForDemo(providerNo, demographicNo);
+		for (ProviderDefaultProgram pdp : programs) {
+			for (Program p : rolesForDemo.keySet()) {
+				if (pdp.getProgramId() == p.getId().intValue()) {
+					List<ProgramProvider> programProviderList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, (long) pdp.getProgramId());
+
+					note.setProgram_no("" + pdp.getProgramId());
+					note.setReporter_caisi_role("" + programProviderList.get(0).getRoleId());
+
+					programSet = true;
+				}
+			}
+		}
+
+		if (!programSet && !rolesForDemo.isEmpty()) {
+			Program program = rolesForDemo.keySet().iterator().next();
+			ProgramProvider programProvider = programProviderDao.getProgramProvider(providerNo, (long) program.getId());
+			note.setProgram_no("" + programProvider.getProgramId());
+			note.setReporter_caisi_role("" + programProvider.getRoleId());
+		}
+
+		note.setReporter_program_team("0");
+
+		CaseManagementCPP cpp = this.caseManagementMgr.getCPP(demographicNo);
+		if( cpp == null ) {
+			cpp = new CaseManagementCPP();
+			cpp.setDemographic_no(demographicNo);
+		}
+
+		String savedStr = caseManagementMgr.saveNote(cpp, note, providerNo, null, null, null);
+		addNewNoteLink(note.getId());
+
+
+		HashMap<String, Object> hashMap = new HashMap<String, Object>();
+		hashMap.put("id", note.getId());
+		JSONObject json = JSONObject.fromObject(hashMap);
+		response.getOutputStream().write(json.toString().getBytes());
+
+		return null;
+	}
+
 	public ActionForward issueNoteSave(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String strNote = request.getParameter("value");
 		String appointmentNo = request.getParameter("appointmentNo");
@@ -535,6 +706,9 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		CaseManagementNote note;
 		boolean newNote = false;
 		// we don't want to try to remove an issue from a new note so we test here
+		if(noteId.isEmpty())
+			noteId = "0";
+
 		if (noteId.equals("0")) {
 
 			note = new CaseManagementNote();
@@ -1198,6 +1372,23 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			newNote = true;
 		}
 
+		// Checks whether the user can set the program via the UI - if so, make sure that they can't screw it up if they do
+		if (OscarProperties.getInstance().getBooleanProperty("note_program_ui_enabled", "true")) {
+			String noteProgramNo = request.getParameter("_note_program_no");
+			String noteRoleId = request.getParameter("_note_role_id");
+
+			if (noteProgramNo != null && noteRoleId != null && noteProgramNo.trim().length() > 0 && noteRoleId.trim().length() > 0) {
+				if (noteProgramNo.equalsIgnoreCase("-2") || noteRoleId.equalsIgnoreCase("-2")) {
+					throw new Exception("Patient is not admitted to any programs user has access to. [roleId=-2, programNo=-2]");
+				} else if (!noteProgramNo.equalsIgnoreCase("-1") && !noteRoleId.equalsIgnoreCase("-1")) {
+					note.setProgram_no(noteProgramNo);
+					note.setReporter_caisi_role(noteRoleId);
+				}
+			} else {
+				throw new Exception("Missing role id or program number. [roleId=" + noteRoleId + ", programNo=" + noteProgramNo + "]");
+			}
+		}
+
 		if (sessionBean.appointmentNo != null && sessionBean.appointmentNo.length() > 0) {
 			note.setAppointmentNo(Integer.parseInt(sessionBean.appointmentNo));
 		}
@@ -1308,6 +1499,20 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 					if (caseManagementIssueDao.getIssuebyId(demo, String.valueOf(issue.getId())) == null) {
 						caseManagementIssueDao.saveIssue(caseManagementIssue);
 					}
+					// reload to materliase generated fields.
+					caseManagementIssue = caseManagementIssueDao.getIssuebyId(demo, String.valueOf(issue.getId()));
+				}
+			} else if( caseManagementIssue != null && isChecked) {
+				caseManagementIssue.setAcute("acute".equals(issueDisplay.acute));
+				caseManagementIssue.setCertain("certain".equals(issueDisplay.certain));
+				caseManagementIssue.setMajor("major".equals(issueDisplay.major));
+				caseManagementIssue.setResolved("resolved".equals(issueDisplay.resolved));
+				Issue issue = issueDao.findIssueByCode(issueDisplay.code);
+				if (issue != null) {
+					caseManagementIssue.setUpdate_date(new Date());
+					// Should not save duplicated issue for one demographic
+					// But should be able to update existing issues.
+					caseManagementIssueDao.saveIssue(caseManagementIssue);
 					// reload to materliase generated fields.
 					caseManagementIssue = caseManagementIssueDao.getIssuebyId(demo, String.valueOf(issue.getId()));
 				}
@@ -1868,6 +2073,8 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		CaseManagementEntryFormBean cform = (CaseManagementEntryFormBean) form;
 
 		String demono = request.getParameter("amp;demographicNo");
+		if(demono == null)
+			demono = request.getParameter("demographicNo");
 
 		// get current providerNo
 		// String providerNo = request.getParameter("amp;providerNo");
@@ -1879,8 +2086,8 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		List searchResults;
 		searchResults = caseManagementMgr.searchIssues(providerNo, programId, search);
 
-		// remove issues which we already have - we don't want duplicates unless asked for
-		List existingIssues = caseManagementMgr.filterIssues(caseManagementMgr.getIssues(Integer.parseInt(demono)), programId);
+		// Don't remove issues which we already have. But don't insert duplicate issues when save the issues.
+		List existingIssues = new ArrayList<Issue>();
 		List<Issue> filteredSearchResults;
 
 		if (request.getParameter("amp;all") != null) {
@@ -1990,8 +2197,9 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		}
 
 		// if issue hasn't been added, add it
-		// if it has do nothing;
-		if (!issueExists) {
+		// if it has do nothing;-> change to if it's already added, still keep it but won't
+		//insert into casemgmt_issue, just add a new record to casemgmt_issue_notes.
+		//if (!issueExists) {
 			CheckIssueBoxBean[] caseIssueList = new CheckIssueBoxBean[1];
 
 			caseIssueList[0] = new CheckIssueBoxBean();
@@ -2001,7 +2209,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			sessionFrm.setNewIssueCheckList(caseIssueList);
 
 			return issueAdd(mapping, cform, request, response);
-		} else return null;
+		//} else return null;
 	}
 
 	public ActionForward issueAdd(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -2054,6 +2262,8 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		k = 0;
 
 		String programIdStr = (String) session.getAttribute(SessionConstants.CURRENT_PROGRAM_ID);
+		if(programIdStr==null)
+			programIdStr = (String) session.getAttribute("case_program_id");
 		Integer programId = null;
 		if (programIdStr != null) programId = Integer.valueOf(programIdStr);
 
@@ -2071,8 +2281,23 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			for (int i = 0; i < issueList.length; i++) {
 				if (issueList[i].isChecked()) {
 					if (caseManagementIssueDao.getIssuebyId(demono, String.valueOf(issueList[i].getIssue().getId())) != null) {
-						continue;
-					}
+						//continue;
+						//issue already added
+						for(int j=0; j<oldList.length; j++) {
+							if(oldList[j].getIssue().getIssue_id() == issueList[i].getIssue().getId().longValue() ) { //find old issue and check it
+								caseIssueList[j].setChecked("on");
+								caseIssueList[j].getIssue().setAcute(false);
+								caseIssueList[j].getIssue().setCertain(false);
+								caseIssueList[j].getIssue().setMajor(false);
+								caseIssueList[j].getIssue().setResolved(false);
+								
+								caseIssueList[j].getIssueDisplay().setAcute("chronic");
+								caseIssueList[j].getIssueDisplay().setCertain("uncertain");
+								caseIssueList[j].getIssueDisplay().setMajor("not major");
+								caseIssueList[j].getIssueDisplay().setResolved("unresolved");
+							}
+						}
+					} else {
 					caseIssueList[oldList.length + k] = new CheckBoxBean();
 					CaseManagementIssue cmi = newIssueToCIssue(sessionFrm, issueList[i].getIssue(), programId);
 					caseIssueList[oldList.length + k].setIssue(cmi);
@@ -2091,7 +2316,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 					}
 
 					k++;
-
+					}
 				}
 			}
 		}
@@ -2329,7 +2554,13 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		oldList[ind.intValue()].getIssue().setUpdate_date(new Date());
 		iss.add(oldList[ind.intValue()].getIssue());
 		caseManagementMgr.saveAndUpdateCaseIssues(iss);
-
+		
+		//Change issueDisplay if this issue is successfully saved.
+		sessionFrm.getIssueCheckList()[ind.intValue()].getIssueDisplay().setAcute(oldList[ind.intValue()].getIssue().isAcute()?"acute":"chronic");
+		sessionFrm.getIssueCheckList()[ind.intValue()].getIssueDisplay().setCertain(oldList[ind.intValue()].getIssue().isCertain()?"certain":"uncertain");
+		sessionFrm.getIssueCheckList()[ind.intValue()].getIssueDisplay().setMajor(oldList[ind.intValue()].getIssue().isMajor()?"major":"not major");
+		sessionFrm.getIssueCheckList()[ind.intValue()].getIssueDisplay().setResolved(oldList[ind.intValue()].getIssue().isResolved()?"resolved":"unresolved");
+		
 		if (OscarProperties.getInstance().isCaisiLoaded()) {
 			String providerNo = this.getProviderNo(request);
 
@@ -2344,7 +2575,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		}
 
 		String ajax = request.getParameter("ajax");
-		if (ajax != null && ajax.equalsIgnoreCase("true")) {
+		if (ajax != null && ajax.equalsIgnoreCase("true")) {			
 			request.setAttribute("caseManagementEntryForm", sessionFrm);
 			return mapping.findForward("issueList_ajax");
 		} else return mapping.findForward("view");
@@ -2617,7 +2848,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		}
 		printer.finish();
 
-		List<String> pdfDocs = new ArrayList<String>();
+		List<Object> pdfDocs = new ArrayList<Object>();
 		pdfDocs.add(fileName);
 
 		if (request.getParameter("printLabs") != null && request.getParameter("printLabs").equalsIgnoreCase("true")) {
@@ -2894,14 +3125,45 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		return sb.toString();
 	}
 
+	/**
+	 * gets all the notes
+	 * if we have a key, and the note is locked, consider it
+	 * caisi - filter notes
+	 * grab the last one, where i am provider, and it's not signed
+	 *
+	 * @param request
+	 * @param demono
+	 * @param providerNo
+	 * @return
+	 */
 	public CaseManagementNote getLastSaved(HttpServletRequest request, String demono, String providerNo) {
 		HttpSession session = request.getSession();
-		CaseManagementNote note = null;
-		List notes = null;
+		//CaseManagementNote note = null;
+		List<EChartNoteEntry> entries = new ArrayList<EChartNoteEntry>();
+
+		//Gets some of the note data, no relationships, not the note/history..just enough
+		List<Map<String,Object>> notes = this.caseManagementNoteDao.getUnsignedRawNoteInfoMapByDemographic(demono);
+		Map<String,Object> filteredNotes = new LinkedHashMap<String,Object>();
+
+		//This gets rid of old revisions (better than left join on a computed subset of itself
+		for(Map<String,Object> note:notes) {
+			if(filteredNotes.get(note.get("uuid"))!=null)
+				continue;
+			filteredNotes.put((String)note.get("uuid"),true);
+			EChartNoteEntry e = new EChartNoteEntry();
+			e.setId(note.get("id"));
+			e.setDate((Date)note.get("observation_date"));
+			e.setProviderNo((String)note.get("providerNo"));
+			e.setProgramId(Integer.parseInt((String)note.get("program_no")));
+			e.setRole((String)note.get("reporter_caisi_role"));
+			e.setType("local_note");
+			entries.add(e);
+
+		}
 
 		// UserProperty prop = caseManagementMgr.getUserProperty(providerNo, UserProperty.STALE_NOTEDATE);
-		notes = caseManagementMgr.getNotes(demono);
-		notes = manageLockedNotes(notes, false, this.getUnlockedNotesMap(request));
+		//notes = caseManagementMgr.getNotes(demono);
+		//notes = manageLockedNotes(notes, false, this.getUnlockedNotesMap(request));
 
 		String programId = (String) session.getAttribute("case_program_id");
 
@@ -2909,18 +3171,23 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			programId = "0";
 		}
 
-		notes = caseManagementMgr.filterNotes(notes, programId);
+		entries = caseManagementMgr.filterNotes1(entries, programId);
 
-		for (int idx = notes.size() - 1; idx >= 0; --idx) {
-			CaseManagementNote n = (CaseManagementNote) notes.get(idx);
-			if (!n.isSigned() && n.getProviderNo().equals(providerNo)) {
-				note = n;
+		Collections.sort(entries,EChartNoteEntry.getDateComparatorDesc());
+
+		Map unlockedNotesMap = this.getUnlockedNotesMap(request);
+		for(EChartNoteEntry entry:entries) {
+			CaseManagementNote n = caseManagementMgr.getNote(String.valueOf(entry.getId()));
+			if(n.isLocked() && unlockedNotesMap.get(entry.getId()) != null ) {
+				n.setLocked(false);
+			}
+			if(n.getProviderNo().equals(providerNo)) {
 				session.setAttribute("newNote", "false");
-				break;
+				return n;
 			}
 		}
 
-		return note;
+		return null;
 	}
 
 	protected Map getUnlockedNotesMap(HttpServletRequest request) {

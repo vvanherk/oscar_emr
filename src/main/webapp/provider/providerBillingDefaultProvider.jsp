@@ -163,7 +163,7 @@ br {
             <html:form action="/SetBillingDefPrv.do">
 
 			<span style="color:blue">
-				Select the default selected provider for billing. 
+				Select the default selected provider for invoice billing. 
 				<br/>
 				<% if( provno.equals("") ){
 					%>There is currently no default set<%

@@ -1,24 +1,25 @@
-/*
-* 
-* Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License. 
-* This program is free software; you can redistribute it and/or 
-* modify it under the terms of the GNU General Public License 
-* as published by the Free Software Foundation; either version 2 
-* of the License, or (at your option) any later version. * 
-* This program is distributed in the hope that it will be useful, 
-* but WITHOUT ANY WARRANTY; without even the implied warranty of 
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-* along with this program; if not, write to the Free Software 
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-* 
-* <OSCAR TEAM>
-* 
-* This software was written for 
-* Centre for Research on Inner City Health, St. Michael's Hospital, 
-* Toronto, Ontario, Canada 
-*/
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
 
 package org.oscarehr.PMmodule.dao;
 
@@ -226,6 +227,40 @@ public class AdmissionDao extends HibernateDaoSupport {
 
     }
 
+	public List<Admission> getDischargedAdmissions(Integer demographicNo) {
+		if (demographicNo == null || demographicNo <= 0) {
+			throw new IllegalArgumentException();
+		}
+
+		String queryStr = "FROM Admission a WHERE a.ClientId=? AND a.AdmissionStatus='discharged' ORDER BY a.AdmissionDate DESC";
+		@SuppressWarnings("unchecked")
+		List<Admission> dischargedAdmissions = getHibernateTemplate().find(queryStr, new Object[] { demographicNo });
+
+		if (log.isDebugEnabled()) {
+			log.debug("getDischargedAdmissions for clientId " + demographicNo + ", # of admissions: " + dischargedAdmissions.size());
+		}
+
+		List<Admission> currentAdmissions = getCurrentAdmissions(demographicNo);
+
+		List<Admission> fullyDischargedAdmissions = new ArrayList<Admission>();
+
+		for (Admission d : dischargedAdmissions) {
+			boolean isDischarged = true;
+
+			for (Admission a : currentAdmissions) {
+				if (d.getProgramId().intValue() == a.getProgramId().intValue()) {
+					isDischarged = false;
+				}
+			}
+
+			if (isDischarged)
+				fullyDischargedAdmissions.add(d);
+		}
+
+		return fullyDischargedAdmissions;
+
+	}
+
     public List<Admission> getCurrentAdmissionsByFacility(Integer demographicNo, Integer facilityId) {
         if (demographicNo == null || demographicNo <= 0) {
             throw new IllegalArgumentException();
@@ -430,7 +465,7 @@ public class AdmissionDao extends HibernateDaoSupport {
             throw new IllegalArgumentException();
         }
 
-        Admission admission = (Admission) this.getHibernateTemplate().get(Admission.class, id);
+        Admission admission = this.getHibernateTemplate().get(Admission.class, id);
 
         if (log.isDebugEnabled()) {
             log.debug("getAdmission: id= " + id + ", found: " + (admission != null));
@@ -571,6 +606,20 @@ public class AdmissionDao extends HibernateDaoSupport {
     }
 
     /**
+     * Get anyone who was admitted during the time frame (note this is admitted only, not was in the program).
+     * The startDate is inclusive and end date is exclusive.
+     */
+    public List<Admission> getAdmissionsByProgramAndAdmittedDate(int programId, Date startDate, Date endDate) {
+		String q = "FROM Admission a WHERE a.ProgramId=? and a.AdmissionDate>=? and a.AdmissionDate<?";
+
+		@SuppressWarnings("unchecked")
+        List<Admission> rs = this.getHibernateTemplate().find(q, new Object[] { new Integer(programId), startDate, endDate });
+        
+		return rs;    	
+    }
+    
+    
+    /**
      * Get anyone who was in the program during this time period.
      */
     public List<Admission> getAdmissionsByProgramAndDate(int programId, Date startDate, Date endDate) {
@@ -613,7 +662,7 @@ public class AdmissionDao extends HibernateDaoSupport {
         String q = "Select a From Demographic d, Admission a " + "Where d.anonymous = ? and (d.PatientStatus=? or d.PatientStatus='' or d.PatientStatus=null) and d.DemographicNo=a.ClientId and a.AdmissionStatus='current' and a.programType != 'community'";                 
 
         String status = "AC"; // only show active clients
-        List rs = (List) getHibernateTemplate().find(q, new Object[] { "one-time-anonymous",status});
+        List rs = getHibernateTemplate().find(q, new Object[] { "one-time-anonymous",status});
 
         return rs;
     }

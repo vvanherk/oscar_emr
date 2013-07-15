@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package org.oscarehr.common.model;
 
 import java.io.Serializable;
@@ -22,23 +47,31 @@ import javax.persistence.TemporalType;
 @Table(name="batch_billing")
 public class BatchBilling  extends AbstractModel<Integer> implements Serializable {
 	private static final long serialVersionUID = 1L;
+	@Id
+	@GeneratedValue(strategy=GenerationType.AUTO)
+	@Column(unique=true, nullable=false)
 	private Integer id;
+	@Column(name="billing_provider_no")	
 	private String billingProviderNo;
+	@Column(name="create_date", nullable=false)	
 	private Timestamp createDate;
+	@Column(name="lastbilled_date")
+	@Temporal(TemporalType.DATE)		
 	private Date lastbilled_date;
 	private String creator;
+	@Column(name="demographic_no")	
 	private int demographicNo;
+	@Column(length=5)	
 	private String dxcode;
+	@Column(name="service_code", length=10)		
 	private String serviceCode;
+	@Column(name="billing_amount")	
 	private String billing_amount;
 
     public BatchBilling() {
     }
 
 
-	@Id
-	@GeneratedValue(strategy=GenerationType.AUTO)
-	@Column(unique=true, nullable=false)
 	public Integer getId() {
 		return this.id;
 	}
@@ -48,7 +81,6 @@ public class BatchBilling  extends AbstractModel<Integer> implements Serializabl
 	}
 
 
-	@Column(name="billing_provider_no")
 	public String getBillingProviderNo() {
 		return this.billingProviderNo;
 	}
@@ -58,7 +90,6 @@ public class BatchBilling  extends AbstractModel<Integer> implements Serializabl
 	}
 
 
-	@Column(name="create_date", nullable=false)
 	public Timestamp getCreateDate() {
 		return this.createDate;
 	}
@@ -77,7 +108,6 @@ public class BatchBilling  extends AbstractModel<Integer> implements Serializabl
 	}
 
 
-	@Column(name="demographic_no")
 	public int getDemographicNo() {
 		return this.demographicNo;
 	}
@@ -87,7 +117,6 @@ public class BatchBilling  extends AbstractModel<Integer> implements Serializabl
 	}
 
 
-	@Column(length=5)
 	public String getDxcode() {
 		return this.dxcode;
 	}
@@ -97,7 +126,6 @@ public class BatchBilling  extends AbstractModel<Integer> implements Serializabl
 	}
 
 
-	@Column(name="service_code", length=10)	
 	public String getServiceCode() {
 		return this.serviceCode;
 	}
@@ -106,8 +134,6 @@ public class BatchBilling  extends AbstractModel<Integer> implements Serializabl
 		this.serviceCode = serviceCode;
 	}
 
-	@Column(name="lastbilled_date")
-	@Temporal(TemporalType.DATE)	
 	public Date getLastBilledDate() {
 	    return lastbilled_date;
     }
@@ -117,7 +143,6 @@ public class BatchBilling  extends AbstractModel<Integer> implements Serializabl
     }
 
 
-	@Column(name="billing_amount")
 	public String getBillingAmount() {
 	    return billing_amount;
     }

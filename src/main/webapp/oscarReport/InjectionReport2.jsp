@@ -1,28 +1,29 @@
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * Jason Gallagher
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
 <%@ page
 	import="java.util.*,oscar.oscarReport.data.*,oscar.util.*,oscar.oscarDB.*,java.sql.*,oscar.oscarDemographic.data.*,oscar.oscarPrevention.*"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
@@ -119,10 +120,15 @@ table.ele {
 		Type:</label> <select name="injectionType">
 			<option value="RH" <%=selled ("RH",injectionType)%>>Rh</option>
 			<option value="DTaP-IPV" <%=selled ("DTaP-IPV",injectionType)%>>DTaP-IPV</option>
+			<option value="DTaP-IPV-Hib" <%=selled ("DTaP-IPV-Hib",injectionType)%>>DTaP-IPV-Hib</option>
 			<option value="Hib" <%=selled ("Hib",injectionType)%>>Hib</option>
+			<option value="HPV" <%=selled ("HPV",injectionType)%>>HPV</option>
 			<option value="Pneu-C" <%=selled ("Pneu-C",injectionType)%>>Pneu-C</option>
 			<option value="MMR" <%=selled ("MMR",injectionType)%>>MMR</option>
+			<option value="MMRV" <%=selled ("MMRV",injectionType)%>>MMRV</option>
 			<option value="MenC-C" <%=selled ("MenC-C",injectionType)%>>MenC-C</option>
+			<option value="Men-P-ACWY" <%=selled ("Men-P-ACWY",injectionType)%>>Men-P-ACWY</option>
+			<option value="Rot" <%=selled ("Rot",injectionType)%>>Rot</option>
 			<option value="VZ" <%=selled ("VZ",injectionType)%>>VZ</option>
 			<option value="HepB" <%=selled ("HepB",injectionType)%>>HepB</option>
 			<option value="dTap" <%=selled ("dTap",injectionType)%>>dTap</option>
@@ -131,6 +137,7 @@ table.ele {
 			<option value="HepA" <%=selled ("HepA",injectionType)%>>HepA</option>
 			<option value="HepAB" <%=selled ("HepAB",injectionType)%>>HepAB</option>
 			<option value="Rabies" <%=selled ("Rabies",injectionType)%>>Rabies</option>
+			
 			<option value="Tuberculosis"
 				<%=selled ("Tuberculosis",injectionType)%>>Tuberculosis</option>
 			<option value="Pneumovax" <%=selled ("Pneumovax",injectionType)%>>Pneumovax</option>

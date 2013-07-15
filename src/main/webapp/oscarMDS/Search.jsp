@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
@@ -8,31 +33,6 @@
 %>
 
 <link rel="stylesheet" type="text/css" href="encounterStyles.css">
-<!--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
--->
 <html>
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
@@ -45,7 +45,7 @@ function onSubmitCheck(){
 	}
 	if(!check_date('endDate')){
 		return false;
-	}	
+	}
 }
 
 </script>
@@ -55,7 +55,7 @@ function onSubmitCheck(){
 </head>
 
 <body>
-<form method="post" action="../dms/inboxManage.do" onSubmit="return onSubmitCheck();"> 
+<form method="get" action="../dms/inboxManage.do" onSubmit="return onSubmitCheck();">
     <input type="hidden" name="method" value="prepareForIndexPage"/>
 <table width="100%" height="100%" border="0">
 	<tr class="MainTableTopRow">
@@ -93,7 +93,7 @@ function onSubmitCheck(){
 				</td>
 				<td><input type="text" name="hnum" size="15"></td>
 			</tr>
-			
+
 			<tr>
 				<td>Start Date:(yyyy-mm-dd)
 				</td>
@@ -104,15 +104,15 @@ function onSubmitCheck(){
 				</td>
 				<td><input type="text" name="endDate" size="15" id="endDate"></td>
 			</tr>
-			
-			
-			
+
+
+
 			<tr>
 				<td valign="top"><bean:message
 					key="oscarMDS.search.formPhysician" />:</td>
 				<td><select name="searchProviderNo" size="10">
 					<optgroup>
-						<option value=""><bean:message
+						<option value="-1"><bean:message
 							key="oscarMDS.search.formPhysicianAll" /></option>
 						<option value="0"><bean:message
 							key="oscarMDS.search.formPhysicianUnclaimed" /></option>

@@ -1,3 +1,21 @@
+/**
+ * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ */
+
 package oscar.oscarBilling.ca.on.pageUtil;
 
 import java.util.ArrayList;
@@ -42,7 +60,7 @@ public class BillingStatusPrep {
 		startDate = startDate == null || startDate.length() == 0 ? "" : " and (bi.service_date >= '" + startDate + "' or bi.service_date = '')";
 		endDate = endDate == null || endDate.length() == 0 ? "" : " and (bi.service_date <= '" + endDate + "' or bi.service_date = '')";
 		demoNo = demoNo == null || demoNo.length() == 0 ? "" : " and ch1.demographic_no=" + demoNo;
-		dx = dx == null || dx.length() < 2 ? "" : " and ch1.dx='" + dx + "'";
+		dx = dx == null || dx.length() < 2 ? "" : " and bi.dx='" + dx + "'";
 		visitType = visitType == null || visitType.length() < 2 ? "" : " and ch1.visittype='" + visitType + "'";
 		serviceCodeParams = serviceCodeParams == null || serviceCodeParams.length() == 0 || serviceCodeParams.equals(ANY_SERVICE_CODE) ? "" : serviceCodeParams.toUpperCase();
 		billingForm = billingForm == null || billingForm.length() == 0 || billingForm.equals(ANY_BILLING_FORM) ? "" : billingForm;

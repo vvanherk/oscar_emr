@@ -1,30 +1,24 @@
+<%--
+
+    Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+--%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
     "http://www.w3.org/TR/html4/loose.dtd">
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@ include file="/taglibs.jsp"%>
@@ -278,9 +272,6 @@ objectName="_admin,_admin.reporting" rights="r" reverse="<%=true%>">
 
                         &nbsp;&nbsp;
                         <nested:submit style="border:1px solid #666666;">Search Patients</nested:submit>
-                    </nested:form>
-
-
 
                         <display:table name="listview" id="listview" class="mars" style="border:1px solid #666666; width:99%;margin-top:2px;">
                             <display:column property="strFirstName" title="First Name" />
@@ -295,6 +286,16 @@ objectName="_admin,_admin.reporting" rights="r" reverse="<%=true%>">
                             <display:column property="strUpdateDate" title="Update Date" />
                             <display:column property="strStatus" title="Status" />
                         </display:table>
+
+			<%
+	if(request.getAttribute("listview") != null && (request.getAttribute("listview").getClass().getCanonicalName().contains("ArrayList"))) {
+%>
+	<br/>
+	<input type="button" value=" Excel " style="border:1px solid #666666;" onclick="javascript:this.form.action='<%= request.getContextPath()%>/report/DxresearchReport.do?method=patientExcelReport';this.form.submit()">
+<%		
+	}
+%>
+                    </nested:form>
 
                 </td>
             </tr>

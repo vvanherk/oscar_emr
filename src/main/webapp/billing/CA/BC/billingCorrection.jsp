@@ -1,4 +1,28 @@
+<%--
 
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%
   if(session.getValue("user") == null)
     response.sendRedirect("../logout.htm");
@@ -47,7 +71,10 @@
 <%@page import="org.oscarehr.util.SpringUtils" %>
 <%@page import="org.oscarehr.common.dao.ClinicLocationDao" %>
 <%@page import="org.oscarehr.common.model.ClinicLocation" %>
+<%@ page import="org.oscarehr.common.model.DiagnosticCode" %>
+<%@ page import="org.oscarehr.common.dao.DiagnosticCodeDao" %>
 <%
+	DiagnosticCodeDao diagnosticCodeDao = SpringUtils.getBean(DiagnosticCodeDao.class);
 	ClinicLocationDao clinicLocationDao = (ClinicLocationDao)SpringUtils.getBean("clinicLocationDao");
 %>
 <%
@@ -56,31 +83,6 @@
   int curMonth = (now.get(Calendar.MONTH)+1);
   int curDay = now.get(Calendar.DAY_OF_MONTH);
 %>
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
 <html>
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
@@ -311,7 +313,7 @@ document.body.insertAdjacentHTML('beforeEnd', WebBrowser);
 			<option value="W" <%=BillType.equals("W")?"selected":""%>>W
 			| Bill Worker's Compensation Board</option>
 			<option value="B" <%=BillType.equals("B")?"selected":""%>>B
-			| Summitted OHIP</option>
+			| Submitted OHIP</option>
 			<option value="S" <%=BillType.equals("S")?"selected":""%>>S
 			| Settled/Paid by OHIP</option>
 			<option value="X" <%=BillType.equals("X")?"selected":""%>>X
@@ -487,10 +489,10 @@ String proFirst="", proLast="", proOHIP="", proNo="";
  String diagDesc = "";
    ResultSet rsDiagCode = null;
      rsDiagCode = null;
- rsDiagCode = apptMainBean.queryResults(diagCode, "search_diagnostic_code");
- while(rsDiagCode.next()){
-  diagDesc = rsDiagCode.getString("description");
-  }
+ 	List<DiagnosticCode> results = diagnosticCodeDao.searchCode(diagCode);
+ 	for(DiagnosticCode result:results) {
+ 		diagDesc = result.getDescription();
+ 	}
     %>
 
 

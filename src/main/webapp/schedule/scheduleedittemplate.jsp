@@ -1,31 +1,31 @@
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 
 <%
-  
+
 %>
 <%@ page
 	import="java.util.*, java.sql.*, oscar.*, java.text.*, java.lang.*"
@@ -34,27 +34,33 @@
 <%@ page import="oscar.OscarProperties"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
-<jsp:useBean id="scheduleMainBean" class="oscar.AppointmentMainBean"
-	scope="session" />
-<jsp:useBean id="myTempBean" class="oscar.ScheduleTemplateBean"
-	scope="page" />
+<jsp:useBean id="scheduleMainBean" class="oscar.AppointmentMainBean" scope="session" />
+<jsp:useBean id="myTempBean" class="oscar.ScheduleTemplateBean"	scope="page" />
+<%@ page import="org.oscarehr.util.SpringUtils" %>
+<%@ page import="org.oscarehr.common.model.ScheduleTemplate" %>
+<%@ page import="org.oscarehr.common.model.ScheduleTemplatePrimaryKey" %>
+<%@ page import="org.oscarehr.common.dao.ScheduleTemplateDao" %>
+<%
+	ScheduleTemplateDao scheduleTemplateDao = SpringUtils.getBean(ScheduleTemplateDao.class);
+%>
 <% //save or delete the settings
   int rowsAffected = 0;
   OscarProperties props = OscarProperties.getInstance();
   int STEP = request.getParameter("step")!=null&&!request.getParameter("step").equals("")?Integer.parseInt(request.getParameter("step")):(props.getProperty("template_time", "").length()>0?Integer.parseInt(props.getProperty("template_time", "")):15);
   if(request.getParameter("dboperation")!=null && (request.getParameter("dboperation").compareTo(" Save ")==0 || request.getParameter("dboperation").equals("Delete") ) ) {
     String pre = request.getParameter("providerid").equals("Public")&&!request.getParameter("name").startsWith("P:")?"P:":"" ;
-    String[] param1 =new String[4];
-    param1[0]=request.getParameter("providerid");
-    param1[1]=pre + request.getParameter("name");
-    param1[2]=request.getParameter("summary");
-    param1[3]=SxmlMisc.createDataString(request,"timecode","_", 300);
-    String[] param2 =new String[2];
-    param2[0]=request.getParameter("providerid");
-    param2[1]= request.getParameter("name");
-    rowsAffected = scheduleMainBean.queryExecuteUpdate(param2,"delete_scheduletemplate");
-    if(request.getParameter("dboperation")!=null && request.getParameter("dboperation").equals(" Save ") )
-      rowsAffected = scheduleMainBean.queryExecuteUpdate(param1,"add_scheduletemplate");
+
+    scheduleTemplateDao.remove(new ScheduleTemplatePrimaryKey(request.getParameter("providerid"),request.getParameter("name")));
+
+    if(request.getParameter("dboperation")!=null && request.getParameter("dboperation").equals(" Save ") ) {
+    	ScheduleTemplate scheduleTemplate = new ScheduleTemplate();
+    	scheduleTemplate.setId(new ScheduleTemplatePrimaryKey());
+    	scheduleTemplate.getId().setName(pre + request.getParameter("name"));
+    	scheduleTemplate.getId().setProviderNo(request.getParameter("providerid"));
+    	scheduleTemplate.setSummary(request.getParameter("summary"));
+    	scheduleTemplate.setTimecode(SxmlMisc.createDataString(request,"timecode","_", 300));
+    	scheduleTemplateDao.persist(scheduleTemplate);
+    }
   }
 
 %>
@@ -95,7 +101,7 @@ function changeGroup(s) {
 	var newGroupNo = s.options[s.selectedIndex].value;
 	newGroupNo = s.options[s.selectedIndex].value;
 	self.location.href = "scheduleedittemplate.jsp?providerid=<%=request.getParameter("providerid")%>&providername=<%=StringEscapeUtils.escapeJavaScript(request.getParameter("providername"))%>&step=" + newGroupNo;
-	
+
 }
 //-->
 </script>

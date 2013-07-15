@@ -1,25 +1,25 @@
-/*
- * Copyright (c) 2007-2009. CAISI, Toronto. All Rights Reserved.
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. 
- * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. 
- * 
- * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
- * 
- * This software was written for 
- * CAISI, 
- * Toronto, Ontario, Canada 
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
-
 package org.oscarehr.util;
 
 import java.io.IOException;
@@ -53,13 +53,7 @@ public class LoggedInUserFilter implements javax.servlet.Filter {
 
 			// set new / current data
 			HttpServletRequest request = (HttpServletRequest) tmpRequest;
-			HttpSession session = request.getSession();
-			LoggedInInfo x = new LoggedInInfo();
-			x.session = session;
-			x.currentFacility = (Facility) session.getAttribute(SessionConstants.CURRENT_FACILITY);
-			x.loggedInProvider = (Provider) session.getAttribute(SessionConstants.LOGGED_IN_PROVIDER);
-			x.loggedInSecurity = (Security) session.getAttribute(SessionConstants.LOGGED_IN_SECURITY);
-			x.initiatingCode = request.getRequestURI();
+			LoggedInInfo x = generateLoggedInInfoFromSession(request);
 			LoggedInInfo.loggedInInfo.set(x);
 
 			logger.debug("LoggedInUserFilter chainning");
@@ -71,5 +65,19 @@ public class LoggedInUserFilter implements javax.servlet.Filter {
 
 	public void destroy() {
 		// can't think of anything to do right now.
+	}
+	
+	public static LoggedInInfo generateLoggedInInfoFromSession(HttpServletRequest request)
+	{
+		HttpSession session=request.getSession();
+		
+		LoggedInInfo x = new LoggedInInfo();
+		x.session = session;
+		x.currentFacility = (Facility) session.getAttribute(SessionConstants.CURRENT_FACILITY);
+		x.loggedInProvider = (Provider) session.getAttribute(SessionConstants.LOGGED_IN_PROVIDER);
+		x.loggedInSecurity = (Security) session.getAttribute(SessionConstants.LOGGED_IN_SECURITY);
+		x.initiatingCode = request.getRequestURI();
+	
+		return(x);
 	}
 }

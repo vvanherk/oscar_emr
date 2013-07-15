@@ -1,3 +1,29 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
 <%@page import="oscar.util.DateUtils"%>
 <%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@page import="org.oscarehr.common.model.Demographic"%>
@@ -13,8 +39,8 @@
 <%@ taglib uri="http://jakarta.apache.org/struts/tags-logic" prefix="logic" %>
 <%@ taglib uri="http://jakarta.apache.org/struts/tags-html-el" prefix="html-el" %>
 <%@ taglib uri="http://jakarta.apache.org/struts/tags-nested" prefix="nested" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
-<%@ taglib uri="http://java.sun.com/jstl/fmt" prefix="fmt" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
 <%@ taglib uri="/WEB-INF/phr-tag.tld" prefix="phr" %>
 <%@ taglib uri="/WEB-INF/rewrite-tag.tld" prefix="rewrite" %>
 
@@ -294,7 +320,7 @@ request.setAttribute("pageMethod",pageMethod);
                                     <td>
                                         <table class=messButtonsA cellspacing=0 cellpadding=3><tr><td class="messengerButtonsA<%if (pageMethod.equals("viewArchivedMessages")) {%>Current<%}%>">
                                             <html:link page="/phr/PhrMessage.do?method=viewArchivedMessages" styleClass="messengerButtons">
-                                                <bean:message key="oscarMessenger.DisplayMessages.msgDeleted"/>
+                                                <bean:message key="oscarMessenger.DisplayMessages.msgArchived"/>
                                             </html:link>
                                         </td></tr></table>
                                     </td>
@@ -330,6 +356,8 @@ request.setAttribute("pageMethod",pageMethod);
                                                     </logic:present>
                                                     Status: <b>Not logged in</b><br/>
                                                     <%=providerName%> password: <input type="password" id="phrPassword" name="phrPassword" style="font-size: 8px; width: 40px;"> <a href="javascript: document.forms['phrLogin'].submit()">Login</a>
+                                                    <br />
+                                                    Keep me logged in <input type="checkbox" checked="checked" name="saveMyOscarPassword" />
                                                     <input type="hidden" name="forwardto" value="<%=request.getServletPath()%>?method=<%=request.getParameter("method")%>">
                                                 </form>
                                             </div>
@@ -514,13 +542,13 @@ request.setAttribute("pageMethod",pageMethod);
 						                            	if (message.isActive())
 						                            	{
 						                            		%>
-								                                   <bean:message key="oscarMessenger.DisplayMessages.formDelete"/>
+								                                   <bean:message key="oscarMessenger.DisplayMessages.formArchive"/>
 						                            		<%
 						                            	}
 						                            	else
 						                            	{
 						                            		%>
-								                                   <bean:message key="oscarMessenger.DisplayMessages.formUndelete"/>
+								                                   <bean:message key="oscarMessenger.DisplayMessages.formUnarchive"/>
 						                            		<%			                            		
 						                            	}
 					                            	%>

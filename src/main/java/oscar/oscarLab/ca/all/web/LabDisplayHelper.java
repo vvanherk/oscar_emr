@@ -1,17 +1,43 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package oscar.oscarLab.ca.all.web;
 
 import java.io.IOException;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
 import org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager;
+import org.oscarehr.PMmodule.caisi_integrator.IntegratorFallBackManager;
 import org.oscarehr.caisi_integrator.ws.CachedDemographicLabResult;
 import org.oscarehr.caisi_integrator.ws.DemographicWs;
 import org.oscarehr.caisi_integrator.ws.FacilityIdLabResultCompositePk;
@@ -41,12 +67,41 @@ public class LabDisplayHelper {
 		return ("" + demographicId + ':' + segmentId + ':' + labType + ':' + labDateTime);
 	}
 
-	public static CachedDemographicLabResult getRemoteLab(Integer remoteFacilityId, String remoteLabKey) throws MalformedURLException {
-		DemographicWs demographicWs = CaisiIntegratorManager.getDemographicWs();
+	public static CachedDemographicLabResult getRemoteLab(Integer remoteFacilityId, String remoteLabKey,Integer demographicId)  {
+		
 		FacilityIdLabResultCompositePk pk = new FacilityIdLabResultCompositePk();
 		pk.setIntegratorFacilityId(remoteFacilityId);
 		pk.setLabResultId(remoteLabKey);
-		CachedDemographicLabResult cachedDemographicLabResult = demographicWs.getCachedDemographicLabResult(pk);
+		CachedDemographicLabResult cachedDemographicLabResult = null;
+		
+		try {
+			if (!CaisiIntegratorManager.isIntegratorOffline()){
+				DemographicWs demographicWs = CaisiIntegratorManager.getDemographicWs();
+				cachedDemographicLabResult = demographicWs.getCachedDemographicLabResult(pk);
+			}
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Unexpected error.", e);
+			CaisiIntegratorManager.checkForConnectionError(e);
+		}
+			
+		if(CaisiIntegratorManager.isIntegratorOffline()){
+			List<CachedDemographicLabResult> labResults = IntegratorFallBackManager.getLabResults(demographicId);
+			for(CachedDemographicLabResult labResult:labResults){
+				if(labResult.getFacilityIdLabResultCompositePk().getIntegratorFacilityId() == pk.getIntegratorFacilityId() && 
+						labResult.getFacilityIdLabResultCompositePk().getLabResultId().equals(pk.getLabResultId()) ) {
+					cachedDemographicLabResult = labResult;
+					break;
+				}
+					
+					
+			}
+			
+			
+		} 
+		 
+		
+		
+		
 
 		return (cachedDemographicLabResult);
 	}
@@ -85,7 +140,7 @@ public class LabDisplayHelper {
 		XmlUtils.appendChildToRoot(doc, "hl7TextMessageBody", hl7Body);
 
 		try {
-			// okay serious hackage going on here. I'm just going to serialise the map and all it's values. *shrugs* it's one of those days and one of those features... 
+			// okay serious hackage going on here. I'm just going to serialise the map and all it's values. *shrugs* it's one of those days and one of those features...
 			// key=identifier, value = CommonLabTestValues.findValuesForTest() result
 			HashMap<String, ArrayList<Map<String, Serializable>>> mapOfTestValues = new HashMap<String, ArrayList<Map<String, Serializable>>>();
 			MessageHandler handler = Factory.getHandler(lab.getSegmentID());
@@ -180,14 +235,14 @@ public class LabDisplayHelper {
 	        Node rootNode = cachedDemographicLabResultXmlData.getFirstChild();
 	        String serialisedEncodedBytes = XmlUtils.getChildNodeTextContents(rootNode, "mapOfTestValues");
 	        byte[] serialisedDecodedBytes=MiscUtils.decodeBase64(serialisedEncodedBytes);
-	        
+
 	        @SuppressWarnings("unchecked")
             HashMap<String, ArrayList<Map<String, Serializable>>> result=(HashMap<String, ArrayList<Map<String, Serializable>>>) MiscUtils.deserialiseFromByteArray(serialisedDecodedBytes);
-	        
+
 	        return result;
         } catch (Exception e) {
 	        logger.error("Yikes, the hack code failed, good luck...", e);
-	        
+
 	        return(null);
         }
 	}

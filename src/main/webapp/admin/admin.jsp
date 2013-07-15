@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@ taglib uri="/WEB-INF/caisi-tag.tld" prefix="caisi"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%@ taglib uri="http://jakarta.apache.org/struts/tags-html"
@@ -35,34 +60,6 @@
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
         "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
-
-<%--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
---%>
-
 <%@page import="oscar.OscarProperties"%><html:html locale="true">
 <head>
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/global.js"></script>
@@ -70,6 +67,12 @@
 <link rel="stylesheet" type="text/css"
 	href="../share/css/OscarStandardLayout.css" />
 <script type="text/javascript" src="../share/javascript/Oscar.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
+   <script>
+     jQuery.noConflict();
+   </script>
+<oscar:customInterface section="admin"/>
+
 <script type="text/JavaScript">
 function onsub() {
 	if(document.searchprovider.keyword.value=="") {
@@ -235,6 +238,9 @@ div.logoutBox {
 			<li><a href="#"
 				onclick='popupPage(360,600,&quot;<html:rewrite page="/admin/admincontrol.jsp"/>?displaymode=displaymygroup&amp;dboperation=searchmygroupall &quot;)'><bean:message
 				key="admin.admin.btnSearchGroupNoRecords" /></a></li>
+			<li><a href="#"
+				onclick='popupPage(360,600,&quot;<html:rewrite page="/admin/groupnoacl.jsp"/>&quot;)'><bean:message
+				key="admin.admin.btnGroupNoAcl" /></a></li>
 		</ul>
 		</div>
 	</caisi:isModuleLoad>
@@ -512,6 +518,9 @@ div.logoutBox {
 				key="admin.admin.btnINRBatchBilling" /></a></li>
 			<li><a href="#"
 				onclick='popupPage(600,900,&quot;<html:rewrite page="/billing/CA/ON/billingONUpload.jsp"/>&quot;);return false;'><bean:message key="admin.admin.uploadMOHFile"/></a></li>
+			<% if (OscarProperties.getInstance().isPropertyActive("moh_file_management_enabled")) { %>
+			<li><a href="#" onclick='popupPage(600,900,&quot;<html:rewrite page="/billing/CA/ON/viewMOHFiles.jsp"/>&quot;);return false;'><bean:message key="admin.admin.viewMOHFiles"/></a></li>
+			<% } %>
 			<li><a href="#"
 				onclick='popupPage(600,900,&quot;<html:rewrite page="/servlet/oscar.DocumentUploadServlet"/>&quot;);return false;'><bean:message
 				key="admin.admin.btnBillingReconcilliation" /></a></li>
@@ -681,7 +690,20 @@ div.logoutBox {
 			<li><html:link page="/admin/../eform/efmimagemanager.jsp">
 				<bean:message key="admin.admin.btnUploadImage" />
 			</html:link></li>
-			<li><html:link page="/admin/../eform/efmmanageformgroups.jsp"><bean:message key="admin.admin.frmGroups"/></html:link></li>
+			<li><html:link page="/admin/../eform/efmmanageformgroups.jsp">
+				<bean:message key="admin.admin.frmGroups"/>
+			</html:link></li>
+
+			<% if (org.oscarehr.common.IsPropertiesOn.isIndivicaRichTextLetterEnable()) { %>
+			<li><html:link page="/admin/../eform/efmformrtl_config.jsp"><bean:message key="admin.admin.richTextLetter"/></html:link></li>
+			<% } %>
+
+			<li><html:link page="/admin/../eform/efmmanageformgroups.jsp">
+				<bean:message key="admin.admin.frmGroups"/>
+			</html:link></li>
+			<li><html:link page="/admin/../eform/efmmanageindependent.jsp">
+				<bean:message key="admin.admin.frmIndependent"/>
+			</html:link></li>
 		</ul>
 		</div>
 	</security:oscarSec>
@@ -730,7 +752,7 @@ div.logoutBox {
 	}
 %>
                         <li><a href="#"
-				onclick='popupPage(550,800,&quot;<html:rewrite page="/admin/ManageBillingReferral.do"/>&quot;);return false;'><bean:message key="admin.admin.billingreferralAdmin"/></a></li>
+				onclick='popupPage(550,800,&quot;<html:rewrite page="/oscarEncounter/oscarConsultationRequest/config/EditSpecialists.jsp"/>&quot;);return false;'><bean:message key="admin.admin.professionalSpecialistAdmin"/></a></li>
 			<li><a href="#"
 				onclick='popupPage(550,800,&quot;<html:rewrite page="/demographic/demographicExport.jsp"/>&quot;);return false;'><bean:message key="admin.admin.DemoExport"/></a></li>
                         <li><a href="#"
@@ -803,6 +825,17 @@ div.logoutBox {
 			<%
 				}
 			%>
+
+			  <%
+                                if (oscarVariables.getProperty("hsfo2.loginSiteCode", "") != null && !"".equalsIgnoreCase(oscarVariables.getProperty("hsfo2.loginSiteCode", "")))
+                                {
+                        %>
+                        <li><a href="#"
+                                onclick='popupPage(400,600,&quot;<html:rewrite page="/admin/RecommitHSFO2.do"/>?method=showSchedule&quot;);return false;'>schedule HSFO2 XML resubmit</a></li>
+                        <%
+                                }
+                        %>
+
 
 			<% if (OscarProperties.getInstance().isFaxEnabled()) { %>
             <li><a href="#" onclick='popupPage(600, 800,&quot;<html:rewrite page="/admin/faxStatus.do" />&quot;);return false;'><bean:message key="admin.faxStatus.faxStatus" /></a></li>

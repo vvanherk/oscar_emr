@@ -1,28 +1,32 @@
-<%--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
 --%>
+
+<%@page import="org.oscarehr.common.model.StudyLogin"%>
+<%@page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.common.dao.StudyLoginDao"%>
 <%
 	if(session.getValue("user") == null || !( ((String) session.getValue("userprofession")).equalsIgnoreCase("doctor") ))
 		response.sendRedirect("../../logout.jsp");
@@ -32,24 +36,22 @@
 <%
 //http://192.168.2.4/PDSsecurity/logindd.asp?DI=PEPPER&UN=yilee18&PW=515750564848564853485353544852485248484851575150
 
-    int provNo = Integer.parseInt((String) session.getAttribute("user"));
+	String providerNo = (String) session.getAttribute("user");
     String studyId = request.getParameter("study_no");
 
-	String baseURL = "http://competeii.mcmaster.ca/PDSsecurity/login.asp";
-	String username = "yilee18";
-	String password = "515750564848564853485353544852485248484851575150";
+	oscar.OscarProperties op = oscar.OscarProperties.getInstance();
 
-	 
-    String sql = "SELECT * from studylogin where provider_no=" + provNo + " and study_no = " + studyId + " and current1=1" ;
-	ResultSet rs = DBHandler.GetSQL(sql);
-	while(rs.next()) {
-		baseURL = oscar.Misc.getString(rs,"remote_login_url");
-		username = oscar.Misc.getString(rs,"username");
-		password = oscar.Misc.getString(rs,"password");
+	String baseURL = op.getProperty("redirectstudysite_default_baseURL");
+	String username = op.getProperty("redirectstudysite_default_username");
+	String password = op.getProperty("redirectstudysite_default_password");
+
+	StudyLoginDao dao = SpringUtils.getBean(StudyLoginDao.class);
+	for(StudyLogin login : dao.find(providerNo, studyId)){
+		baseURL = login.getRemoteLoginUrl();
+		username = login.getUsername();
+		password = login.getPassword();
 	}
-
-	rs.close();
-
+	
 	String studyURL = baseURL + "?DI=PEPPER&DIPatID=&UN=" + username + "&PW=" + password ;
 	response.sendRedirect(studyURL);
 %>

@@ -1,16 +1,28 @@
-/*
- * Copyright (c) 2005. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. This program is free
- * software; you can redistribute it and/or modify it under the terms of the GNU General Public
- * License as published by the Free Software Foundation; either version 2 of the License, or (at
- * your option) any later version. * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
- * PARTICULAR PURPOSE. See the GNU General Public License for more details. * * You should have
- * received a copy of the GNU General Public License along with this program; if not, write to the
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * <OSCAR
- * TEAM> This software was written for the Department of Family Medicine McMaster University
- * Hamilton Ontario, Canada
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
+
 package oscar.login;
 
 import java.io.IOException;
@@ -39,6 +51,10 @@ import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.ProviderPreference;
 import org.oscarehr.common.model.UserProperty;
 import org.oscarehr.decisionSupport.service.DSService;
+import org.oscarehr.phr.util.MyOscarUtils;
+import org.oscarehr.util.EncryptionUtils;
+import org.oscarehr.util.LoggedInInfo;
+import org.oscarehr.util.LoggedInUserFilter;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SessionConstants;
 import org.oscarehr.util.SpringUtils;
@@ -124,14 +140,17 @@ public final class LoginAction extends DispatchAction {
             HttpSession session = request.getSession(false);
             if (session != null) {
                 session.invalidate();
-                session = request.getSession(); // Create a new session for this user
             }
+            session = request.getSession(); // Create a new session for this user
+            LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
+            loggedInInfo.session=session;
 
             logger.debug("Assigned new session for: " + strAuth[0] + " : " + strAuth[3] + " : " + strAuth[4]);
             LogAction.addLog(strAuth[0], LogConst.LOGIN, LogConst.CON_LOGIN, "", ip);
 
             // initial db setting
             Properties pvar = OscarProperties.getInstance();
+            EncryptionUtils.setDeterministicallyMangledPasswordSecretKeyIntoSession(session, password);
             
 
             // get View Type
@@ -148,25 +167,35 @@ public final class LoginAction extends DispatchAction {
             if (isMobileOptimized) session.setAttribute("mobileOptimized","true");
             // initiate security manager
             String default_pmm = null;
+            
+            // get preferences from preference table
+        	ProviderPreference providerPreference=providerPreferenceDao.find(providerNo);
+        	
             if (viewType.equalsIgnoreCase("receptionist") || viewType.equalsIgnoreCase("doctor")) {
-                // get preferences from preference table
-            	ProviderPreference providerPreference=providerPreferenceDao.find(providerNo);
+                
             	if (providerPreference==null) providerPreference=new ProviderPreference();
              	
             	session.setAttribute(SessionConstants.LOGGED_IN_PROVIDER_PREFERENCE, providerPreference);
             	
                 if (org.oscarehr.common.IsPropertiesOn.isCaisiEnable()) {
-                    session.setAttribute("newticklerwarningwindow", providerPreference.getNewTicklerWarningWindow());
+                	if(providerPreference.getNewTicklerWarningWindow() != null)
+                		session.setAttribute("newticklerwarningwindow", providerPreference.getNewTicklerWarningWindow());
                     session.setAttribute("default_pmm", providerPreference.getDefaultCaisiPmm());
                     session.setAttribute("caisiBillingPreferenceNotDelete", String.valueOf(providerPreference.getDefaultDoNotDeleteBilling()));
                     
                     default_pmm = providerPreference.getDefaultCaisiPmm();
+                    @SuppressWarnings("unchecked")
                     ArrayList<String> newDocArr = (ArrayList<String>)request.getSession().getServletContext().getAttribute("CaseMgmtUsers");    
                     if("enabled".equals(providerPreference.getDefaultNewOscarCme())) {
                     	newDocArr.add(providerNo);
                     	session.setAttribute("CaseMgmtUsers", newDocArr);
                     }
                 }
+                session.setAttribute("starthour", providerPreference.getStartHour().toString());
+                session.setAttribute("endhour", providerPreference.getEndHour().toString());
+                session.setAttribute("everymin", providerPreference.getEveryMin().toString());
+                session.setAttribute("groupno", providerPreference.getMyGroupNo());
+                
             }
 
             if (viewType.equalsIgnoreCase("receptionist")) { // go to receptionist view
@@ -222,6 +251,9 @@ public final class LoginAction extends DispatchAction {
             session.setAttribute(SessionConstants.LOGGED_IN_PROVIDER, provider);
             session.setAttribute(SessionConstants.LOGGED_IN_SECURITY, cl.getSecurity());
 
+	    loggedInInfo = LoggedInUserFilter.generateLoggedInInfoFromSession(request);
+	    MyOscarUtils.attemptMyOscarAutoLoginIfNotAlreadyLoggedIn(loggedInInfo);
+            
             List<Integer> facilityIds = ProviderDao.getFacilityIds(provider.getProviderNo());
             if (facilityIds.size() > 1) {
                 return(new ActionForward("/select_facility.jsp?nextPage=" + where));

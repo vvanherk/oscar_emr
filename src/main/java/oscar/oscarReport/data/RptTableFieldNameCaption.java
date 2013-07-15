@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * Created on 2005-7-25
  */
@@ -36,7 +61,7 @@ public class RptTableFieldNameCaption {
         String sql = "select id from reportTableFieldCaption where table_name = '"
                 + StringEscapeUtils.escapeSql(table_name) + "' and name='" + StringEscapeUtils.escapeSql(name) + "'";
         try {
-            ResultSet rs = dbObj.searchDBRecord(sql);
+            ResultSet rs = DBHelp.searchDBRecord(sql);
             if (rs.next()) {
                 ret = insertRecord();
             } else {
@@ -59,11 +84,8 @@ public class RptTableFieldNameCaption {
         String sql = "insert into reportTableFieldCaption (table_name, name, caption) values ('"
                 + StringEscapeUtils.escapeSql(table_name) + "', '" + StringEscapeUtils.escapeSql(name) + "', '"
                 + StringEscapeUtils.escapeSql(caption) + "')";
-        try {
-            ret = DBHelp.updateDBRecord(sql);
-        } catch (SQLException e) {
-            logger.error("insertRecord() : sql = " + sql);
-        }
+        ret = DBHelp.updateDBRecord(sql);
+
         return ret;
     }
 
@@ -72,16 +94,13 @@ public class RptTableFieldNameCaption {
         String sql = "update reportTableFieldCaption set caption = '" + StringEscapeUtils.escapeSql(caption)
                 + "' where table_name='" + StringEscapeUtils.escapeSql(table_name) + "' and name = '"
                 + StringEscapeUtils.escapeSql(name) + "'";
-        try {
-            ret = DBHelp.updateDBRecord(sql);
-        } catch (SQLException e) {
-            logger.error("updateRecord() : sql = " + sql);
-        }
+        ret = DBHelp.updateDBRecord(sql);
+
         return ret;
     }
 
     // combine a table meta list and caption from table reportTableFieldCaption
-    public Vector getTableNameCaption(String tableName) throws SQLException {
+    public Vector getTableNameCaption(String tableName)  {
         Vector ret = new Vector();
         Vector vec = getMetaNameList(tableName);
         Properties prop = getNameCaptionProp(tableName);
@@ -105,9 +124,9 @@ public class RptTableFieldNameCaption {
         String sql = "select name, caption from reportTableFieldCaption where table_name = '"
                 + StringEscapeUtils.escapeSql(tableName) + "'";
         try {
-            ResultSet rs = dbObj.searchDBRecord(sql);
+            ResultSet rs = DBHelp.searchDBRecord(sql);
             while (rs.next()) {
-                ret.setProperty(dbObj.getString(rs,"name"), dbObj.getString(rs,"caption"));
+                ret.setProperty(DBHelp.getString(rs,"name"), DBHelp.getString(rs,"caption"));
             }
             rs.close();
         } catch (SQLException e) {
@@ -120,7 +139,7 @@ public class RptTableFieldNameCaption {
         Vector ret = new Vector();
         String sql = "select * from " + tableName + " limit 1";
         try {
-            ResultSet rs = dbObj.searchDBRecord(sql);
+            ResultSet rs = DBHelp.searchDBRecord(sql);
             ResultSetMetaData md = rs.getMetaData();
             for (int i = 1; i <= md.getColumnCount(); i++) {
                 ret.add(md.getColumnName(i));
@@ -132,10 +151,10 @@ public class RptTableFieldNameCaption {
         return ret;
     }
 
-    public Vector getFormTableNameList() throws SQLException {
-    	
+    public Vector getFormTableNameList() {
+
     	List<EncounterForm> forms=encounterFormDao.findAll();
-    	
+
         Vector ret = new Vector();
         for (EncounterForm encounterForm : forms) {
             ret.add(encounterForm.getFormName());

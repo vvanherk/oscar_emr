@@ -1,30 +1,50 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
 package org.oscarehr.common.hl7.v2;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.List;
+
+import org.apache.log4j.Logger;
+import org.oscarehr.util.MiscUtils;
+
+import oscar.OscarProperties;
+import oscar.appt.ApptData;
+import oscar.oscarClinic.ClinicData;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.v23.message.ADT_A04;
-import ca.uhn.hl7v2.model.v23.segment.MSH;
 import ca.uhn.hl7v2.model.v23.segment.EVN;
+import ca.uhn.hl7v2.model.v23.segment.MSH;
 import ca.uhn.hl7v2.model.v23.segment.PID;
 import ca.uhn.hl7v2.model.v23.segment.PV1;
 import ca.uhn.hl7v2.parser.Parser;
 import ca.uhn.hl7v2.parser.PipeParser;
-
-import org.apache.log4j.Logger;
-
-import oscar.oscarClinic.ClinicData;
-import oscar.appt.ApptData;
-
-import org.oscarehr.util.MiscUtils;
-import oscar.OscarProperties;
-
-import java.util.Date;
-import java.util.List;
-import java.text.SimpleDateFormat;
-
-import java.io.FileWriter;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.File;
 
 /**
  * Class HL7A04Data

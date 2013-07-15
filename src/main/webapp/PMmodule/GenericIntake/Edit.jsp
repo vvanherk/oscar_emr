@@ -1,23 +1,30 @@
-<!--  
-/**
- * Copyright (C) 2007.
- * Centre for Research on Inner City Health, St. Michael's Hospital, Toronto, Ontario, Canada.
- *
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU Gengeneral Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
- */
--->
+
+<%--
+
+
+    Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for
+    Centre for Research on Inner City Health, St. Michael's Hospital,
+    Toronto, Ontario, Canada
+
+--%>
+
+
 
 <%-- Updated by Eugene Petruhin on 30 dec 2008 while fixing #2456688 --%>
 
@@ -241,7 +248,7 @@
         dojo.require("dojo.validate.*");
         // -->
     </script>
-    <script type="text/javascript" src="<html:rewrite page="/js/genericIntake.js.jsp" />"></script>
+    <script type="text/javascript" src="<html:rewrite page="/js/genericIntake.js" />"></script>
     <script type="text/javascript" src="<html:rewrite page="/js/checkDate.js" />"></script>
 
     
@@ -295,7 +302,9 @@
 		for(IntakeNodeJavascript js:intakeEditForm.getJsLocation()) {
 	%>
 			<script type="text/javascript" src="<%= request.getContextPath() %><%=js.getLocation()%>"></script>
-	<%}}%>
+	<%}}  	
+	
+	%>
 			
 			
     <style>
@@ -318,11 +327,37 @@
 <html:hidden property="method"/>
 <input type="hidden" name="currentBedCommunityProgramId_old" value="<%=session.getAttribute("intakeCurrentBedCommunityId")%>" />
 <input type="hidden" name="intakeType" value="<%=intakeType %>" />
+<input type="hidden" name="type" value="<%=intakeType %>" />
 <input type="hidden" name="remoteFacilityId" value="<%=StringUtils.trimToEmpty(request.getParameter("remoteFacilityId"))%>" />
 <input type="hidden" name="remoteDemographicId" value="<%=StringUtils.trimToEmpty(request.getParameter("remoteDemographicId"))%>" />
 <input type="hidden" name="skip_validate" id="skip_validate" value="false"/>
 <input type="hidden" id="facility_name" name="facility_name" value="<%=org.oscarehr.util.LoggedInInfo.loggedInInfo.get().currentFacility.getName()%>"/>
 <input type="hidden" id="ocan_service_org_number" name="ocan_service_org_number" value="<%=org.oscarehr.util.LoggedInInfo.loggedInInfo.get().currentFacility.getOcanServiceOrgNumber()%>"/>
+
+<!--  If this is from adding appointment screen, save the intake and go back to there -->       
+<input  type="hidden" name="fromAppt" value="<%=request.getParameter("fromAppt")%>">
+<input  type="hidden" name="originalPage" value="<%=request.getParameter("originalPage")%>">
+<input  type="hidden" name="bFirstDisp" value="<%=request.getParameter("bFirstDisp")%>">
+<input  type="hidden" name="provider_no" value="<%=request.getParameter("provider_no")%>">
+<input  type="hidden" name="start_time" value="<%=request.getParameter("start_time")%>">
+<input  type="hidden" name="end_time" value="<%=request.getParameter("end_time")%>">
+<input  type="hidden" name="duration" value="<%=request.getParameter("duration")%>">
+<input  type="hidden" name="year" value="<%=request.getParameter("year")%>">
+<input  type="hidden" name="month" value="<%=request.getParameter("month")%>">
+<input  type="hidden" name="day" value="<%=request.getParameter("day")%>">
+<input  type="hidden" name="appointment_date" value="<%=request.getParameter("appointment_date")%>">
+<input  type="hidden" name="notes" value="<%=request.getParameter("notes")%>">
+<input  type="hidden" name="reason" value="<%=request.getParameter("reason")%>">
+<input  type="hidden" name="location" value="<%=request.getParameter("location")%>">
+<input  type="hidden" name="resources" value="<%=request.getParameter("resources")%>">
+<input  type="hidden" name="apptType" value="<%=request.getParameter("apptType")%>">
+<input  type="hidden" name="style" value="<%=request.getParameter("style")%>">
+<input  type="hidden" name="billing" value="<%=request.getParameter("billing")%>">
+<input  type="hidden" name="status" value="<%=request.getParameter("status")%>">
+<input  type="hidden" name="createdatetime" value="<%=request.getParameter("createdatetime")%>">
+<input  type="hidden" name="creator" value="<%=request.getParameter("creator")%>">
+<input  type="hidden" name="remarks" value="<%=request.getParameter("remarks")%>">
+
 
 <div id="layoutContainer" dojoType="LayoutContainer" layoutChildPriority="top-bottom" class="intakeLayoutContainer">
 <div id="topPane" dojoType="ContentPane" layoutAlign="top" class="intakeTopPane">

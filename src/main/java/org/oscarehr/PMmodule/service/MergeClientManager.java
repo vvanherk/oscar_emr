@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.PMmodule.service;
 
 import java.util.ArrayList;
@@ -30,22 +53,22 @@ public class MergeClientManager {
 		return mergeClientDao.getHead(demographic_no);
 	}
 
-	public List getTail(Integer demographic_no) {
+	public List<ClientMerge> getTail(Integer demographic_no) {
 		return mergeClientDao.getTail(demographic_no);
 	}
 	public ClientMerge getClientMerge(Integer demographic_no) {
 		return mergeClientDao.getClientMerge(demographic_no);
 	}
-	public List  searchMerged(ClientSearchFormBean criteria){
-		List lst=this.demographicDao.search(criteria, false,false);
-		List result = new ArrayList();
-		Iterator items =lst.iterator();
+	public List<Demographic>  searchMerged(ClientSearchFormBean criteria){
+		List<Demographic> lst=this.demographicDao.search(criteria, false,false);
+		List<Demographic> result = new ArrayList<Demographic>();
+		Iterator<Demographic> items =lst.iterator();
 		while(items.hasNext()){
-			Demographic client=(Demographic)items.next();
+			Demographic client=items.next();
 			if(!client.getSubRecord().isEmpty()) {
-				Iterator subs = client.getSubRecord().iterator();
+				Iterator<Integer> subs = client.getSubRecord().iterator();
 				while(subs.hasNext()){
-					Integer cId=(Integer)subs.next();
+					Integer cId=subs.next();
 					Demographic mergedClient= demographicDao.getClientByDemographicNo(cId);
 					result.add(mergedClient);
 					result.add(client);

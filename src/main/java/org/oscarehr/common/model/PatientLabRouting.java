@@ -1,20 +1,19 @@
-/*
- * Copyright (c) 2010. Department of Family Medicine, McMaster University. All Rights Reserved.
- * 
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. 
+ * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. 
- * 
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -22,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package org.oscarehr.common.model;
 
 import javax.persistence.Column;
@@ -41,20 +42,20 @@ public class PatientLabRouting extends AbstractModel<Integer> {
 
 	@Column(name = "lab_no")
 	/** This is also referred to as segmentId in parts of the code... */
-	private int labNumber;
+	private int labNo;
 
 	@Column(name = "lab_type")
 	private String labType;
-	
-	@Column(name = "demographic_no")
-	private Integer demographicNumber;
 
-	public int getLabNumber() {
-    	return labNumber;
+	@Column(name = "demographic_no")
+	private Integer demographicNo;
+
+	public int getLabNo() {
+    	return labNo;
     }
 
-	public void setLabNumber(int labNumber) {
-    	this.labNumber = labNumber;
+	public void setLabNo(int labNo) {
+    	this.labNo = labNo;
     }
 
 	public String getLabType() {
@@ -65,12 +66,12 @@ public class PatientLabRouting extends AbstractModel<Integer> {
     	this.labType = labType;
     }
 
-	public Integer getDemographicNumber() {
-    	return demographicNumber;
+	public Integer getDemographicNo() {
+    	return demographicNo;
     }
 
-	public void setDemographicNumber(Integer demographicNumber) {
-    	this.demographicNumber = demographicNumber;
+	public void setDemographicNo(Integer demographicNo) {
+    	this.demographicNo = demographicNo;
     }
 
 	@Override

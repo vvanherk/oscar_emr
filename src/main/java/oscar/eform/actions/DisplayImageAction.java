@@ -1,35 +1,32 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  Jason Gallagher
- *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
- *
- * DisplayImageAction.java
- *
- * Created on February 17, 2007, 3:32 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package oscar.eform.actions;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import javax.activation.MimetypesFileTypeMap;
 import javax.servlet.http.HttpServletRequest;
@@ -135,7 +132,7 @@ public class DisplayImageAction extends DownloadAction{
                     contentType = "text/javascript";
                 }else if(extension(file.getName()).equalsIgnoreCase("css")){ // for GIF
                     contentType = "text/css";
-                }else if(extension(file.getName()).equalsIgnoreCase("html") || extension(file.getName()).equalsIgnoreCase("htm")){ // for HTML
+                }else if(extension(file.getName()).equalsIgnoreCase("rtl") || extension(file.getName()).equalsIgnoreCase("html") || extension(file.getName()).equalsIgnoreCase("htm")){ // for HTML
                     contentType = "text/html";
                 }else{
                     throw new Exception("please check the file type or update mimetypes.default file to include the "+"."+extension(file.getName()));
@@ -188,14 +185,31 @@ public class DisplayImageAction extends DownloadAction{
      * This method used to list images for eform generator
      *
      */
- public String[] visitAllFiles(File dir) {
-    String[] children=null;
-    if (dir.isDirectory()) {
-         children = dir.list();
-        for (int i=0; i<children.length; i++) {
-            visitAllFiles(new File(dir, children[i]));
-        }
+    public String[] visitAllFiles(File dir) {
+    	String[] children=null;
+    	if (dir.isDirectory()) {
+    		children = dir.list();
+    		for (int i=0; i<children.length; i++) {
+    			visitAllFiles(new File(dir, children[i]));
+    		}
+    	}
+    	return children;
     }
-     return children;
-}
+    
+	public static String[] getRichTextLetterTemplates(File dir) {
+		ArrayList<String> results = getFiles(dir, ".*(rtl)$", null);				
+		return results.toArray(new String[0]);
+	}
+	
+	public static ArrayList<String> getFiles(File dir, String ext, ArrayList<String> files) {
+		if (files == null) { files = new ArrayList<String>(); }
+		if (dir.isDirectory()) {			
+			for (String fileName : dir.list()) {
+				if (fileName.toLowerCase().matches(ext)) {
+					files.add(fileName);
+				}
+			}
+		}
+		return files;
+	}
 }

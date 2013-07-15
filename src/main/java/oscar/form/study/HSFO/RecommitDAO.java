@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package oscar.form.study.HSFO;
 
 import java.sql.Connection;
@@ -22,7 +47,7 @@ public class RecommitDAO {
 	 public RecommitDAO() {
 	 }
 
-	 public RecommitSchedule getLastSchedule(boolean statusFlag) throws SQLException{
+	 public RecommitSchedule getLastSchedule(boolean statusFlag) {
 
 		 PreparedStatement st = null;
 	     String sqlstatement ="select * from hsfo_recommit_schedule ";
@@ -70,7 +95,7 @@ public class RecommitDAO {
 	        return reSchedule;
 	 }
 
-	 public void updateLastSchedule(RecommitSchedule rd)throws SQLException{
+	 public void updateLastSchedule(RecommitSchedule rd) {
 		 PreparedStatement st = null;
 	     String sqlstatement ="update hsfo_recommit_schedule set id=?, status=?, "+
 	     		"memo=?, schedule_time=?,user_no=?,check_flag=? where id=?";
@@ -105,7 +130,7 @@ public class RecommitDAO {
 
 	 }
 
-	 public void insertchedule(RecommitSchedule rd)throws SQLException{
+	 public void insertchedule(RecommitSchedule rd) {
 		 PreparedStatement st = null;
 	     String sqlstatement ="insert into hsfo_recommit_schedule set status=?, "+
 	     		"memo=?, schedule_time=?,user_no=?,check_flag=?";
@@ -140,7 +165,7 @@ public class RecommitDAO {
 
 	 }
 
-	 public boolean isLastActivExpire() throws SQLException{
+	 public boolean isLastActivExpire() {
 		 boolean exp=false;
 		 RecommitSchedule rd=getLastSchedule(false);
 		 if (rd!=null && !"D".equalsIgnoreCase(rd.getStatus())){
@@ -149,7 +174,7 @@ public class RecommitDAO {
 		 return exp;
 	 }
 
-	 public void deActiveLast() throws SQLException{
+	 public void deActiveLast() {
 		 RecommitSchedule rd=getLastSchedule(false);
 		 if (rd!=null && !"D".equalsIgnoreCase(rd.getStatus())){
 			 rd.setStatus("D");
@@ -157,7 +182,7 @@ public class RecommitDAO {
 		 }
 	 }
 
-	 public String SynchronizeDemoInfo() throws SQLException{
+	 public String SynchronizeDemoInfo() {
 		 HSFODAO hsfoDao=new HSFODAO();
 		 List idList=hsfoDao.getAllPatientId();
 		 Iterator itr=idList.iterator();
@@ -187,7 +212,7 @@ public class RecommitDAO {
 		 return null;
 	 }
 
-	 public String checkProvider()throws SQLException{
+	 public String checkProvider() {
 		 HSFODAO hsfoDao=new HSFODAO();
 		 List idList=hsfoDao.getAllPatientId();
 		 Iterator itr=idList.iterator();

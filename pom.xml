@@ -21,14 +21,14 @@
 
 		<repository>
 			<id>local_repo</id>
-			<url>file://local_repo</url>
+			<url>file://${project.basedir}/local_repo</url>
 		</repository>
 	</repositories>
 
 	<pluginRepositories>
         	<pluginRepository>
 			<id>local_repo</id>
-			<url>file://local_repo</url>
+			<url>file://${project.basedir}/local_repo</url>
         	</pluginRepository>
 	</pluginRepositories>
 
@@ -45,6 +45,11 @@
 			<artifactId>commons-lang</artifactId>
 			<version>2.4</version>
 		</dependency>
+                <dependency>
+                    <groupId>commons-validator</groupId>
+                    <artifactId>commons-validator</artifactId>
+                    <version>1.3.1</version>
+                </dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-io</artifactId>
@@ -177,7 +182,7 @@
 		<dependency>
 			<groupId>org.apache.cxf</groupId>
 			<artifactId>apache-cxf</artifactId>
-			<version>2.5.2</version>
+			<version>2.6.0</version>
 			<type>pom</type>
 			<exclusions>
 				<exclusion>
@@ -188,9 +193,26 @@
 					<artifactId>geronimo-servlet_2.5_spec</artifactId>
 					<groupId>org.apache.geronimo.specs</groupId>
 				</exclusion>
+				<exclusion>
+					<artifactId>geronimo-servlet_3.0_spec</artifactId>
+					<groupId>org.apache.geronimo.specs</groupId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 
+		<!-- pdf / jpedal -->
+		<dependency>
+  			<groupId>org</groupId>
+  			<artifactId>jpedal</artifactId>
+  			<version>lgpl</version>
+		</dependency>
+
+		<!--  pdfbox -->
+		 <dependency>
+	      <groupId>org.apache.pdfbox</groupId>
+	      <artifactId>pdfbox</artifactId>
+	      <version>1.2.1</version>
+	    </dependency>
 
 		<!-- struts -->
 		<dependency>
@@ -204,9 +226,9 @@
 			<version>UNKNOWN</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.struts</groupId>
+			<groupId>struts</groupId>
 			<artifactId>struts-el</artifactId>
-			<version>REALLY_OLD</version>
+			<version>1.2.7</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -216,7 +238,7 @@
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>jstl</artifactId>
-			<version>1.0.5</version>
+			<version>1.1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>taglibs</groupId>
@@ -278,7 +300,7 @@
 			<artifactId>caisi_integrator_client_stubs</artifactId>
 			<version>SNAPSHOT</version>
 		</dependency>
-		
+
 		<!-- macplus -->
 		<dependency>
 			<groupId>ca.mcmaster.plus</groupId>
@@ -381,7 +403,7 @@
 			<version>0.0-SNAPSHOT</version>
 		</dependency>
 
-		<!-- cds cihi phc vrs -->	
+		<!-- cds cihi phc vrs -->
 		<dependency>
 			<groupId>cds</groupId>
 			<artifactId>cds_cihi_phcvrs</artifactId>
@@ -394,7 +416,7 @@
 			<artifactId>cds_cihi</artifactId>
 			<version>1.0</version>
 		</dependency>
-		
+
 		<!-- cds rourke -->
 		<dependency>
 			<groupId>cds</groupId>
@@ -415,6 +437,13 @@
 			<artifactId>hsfo</artifactId>
 			<version>2007-02-12</version>
 		</dependency>
+
+		 <dependency>
+                        <groupId>hsfo2</groupId>
+                        <artifactId>hsfo2</artifactId>
+                        <version>2.0</version>
+                </dependency>
+
 
 		<!-- apache xml beans -->
 		<dependency>
@@ -496,11 +525,11 @@
 
 		<!-- FOR BORN Project - AR2005 in XML format -->
 		<dependency>
-			<groupId>org.oscarehr</groupId>
+			<groupId>org.oscarehr.ar2005</groupId>
 			<artifactId>ar2005</artifactId>
-			<version>SNAPSHOT</version>
+			<version>0.12-DRAFT</version>
 		</dependency>
-	
+
 		 <dependency>
                         <groupId>jspellchecker</groupId>
                         <artifactId>jazzy-core</artifactId>
@@ -532,7 +561,7 @@
 		<dependency>
 			<groupId>org.apache.poi</groupId>
 			<artifactId>poi</artifactId>
-			<version>3.6</version>
+			<version>3.0.1-FINAL</version>
 		</dependency>
 
 		<!-- ostermillerutils_1_04_03_for_java_1_4.jar we need to stop using this and replace it with apache commons -->
@@ -609,13 +638,6 @@
 			<version>r938</version>
 		</dependency>
 
-		<!-- tracking data source, can be removed once we fix our database access -->
-		<dependency>
-			<groupId>TrackingBasicDataSource</groupId>
-			<artifactId>TrackingBasicDataSource</artifactId>
-			<version>0.0-SNAPSHOT</version>
-		</dependency>
-
 		<!-- xerces -->
 		<dependency>
 			<groupId>xerces</groupId>
@@ -665,7 +687,7 @@
 			<artifactId>jsch</artifactId>
 			<version>0.1.29</version>
 		</dependency>
-		
+
 		<!-- OLIS -->
 		<dependency>
 			<groupId>ca.ssha.www</groupId>
@@ -683,7 +705,7 @@
                         <version>140</version>
                 </dependency>
 
-		<!-- AXIS2 (for OLIS) --> 
+		<!-- AXIS2 (for OLIS) -->
 
                <dependency>
                         <groupId>org.apache.axis2</groupId>
@@ -717,14 +739,250 @@
                         <version>1.2.11</version>
                 </dependency>
 
+		<!-- velocity -->
+		<dependency>
+			<groupId>org.apache.velocity</groupId>
+			<artifactId>velocity</artifactId>
+			<version>1.7</version>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.velocity</groupId>
+			<artifactId>velocity-tools</artifactId>
+			<version>2.0</version>
+			<scope>compile</scope>
+			<exclusions>
+				<exclusion>
+					<groupId>org.apache.struts</groupId>
+					<artifactId>struts-core</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.struts</groupId>
+					<artifactId>struts-taglib</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.apache.struts</groupId>
+					<artifactId>struts-tiles</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
+		<dependency>
+			<groupId>org.oscarehr</groupId>
+			<artifactId>utils</artifactId>
+			<version>SNAPSHOT</version>
+			<type>jar</type>
+			<scope>compile</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
 		<plugins>
+        <plugin>
+            <groupId>com.mycila.maven-license-plugin</groupId>
+            <artifactId>maven-license-plugin</artifactId>
+            <configuration>
+                <header>utils/headers/mcmaster.txt</header>
+		<validHeaders>
+                        <validHeader>utils/headers/os.txt</validHeader>
+                        <validHeader>utils/headers/quatro.txt</validHeader>
+                        <validHeader>utils/headers/quatro2.txt</validHeader>
+                        <validHeader>utils/headers/md.txt</validHeader>
+                        <validHeader>utils/headers/caisi.txt</validHeader>
+                        <validHeader>utils/headers/hs.txt</validHeader>
+                        <validHeader>utils/headers/pc.txt</validHeader>
+                        <validHeader>utils/headers/andromedia.txt</validHeader>
+                        <validHeader>utils/headers/lgpl.txt</validHeader>
+                        <validHeader>utils/headers/asl.txt</validHeader>
+                        <validHeader>utils/headers/cmi.txt</validHeader>
+                        <validHeader>utils/headers/indivica.txt</validHeader>
+                        <validHeader>utils/headers/peaceworks.txt</validHeader>
+                </validHeaders>
+                <includes>
+                    <include>src/main/java/**/*.java</include>
+                    <include>src/test/java/**/*.java</include>
+                    <include>src/main/webapp/**/*.jsp</include>
+		</includes>
+                <excludes>
+			<exclude>src/main/webapp/billing/CA/BC/billingAccountReports.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/billingPreferences.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/billingSVCTrayAssoc.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/billTransactions.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/billType_frag.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/deletePrivateCode.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/dxcode_svccode_assoc.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/manageSVCDXAssoc.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/receivePayment.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/saveAssocs.jsp</exclude>
+			<exclude>src/main/webapp/billing/CA/BC/settleBG.jsp</exclude>
+			<exclude>src/main/webapp/report/tabulardaysheetreport.jsp</exclude>
+
+			<exclude>src/main/webapp/form/formadf.jsp</exclude>
+			<exclude>src/main/webapp/form/formadfv2.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcar.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcarpg1.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcarpg1namepopup.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcarpg2.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcarpg3.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcbirthsummo.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcclientchartchecklist.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcinr.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcnewborn.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcnewbornpg1.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcnewbornpg2.jsp</exclude>
+			<exclude>src/main/webapp/form/formbcnewbornpg3.jsp</exclude>
+			<exclude>src/main/webapp/form/formGrowth0_36.jsp</exclude>
+			<exclude>src/main/webapp/form/formGrowth0_36Print.jsp</exclude>
+			<exclude>src/main/webapp/form/formGrowthChart.jsp</exclude>
+			<exclude>src/main/webapp/form/formGrowthChartPrint.jsp</exclude>
+			<exclude>src/main/webapp/form/formimmunallergy.jsp</exclude>
+			<exclude>src/main/webapp/form/formInvoice.jsp</exclude>
+			<exclude>src/main/webapp/form/formonar.jsp</exclude>
+			<exclude>src/main/webapp/form/formonarpg1.jsp</exclude>
+			<exclude>src/main/webapp/form/formonarpg2.jsp</exclude>
+			<exclude>src/main/webapp/form/formonarpg3.jsp</exclude>
+			<exclude>src/main/webapp/form/formonarpg4.jsp</exclude>
+			<exclude>src/main/webapp/form/formovulation.jsp</exclude>
+			<exclude>src/main/webapp/form/study/ar2ping.jsp</exclude>
+			<exclude>src/main/webapp/form/study/dm2ping.jsp</exclude>
+			<exclude>src/main/webapp/form/study/dmdata.jsp</exclude>
+			<exclude>src/main/webapp/form/study/formar2ping.jsp</exclude>
+			<exclude>src/main/webapp/form/study/formarpg1.jsp</exclude>
+			<exclude>src/main/webapp/form/study/formarpg2.jsp</exclude>
+			<exclude>src/main/webapp/form/study/formarpg3.jsp</exclude>
+			<exclude>src/main/webapp/form/study/formdiabete2ping.jsp</exclude>
+			<exclude>src/main/webapp/report/onbillingtotal.jsp</exclude>
+			<exclude>src/main/webapp/report/reportBCARDemo2.jsp</exclude>
+			<exclude>src/main/webapp/report/reportBCARDemo.jsp</exclude>
+			<exclude>src/main/webapp/report/reportbcedblist.jsp</exclude>
+			<exclude>src/main/webapp/report/reportbilledvisit1.jsp</exclude>
+			<exclude>src/main/webapp/report/reportbilledvisit2.jsp</exclude>
+			<exclude>src/main/webapp/report/reportbilledvisit3.jsp</exclude>
+			<exclude>src/main/webapp/report/reportbilledvisit.jsp</exclude>
+			<exclude>src/main/webapp/report/reportdxvisit.jsp</exclude>
+			<exclude>src/main/webapp/report/reportFilter.jsp</exclude>
+			<exclude>src/main/webapp/report/reportFormCaption.jsp</exclude>
+			<exclude>src/main/webapp/report/reportFormConfig.jsp</exclude>
+			<exclude>src/main/webapp/report/reportFormDemoConfig.jsp</exclude>
+			<exclude>src/main/webapp/report/reportFormOrder.jsp</exclude>
+			<exclude>src/main/webapp/report/reportFormRecord.jsp</exclude>
+			<exclude>src/main/webapp/report/reportonbilledphcp.jsp</exclude>
+			<exclude>src/main/webapp/report/reportonbilledvisit.jsp</exclude>
+			<exclude>src/main/webapp/report/reportonbilledvisitprovider.jsp</exclude>
+			<exclude>src/main/webapp/report/reportonedblist.jsp</exclude>
+			<exclude>src/main/webapp/report/reportResult.jsp</exclude>
+
+			<exclude>src/main/webapp/billing/billingBrazil.jsp</exclude>
+			<exclude>src/main/webapp/billing/billingBrazilSuccess.jsp</exclude>
+			<exclude>src/main/webapp/billing/billingConsFatMedBrazil.jsp</exclude>
+			<exclude>src/main/webapp/billing/billingConsFatPatBrazil.jsp</exclude>
+			<exclude>src/main/webapp/popup/atividade.jsp</exclude>
+			<exclude>src/main/webapp/popup/cid.jsp</exclude>
+			<exclude>src/main/webapp/popup/procedimento.jsp</exclude>
+			<exclude>src/main/java/oscar/entities/S21.java</exclude>
+			<exclude>src/main/java/oscar/entities/S22.java</exclude>
+			<exclude>src/main/java/oscar/entities/S23.java</exclude>
+			<exclude>src/main/java/oscar/oscarBilling/ca/bc/MSP/CDMReminderHlp.java</exclude>
+			<exclude>src/main/java/oscar/oscarBilling/ca/bc/MSP/CreateBillingReportActionForm.java</exclude>
+			<exclude>src/main/java/oscar/oscarBilling/ca/bc/MSP/CreateBillingReportAction.java</exclude>
+			<exclude>src/main/java/oscar/oscarBilling/ca/bc/MSP/ServiceCodeValidationLogic.java</exclude>
+			<exclude>src/main/java/oscar/oscarBilling/ca/bc/MSP/ServiceCodeValidator.java</exclude>
+			<exclude>src/main/java/oscar/oscarBilling/ca/bc/MSP/SexValidator.java</exclude>
+			<exclude>src/main/java/oscar/oscarDemographic/PrintDemoAddressLabelAction.java</exclude>
+			<exclude>src/main/java/oscar/oscarDemographic/PrintDemoChartLabelAction.java</exclude>
+			<exclude>src/main/java/oscar/oscarDemographic/PrintDemoLabelAction.java</exclude>
+			<exclude>src/main/java/oscar/OscarDocumentCreator.java</exclude>
+			<exclude>src/main/webapp/oscarReport/patientlist.jsp</exclude>
+			<exclude>src/main/java/oscar/oscarReport/data/DoctorList.java</exclude>
+			<exclude>src/main/webapp/jspspellcheck/*.jsp</exclude>
+			<exclude>src/main/java/net/sf/jasperreports/renderers/BarbecueRenderer.java</exclude>
+			<exclude>src/main/java/oscar/oscarDB/ResultSetBuilder.java</exclude>
+			<exclude>src/main/java/oscar/login/UAgentInfo.java</exclude>
+			<exclude>src/main/webapp/lab/CA/ON/uploadComplete.jsp</exclude>
+			<exclude>src/main/webapp/lab/CA/ALL/uploadComplete.jsp</exclude>
+                        <exclude>src/**/*.txt</exclude>
+                        <exclude>src/**/*.js</exclude>
+                        <exclude>database/**</exclude>
+                        <exclude>docs/**</exclude>
+                        <exclude>local_repo/**</exclude>
+                        <exclude>**/.gitignore</exclude>
+			<exclude>src/main/java/oscar/billing/cad/dao/CadAtividadeSaudeDAO.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/dao/CadProcedimentoDAO.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/dao/CidDAO.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/dao/TipoAtendimentoDAO.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/model/CadAtividadesSaude.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/model/CadCid.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/model/CadFaixasEtaria.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/model/CadGrupoAtendimento.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/model/CadNaturezaEas.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/model/CadProcedimentos.java</exclude>
+			<exclude>src/main/java/oscar/billing/cad/model/CadTiposAtendimento.java</exclude>
+			<exclude>src/main/java/oscar/billing/controler/ConsultaFaturamentoMedicoAction.java</exclude>
+			<exclude>src/main/java/oscar/billing/controler/ConsultaFaturamentoMedicoForm.java</exclude>
+			<exclude>src/main/java/oscar/billing/controler/ConsultaFaturamentoPacienteAction.java</exclude>
+			<exclude>src/main/java/oscar/billing/controler/ConsultaFaturamentoPacienteForm.java</exclude>
+			<exclude>src/main/java/oscar/billing/controler/ProcedimentoRealizadoAction.java</exclude>
+			<exclude>src/main/java/oscar/billing/controler/ProcedimentoRealizadoForm.java</exclude>
+			<exclude>src/main/java/oscar/billing/dao/DiagnosticoDAO.java</exclude>
+			<exclude>src/main/java/oscar/billing/dao/ProcedimentoRealizadoDAO.java</exclude>
+			<exclude>src/main/java/oscar/billing/fat/dao/FatFormulariosDAO.java</exclude>
+			<exclude>src/main/java/oscar/billing/fat/model/FatAgendaBpa.java</exclude>
+			<exclude>src/main/java/oscar/billing/fat/model/FatBpa.java</exclude>
+			<exclude>src/main/java/oscar/billing/fat/model/FatEas.java</exclude>
+			<exclude>src/main/java/oscar/billing/fat/model/FatFaturamento.java</exclude>
+			<exclude>src/main/java/oscar/billing/fat/model/FatFormularioProcedimento.java</exclude>
+			<exclude>src/main/java/oscar/billing/fat/model/FatFormularios.java</exclude>
+			<exclude>src/main/java/oscar/billing/model/Diagnostico.java</exclude>
+			<exclude>src/main/java/oscar/billing/model/ProcedimentoRealizado.java</exclude>
+			<exclude>src/main/java/oscar/billing/popup/AtividadeSaudeAction.java</exclude>
+			<exclude>src/main/java/oscar/billing/popup/AtividadeSaudeForm.java</exclude>
+			<exclude>src/main/java/oscar/billing/popup/CidAction.java</exclude>
+			<exclude>src/main/java/oscar/billing/popup/CidForm.java</exclude>
+			<exclude>src/main/java/oscar/billing/popup/ProcedimentoAction.java</exclude>
+			<exclude>src/main/java/oscar/billing/popup/ProcedimentoForm.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmAdfRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmAdfV2Record.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmBCARRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmBCBrithSumMoRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmBCClientChartChecklistRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmBCINRRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmBCNewBornRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmGrowth0_36Record.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmGrowthChartRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmInvoiceRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmONARRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/FrmOvulationRecord.java</exclude>
+			<exclude>src/main/java/oscar/form/graphic/FrmPdfGraphicAR.java</exclude>
+			<exclude>src/main/java/oscar/form/graphic/FrmPdfGraphicGrowthChart.java</exclude>
+			<exclude>src/main/java/oscar/form/pdfservlet/FrmPDFServlet.java</exclude>
+			<exclude>src/main/java/oscar/form/study/FrmStudyPING_DiabetesRecord.java</exclude>
+
+
+                </excludes>
+		<strictCheck>true</strictCheck>
+            </configuration>
+			<executions>
+				<execution>
+					<goals>
+						<goal>check</goal>
+					</goals>
+				</execution>
+			</executions>
+		        </plugin>
+
+			<plugin>
+			    <groupId>org.apache.maven.plugins</groupId>
+			    <artifactId>maven-war-plugin</artifactId>
+			    <version>2.1.1</version>
+			    <configuration>
+			        <failOnMissingWebXml>false</failOnMissingWebXml>
+			    </configuration>
+			</plugin>	
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
+                                <version>2.5.1</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
@@ -807,7 +1065,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-pmd-plugin</artifactId>
-				<!-- 
+				<!--
 				<executions>
 					<execution>
 						<phase>process-sources</phase>
@@ -829,16 +1087,23 @@
 
 		     <plugin>
 		        <groupId>org.apache.maven.plugins</groupId>
-		        <artifactId>maven-surefire-plugin</artifactId>		       
+		        <artifactId>maven-surefire-plugin</artifactId>
 		        <configuration>
 		          <skipTests>false</skipTests>
 			  <excludes>
 		            <exclude>**/AR2005*.java</exclude>
 		            <exclude>**/OntarioMDSpec4DataTest.java</exclude>
+		            <exclude>**/ONAREnhancedBornConnectorTest.java</exclude>
 		          </excludes>
+				<systemProperties>
+					<property>
+						<name>oscar.dbinit.skip</name>
+						<value>${oscar.dbinit.skip}</value>
+					</property>
+				</systemProperties>
 		        </configuration>
 		      </plugin>
-		
+
 	  <plugin>
 			  	<groupId>org.oscarehr</groupId>
         		<artifactId>oscar-il18n-check-plugin</artifactId>
@@ -850,14 +1115,14 @@
     					<param>oscarResources_fr.properties</param>
     					<param>oscarResources_pt_BR.properties</param>
     				</otherResourceFiles>
-  				</configuration> 
+  				</configuration>
   				<dependencies>
   				    <dependency>
       					<groupId>com.google.code</groupId>
       					<artifactId>google-api-translate-java</artifactId>
       					<version>0.95</version>
-    				</dependency>  				
-  				</dependencies>    
+    				</dependency>
+  				</dependencies>
 <!--
 				<executions>
 					<execution>
@@ -866,23 +1131,28 @@
 							<goal>check</goal>
 						</goals>
 					</execution>
-				</executions>  		   
+				</executions>
 -->
 
       		</plugin>
-       		
+
 			<plugin>
 				<groupId>org.oscarehr.maven.plugins</groupId>
 				<artifactId>repository_cleaner_plugin</artifactId>
-				<version>0.1-SNAPSHOT</version>
+				<version>0.2-SNAPSHOT</version>
 				<configuration>
 					<groupIdsToRemove>
-						<param>org.oscarehr.myoscar_server</param>
-						<param>org.oscarehr.caisi_integrator</param>
+						<param>org.oscarehr.caisi_integrator.caisi_integrator_client_stubs</param>
+						<param>org.oscarehr.myoscar_server.myoscar_server_client_stubs</param>
+						<param>org.oscarehr.ar2005.ar2005</param>
 						<param>org.oscarehr.utils</param>
-						<param>dm</param>
-						<param>cds</param>
-						<param>ca.ssha.www</param>
+						<param>dm.dm</param>
+						<param>cds.cds</param>
+						<param>cds.cds_cihi_phcvrs</param>
+						<param>cds.cds_cihi</param>
+						<param>cds.cds_rourke</param>
+						<param>cds.cds_hrm</param>
+						<param>ca.ssha.www.olis-service</param>
 					</groupIdsToRemove>
 				</configuration>
 				<executions>
@@ -933,6 +1203,60 @@
 	</plugin>
 -->
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-antrun-plugin
+										</artifactId>
+										<versionRange>
+											[1.3,)
+										</versionRange>
+										<goals>
+											<goal>run</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-checkstyle-plugin
+										</artifactId>
+										<versionRange>
+											[2.8,)
+										</versionRange>
+										<goals>
+											<goal>checkstyle</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
 
 </project>

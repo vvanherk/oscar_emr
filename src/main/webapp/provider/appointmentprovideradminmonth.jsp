@@ -1,28 +1,29 @@
-<!--  
-/* 
- * 
- * Copyright (c) 2001-2008. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%!
@@ -83,6 +84,19 @@ if (org.oscarehr.common.IsPropertiesOn.isCaisiEnable() && org.oscarehr.common.Is
   int endHour=providerPreference.getEndHour();
   int everyMin=providerPreference.getEveryMin();
   int view=0;
+
+  Collection<Integer> eforms = providerPreference.getAppointmentScreenEForms();
+  StringBuilder eformIds = new StringBuilder();
+  for( Integer eform : eforms ) {
+  	eformIds = eformIds.append("&eformId=" + eform);
+  }
+
+  Collection<String> forms = providerPreference.getAppointmentScreenForms();
+  StringBuilder ectFormNames = new StringBuilder();
+  for( String formName : forms ) {
+  	ectFormNames = ectFormNames.append("&encounterFormName=" + formName);
+  }
+  
   
   boolean isMygroupnoNumber = true;
   
@@ -170,8 +184,6 @@ if (bMultisites) {
 }
 //multisite ends =======================
 %>
-
-
 <%@ page import="oscar.dao.*" %>
 <%@ page
 	import="java.lang.*, java.util.*, java.text.*,java.net.*,java.sql.*,oscar.*"
@@ -269,6 +281,12 @@ if (bMultisites) {
 <%@page import="oscar.appt.ApptUtil"%><html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
+   <script>
+     jQuery.noConflict();
+   </script>
+<oscar:customInterface section="monthview"/>
+
 <title><bean:message
 	key="provider.appointmentprovideradminmonth.title" /></title>
 <link rel="stylesheet" href="../receptionist/receptionistapptstyle.css"
@@ -325,10 +343,10 @@ function popupOscarRx(vheight,vwidth,varpage) { //open a new popup window
             var newGroupNo = s.options[s.selectedIndex].value.substring(5) ;
             <%if (org.oscarehr.common.IsPropertiesOn.isCaisiEnable() && org.oscarehr.common.IsPropertiesOn.isTicklerPlusEnable()){%>
             {
-                popupOscarRx(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&new_tickler_warning_window=<%=n_t_w_w%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&mygroup_no="+newGroupNo);
+                popupOscarRx(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&new_tickler_warning_window=<%=n_t_w_w%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&mygroup_no="+newGroupNo) + "<%=eformIds.toString()%><%=ectFormNames.toString()%>";
             }
             <%}else {%>
-                popupOscarRx(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&mygroup_no="+newGroupNo);
+                popupOscarRx(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&mygroup_no="+newGroupNo + "<%=eformIds.toString()%><%=ectFormNames.toString()%>");
             <%}%>
         } 
         else 
@@ -748,7 +766,7 @@ function refreshTabAlerts(id) {
 						size="-2" color="blue"><%=strHolidayName.toString()%></font> <%
   while (bFistEntry?it.hasNext():true) { 
     date = bFistEntry?it.next():date;
-    String _scheduleDate = year+"-"+MyDateFormat.getDigitalXX(month)+"-"+MyDateFormat.getDigitalXX(dateGrid[i][j]);
+    String _scheduleDate = year+"-"+MyDateFormat.getDigitalXX(month)+"-"+MyDateFormat.getDigitalXX(dateGrid[i][j]);    
     if(!String.valueOf(date.get("sdate")).equals(_scheduleDate) ) {
       bFistEntry = false;
       break;
@@ -758,14 +776,15 @@ function refreshTabAlerts(id) {
     }
     if(isTeamOnly || !providerview.startsWith("_grp_",0) || myGrpBean.containsKey(String.valueOf(date.get("provider_no"))) ) {
     	%>
-    	
     <br><span class='datepname'>&nbsp;<%=providerNameBean.getShortDef(String.valueOf(date.get("provider_no")),"",NameMaxLen )%></span><span
 						class='datephour'><%=date.get("hour") %></span>
-    	<%
+	<%
     	if (bMultisites && CurrentSiteMap.get(date.get("reason")) != null && ( selectedSite == null || "NONE".equals(date.get("reason")) || selectedSite.equals(date.get("reason")))) {
-		%> 
+%> 
 <% if (bMultisites) { out.print(getSiteHTML((String)date.get("reason"), sites)); } %>
-<% if (!bMultisites) { %>						
+					
+<% if (!bMultisites) { %>	
+					
 						<span class='datepreason'><%=date.get("reason") %></span>
 <% } %>
 <%  } } } %>

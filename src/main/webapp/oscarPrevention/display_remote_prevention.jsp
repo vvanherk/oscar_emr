@@ -1,3 +1,27 @@
+<%--
+
+
+    Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for
+    Centre for Research on Inner City Health, St. Michael's Hospital,
+    Toronto, Ontario, Canada
+
+--%>
 <%@page import="java.util.Map"%>
 <%@page import="java.util.HashMap"%>
 <%@page import="org.oscarehr.PMmodule.caisi_integrator.RemotePreventionHelper"%>
@@ -7,6 +31,9 @@
 <%@page import="org.oscarehr.caisi_integrator.ws.FacilityIdIntegerCompositePk"%>
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.caisi_integrator.ws.CachedDemographicPrevention"%>
+<%@page import="org.oscarehr.util.LoggedInInfo" %>
+<%@page import="org.oscarehr.util.MiscUtils" %>
+<%@page import="org.oscarehr.PMmodule.caisi_integrator.IntegratorFallBackManager" %>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd" >
 
@@ -32,15 +59,35 @@
 	</head>
 	<body>
 		<%
+		    Integer demographicId = Integer.valueOf(request.getParameter("demographic_no"));
 			Integer remoteFacilityId=Integer.valueOf(request.getParameter("remoteFacilityId"));
 			Integer remotePreventionId=Integer.valueOf(request.getParameter("remotePreventionId"));
 			
-			DemographicWs demographicWs = CaisiIntegratorManager.getDemographicWs();
-
 			FacilityIdIntegerCompositePk pk=new FacilityIdIntegerCompositePk();
 			pk.setIntegratorFacilityId(remoteFacilityId);
 			pk.setCaisiItemId(remotePreventionId);
-			CachedDemographicPrevention remotePrevention = demographicWs.getCachedDemographicPreventionsByPreventionId(pk);
+			CachedDemographicPrevention remotePrevention  = null;
+			
+			try {
+				if (!CaisiIntegratorManager.isIntegratorOffline()){
+					remotePrevention = CaisiIntegratorManager.getDemographicWs().getCachedDemographicPreventionsByPreventionId(pk);
+				}
+			} catch (Exception e) {
+				MiscUtils.getLogger().error("Unexpected error.", e);
+				CaisiIntegratorManager.checkForConnectionError(e);
+			}
+				
+			if(CaisiIntegratorManager.isIntegratorOffline()){
+				List<CachedDemographicPrevention> remotePreventions = IntegratorFallBackManager.getRemotePreventions(demographicId);
+				for(CachedDemographicPrevention prev:remotePreventions){
+					if ( prev.getFacilityPreventionPk().getIntegratorFacilityId() == remoteFacilityId && prev.getFacilityPreventionPk().getCaisiItemId() == remotePreventionId){
+						remotePrevention = prev;
+					}
+				}
+				
+			} 
+		
+			
 			
 			CachedFacility cachedFacility=CaisiIntegratorManager.getRemoteFacility(remoteFacilityId);
 			FacilityIdStringCompositePk providerPk=new FacilityIdStringCompositePk();

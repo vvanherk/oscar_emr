@@ -1,46 +1,55 @@
-<%--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
 --%>
+
 <%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@page import="org.oscarehr.phr.util.MyOscarUtils"%>
 <%@page import="org.oscarehr.phr.PHRAuthentication"%>
-<%@page import="org.oscarehr.phr.util.MyOscarMessageManager"%>
+<%@page import="org.oscarehr.phr.util.MyOscarMessageManager,org.oscarehr.phr.util.MyOscarServerRelationManager"%>
 <%@page import="org.oscarehr.myoscar_server.ws.MessageTransfer"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
 <%@ page import="org.w3c.dom.*" %>
-<%@ page import="oscar.oscarDemographic.data.*" %>
+<%@ page import="oscar.oscarDemographic.data.*,org.oscarehr.common.model.Demographic,org.oscarehr.common.dao.DemographicDao,org.oscarehr.util.SpringUtils" %>
 <%@ page import="javax.servlet.http.HttpServletRequest.*" %>
 <%@ page import="java.util.Iterator.*" %>
 <%@ page import="java.util.Enumeration.*" %>
 <%@ page import="org.apache.commons.collections.iterators.*" %>
 <%@ page import="oscar.util.UtilDateUtilities,java.util.*" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://jakarta.apache.org/struts/tags-html-el" prefix="html-el" %>
+<c:set var="ctx" value="${pageContext.request.contextPath}" scope="request" />
+<%
+Demographic demographic= null;
+String DemographicNo = null;
+String myOscarUserName = null;
+PHRAuthentication phrAuthentication=MyOscarUtils.getPHRAuthentication(session);
+DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
 
+%>
 <html:html locale="true">
 
 <head>
@@ -81,6 +90,7 @@
     }
 </style>
 <script type="text/javascript" src="../../share/javascript/Oscar.js"></script>
+<script type="text/javascript" src="<c:out value="${ctx}"/>/js/jquery.js"></script>
 <script language="javascript">
 
     var browserName=navigator.appName; 
@@ -120,9 +130,7 @@
        }catch (e){
           alert ("ERROR: could not paste to EMR");
        }
-    }
-
-    
+    }    
 </script>
 </head>
 
@@ -191,14 +199,22 @@
                             		try
                             		{
                             			replyToMessageId=new Long(request.getParameter("replyToMessageId"));
-                            			PHRAuthentication auth=MyOscarUtils.getPHRAuthentication(session);
-                            			replyToMessage=MyOscarMessageManager.getMessage(auth.getMyOscarUserId(), auth.getMyOscarPassword(), replyToMessageId);
+                            			
+                            			replyToMessage=MyOscarMessageManager.getMessage(phrAuthentication.getMyOscarUserId(), phrAuthentication.getMyOscarPassword(), replyToMessageId);
+                            			myOscarUserName=replyToMessage.getSenderPersonUserName();
+                                		demographic=MyOscarUtils.getDemographicByMyOscarUserName(myOscarUserName);
                             		}
                             		catch (Exception e)
                             		{
                             			// this is okay, if the request is not a reply this will happen.
                             		}
-                            	
+                            		if (demographic == null){
+                            			String demographcNo = request.getParameter("demographicNo");
+                            			if(demographcNo != null && !demographcNo.equalsIgnoreCase("null")){
+                            				demographic = demographicDao.getDemographic(demographcNo);
+                            				myOscarUserName = demographic.getMyOscarUserName();
+                            			}
+                            		}
                             	%>
                                 <html:form action="/phr/PhrMessage">
                                     <tr>
@@ -225,7 +241,23 @@
 			                                                    	<html-el:text readonly="readonly" name="to" property="to" size="30" value="${toName}"/>
 			                                        			<%
 			                                        		}
-			                                        	%>                                            
+			                                        	%>    
+			                                        	
+			                                        	<%if(demographic!=null){ %>
+														<div id="relationshipMessage"></div>    
+														<script type="text/javascript">
+														$.ajax({
+														    url: '../PatientRelationship.jspf?demoNo=<%=demographic.getDemographicNo()%>&myOscarUserName=<%=myOscarUserName%>',
+														    dataType: 'html',
+														    timeout: 7000,
+														    cache: false,
+														    error: function() { alert("Error talking to server."); },
+														    success: function(data) {
+														      $("#relationshipMessage").html(data);
+														    }
+														  });
+														<%}%>
+														</script>                                
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -267,6 +299,8 @@
                                                 </tr>
                                             </table>
                                            
+                                            <input type="hidden" name="andPasteToEchart" id="andPasteToEchart"/>
+                                            <input type="submit" class="ControlPushButton" value="<bean:message key="oscarMessenger.CreateMessage.btnSendMessage"/>" >
 	                                     	<%
                                         		if (replyToMessage!=null)
                                         		{
@@ -274,6 +308,25 @@
                                         				<input type="hidden" name="replyToMessageId" value="<%=replyToMessageId%>" />
                                         				<input type="hidden" name="method" value="sendReply" />
                                         				<input type="hidden" name="demographicNo" value="<%=request.getParameter("demographicNo")%>" />
+                                        				
+                                            			<input type="submit" 
+                                            			<%if (demographic == null){%>
+		                                   					disabled="disabled"
+		                                   					title="<bean:message key="global.no.myoscar.account.registered"/>"
+		                                				<%}%> 
+                                            				class="ControlPushButton" value="<bean:message key="oscarMessenger.CreateMessage.btnSendMessageCpyToeChart"/>" onclick="setCpyToChart();" >
+                                            			<input type="button" 
+                                            				<%if (demographic == null){%>
+		                                   						disabled="disabled"
+		                                   						title="<bean:message key="global.no.myoscar.account.registered"/>"
+		                                					<%}%> 
+                                            				class="ControlPushButton" value="<bean:message key="oscarMessenger.CreateMessage.btnOpenEchart"/>" onclick="gotoEchart2('<%=request.getParameter("demographicNo")%>','<%=replyToMessageId%>');" />
+                                            			<input type="button" 
+                                            				<%if (demographic == null){%>
+		                                   						disabled="disabled"
+		                                   						title="<bean:message key="global.no.myoscar.account.registered"/>"
+		                                					<%}%> 
+                                            				class="ControlPushButton" value="<bean:message key="oscarMessenger.CreateMessage.btnPasteToEchart"/>" onclick="paste2Echart();"/>
                                         			<%
                                         		}
                                         		else
@@ -284,11 +337,6 @@
                                         			<%
                                         		}
                                         	%>
-                                        	<input type="hidden" name="andPasteToEchart" id="andPasteToEchart"/>
-                                            <input type="submit" class="ControlPushButton" value="<bean:message key="oscarMessenger.CreateMessage.btnSendMessage"/>" >
-                                            <input type="submit" class="ControlPushButton" value="<bean:message key="oscarMessenger.CreateMessage.btnSendMessageCpyToeChart"/>" onclick="setCpyToChart();" >
-                                            <input type="button" class="ControlPushButton" value="<bean:message key="oscarMessenger.CreateMessage.btnOpenEchart"/>" onclick="gotoEchart2('<%=request.getParameter("demographicNo")%>','<%=replyToMessageId%>');" />
-                                            <input type="button" class="ControlPushButton" value="<bean:message key="oscarMessenger.CreateMessage.btnPasteToEchart"/>" onclick="paste2Echart();"/>
                                         </td>
                                     </tr>
                                     </html:form>                                                                                                                                                                            
@@ -317,6 +365,3 @@
     </table>
 </body>
 </html:html>
-
-
-

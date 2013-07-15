@@ -1,27 +1,26 @@
-/*
+/**
  *
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * <OSCAR TEAM>
- *
- * UserPropertyDAO.java
- *
- * Created on December 19, 2007, 4:29 PM
- *
- *
- *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
+
 
 package org.oscarehr.common.dao;
 
@@ -29,30 +28,39 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Query;
+
 import org.oscarehr.common.model.UserProperty;
-import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
+import org.springframework.stereotype.Repository;
 
 /**
  *
  * @author rjonasz
  */
-public class UserPropertyDAO extends HibernateDaoSupport {
+@Repository
+public class UserPropertyDAO extends AbstractDao<UserProperty> {
+
 	public final static String COLOR_PROPERTY = "ProviderColour";
-	
+
     /** Creates a new instance of UserPropertyDAO */
     public UserPropertyDAO() {
+    	super(UserProperty.class);
     }
-    
-    
+
+
     public void delete(UserProperty prop) {
-        this.getHibernateTemplate().delete(prop);
+        remove(prop.getId());
     }
-    
+
     public void saveProp(UserProperty prop) {
-        this.getHibernateTemplate().saveOrUpdate(prop);
+        if(prop.getId() != null && prop.getId().intValue()>0) {
+        	merge(prop);
+        } else {
+        	persist(prop);
+        }
     }
-    
-    //Should properties be updatable?
+
+    //Should properties be updateable?
     public void saveProp(String name, String val) {
         if (val != null) {
                 UserProperty prop = getProp(name);
@@ -66,53 +74,70 @@ public class UserPropertyDAO extends HibernateDaoSupport {
     }
 
     public UserProperty getProp(String prov, String name) {
-        List list = this.getHibernateTemplate().find("from UserProperty p where p.providerNo = ? and p.name = ?", new Object[] {prov,name});
+    	Query query = entityManager.createQuery("select p from UserProperty p where p.providerNo = ? and p.name = ?");
+    	query.setParameter(1, prov);
+    	query.setParameter(2, name);
+
+        @SuppressWarnings("unchecked")
+        List<UserProperty> list = query.getResultList();
         if( list != null && list.size() > 0 ) {
-            UserProperty prop = (UserProperty)list.get(0);
+            UserProperty prop = list.get(0);
             return prop;
         }
         else
-            return null;            
+            return null;
     }
-    
+
     public UserProperty getProp(String name) {
-        List list = this.getHibernateTemplate().find("from UserProperty p where  p.name = ?", name);
+    	Query query = entityManager.createQuery("select p from UserProperty p where p.name = ?");
+    	query.setParameter(1, name);
+
+        @SuppressWarnings("unchecked")
+        List<UserProperty> list = query.getResultList();
         if( list != null && list.size() > 0 ) {
-            UserProperty prop = (UserProperty)list.get(0);
+            UserProperty prop = list.get(0);
             return prop;
         }
         else
-            return null;            
+            return null;
     }
-    
+
     public List<UserProperty> getDemographicProperties(String providerNo) {
-    	@SuppressWarnings("unchecked")
-    	List<UserProperty> list = this.getHibernateTemplate().find("from UserProperty p where  p.providerNo = ?", providerNo);
+    	Query query = entityManager.createQuery("select p from UserProperty p where p.providerNo = ?");
+    	query.setParameter(1, providerNo);
+
+        @SuppressWarnings("unchecked")
+        List<UserProperty> list = query.getResultList();
+
     	return list;
     }
-    
+
     public Map<String,String> getProviderPropertiesAsMap(String providerNo) {
     	Map<String,String> map = new HashMap<String,String>();
+
+    	Query query = entityManager.createQuery("select p from UserProperty p where p.providerNo = ?");
+    	query.setParameter(1, providerNo);
+
     	@SuppressWarnings("unchecked")
-    	List<UserProperty> list = this.getHibernateTemplate().find("from UserProperty p where  p.providerNo = ?", providerNo);
+    	List<UserProperty> list = query.getResultList();
     	for(UserProperty p:list) {
     		map.put(p.getName(), p.getValue());
     	}
     	return map;
     }
-    
+
     public void saveProperties(String providerNo, Map<String,String> props) {
     	for(String key:props.keySet()) {
     		String value = props.get(key);
     		if(value == null) value = new String();
     		UserProperty prop  = null;
     		if((prop=this.getProp(providerNo, key)) != null) {
-    			prop.setValue(value);    			
+    			prop.setValue(value);
     		} else {
     			prop = new UserProperty();
     			prop.setName(key);
     			prop.setProviderNo(providerNo);
-    			prop.setValue(value);    			
+    			prop.setValue(value);
     		}
     		saveProp(prop);
     	}

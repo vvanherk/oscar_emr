@@ -1,4 +1,4 @@
-<flowsheet name="diab3" ds_rules="diab.drl" dxcode_triggers="" display_name="Diabetes Flowsheet">
+<flowsheet name="diab3" ds_rules="diab.drl" is_universal="true" display_name="CDM Indicators">
 	<indicator key="HIGH" colour="#800517" />
   	<indicator key="LOW" colour="#800517" />
 
@@ -42,7 +42,7 @@
               </rule>
             </ruleset>
         </item>
-		<item measurement_type="WC" display_name="Waist Circ " guideline="" graphable="yes" value_name="cm" />
+		<item measurement_type="WAIS" display_name="Waist Circ " guideline="" graphable="yes" value_name="cm" />
 		<item measurement_type="LDL" display_name="LDL" guideline="LDL &lt; 2.0" graphable="yes" value_name="">
 			<ruleset>
             	<rule indicationColor="HIGH">
@@ -61,15 +61,15 @@
 	</header>
 	
 	<header display_name="Renal">
-		<item measurement_type="UACR" display_name="Urine ACR" guideline="Target: &lt; 2.0 M : &lt;2.8 F" graphable="yes" value_name="">
+		<item measurement_type="ACR" display_name="Urine ACR" guideline="Target: &lt; 2.0 M : &lt;2.8 F" graphable="yes" value_name="">
 			<ruleset>
 	        	<rule indicationColor="HIGH">
 	          		<condition type="isMale"  value="true" />
-	          		<condition type="getDataAsDouble" param="UACR" value="&gt;2.0" />
+	          		<condition type="getDataAsDouble" param="ACR" value="&gt;2.0" />
 	       	 	</rule>
 	        	<rule indicationColor="HIGH">
 	          		<condition type="isFemale"  value="true" />
-	          		<condition type="getDataAsDouble" param="UACR" value="&gt;2.8" />
+	          		<condition type="getDataAsDouble" param="ACR" value="&gt;2.8" />
 	        	</rule>
 	     	</ruleset>
 		</item>
@@ -233,7 +233,7 @@
 	  </measurement>
 	  
 	  
-	  <measurement type="UACR" typeDesc="UACR" typeDisplayName="Alb creat ratio" measuringInstrc="">
+	  <measurement type="ACR" typeDesc="ACR" typeDisplayName="Alb creat ratio" measuringInstrc="">
 	    <validationRule name="Numeric Value: 0 to 300" maxValue="300" minValue="0" isDate="" isNumeric="1" regularExp="" maxLength="" minLength="" />
 	  </measurement>
 	  
@@ -285,7 +285,7 @@
 	</measurement>
 	
 	
-	<measurement type="WC" typeDesc="Waist Circumference" typeDisplayName="Waist Circ." measuringInstrc="in cm (nnn) Range:40-500 Interval:3mo.">
+	<measurement type="WAIS" typeDesc="Waist Circumference" typeDisplayName="Waist Circ." measuringInstrc="in cm (nnn) Range:40-500 Interval:3mo.">
 	  <validationRule name="Numeric Value: 40 to 500" maxValue="500" minValue="40" isDate="" isNumeric="1" regularExp="" maxLength="" minLength="" />
 	</measurement>
 	

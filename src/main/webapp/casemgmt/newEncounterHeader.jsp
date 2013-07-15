@@ -1,32 +1,37 @@
-<!--
-/*
-*
-* Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License.
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License
-* as published by the Free Software Foundation; either version 2
-* of the License, or (at your option) any later version. *
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-*
-* <OSCAR TEAM>
-*
-* This software was written for
-* Centre for Research on Inner City Health, St. Michael's Hospital,
-* Toronto, Ontario, Canada
-*/
- -->
+
+<%--
+
+
+    Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for
+    Centre for Research on Inner City Health, St. Michael's Hospital,
+    Toronto, Ontario, Canada
+
+--%>
+
+
  <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
  <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
- <%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+ <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
  <%@ page import="oscar.oscarEncounter.data.*, oscar.oscarProvider.data.*, oscar.util.UtilDateUtilities" %>
  <%@ page import="org.oscarehr.util.MiscUtils"%>
  <%@ page import="java.net.URLEncoder"%>
+ <%@ page import="org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager, org.oscarehr.util.LoggedInInfo, org.oscarehr.common.model.Facility" %>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security" %>
 <%
     oscar.oscarEncounter.pageUtil.EctSessionBean bean = null;
@@ -34,6 +39,8 @@
         response.sendRedirect("error.jsp");
         return;
     }
+    
+    Facility facility = LoggedInInfo.loggedInInfo.get().currentFacility;
 
     String demoNo = bean.demographicNo;
     EctPatientData.Patient pd = new EctPatientData().getPatient(demoNo);
@@ -104,20 +111,40 @@
         <%=getEChartLinks() %>
         &nbsp;&nbsp;
         
-        <%
-		String strFullChart = request.getParameter("fullChart"); 
-		boolean quickChart =  strFullChart == null || strFullChart.equals("") || strFullChart.equalsIgnoreCase("false");	
-		if( quickChart ) {
-		%>		
-			<a id="quickChart" href="#" onclick="return viewFullChart(true);"><bean:message key="oscarEncounter.fullChart.msg"/></a>		
 		<%
-		}
-		else {
+		if (facility.isIntegratorEnabled()){
+			int secondsTillConsideredStale = -1;
+			try{
+				secondsTillConsideredStale = Integer.parseInt(oscar.OscarProperties.getInstance().getProperty("seconds_till_considered_stale"));
+			}catch(Exception e){
+				MiscUtils.getLogger().error("OSCAR Property: seconds_till_considered_stale did not parse to an int",e);
+				secondsTillConsideredStale = -1;
+			}
+			
+			boolean allSynced = true;
+			
+			try{
+				allSynced  = CaisiIntegratorManager.haveAllRemoteFacilitiesSyncedIn(secondsTillConsideredStale,false); 
+				CaisiIntegratorManager.setIntegratorOffline(false);	
+			}catch(Exception remoteFacilityException){
+				MiscUtils.getLogger().error("Error checking Remote Facilities Sync status",remoteFacilityException);
+				CaisiIntegratorManager.checkForConnectionError(remoteFacilityException);
+			}
+			if(secondsTillConsideredStale == -1){  
+				allSynced = true; 
+			}
 		%>
-			<a id="quickChart" href="#" onclick="return viewFullChart(false);"><bean:message key="oscarEncounter.quickChart.msg"/></a>
-		<%
-		}
-		%>      
+			<%if (CaisiIntegratorManager.isIntegratorOffline()) {%>
+    			<div style="background: none repeat scroll 0% 0% red; color: white; font-weight: bold; padding-left: 10px; margin-bottom: 2px;"><bean:message key="oscarEncounter.integrator.NA"/></div>
+    		<%}else if(!allSynced) {%>
+    			<div style="background: none repeat scroll 0% 0% orange; color: white; font-weight: bold; padding-left: 10px; margin-bottom: 2px;"><bean:message key="oscarEncounter.integrator.outOfSync"/>
+    			&nbsp;&nbsp;
+				<a href="javascript:void(0)" onClick="popupPage(233,600,'ViewICommun','<c:out value="${ctx}"/>/admin/viewIntegratedCommunity.jsp'); return false;" >Integrator</a>
+    			</div>
+	    	<%}else{%>
+	    		<a href="javascript:void(0)" onClick="popupPage(233,600,'ViewICommun','<c:out value="${ctx}"/>/admin/viewIntegratedCommunity.jsp'); return false;" >I</a>
+	    	<%}%>
+	  <%}%>    
    </span>
 </div>
 
@@ -137,4 +164,3 @@ String getEChartLinks(){
 		return "";
 }
 %>
-

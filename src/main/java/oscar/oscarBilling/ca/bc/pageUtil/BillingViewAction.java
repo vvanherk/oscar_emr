@@ -1,20 +1,19 @@
-
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -22,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.oscarBilling.ca.bc.pageUtil;
 
 import java.io.IOException;
@@ -46,6 +47,7 @@ import oscar.oscarBilling.ca.bc.MSP.MSPReconcile;
 import oscar.oscarBilling.ca.bc.data.BillRecipient;
 import oscar.oscarBilling.ca.bc.data.BillingPreference;
 import oscar.oscarBilling.ca.bc.data.BillingPreferencesDAO;
+import oscar.oscarBilling.ca.bc.pageUtil.BillingBillingManager.BillingItem;
 import oscar.oscarDemographic.data.DemographicData;
 
 public final class BillingViewAction
@@ -70,12 +72,12 @@ public final class BillingViewAction
       BillingViewBean bean = new BillingViewBean();
       bean.loadBilling(request.getParameter("billing_no"));
       BillingBillingManager bmanager = new BillingBillingManager();
-      ArrayList billItem = new ArrayList();
+      ArrayList<BillingItem> billItem = new ArrayList<BillingItem>();
       String[] billingN = request.getParameterValues("billing_no");
 
       for (int i = 0; i < billingN.length; i++){
           log.debug("billn "+i+" "+billingN[i]);
-         ArrayList tempBillItem = bmanager.getBillView(billingN[i]);
+         ArrayList<BillingItem> tempBillItem = bmanager.getBillView(billingN[i]);
          billItem.addAll(tempBillItem);
       }
 
@@ -101,10 +103,10 @@ public final class BillingViewAction
       frm.setBillingNo(bean.getBillingNo());
       log.debug("End Demo Call billing No"+request.getParameter("billing_no"));
       //Loading bill Recipient Data
-      List billRecipList = bean.getBillRecipient(request.getParameter("billing_no"));
+      List<BillRecipient> billRecipList = bean.getBillRecipient(request.getParameter("billing_no"));
       if (!billRecipList.isEmpty()) {
         log.debug("Filling recep with last details");
-        BillRecipient rec = (BillRecipient) billRecipList.get(0);
+        BillRecipient rec = billRecipList.get(0);
         frm.setRecipientAddress(rec.getAddress());
         frm.setRecipientCity(rec.getCity());
         frm.setRecipientName(rec.getName());

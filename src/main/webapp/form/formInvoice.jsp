@@ -1,9 +1,3 @@
-<!--
-/*
- *
- * Copyright (c) 2005- OSCAR.
- */
--->
 <%@ page import="oscar.form.*, oscar.form.data.*"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>

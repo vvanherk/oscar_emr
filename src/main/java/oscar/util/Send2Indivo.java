@@ -1,28 +1,27 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version. *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
  *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
  *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * Send2Indivo.java
- *
- * Created on January 10, 2007, 3:43 PM 
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package oscar.util;
 
@@ -42,6 +41,8 @@ import org.indivo.IndivoException;
 import org.indivo.client.ActionNotPerformedException;
 import org.indivo.client.TalkClient;
 import org.indivo.client.TalkClientImpl;
+import org.indivo.xml.JAXBUtils;
+import org.indivo.xml.phr.DocumentGenerator;
 import org.indivo.xml.phr.binarydata.BinaryData;
 import org.indivo.xml.phr.binarydata.BinaryDataType;
 import org.indivo.xml.phr.contact.ConciseContactInformationType;
@@ -266,7 +267,7 @@ public class Send2Indivo {
             org.indivo.xml.phr.medication.ObjectFactory medFactory = new org.indivo.xml.phr.medication.ObjectFactory();
             
             Medication med = medFactory.createMedication(medType);            
-            Element element = jaxbUtils.marshalToElement(med, JAXBContext.newInstance("org.indivo.xml.phr.medication"));
+            Element element = JAXBUtils.marshalToElement(med, JAXBContext.newInstance("org.indivo.xml.phr.medication"));
             
             VersionBodyType body = version.getVersionBody();
             body.setAny(element);
@@ -318,9 +319,9 @@ public class Send2Indivo {
         BinaryData bd = binFactory.createBinaryData(binaryDataType);
 
         try {
-            Element element = jaxbUtils.marshalToElement(bd, JAXBContext.newInstance("org.indivo.xml.phr.binarydata"));
+            Element element = JAXBUtils.marshalToElement(bd, JAXBContext.newInstance("org.indivo.xml.phr.binarydata"));
              
-            IndivoDocumentType doc = generator.generateDefaultDocument(indivoId, indivoFullName, indivoRole,  DocumentClassificationUrns.BINARYDATA, ContentTypeQNames.BINARYDATA, element);
+            IndivoDocumentType doc = DocumentGenerator.generateDefaultDocument(indivoId, indivoFullName, indivoRole,  DocumentClassificationUrns.BINARYDATA, ContentTypeQNames.BINARYDATA, element);
 
             DocumentHeaderType header = doc.getDocumentHeader();
             ContentDescriptionType contentDescription = header.getContentDescription();

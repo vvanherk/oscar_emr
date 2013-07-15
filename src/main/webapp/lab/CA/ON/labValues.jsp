@@ -1,8 +1,32 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@page import="java.io.Serializable"%>
 <%@page import="org.w3c.dom.Document"%>
 <%@page import="org.oscarehr.caisi_integrator.ws.CachedDemographicLabResult"%>
 <%@page import="oscar.oscarLab.ca.all.web.LabDisplayHelper"%>
-<%@page errorPage="../provider/errorpage.jsp"%>
 <%@ page
 	import="java.util.*,oscar.oscarLab.ca.on.*,oscar.oscarDemographic.data.*"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
@@ -26,14 +50,14 @@ org.oscarehr.common.model.Demographic demographic =  dData.getDemographic(demogr
 
 ArrayList list = null;
 
-if (!demographicNo.equals("null")){
+if (!(demographicNo == null || demographicNo.equals("null"))){
 	if(remoteFacilityIdString==null)
 	{
 		list = CommonLabTestValues.findValuesForTest(labType, demographicNo, testName, identifier);
 	}
 	else
 	{
-		CachedDemographicLabResult remoteLab=LabDisplayHelper.getRemoteLab(Integer.parseInt(remoteFacilityIdString), remoteLabKey);
+		CachedDemographicLabResult remoteLab=LabDisplayHelper.getRemoteLab(Integer.parseInt(remoteFacilityIdString), remoteLabKey,Integer.parseInt(demographicNo));
 		Document labContentsAsXml=LabDisplayHelper.getXmlDocument(remoteLab);
 		HashMap<String, ArrayList<Map<String, Serializable>>> mapOfTestValues=LabDisplayHelper.getMapOfTestValues(labContentsAsXml);
 		list=mapOfTestValues.get(identifier);
@@ -41,31 +65,6 @@ if (!demographicNo.equals("null")){
 }
 %>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
 <html>
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
@@ -215,9 +214,10 @@ window.close();
 					key="oscarMDS.segmentDisplay.formDateTimeCompleted" /></td>
 			</tr>
 			<%  int linenum = 0;
+				
                             if (list != null){
-                               for (int i = 0 ;  i < list.size(); i++){
-                                   Hashtable h = (Hashtable) list.get(i);
+                               for (int i = 0 ;  i < list.size(); i++){                            	                               		                               	   
+                                   Map h = (Map) list.get(i);
                                    String lineClass = "NormalRes";
                                    if ( h.get("abn") != null && h.get("abn").equals("A")){
                                       lineClass = "AbnormalRes";

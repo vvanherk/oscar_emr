@@ -1,24 +1,25 @@
-/*
-* 
-* Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License. 
-* This program is free software; you can redistribute it and/or 
-* modify it under the terms of the GNU General Public License 
-* as published by the Free Software Foundation; either version 2 
-* of the License, or (at your option) any later version. * 
-* This program is distributed in the hope that it will be useful, 
-* but WITHOUT ANY WARRANTY; without even the implied warranty of 
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-* along with this program; if not, write to the Free Software 
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-* 
-* <OSCAR TEAM>
-* 
-* This software was written for 
-* Centre for Research on Inner City Health, St. Michael's Hospital, 
-* Toronto, Ontario, Canada 
-*/
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
 
 package org.caisi.dao;
 
@@ -48,7 +49,7 @@ public class TicklerDAO extends HibernateDaoSupport {
     }
 
     public Tickler getTickler(Long id) {
-        return (Tickler)getHibernateTemplate().get(Tickler.class, id);
+        return getHibernateTemplate().get(Tickler.class, id);
     }
 
     public void addComment(Long tickler_id, String provider, String message) {
@@ -98,7 +99,7 @@ public class TicklerDAO extends HibernateDaoSupport {
         ArrayList paramList = new ArrayList();
         query = getTicklerQueryString(query,  paramList,  filter);
         Object params[] = paramList.toArray(new Object[paramList.size()]);
-        return (List)getHibernateTemplate().find(query + "order by t.service_date " + tickler_date_order, params);
+        return getHibernateTemplate().find(query + "order by t.service_date " + tickler_date_order, params);
     }
     
     public int getActiveTicklerCount(String providerNo){
@@ -123,6 +124,7 @@ public class TicklerDAO extends HibernateDaoSupport {
      }
     
     private String getTicklerQueryString(String query, List paramList, CustomFilter filter){
+    		boolean includeMRPClause = true;
             boolean includeProviderClause = true;
             boolean includeAssigneeClause = true;
             boolean includeStatusClause = true;
@@ -156,10 +158,18 @@ public class TicklerDAO extends HibernateDaoSupport {
             if (filter.getStatus().equals("") || filter.getStatus().equals("Z")) {
                     includeStatusClause = false;
             }
+            
+            if( filter.getMrp() == null || filter.getMrp().equals("All Providers") || filter.getMrp().equals("") ) {
+            	includeMRPClause = false;
+            }
 
             
             paramList.add(filter.getStart_date());
             paramList.add(new Date(filter.getEnd_date().getTime()+DateUtils.MILLIS_PER_DAY));
+            
+            if(includeMRPClause) {
+            	query = "select t from Tickler t, Demographic d where t.service_date >= ? and t.service_date <= ? and d.DemographicNo = cast(t.demographic_no as integer) and d.ProviderNo = '" + filter.getMrp() + "'";
+            }
 
             //TODO: IN clause
             if(includeProviderClause) {

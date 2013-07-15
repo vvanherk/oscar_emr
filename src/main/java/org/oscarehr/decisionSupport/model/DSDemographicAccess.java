@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -15,7 +40,8 @@ import org.apache.log4j.Logger;
 import org.oscarehr.billing.CA.ON.dao.BillingClaimDAO;
 import org.oscarehr.casemgmt.dao.CaseManagementNoteDAO;
 import org.oscarehr.casemgmt.model.CaseManagementNote;
-import org.oscarehr.common.dao.FlowSheetCustomizerDAO;
+import org.oscarehr.common.dao.FlowSheetCustomizationDao;
+import org.oscarehr.common.model.FlowSheetCustomization;
 import org.oscarehr.decisionSupport.model.conditionValue.DSValue;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
@@ -69,7 +95,7 @@ public class DSDemographicAccess {
     public DSDemographicAccess(String demographicNo) {
         this.demographicNo = demographicNo;
     }
-    
+
     public DSDemographicAccess(String demographicNo, String providerNo) {
         this.demographicNo = demographicNo;
         this.providerNo = providerNo;
@@ -139,7 +165,7 @@ public class DSDemographicAccess {
         } catch (NumberFormatException nfe) {
         	logger.error("Decision Support Exception, could not format demographicNo: " + demographicNo);
         }
-        return new ArrayList();
+        return new ArrayList<Prescription>();
     }
 
     //generally for testing
@@ -205,7 +231,7 @@ public class DSDemographicAccess {
     	logger.debug("IS AGE CALLED");
         String compareAge = getDemographicData().getAgeInYears() + "";
         if (statement.getValueUnit() != null) {
-            if (statement.getValueUnit().equals("y")) ;
+            if (statement.getValueUnit().equals("y")){/*empty*/}
             else if (statement.getValueUnit().equals("m")) compareAge = DemographicData.getAgeInMonths(getDemographicData()) + "";
             else if (statement.getValueUnit().equals("d")) compareAge = DemographicData.getAgeInDays(getDemographicData()) + "";
             else throw new DecisionSupportException("Cannot recognize unit: " + statement.getValueUnit());
@@ -312,71 +338,71 @@ public class DSDemographicAccess {
     public boolean noteContainsNotall(String searchStrings) { return !noteContainsAll(searchStrings); }
 
     public boolean noteContainsNotany(String searchStrings) { return !noteContainsAny(searchStrings); }
-    
+
     @SuppressWarnings("unchecked")
     public boolean flowsheetUptoDateAny(String flowsheetId) {
     	boolean retval = false;
-    	flowsheetId = flowsheetId.replaceAll("'", "");    	
-    	FlowSheetCustomizerDAO flowSheetCustomizerDAO = (FlowSheetCustomizerDAO) SpringUtils.getBean("flowSheetCustomizerDAO");
-   
+    	flowsheetId = flowsheetId.replaceAll("'", "");
+    	FlowSheetCustomizationDao flowSheetCustomizationDao = (FlowSheetCustomizationDao) SpringUtils.getBean("flowSheetCustomizationDao");
+
     	dxResearchBeanHandler dxRes = new dxResearchBeanHandler(demographicNo);
-        List dxCodes = dxRes.getActiveCodeListWithCodingSystem();
+        List<String> dxCodes = dxRes.getActiveCodeListWithCodingSystem();
         MeasurementTemplateFlowSheetConfig templateConfig = MeasurementTemplateFlowSheetConfig.getInstance();
         ArrayList<String> flowsheets = templateConfig.getFlowsheetsFromDxCodes(dxCodes);
-        
+
         boolean hasFlowSheet = false;
-        for( int idx = 0; idx < flowsheets.size(); ++idx ) {        	
+        for( int idx = 0; idx < flowsheets.size(); ++idx ) {
         	if( flowsheets.get(idx).equals(flowsheetId) ) {
         		hasFlowSheet = true;
         		break;
         	}
         }
-    	    	
-    	if(hasFlowSheet) {    		
-    	
-			List custList = flowSheetCustomizerDAO.getFlowSheetCustomizations( flowsheetId,providerNo,demographicNo);		       	        
+
+    	if(hasFlowSheet) {
+
+			List<FlowSheetCustomization> custList = flowSheetCustomizationDao.getFlowSheetCustomizations( flowsheetId,providerNo,demographicNo);
 
 	        MeasurementFlowSheet mFlowsheet = templateConfig.getFlowSheet(flowsheetId,custList);
 
 	        MeasurementInfo mi = new MeasurementInfo(demographicNo);
 	        List<String> measurementLs = mFlowsheet.getMeasurementList();
-	        
+
 	        mi.getMeasurements(measurementLs);
 	        try{
 	        	mFlowsheet.getMessages(mi);
 	        }catch(Exception e){
 	        	MiscUtils.getLogger().error("Error getting messages for flowsheet ",e);
 	        }
-	        	            	        
-	        ArrayList<String> warnings = mi.getWarnings();	        
-	        if( warnings.size() == 0 ) {    	        	
+
+	        ArrayList<String> warnings = mi.getWarnings();
+	        if( warnings.size() == 0 ) {
 	        	retval = true;
 	        }
-    		
-    	}  
-    	    	    	
+
+    	}
+
     	return retval;
     }
-        
+
     public boolean flowsheetUptoDateAll(String flowsheetId) throws DecisionSupportException { throw new DecisionSupportException("NOT IMPLEMENTED");  }
     public boolean flowsheetUptoDateNot(String flowsheetId) throws DecisionSupportException { throw new DecisionSupportException("NOT IMPLEMENTED"); }
     public boolean flowsheetUptoDateNotall(String flowsheetId) throws DecisionSupportException { throw new DecisionSupportException("NOT IMPLEMENTED");  }
-    public boolean flowsheetUptoDateNotany(String flowsheetId) { return !flowsheetUptoDateAny(flowsheetId); }; 
-    
-    public boolean paidAny(String searchStrings, Map options ) {
-    	
+    public boolean flowsheetUptoDateNotany(String flowsheetId) { return !flowsheetUptoDateAny(flowsheetId); };
+
+    public boolean paidAny(String searchStrings, Map<String,String> options ) {
+
     	boolean retval = true;  //Set this optimistically that it has not been paid in the said number of days
     	if(options.containsKey("payer") && options.get("payer").equals("MSP")){
     		BillingClaimDAO billingClaimONDAO = (BillingClaimDAO)SpringUtils.getBean("billingClaimDAO");
     		String[] codes = searchStrings.replaceAll("'","" ).split(",");
-    		
+
     		if(options.containsKey("notInDays")){
-                int notInDays = getAsInt(options,"notInDays");                
+                int notInDays = getAsInt(options,"notInDays");
                 int numDays = -1;
                 for (String code: codes){
                     //This returns how many days since the last time this code was paid and -1 if it never has been settled
                     numDays = billingClaimONDAO.getDaysSincePaid(code, demographicNo);
-                     
+
                     //If any of the codes has been paid in the number of days then return false
                     if (numDays < notInDays && numDays != -1){
                         retval = false;
@@ -385,28 +411,28 @@ public class DSDemographicAccess {
                     else {
                     	//if no paid bills in last number of days check to see if it has been billed within last 2 months and waits to be settled
                     	numDays = billingClaimONDAO.getDaysSinceBilled(code, demographicNo);
-                    	
+
                     	if( numDays < 60 && numDays != -1 ) {
                     		retval = false;
                     		break;
                     	}
-                    	
+
                     }
-                    
+
                     logger.debug("PAYER:MSP demo "+demographicNo+" Code:"+code+" numDays"+numDays+" notInDays:"+notInDays+ " Answer: "+!(numDays < notInDays && numDays != -1)+" Setting return val to :"+retval);
                 }
-                
-                
+
+
     		}
-    	}    		
-    	
+    	}
+
     	return retval;
     }
 
     public boolean paidAll(String searchStrings,Map options) throws DecisionSupportException { throw new DecisionSupportException("NOT IMPLEMENTED");  }
     public boolean paidNot(String searchStrings,Map options) throws DecisionSupportException { throw new DecisionSupportException("NOT IMPLEMENTED");  }
     public boolean paidNotall(String searchStrings,Map options) throws DecisionSupportException { throw new DecisionSupportException("NOT IMPLEMENTED"); }
-    public boolean paidNotany(String searchStrings,Map options) throws DecisionSupportException { throw new DecisionSupportException("NOT IMPLEMENTED"); }        
+    public boolean paidNotany(String searchStrings,Map options) throws DecisionSupportException { throw new DecisionSupportException("NOT IMPLEMENTED"); }
 
     /////New Billing Functionality
     //Days since last billed
@@ -420,7 +446,7 @@ public class DSDemographicAccess {
     //          notInCalendarYear=true
     //          unitsBilledToday=<4
     //          requiresStartTime=true     not implemented yet.
-    public boolean billedForAny(String searchStrings,Hashtable options) {
+    public boolean billedForAny(String searchStrings,Hashtable<String,String> options) {
         boolean retval = false;
         if(options.containsKey("payer") && options.get("payer").equals("MSP")){
         	logger.debug("PAYER:MSP ");
@@ -473,7 +499,7 @@ public class DSDemographicAccess {
         return retval;
     }
 
-     public boolean billedForAny2(String searchStrings,Hashtable options) {
+     public boolean billedForAny2(String searchStrings,Hashtable<String,String> options) {
         boolean retval = false;
         String[] codes = searchStrings.replaceAll("\'","" ).split(",");
         for (String code: codes){

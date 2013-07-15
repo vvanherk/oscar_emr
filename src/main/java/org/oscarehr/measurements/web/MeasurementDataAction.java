@@ -1,16 +1,43 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package org.oscarehr.measurements.web;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import net.sf.json.JSONObject;
 
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
@@ -25,7 +52,6 @@ import org.oscarehr.util.SpringUtils;
 
 import oscar.oscarEncounter.oscarMeasurements.dao.MeasurementsDao;
 import oscar.oscarEncounter.oscarMeasurements.model.Measurements;
-import oscar.util.*;
 
 public class MeasurementDataAction extends DispatchAction {
 
@@ -33,7 +59,7 @@ public class MeasurementDataAction extends DispatchAction {
 	private static MeasurementsDao measurementsDao = (MeasurementsDao) SpringUtils.getBean("measurementsDao");
 	OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
 
-	public ActionForward getLatestValues(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	public ActionForward getLatestValues(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		String demographicNo = request.getParameter("demographicNo");
 		String typeStr = request.getParameter("types");
 		String appointmentNo = request.getParameter("appointmentNo");
@@ -81,7 +107,7 @@ public class MeasurementDataAction extends DispatchAction {
 				String data = value.getDataField();
 				data = UtilMisc.htmlEscape( data );
 				data = UtilMisc.newlineEscape( data );
-				script.append("jQuery(\"[measurement='"+key+"']\").val(\""+data+"\");\n");
+				script.append("jQuery(\"[measurement='"+key+"']\").val(\""+data+"\").attr({itemtime: \"" + value.getDateEntered().getTime() + "\", appointment_no: \"" + value.getAppointmentNo() + "\"});\n");
 				if(apptNo>0 && apptNo == value.getAppointmentNo()) {
 					script.append("jQuery(\"[measurement='"+key+"']\").addClass('examfieldwhite');\n");
 				}
@@ -118,37 +144,81 @@ public class MeasurementDataAction extends DispatchAction {
 		return null;
 	}
 
+	public ActionForward getMeasurementsGroupByDate(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String demographicNo = request.getParameter("demographicNo");
+		String[] types = (request.getParameter("types") != null ? request.getParameter("types") : "").split(",");
 
-	public ActionForward saveValues(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		List<Date> measurementDates = measurementsDao.getDatesForMeasurements(demographicNo, types);
+		HashMap<String, HashMap<String, Measurements>> measurementsMap = new HashMap<String, HashMap<String, Measurements>>();
+
+		for (Date d : measurementDates) {
+			Calendar c = Calendar.getInstance();
+			c.setTime(d);
+
+			Date outDate = c.getTime();
+
+			if (!measurementsMap.keySet().contains(outDate.getTime() + ""))
+				measurementsMap.put(outDate.getTime() + "", measurementsDao.getMeasurementsPriorToDate(demographicNo, d));
+		}
+
+		boolean isJsonRequest = request.getParameter("json") != null && request.getParameter("json").equalsIgnoreCase("true");
+
+		if (isJsonRequest) {
+			JSONObject json = JSONObject.fromObject(measurementsMap);
+			response.getOutputStream().write(json.toString().getBytes());
+		}
+		return null;
+	}
+
+
+	public ActionForward saveValues(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String demographicNo = request.getParameter("demographicNo");
 		String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
 		String strAppointmentNo = request.getParameter("appointmentNo");
 		int appointmentNo = Integer.parseInt(strAppointmentNo);
 
-		Enumeration e = request.getParameterNames();
-		Map<String,String> measurements = new HashMap<String,String>();
+		boolean isJsonRequest = request.getParameter("json") != null && request.getParameter("json").equalsIgnoreCase("true");
 
-		while(e.hasMoreElements()) {
-			String key = (String)e.nextElement();
-			String values[] = request.getParameterValues(key);
-			if(key.equals("action") || key.equals("demographicNo") || key.equals("appointmentNo"))
-				continue;
-			if(values.length>0 && values[0]!=null && values[0].length()>0) {
-				measurements.put(key,values[0]);
-				Measurements m = new Measurements();
-				m.setComments("");
-				m.setDataField(values[0]);
-				m.setDateEntered(new Date());
-				m.setDateObserved(new Date());
-				m.setDemographicNo(Integer.parseInt(demographicNo));
-				m.setMeasuringInstruction("");
-				m.setProviderNo(providerNo);
-				m.setType(key);
-				m.setAppointmentNo(appointmentNo);
-				measurementsDao.addMeasurements(m);
+		try {
+
+			Enumeration e = request.getParameterNames();
+			Map<String,String> measurements = new HashMap<String,String>();
+
+			while(e.hasMoreElements()) {
+				String key = (String)e.nextElement();
+				String values[] = request.getParameterValues(key);
+				if(key.equals("action") || key.equals("demographicNo") || key.equals("appointmentNo"))
+					continue;
+				if(values.length>0 && values[0]!=null && values[0].length()>0) {
+					measurements.put(key,values[0]);
+					Measurements m = new Measurements();
+					m.setComments("");
+					m.setDataField(values[0]);
+					m.setDateEntered(new Date());
+					m.setDateObserved(new Date());
+					m.setDemographicNo(Integer.parseInt(demographicNo));
+					m.setMeasuringInstruction("");
+					m.setProviderNo(providerNo);
+					m.setType(key);
+					m.setAppointmentNo(appointmentNo);
+					measurementsDao.addMeasurements(m);
+				}
 			}
-		}
 
+			if (isJsonRequest) {
+				HashMap<String, Object> hashMap = new HashMap<String, Object>();
+				hashMap.put("success", true);
+				JSONObject json = JSONObject.fromObject(hashMap);
+				response.getOutputStream().write(json.toString().getBytes());
+			}
+
+		} catch (Exception e) {
+			HashMap<String, Object> hashMap = new HashMap<String, Object>();
+			hashMap.put("success", false);
+			MiscUtils.getLogger().error("Couldn't save measurements", e);
+			JSONObject json = JSONObject.fromObject(hashMap);
+			response.getOutputStream().write(json.toString().getBytes());
+		}
 
 		return null;
 	}

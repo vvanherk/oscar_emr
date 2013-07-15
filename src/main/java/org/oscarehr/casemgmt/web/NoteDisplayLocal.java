@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.casemgmt.web;
 
 import java.util.ArrayList;
@@ -26,18 +49,21 @@ public class NoteDisplayLocal implements NoteDisplay {
 	private String location;
 	private boolean isCpp = false;
 
+	private List<CaseManagementIssue> caseManagementIssues;
+
 	public NoteDisplayLocal(CaseManagementNote caseManagementNote) {
 		this.caseManagementNote = caseManagementNote;
+		this.caseManagementIssues=caseManagementIssueNotesDao.getNoteIssues(getNoteId());
 
 		LoggedInInfo loggedInInfo = LoggedInInfo.loggedInInfo.get();
 		if (loggedInInfo != null) editable = !caseManagementNote.isSigned() || (loggedInInfo.loggedInProvider.getProviderNo().equals(caseManagementNote.getProviderNo()) && !caseManagementNote.isLocked());
 
-		isCpp=calculateIsCpp();
+		this.isCpp=calculateIsCpp();
+
 	}
 
 	public boolean containsIssue(String issueCode) {
-		List<CaseManagementIssue> caseManagementIssues=caseManagementIssueNotesDao.getNoteIssues(getNoteId());
-		for (CaseManagementIssue caseManagementIssue : caseManagementIssues) {
+		for (CaseManagementIssue caseManagementIssue : this.caseManagementIssues) {
 			if (caseManagementIssue.getIssue().getCode().equals(issueCode)) {
 					return(true);
 			}
@@ -47,8 +73,7 @@ public class NoteDisplayLocal implements NoteDisplay {
 
 	private boolean calculateIsCpp()
 	{
-		List<CaseManagementIssue> caseManagementIssues=caseManagementIssueNotesDao.getNoteIssues(getNoteId());
-		for (CaseManagementIssue caseManagementIssue : caseManagementIssues)
+		for (CaseManagementIssue caseManagementIssue : this.caseManagementIssues)
 		{
 			for (int cppIdx = 0; cppIdx < CppUtils.cppCodes.length; cppIdx++)
 			{

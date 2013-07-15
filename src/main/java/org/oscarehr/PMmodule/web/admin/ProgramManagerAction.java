@@ -1,38 +1,43 @@
-/*
- * 
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for 
- * Centre for Research on Inner City Health, St. Michael's Hospital, 
- * Toronto, Ontario, Canada 
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
 
 package org.oscarehr.PMmodule.web.admin;
 
 import java.net.MalformedURLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.xml.ws.WebServiceException;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -41,8 +46,17 @@ import org.apache.struts.action.ActionMessage;
 import org.apache.struts.action.ActionMessages;
 import org.apache.struts.action.DynaActionForm;
 import org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager;
+import org.oscarehr.PMmodule.dao.CriteriaDAO;
+import org.oscarehr.PMmodule.dao.CriteriaSelectionOptionDAO;
+import org.oscarehr.PMmodule.dao.CriteriaTypeDAO;
+import org.oscarehr.PMmodule.dao.CriteriaTypeOptionDAO;
+import org.oscarehr.PMmodule.dao.VacancyTemplateDAO;
 import org.oscarehr.PMmodule.model.Admission;
 import org.oscarehr.PMmodule.model.BedCheckTime;
+import org.oscarehr.PMmodule.model.Criteria;
+import org.oscarehr.PMmodule.model.CriteriaSelectionOption;
+import org.oscarehr.PMmodule.model.CriteriaType;
+import org.oscarehr.PMmodule.model.CriteriaTypeOption;
 import org.oscarehr.PMmodule.model.Program;
 import org.oscarehr.PMmodule.model.ProgramAccess;
 import org.oscarehr.PMmodule.model.ProgramClientRestriction;
@@ -52,6 +66,8 @@ import org.oscarehr.PMmodule.model.ProgramProvider;
 import org.oscarehr.PMmodule.model.ProgramQueue;
 import org.oscarehr.PMmodule.model.ProgramSignature;
 import org.oscarehr.PMmodule.model.ProgramTeam;
+import org.oscarehr.PMmodule.model.Vacancy;
+import org.oscarehr.PMmodule.model.VacancyTemplate;
 import org.oscarehr.PMmodule.service.AdmissionManager;
 import org.oscarehr.PMmodule.service.BedCheckTimeManager;
 import org.oscarehr.PMmodule.service.ClientRestrictionManager;
@@ -59,6 +75,8 @@ import org.oscarehr.PMmodule.service.LogManager;
 import org.oscarehr.PMmodule.service.ProgramManager;
 import org.oscarehr.PMmodule.service.ProgramQueueManager;
 import org.oscarehr.PMmodule.service.ProviderManager;
+import org.oscarehr.PMmodule.service.VacancyTemplateManager;
+import org.oscarehr.PMmodule.utility.ProgramAccessCache;
 import org.oscarehr.PMmodule.web.BaseAction;
 import org.oscarehr.caisi_integrator.ws.CachedProvider;
 import org.oscarehr.caisi_integrator.ws.DemographicTransfer;
@@ -70,6 +88,8 @@ import org.oscarehr.common.dao.FacilityDao;
 import org.oscarehr.common.dao.FunctionalCentreDao;
 import org.oscarehr.common.model.FunctionalCentre;
 import org.oscarehr.util.MiscUtils;
+import org.oscarehr.util.SpringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
 
 import com.quatro.service.security.RolesManager;
@@ -86,9 +106,16 @@ public class ProgramManagerAction extends BaseAction {
 	private ProgramManager programManager;
 	private ProviderManager providerManager;
 	private ProgramQueueManager programQueueManager;
+	@Autowired
+	private VacancyTemplateManager vacancyTemplateManager;
 	//private RoleManager roleManager;
 	private RolesManager roleManager;
 	private FunctionalCentreDao functionalCentreDao;
+	private static VacancyTemplateDAO vacancyTemplateDAO = (VacancyTemplateDAO) SpringUtils.getBean("vacancyTemplateDAO");
+	private static CriteriaDAO criteriaDAO = (CriteriaDAO) SpringUtils.getBean("criteriaDAO");
+	private static CriteriaTypeDAO criteriaTypeDAO = (CriteriaTypeDAO) SpringUtils.getBean("criteriaTypeDAO");
+	private static CriteriaTypeOptionDAO criteriaTypeOptionDAO = (CriteriaTypeOptionDAO) SpringUtils.getBean("criteriaTypeOptionDAO");
+	private static CriteriaSelectionOptionDAO criteriaSelectionOptionDAO = (CriteriaSelectionOptionDAO) SpringUtils.getBean("criteriaSelectionOptionDAO");
 	
 	public void setFacilityDao(FacilityDao facilityDao) {
 		this.facilityDao = facilityDao;
@@ -143,7 +170,13 @@ public class ProgramManagerAction extends BaseAction {
 		DynaActionForm programForm = (DynaActionForm) form;
 
 		String id = request.getParameter("id");
-
+		
+		request.setAttribute("view.tab", request.getParameter("view.tab"));
+		if(request.getParameter("newVacancy")!=null && "true".equals(request.getParameter("newVacancy")))
+			request.setAttribute("vacancyOrTemplateId", "");
+		else
+			request.setAttribute("vacancyOrTemplateId", programForm.get("vacancyOrTemplateId"));
+		
 		if (isCancelled(request)) {
 			return list(mapping, form, request, response);
 		}
@@ -350,6 +383,7 @@ public class ProgramManagerAction extends BaseAction {
 		this.setEditAttributes(request, String.valueOf(program.getId()));
 		programForm.set("access", new ProgramAccess());
 
+		ProgramAccessCache.setAccessMap(program.getId());
 		return edit(mapping, form, request, response);
 	}
 
@@ -435,6 +469,8 @@ public class ProgramManagerAction extends BaseAction {
 
 		setEditAttributes(request, String.valueOf(program.getId()));
 
+		ProgramAccessCache.setAccessMap(program.getId());
+		
 		return mapping.findForward("edit");
 	}
 
@@ -716,6 +752,8 @@ public class ProgramManagerAction extends BaseAction {
 		messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("program.saved", program.getName()));
 		saveMessages(request, messages);
 
+		ProgramAccessCache.setAccessMap(program.getId());
+		
 		logManager.log("write", "edit program", String.valueOf(program.getId()), request);
 
 		setEditAttributes(request, String.valueOf(program.getId()));
@@ -774,7 +812,232 @@ public class ProgramManagerAction extends BaseAction {
 			programManager.saveProgramSignature(programSignature);
 		}
 	}
+	
+	public ActionForward viewVacancyTemplate(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+		DynaActionForm programForm = (DynaActionForm) form;
+		String programId = request.getParameter("programId");
+		String templateId = request.getParameter("templateId");
+		
+		request.setAttribute("templateId", templateId);
+		
+		VacancyTemplate vt = vacancyTemplateDAO.getVacancyTemplate(Integer.valueOf(templateId));
+		List<Criteria> criterias = criteriaDAO.getCriteriaByTemplateId(Integer.valueOf(templateId));
+		request.setAttribute("criterias",criterias);
+		
+		return mapping.findForward("edit");
+	}
 
+	public ActionForward chooseTemplate(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+		
+		DynaActionForm programForm = (DynaActionForm) form;
+		Program program = (Program) programForm.get("program");
+		
+		programForm.set("program", program);
+		
+		String programId = request.getParameter("programId");
+		String templateId = request.getParameter("requiredVacancyTemplateId");
+		
+		request.setAttribute("view.tab", "vacancy_add");
+		
+		VacancyTemplate vt = vacancyTemplateDAO.getVacancyTemplate(Integer.valueOf(templateId));
+		
+		request.setAttribute("selectedTemplate",vt);
+		
+		setEditAttributes(request, String.valueOf(program.getId()));
+		
+		return mapping.findForward("edit");
+	}
+	
+	public ActionForward save_vacancy(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+		
+		DynaActionForm programForm = (DynaActionForm) form;
+		Program program = (Program) programForm.get("program");
+		
+		if (this.isCancelled(request)) {
+			return list(mapping, form, request, response);
+		}
+				
+		HashMap<String,String[]> parameters=new HashMap(request.getParameterMap());
+		
+		Integer templateId = null;
+		String templateId_str = request.getParameter("requiredVacancyTemplateId");
+		if(!StringUtils.isBlank(templateId_str))
+			templateId = Integer.valueOf(templateId_str);
+		VacancyTemplate vacancyTemplate=VacancyTemplateManager.createVacancyTemplate(templateId_str);
+		
+		Vacancy vacancy = new Vacancy();
+		String vacancyId = request.getParameter("vacancyId");
+		if(!StringUtils.isBlank(vacancyId)) {
+			vacancy = VacancyTemplateManager.getVacancyById(Integer.valueOf(vacancyId));
+		}		
+		vacancy.setTemplateId(templateId);
+		vacancy.setStatus(parameters.get("vacancyStatus")[0]);
+		vacancy.setReasonClosed(parameters.get("reasonClosed")[0]);		
+			
+		String dateClosed = parameters.get("dateClosed")[0];
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd", request.getLocale());
+		ResourceBundle props = ResourceBundle.getBundle("oscarResources", request.getLocale());
+		if (!StringUtils.isBlank(dateClosed)) {			
+			try {
+				Date dateClosedFormatted = formatter.parse(dateClosed);			
+				vacancy.setDateClosed(dateClosedFormatted);
+			} catch (Exception e){
+				logger.warn("warn", e);
+			}
+		}
+		
+		vacancy.setDateCreated(new Date());
+		
+		vacancy.setWlProgramId(program.getId());
+		VacancyTemplateManager.saveVacancy(vacancy);		
+			
+		//Save Criteria
+		//List<CriteriaType> typeList = VacancyTemplateManager.getAllCriteriaTypes();
+		//for(CriteriaType type : typeList) {	
+		List<Criteria> criteriaList = VacancyTemplateManager.getRefinedCriteriasByTemplateId(templateId);
+		for(Criteria c : criteriaList) {
+			CriteriaType type = VacancyTemplateManager.getCriteriaTypeById(c.getCriteriaTypeId());
+			Criteria newCriteria = new Criteria();			
+			newCriteria.setVacancyId(vacancy.getId());			
+			newCriteria.setMatchScoreWeight(1.0); //???
+					
+			String required = type.getFieldName().toLowerCase().replaceAll(" ","_")+"Required";
+			if(request.getParameter(required) == null) 
+				newCriteria.setCanBeAdhoc(false);
+			
+			String targetName = "targetOf"+ type.getFieldName().toLowerCase().replaceAll(" ","_");
+			String[] answers = parameters.get(targetName);
+			
+			saveTemplateOrVacancy(parameters, answers, type, newCriteria, request);
+			
+		}	
+		
+		setEditAttributes(request, String.valueOf(program.getId()));
+		
+		return edit(mapping, form, request, response);		
+		
+	}
+	
+	public ActionForward save_vacancy_template(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+		
+		DynaActionForm programForm = (DynaActionForm) form;
+		Program program = (Program) programForm.get("program");
+		
+		if (this.isCancelled(request)) {
+			return list(mapping, form, request, response);
+		}
+				
+		HashMap<String,String[]> parameters=new HashMap(request.getParameterMap());
+		
+		//save tmeplate
+		String vacancyTemplateId = request.getParameter("vacancyOrTemplateId");
+		VacancyTemplate vacancyTemplate=VacancyTemplateManager.createVacancyTemplate(vacancyTemplateId);
+		vacancyTemplate.setName(request.getParameter("templateName"));
+		vacancyTemplate.setProgramId(Integer.parseInt(request.getParameter("associatedProgramId")));
+		if (request.getParameter("templateActive") == null) {
+			vacancyTemplate.setActive(false);
+		}		
+		vacancyTemplate.setWlProgramId(Integer.parseInt(request.getParameter("programId")));
+		VacancyTemplateManager.saveVacancyTemplate(vacancyTemplate);	
+		
+		//Save Criteria
+		List<CriteriaType> typeList = VacancyTemplateManager.getAllCriteriaTypes();
+		for(CriteriaType type : typeList) {
+			Criteria criteria = new Criteria();		
+			criteria.setTemplateId(vacancyTemplate.getId());			
+			String required = type.getFieldName().toLowerCase().replaceAll(" ","_")+"Required";
+			if(request.getParameter(required) == null) 
+				criteria.setCanBeAdhoc(false);			
+			String targetName = "targetOf"+ type.getFieldName().toLowerCase().replaceAll(" ","_");
+			String[] answers = parameters.get(targetName);
+			
+			saveTemplateOrVacancy(parameters, answers, type, criteria, request);
+			
+		}	
+		
+		setEditAttributes(request, String.valueOf(program.getId()));
+		
+		return edit(mapping, form, request, response);		
+	}
+	
+	private void saveTemplateOrVacancy(HashMap<String, String[]> parameters, String[] answers, CriteriaType type, Criteria criteria, HttpServletRequest request) {
+		
+		if(type.getFieldType().equalsIgnoreCase("select_multiple")) {
+			
+			saveCriteria(criteria, answers);
+			
+		} else if(type.getFieldType().equalsIgnoreCase("select_one_range")) {
+			
+			String sourceName = "sourceOf" + type.getFieldName().toLowerCase().replaceAll(" ","_");
+			String[] singleAnswers = parameters.get(sourceName);
+			String answer = "";
+			if(singleAnswers!=null && singleAnswers.length>0)
+				answer = singleAnswers[0];
+			criteria.setCriteriaValue(answer);
+			
+			String minName = type.getFieldName().toLowerCase().replaceAll(" ","_")+"Minimum";
+			String maxName = type.getFieldName().toLowerCase().replaceAll(" ","_")+"Maximum";
+			if(!StringUtils.isBlank(request.getParameter(minName)))
+				criteria.setRangeStartValue(Integer.valueOf(request.getParameter(minName)));
+			if(!StringUtils.isBlank(request.getParameter(maxName)))
+				criteria.setRangeEndValue(Integer.valueOf(request.getParameter(maxName)));
+			
+			criteria.setCriteriaTypeId(type.getId()); 	
+			
+			VacancyTemplateManager.saveCriteria(criteria);
+		
+		} else if(type.getFieldType().equalsIgnoreCase("select_one")) {
+			
+			String sourceName = "sourceOf" + type.getFieldName().toLowerCase().replaceAll(" ","_");
+			String[] singleAnswers = parameters.get(sourceName);
+			String answer = "";
+			if(singleAnswers!=null && singleAnswers.length>0)
+				answer = singleAnswers[0];
+			criteria.setCriteriaValue(answer);
+			
+			criteria.setCriteriaTypeId(type.getId()); 	
+			
+			VacancyTemplateManager.saveCriteria(criteria);
+			
+		} else if(type.getFieldType().equalsIgnoreCase("number")) {
+			
+			String numberName = type.getFieldName().toLowerCase().replaceAll(" ","_") + "Number";
+			String[] numberAnswers = parameters.get(numberName);
+			String number = "";
+			if(numberAnswers!=null && numberAnswers.length>0)
+				number = numberAnswers[0];
+			criteria.setCriteriaValue(number);
+			
+			criteria.setCriteriaTypeId(type.getId());
+			
+			VacancyTemplateManager.saveCriteria(criteria);
+			
+		} else {
+			//do nothing for now
+		}
+}
+	
+	private void saveCriteria(Criteria criteria, String [] paramValues) {	
+		if(paramValues==null || paramValues.length<1) 
+			return;
+		for(int i=0; i<paramValues.length; i++) {		
+			CriteriaTypeOption option = criteriaTypeOptionDAO.getByValue(paramValues[i]);
+			if(option!=null) {
+				criteria.setCriteriaTypeId(option.getCriteriaTypeId());
+			}
+			
+			//criteria.setMatchScoreWeight(Double.parseDouble("0.5"));
+			VacancyTemplateManager.saveCriteria(criteria);
+			
+			//Save criteria_selection_option
+			CriteriaSelectionOption selectedOption = new CriteriaSelectionOption();
+			selectedOption.setCriteriaId(criteria.getId());
+			//selectedOption.setOptionValue(String.valueOf(option.getId()));
+			selectedOption.setOptionValue(option.getOptionValue());
+			VacancyTemplateManager.saveCriteriaSelectedOption(selectedOption);	
+		}
+	}
+	
 	public ActionForward save_access(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		DynaActionForm programForm = (DynaActionForm) form;
 		Program program = (Program) programForm.get("program");
@@ -815,6 +1078,8 @@ public class ProgramManagerAction extends BaseAction {
 		programForm.set("access", new ProgramAccess());
 		setEditAttributes(request, String.valueOf(program.getId()));
 
+		ProgramAccessCache.setAccessMap(program.getId());
+		
 		return mapping.findForward("edit");
 	}
 
@@ -936,7 +1201,10 @@ public class ProgramManagerAction extends BaseAction {
 			request.setAttribute("teams", teams);
 			request.setAttribute("client_statuses", programManager.getProgramClientStatuses(new Integer(programId)));
 
-			request.setAttribute("admissions", admissionManager.getCurrentAdmissionsByProgramId(programId));
+			//this can be pretty big
+			if(request.getAttribute("view.tab") != null && request.getAttribute("view.tab").equals("Clients"))
+				request.setAttribute("admissions", admissionManager.getCurrentAdmissionsByProgramId(programId));
+			
 			request.setAttribute("accesses", programManager.getProgramAccesses(programId));
 			request.setAttribute("queue", programQueueManager.getActiveProgramQueuesByProgramId(Long.valueOf(programId)));
 
@@ -1223,5 +1491,19 @@ public class ProgramManagerAction extends BaseAction {
 	public void setRolesManager(RolesManager mgr) {
 		this.roleManager = mgr;
 	}
+
+	/**
+     * @return the vacancyTemplateManager
+     */
+    public VacancyTemplateManager getVacancyTemplateManager() {
+    	return vacancyTemplateManager;
+    }
+
+	/**
+     * @param vacancyTemplateManager the vacancyTemplateManager to set
+     */
+    public void setVacancyTemplateManager(VacancyTemplateManager vacancyTemplateManager) {
+    	this.vacancyTemplateManager = vacancyTemplateManager;
+    }
 
 }

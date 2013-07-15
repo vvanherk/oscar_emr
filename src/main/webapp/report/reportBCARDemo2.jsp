@@ -553,4 +553,3 @@ for(int i=0; i<vecFieldValue.size(); i++) {
       <script language="javascript" src="../commons/scripts/sort_table/standardista-table-sorting.js">
     </body>
   </html>
-      

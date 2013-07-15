@@ -1,30 +1,27 @@
 /**
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * Jason Gallagher
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
  * McMaster University
  * Hamilton
- * Ontario, Canada   Creates a new instance of ImportDemographicDataAction
- *
- *
- * * ImportDemographicDataAction4.java
- *
- * Created on Oct 2, 2007
+ * Ontario, Canada
  */
+
 
 package oscar.oscarDemographic.pageUtil;
 
@@ -78,11 +75,13 @@ import org.oscarehr.casemgmt.service.CaseManagementManager;
 import org.oscarehr.common.dao.AllergyDao;
 import org.oscarehr.common.dao.DemographicArchiveDao;
 import org.oscarehr.common.dao.DemographicContactDao;
+import org.oscarehr.common.dao.DemographicExtDao;
 import org.oscarehr.common.dao.DrugDao;
 import org.oscarehr.common.dao.DrugReasonDao;
 import org.oscarehr.common.dao.PartialDateDao;
 import org.oscarehr.common.dao.ProviderDataDao;
 import org.oscarehr.common.model.Allergy;
+import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DemographicArchive;
 import org.oscarehr.common.model.DemographicContact;
 import org.oscarehr.common.model.Drug;
@@ -106,7 +105,6 @@ import oscar.appt.ApptStatusData;
 import oscar.dms.EDocUtil;
 import oscar.oscarDemographic.data.DemographicAddResult;
 import oscar.oscarDemographic.data.DemographicData;
-import oscar.oscarDemographic.data.DemographicExt;
 import oscar.oscarDemographic.data.DemographicRelationship;
 import oscar.oscarEncounter.data.EctProgram;
 import oscar.oscarEncounter.oscarMeasurements.data.ImportExportMeasurements;
@@ -186,6 +184,7 @@ import cdsDt.PersonNameStandard.OtherNames;
     DemographicArchiveDao demoArchiveDao = (DemographicArchiveDao) SpringUtils.getBean("demographicArchiveDao");
     ProviderDataDao providerDataDao = (ProviderDataDao) SpringUtils.getBean("providerDataDao");
     PartialDateDao partialDateDao = (PartialDateDao) SpringUtils.getBean("partialDateDao");
+    DemographicExtDao demographicExtDao = (DemographicExtDao) SpringUtils.getBean("demographicExtDao");
 
     @Override
     public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception  {
@@ -409,7 +408,7 @@ import cdsDt.PersonNameStandard.OtherNames;
 
         //Check duplicate
         DemographicData dd = new DemographicData();
-        ArrayList demodup = null;
+        ArrayList<Demographic> demodup = null;
         if (StringUtils.filled(hin)) demodup = dd.getDemographicWithHIN(hin);
         else demodup = dd.getDemographicWithLastFirstDOB(lastName, firstName, birthDate);
         if (demodup.size()>0) {
@@ -603,7 +602,6 @@ import cdsDt.PersonNameStandard.OtherNames;
             date_of_birth = UtilDateUtilities.DateToString(bDate,"dd");
         }
 
-        DemographicExt dExt = new DemographicExt();
         DemographicAddResult demoRes = null;
 
         //Check if Contact-only demographic exists
@@ -683,10 +681,10 @@ import cdsDt.PersonNameStandard.OtherNames;
 	            saveLinkNote(dmNote, CaseManagementNoteLink.DEMOGRAPHIC, Long.valueOf(demographicNo));
             }
 
-            if (!workExt.equals("")) dExt.addKey(primaryPhysician, demographicNo, "wPhoneExt", workExt);
-            if (!homeExt.equals("")) dExt.addKey(primaryPhysician, demographicNo, "hPhoneExt", homeExt);
-            if (!cellPhone.equals("")) dExt.addKey(primaryPhysician, demographicNo, "demo_cell", cellPhone);
-            if(courseId>0) dExt.addKey(primaryPhysician, demographicNo, "course", String.valueOf(courseId));
+            if (!workExt.equals("")) demographicExtDao.addKey(primaryPhysician, demographicNo, "wPhoneExt", workExt);
+            if (!homeExt.equals("")) demographicExtDao.addKey(primaryPhysician, demographicNo, "hPhoneExt", homeExt);
+            if (!cellPhone.equals("")) demographicExtDao.addKey(primaryPhysician, demographicNo, "demo_cell", cellPhone);
+            if(courseId>0) demographicExtDao.addKey(primaryPhysician, demographicNo, "course", String.valueOf(courseId));
 
 
             //Demographic Contacts
@@ -738,9 +736,9 @@ import cdsDt.PersonNameStandard.OtherNames;
                 	cDemoNo = demoRes.getId();
                     err_note.add("Contact-only patient "+cPatient+" (Demo no="+cDemoNo+") created");
 
-                    if (!workExt.equals("")) dExt.addKey("", cDemoNo, "wPhoneExt", workExt);
-                    if (!homeExt.equals("")) dExt.addKey("", cDemoNo, "hPhoneExt", homeExt);
-                    if (!cellPhone.equals("")) dExt.addKey("", cDemoNo, "demo_cell", cellPhone);
+                    if (!workExt.equals("")) demographicExtDao.addKey("", cDemoNo, "wPhoneExt", workExt);
+                    if (!homeExt.equals("")) demographicExtDao.addKey("", cDemoNo, "hPhoneExt", homeExt);
+                    if (!cellPhone.equals("")) demographicExtDao.addKey("", cDemoNo, "demo_cell", cellPhone);
                 }
                 insertIntoAdmission(cDemoNo);
 

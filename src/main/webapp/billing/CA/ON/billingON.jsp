@@ -1,22 +1,22 @@
-<!-- 
- *
- * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * Yi Li
- */
--->
+<%--
 
+    Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+--%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
@@ -32,8 +32,8 @@
 <%@page import="org.oscarehr.common.model.ClinicNbr"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
-<%@page import="org.oscarehr.common.model.Billingreferral" %>
-<%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
+<%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
+<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
 <%@page import="oscar.oscarBilling.ca.bc.decisionSupport.BillingGuidelines" %>
 <%@page import="org.oscarehr.decisionSupport.model.DSConsequence" %>
 <%@ page import="org.oscarehr.billing.model.BillingDefault"%>
@@ -42,9 +42,9 @@
 <%@ page import="org.oscarehr.common.dao.ClinicLocationDao"%>
 <%@page import="oscar.oscarDB.*" %>
 <%
-	BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
-	
-	BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("billingDefaultDao");
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+
+		BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("billingDefaultDao");
 %>
 <jsp:useBean id="providerBean" class="java.util.Properties" scope="session" />
 <%
@@ -52,7 +52,7 @@
 				response.sendRedirect("../../../logout.jsp");
 			}
                         oscar.OscarProperties oscarVariables = oscar.OscarProperties.getInstance();
-                        
+
 			String user_no = (String) session.getAttribute("user");
 			String providerview = request.getParameter("providerview") == null ? "" : request
 					.getParameter("providerview");
@@ -79,7 +79,7 @@
                             billReferenceDate = request.getParameter("service_date")!=null? request.getParameter("service_date"):strToday;
                         }
                         else {
-                           billReferenceDate = request.getParameter("appointment_date"); 
+                           billReferenceDate = request.getParameter("appointment_date");
                         }
 			String demoname = request.getParameter("demographic_name");
 			String demo_no = request.getParameter("demographic_no");
@@ -114,41 +114,41 @@
 			else {
      			provider_no = apptProvider_no;
  			}
-            
-            
+
+
             //check for management fee code eligibility
             StringBuilder billingRecomendations = new StringBuilder();
-            try{            	
+            try{
             	List<DSConsequence> list = BillingGuidelines.getInstance().evaluateAndGetConsequences(request.getParameter("demographic_no"), (String) request.getSession().getAttribute("user"));
-        
-            	for (DSConsequence dscon : list){                
+
+            	for (DSConsequence dscon : list){
                 	billingRecomendations.append(dscon.getText() + " ");
            		}
         	}catch(Exception e){
             	MiscUtils.getLogger().error("Error", e);
         	}
-            
+
             ProviderPreferenceDao preferenceDao = (ProviderPreferenceDao) SpringUtils.getBean("providerPreferenceDao");
             ProviderPreference preference = null;
             preference=ProviderPreferencesUIBean.getProviderPreferenceByProviderNo(provider_no);
 
 
            	BillingONDataHelp dbObj = new BillingONDataHelp();
-			
+
 			if (curBillForm!=null) {
 			    // user picks a bill form from browser
 			    ctlBillForm = curBillForm;
 			} else {
 			    // check user preference to show a bill form
 			    ProviderPreference providerPreference=null;
-			    
+
                 if( apptProvider_no.equalsIgnoreCase("none") ) {
                 	providerPreference = preferenceDao.find(user_no);
                 }
                 else {
                 	providerPreference = preferenceDao.find(apptProvider_no);
                 }
-			    
+
 			    if (providerPreference!=null) {
 					ctlBillForm = providerPreference.getDefaultServiceType();
 			    } else {
@@ -157,11 +157,11 @@
 					if (dv!=null) ctlBillForm = dv;
 			    }
 			}
-			
+
 			if( ctlBillForm == null ) {
 				ctlBillForm = "";
 			}
-			
+
 			GregorianCalendar now = new GregorianCalendar();
 			int curYear = now.get(Calendar.YEAR);
 			int curMonth = (now.get(Calendar.MONTH) + 1);
@@ -178,7 +178,7 @@
 				if(providerview.indexOf("|")!=-1)
 					providerview = providerview.substring(0,providerview.indexOf("|"));
 			}
-			
+
 			// get patient's detail
 			String errorFlag = "";
 			String warningMsg = "", errorMsg = "";
@@ -196,14 +196,14 @@
 			//while (rs.next()) {
 				demoLast = (String)demoL.get(0); //rs.getString("last_name");
 				demoFirst = (String)demoL.get(1); //rs.getString("first_name");
-				demoDOB = (String)demoL.get(2); 
+				demoDOB = (String)demoL.get(2);
 				demoHIN = (String)demoL.get(3); //rs.getString("hin");
 				demoVer = (String)demoL.get(4); //rs.getString("ver");
 				demoHCTYPE = (String)demoL.get(5); //rs.getString("hc_type") == null ? "" : rs.getString("hc_type");
 				demoSex = (String)demoL.get(6); //rs.getString("sex");
-				family_doctor = (String)demoL.get(7); 
-				assgProvider_no = (String)demoL.get(8); 
-				roster_status = (String)demoL.get(9); 
+				family_doctor = (String)demoL.get(7);
+				assgProvider_no = (String)demoL.get(8);
+				roster_status = (String)demoL.get(9);
 
 				if (demoHCTYPE.compareTo("") == 0 || demoHCTYPE == null || demoHCTYPE.length() < 2) {
 					demoHCTYPE = "ON";
@@ -292,18 +292,18 @@
 
 			// set default value
 			// use parameter -> history record
-			Billingreferral billingReferral = billingReferralDao.getByReferralNo(r_doctor_ohip);
-            if(billingReferral != null) {
-            	r_doctor = billingReferral.getLastName() + "," + billingReferral.getFirstName();
+			ProfessionalSpecialist specialist = professionalSpecialistDao.getByReferralNo(r_doctor_ohip);
+            if(specialist != null) {
+            	r_doctor = specialist.getLastName() + "," + specialist.getFirstName();
             }
 
 			String paraName = request.getParameter("dxCode");
-            if(paraName==null || paraName.equals("")) { 
-            	// get the default diagnostic code         
+            if(paraName==null || paraName.equals("")) {
+            	// get the default diagnostic code
                 if(preference!=null) {
                     paraName = preference.getDefaultDxCode();
             	}
-            }                
+            }
             String dxCode = getDefaultValue(paraName, vecHistD, "diagnostic_code");
 
 			//provider
@@ -331,16 +331,16 @@
 
 			//visitType
 			paraName = request.getParameter("xml_visittype");
-                        
-			String xml_visittype = getDefaultValue(paraName, vecHist, "visitType");                         
+
+			String xml_visittype = getDefaultValue(paraName, vecHist, "visitType");
 			//xml_visittype = paraName != null && !"".equals(paraName)? paraName : "00" ;
-                        
+
 			if (!"".equals(xml_visittype)) {
 				visitType = xml_visittype;
 			} else {
 				visitType = visitType == null ? "" : visitType;
 			}
-                        
+
 			paraName = request.getParameter("xml_location");
 			String xml_location = getDefaultValue(paraName, vecHist, "clinic_ref_code");
 			xml_location = paraName != null && !"".equals(paraName)? paraName : "0";
@@ -387,13 +387,13 @@
             Properties propPremium = new Properties();
             String serviceCode, serviceDesc, serviceValue, servicePercentage, serviceType, displayStyle, serviceDisp = "";
             String headerTitle1 = "", headerTitle2 = "", headerTitle3 = "";
-            
+
             CSSStylesDAO cssStylesDao = (CSSStylesDAO) SpringUtils.getBean("CSSStylesDAO");
 			CssStyle cssStyle;
 			String styleId;
-			
+
             boolean sliFlag = false;
-            
+
             sql0 = "select distinct servicetype_name, servicetype from ctl_billingservice where status='A'";
             rs0 = dbObj.searchDBRecord(sql0);
             while (rs0.next()) {
@@ -405,21 +405,21 @@
                     String ctlcodename = rs0.getString("servicetype_name");
 
                     listServiceType.add(ctlcode);
-                    
-                    sql = "select distinct c.servicetype_name, c.servicetype, c.service_group_name, c.service_order,b.service_code, b.description, b.value, b.percentage, b.displayStyle, b.sliFlag from billingservice b, ctl_billingservice c where c.service_code=b.service_code and c.status='A' and c.servicetype ='"
+
+                    sql = "select distinct c.servicetype_name, c.servicetype, c.service_group_name, c.service_order,b.service_code, b.description, b.value, b.percentage, b.displaystyle, b.sliFlag from billingservice b, ctl_billingservice c where c.service_code=b.service_code and c.status='A' and c.servicetype ='"
                         + ctlcode + "' and c.service_group ='" + "Group1" + "' and b.billingservice_date in (select max(b2.billingservice_date) from billingservice b2 where b2.billingservice_date <= '" + billReferenceDate + "' and b2.service_code = b.service_code  ) and b.billingservice_no = (select max(b3.billingservice_no) from billingservice b3 where b3.billingservice_date = b.billingservice_date and b3.service_code = b.service_code) order by c.service_order";
-    
-                    
+
+
 			rs = dbObj.searchDBRecord(sql);
 			while (rs.next()) {
-				propT = new Properties();						
+				propT = new Properties();
 				propT.setProperty("serviceCode", rs.getString("service_code"));
 				propT.setProperty("serviceDesc", rs.getString("description"));
 				propT.setProperty("serviceDisp", rs.getString("value"));
 				propT.setProperty("servicePercentage", noNull(rs.getString("percentage")));
 				propT.setProperty("serviceType", rs.getString("servicetype"));
                 propT.setProperty("serviceTypeName", rs.getString("servicetype_name"));
-                
+
                 styleId = rs.getString("displaystyle");
                 if( styleId != null ) {
                 	cssStyle = cssStylesDao.find(new Integer(styleId));
@@ -428,10 +428,10 @@
                 else {
                 	propT.setProperty("displaystyle", "");
                 }
-                                
+
                 propT.setProperty("serviceSLI", ((Boolean)rs.getBoolean("sliFlag")).toString());
                	titleMap.put("group1_".concat(ctlcode),rs.getString("service_group_name"));
-               	
+
                 listGroup1.add(propT);
 			}
 
@@ -446,17 +446,17 @@
 					propPremium.setProperty(rs.getString("service_code"), "A");
 				}
 			}
-			billingServiceCodesMap.put("group1_".concat(ctlcode),listGroup1);		
-			
-			
-			sql = "select distinct c.servicetype_name, c.servicetype, c.service_group_name, c.service_order,b.service_code, b.description, b.value, b.percentage, b.displayStyle, b.sliFlag from billingservice b, ctl_billingservice c where c.service_code=b.service_code and c.status='A' and c.servicetype ='"
+			billingServiceCodesMap.put("group1_".concat(ctlcode),listGroup1);
+
+
+			sql = "select distinct c.servicetype_name, c.servicetype, c.service_group_name, c.service_order,b.service_code, b.description, b.value, b.percentage, b.displaystyle, b.sliFlag from billingservice b, ctl_billingservice c where c.service_code=b.service_code and c.status='A' and c.servicetype ='"
                  + ctlcode + "' and c.service_group ='" + "Group2" + "' and b.billingservice_date in (select max(b2.billingservice_date) from billingservice b2 where b2.billingservice_date <= '" + billReferenceDate + "' and b2.service_code = b.service_code) and b.billingservice_no = (select max(b3.billingservice_no) from billingservice b3 where b3.billingservice_date = b.billingservice_date and b3.service_code = b.service_code) order by c.service_order";
 
 			rs = dbObj.searchDBRecord(sql);
-                        
+
 			while (rs.next()) {
 				propT = new Properties();
-				
+
 				propT.setProperty("serviceCode", rs.getString("service_code"));
 				propT.setProperty("serviceDesc", rs.getString("description"));
 				propT.setProperty("serviceDisp", rs.getString("value"));
@@ -471,10 +471,10 @@
                 else {
                 	propT.setProperty("displaystyle", "");
                 }
-                
+
                 propT.setProperty("serviceSLI", ((Boolean)rs.getBoolean("sliFlag")).toString());
                 titleMap.put("group2_".concat(ctlcode),rs.getString("service_group_name"));
-                
+
                 listGroup2.add(propT);
 
 			}
@@ -486,23 +486,23 @@
 					sql += (i == 0 ? "" : " or ") + "service_code='"
 						+ listGroup2.get(i).getProperty("serviceCode") + "'";
                 }
-                        
+
                 rs = dbObj.searchDBRecord(sql);
                  while (rs.next()) {
                      propPremium.setProperty(rs.getString("service_code"), "A");
                 }
-            }   
+            }
             billingServiceCodesMap.put("group2_".concat(ctlcode),listGroup2);
-            
-            
-            sql = "select distinct c.servicetype_name, c.servicetype, c.service_group_name, c.service_order,b.service_code, b.description, b.value, b.percentage, b.displayStyle, b.sliFlag from billingservice b, ctl_billingservice c where c.service_code=b.service_code and c.status='A' and c.servicetype ='"
+
+
+            sql = "select distinct c.servicetype_name, c.servicetype, c.service_group_name, c.service_order,b.service_code, b.description, b.value, b.percentage, b.displaystyle, b.sliFlag from billingservice b, ctl_billingservice c where c.service_code=b.service_code and c.status='A' and c.servicetype ='"
 
                 + ctlcode + "' and c.service_group ='" + "Group3" + "' and b.billingservice_date in (select max(b2.billingservice_date) from billingservice b2 where b2.billingservice_date <= '" + billReferenceDate + "' and b2.service_code = b.service_code) and b.billingservice_no = (select max(b3.billingservice_no) from billingservice b3 where b3.billingservice_date = b.billingservice_date and b3.service_code = b.service_code) order by c.service_order";
 
 			rs = dbObj.searchDBRecord(sql);
 			while (rs.next()) {
 				propT = new Properties();
-				
+
 				propT.setProperty("serviceCode", rs.getString("service_code"));
 				propT.setProperty("serviceDesc", rs.getString("description"));
 				propT.setProperty("serviceDisp", rs.getString("value"));
@@ -517,14 +517,14 @@
                 else {
                 	propT.setProperty("displaystyle", "");
                 }
-                
-                propT.setProperty("serviceSLI", ((Boolean)rs.getBoolean("sliFlag")).toString());                
+
+                propT.setProperty("serviceSLI", ((Boolean)rs.getBoolean("sliFlag")).toString());
                 titleMap.put("group3_".concat(ctlcode),rs.getString("service_group_name"));
-                
+
                 listGroup3.add(propT);
 
 			}
-             
+
             if (listGroup3.size() > 0){
                  sql = "select service_code,status from ctl_billingservice_premium where ";
                  for (int i = 0; i < listGroup3.size(); i++) {
@@ -537,18 +537,18 @@
 			     	propPremium.setProperty(rs.getString("service_code"), "A");
                  }
             }
-            
-            billingServiceCodesMap.put("group3_".concat(ctlcode),listGroup3);     
-                        
+
+            billingServiceCodesMap.put("group3_".concat(ctlcode),listGroup3);
+
             }
-            
+
            sql = "select billtype from ctl_billingtype where servicetype='" + ctlBillForm +"'";
            rs = dbObj.searchDBRecord(sql);
            String defaultBillType = "";
            if (rs.next()) {
             	defaultBillType = rs.getString("billtype");
-           }   
-           
+           }
+
 			// create msg
 			msg += errorMsg + warningMsg;
 %>
@@ -588,6 +588,9 @@
 <script type="text/javascript" language="JavaScript">
 <!--
 jQuery.noConflict();
+</script>
+<oscar:customInterface section="billing"/>
+<script>
 
 function gotoBillingOB() {
     if(self.location.href.lastIndexOf("?") > 0) {
@@ -625,7 +628,7 @@ function showHideLayers() { //v3.0
 
 function onNext() {
     var ret = true;
-    if (!checkAllDates()) { 
+    if (!checkAllDates()) {
     	ret = false;
     }
     else if (!existServiceCode() && document.forms[0].services_checked.value<=0) {
@@ -634,23 +637,23 @@ function onNext() {
 	}
 	else if (!checkSli()) {
 		ret = false;
-		alert("You have selected billing codes that require an SLI code but have not provided an SLI code.");		
+		alert("You have selected billing codes that require an SLI code but have not provided an SLI code.");
 	}
 	else if (document.forms[0].dxCode.value=="") {
 	    ret = confirm("You didn't enter a diagnostic code in the Dx box. Continue?");
 	    if (!ret) document.forms[0].dxCode.focus();
-	}    
+	}
     return ret;
 }
 
 function checkSli() {
-	var needsSli = false; 
-    jQuery("input[name^=xml_]:checked").each(function() { 
-            needsSli = needsSli || eval(jQuery("input[name='sli_xml_" + this.name.substring(4) + "']").val());     
-    }); 
-    jQuery("input[name^=serviceCode][value!='']").each(function() { 
-            needsSli = needsSli || eval(jQuery("input[name='sli_xml_" + this.value + "']").val()); 
-    }); 
+	var needsSli = false;
+    jQuery("input[name^=xml_]:checked").each(function() {
+            needsSli = needsSli || eval(jQuery("input[name='sli_xml_" + this.name.substring(4) + "']").val());
+    });
+    jQuery("input[name^=serviceCode][value!='']").each(function() {
+            needsSli = needsSli || eval(jQuery("input[name='sli_xml_" + this.value + "']").val());
+    });
     return !needsSli || jQuery("select[name='xml_slicode']").get(0).selectedIndex != 0;
 }
 
@@ -660,9 +663,9 @@ function checkAllDates() {
     if(document.forms[0].xml_provider.value=="000000"){
 		alert("Please select a provider.");
 		b = false;
-    } 
+    }
     <% if (!OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
-    else if(document.forms[0].xml_visittype.options[2].selected && (document.forms[0].xml_vdate.value=="" || document.forms[0].xml_vdate.value=="0000-00-00")) {    
+    else if(document.forms[0].xml_visittype.options[2].selected && (document.forms[0].xml_vdate.value=="" || document.forms[0].xml_vdate.value=="0000-00-00")) {
 		alert("Need an admission date.");
 		b = false;
     }
@@ -709,7 +712,7 @@ function checkServiceDate(s) {
 
 function existServiceCode() {
     b = false;
-    
+
     if (document.forms[0].serviceCode0.value!="") b=true;
 <% for (int i = 1; i < BillingDataHlp.FIELD_SERVICE_NUM; i++) { %>
     else if (document.forms[0].serviceCode<%=i%>.value!="") b=true;
@@ -805,28 +808,28 @@ function scScriptAttach(nameF) {
 function onDblClickServiceCode(item) {
 	if(document.forms[0].serviceCode0.value=="") {
 		document.forms[0].serviceCode0.value = item.id.substring(3);
-	} 
+	}
 <% for(int i=1; i<BillingDataHlp.FIELD_SERVICE_NUM; ++i) { %>
 	else if(document.forms[0].serviceCode<%=i%>.value=="") {
 		document.forms[0].serviceCode<%=i%>.value = item.id.substring(3);
-	} 
+	}
 <% } %>
 }
 
 function onClickServiceCode(item) {
 	if(document.forms[0].serviceCode0.value=="") {
 		document.forms[0].serviceCode0.value = item.id.substring(4);
-	} 
+	}
 <% for(int i=1; i<BillingDataHlp.FIELD_SERVICE_NUM; ++i) { %>
 	else if(document.forms[0].serviceCode<%=i%>.value=="") {
 		document.forms[0].serviceCode<%=i%>.value = item.id.substring(4);
-	} 
+	}
 <% } %>
 }
 
 function upCaseCtrl(ctrl) {
-	var n = document.forms[0].xml_billtype.selectedIndex;  
-	var val = document.forms[0].xml_billtype[n].value; 
+	var n = document.forms[0].xml_billtype.selectedIndex;
+	var val = document.forms[0].xml_billtype[n].value;
 	if(val.substring(0,3) == "ODP" || val.substring(0,3) == "WCB" || val.substring(0,3) == "BON") ctrl.value = ctrl.value.toUpperCase();
 }
 
@@ -897,12 +900,12 @@ function onClickRefDoc() {
     }
 }
 
-function onChangePrivate() { 
-	var n = document.forms[0].xml_billtype.selectedIndex;  
-	var val = document.forms[0].xml_billtype[n].value; 
+function onChangePrivate() {
+	var n = document.forms[0].xml_billtype.selectedIndex;
+	var val = document.forms[0].xml_billtype[n].value;
   	if(val.substring(0,3) == "PAT" || val.substring(0,3) == "OCF" || val.substring(0,3) == "ODS" || val.substring(0,3) == "CPP" || val.substring(0,3) == "STD") {
   		self.location.href = "billingON.jsp?curBillForm=<%="PRI"%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&xml_billtype="+val.substring(0,3)+"&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
-  	} 
+  	}
     else if( val.substring(0,3) == "BON") {
         self.location.href = "billingON.jsp?curBillForm=<%=oscarVariables.getProperty("primary_care_incentive", "").trim()%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&xml_billtype="+val.substring(0,3)+"&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
     }
@@ -924,7 +927,7 @@ function showHideBox(layerName, iState) { // 1 visible, 0 hidden
     }
 }
 
-function onHistory() { 
+function onHistory() {
     var dd = document.forms[0].day.value;
     //alert(dd);
     popupPage("1000","640","billingONHistorySpec.jsp?demographic_no=<%=demo_no%>&demo_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&orderby=appointment_date&day=" + dd);
@@ -933,7 +936,7 @@ function onHistory() {
 function prepareBack() {
     document.forms[0].services_checked.value = "<%=request.getParameter("services_checked")%>";
     if (document.forms[0].services_checked.value=="null") document.forms[0].services_checked.value = 0;
-    document.forms[0].url_back.value = location.href;    
+    document.forms[0].url_back.value = location.href;
 
     //showBillFormDiv ("group1_", "<%=ctlBillForm%>");
     //showBillFormDiv ("group2_", "<%=ctlBillForm%>");
@@ -999,7 +1002,7 @@ function callChangeCodeDesc() {
 function changeCodeDesc() {
     var url  = "billingON_dx_desc.jsp";
     var pars = "diagnostic_code=" + document.forms[0].dxCode.value;
-    
+
     var descAjax = new Ajax.Updater("code_desc",url, {method: "get", parameters: pars});
 }
 
@@ -1008,7 +1011,7 @@ function toggleDiv(selectedBillForm, selectedBillFormName,billType)
 {
         document.getElementById("billForm").value=selectedBillForm;
         document.getElementById("billFormName").value=selectedBillFormName;
-        
+
         if(billType != ''){
         	for (var i=0;i<document.forms[0].xml_billtype.options.length;i++) {
         	    if (document.forms[0].xml_billtype.options[i].value.substring(0,3) == billType){
@@ -1360,7 +1363,7 @@ jQuery(document).ready(function() {
 			ResultSet rsbtype = dbObj.searchDBRecord("select billtype from ctl_billingtype where servicetype='" + ctlcode +"'");
 			if (rsbtype.next()) {
 				billType = rsbtype.getString("billtype");
-	        }   
+	        }
 			rsbtype.close();
 %>
 	<tr bgcolor=<%=ctlCount%2==0 ? "#FFFFFF" : "#EEEEFF"%>>
@@ -1436,7 +1439,7 @@ jQuery(document).ready(function() {
 			<td align="right">
 			    <oscar:help keywords="1.4 Billing" key="app.top1" style="color: #FFFFFF" />  <font color="#FFFFFF"> |  </font> <a href=# onclick="popupPage(460,680,'billingONfavourite.jsp'); return false;">
 				<font color="#FFFFFF">Edit</font>
-			    </a> 
+			    </a>
 			    <select name="cutlist" id="cutlist" onchange="changeCut(this)">
 				<option selected="selected" value="">- SUPER CODES -</option>
 <% //
@@ -1459,8 +1462,8 @@ jQuery(document).ready(function() {
 		<table border="0" cellspacing="0" cellpadding="0" width="100%" class="myYellow">
 		    <tr>
 			<td nowrap bgcolor="#FFCC99" width="10%" align="center">
-			    <b>&nbsp;<oscar:nameage demographicNo="<%=demo_no%>"/>  <%=roster_status%></b>			    			    
-				<%if (appt_no.compareTo("0") == 0) {%> 
+			    <b>&nbsp;<oscar:nameage demographicNo="<%=demo_no%>"/>  <%=roster_status%></b>
+				<%if (appt_no.compareTo("0") == 0) {%>
 			    <img src="../../../images/cal.gif" id="service_date_cal" />
 			    <input type="text" id="service_date" name="service_date"
 				   readonly value="<%=request.getParameter("service_date")!=null? request.getParameter("service_date"):strToday%>"
@@ -1471,7 +1474,7 @@ jQuery(document).ready(function() {
 				<%}%>
 			</td>
 			<td style="color:red; background-color:#FFFFFF; font-size:18px; font-weight:bold;"><%=billingRecomendations.length() > 0 ? billingRecomendations.toString() : ""%></td>
-			<td align="center"><font color="black"><%=msg%></font></td>			
+			<td align="center"><font color="black"><%=msg%></font></td>
 		    </tr>
 		</table>
 
@@ -1551,8 +1554,8 @@ jQuery(document).ready(function() {
 
 
 			%>
-                 
-     
+
+
 
 					<input type="checkbox" name="rfcheck" value="checked" <%=checkRefBox%> onclick="onClickRefDoc()" /><br />
 					<input type="text" name="referralCode" size="5" maxlength="6" value="<%=refNo%>">&nbsp;
@@ -1567,10 +1570,10 @@ jQuery(document).ready(function() {
 					<input type="text" name="serviceCode<%=i%>" size="4" maxlength="15"
 					       value="<%=request.getParameter("serviceCode"+i)!=null?request.getParameter("serviceCode"+i):""%>"
 					       onDblClick="scScriptAttach(this)" onBlur="upCaseCtrl(this)"
-					       />x 
+					       />x
 					<input type="text" name="serviceUnit<%=i%>" size="2" maxlength="4" style="width:20px;"
 					       value="<%=request.getParameter("serviceUnit"+i)!=null?request.getParameter("serviceUnit"+i):""%>"
-					       />@ 
+					       />@
 					<input type="text" name="serviceAt<%=i%>" size="3" maxlength="4" style="width:30px"
 					       value="<%=request.getParameter("serviceAt"+i)!=null?request.getParameter("serviceAt"+i):""%>" /><br />
 <%	    } %>
@@ -1580,7 +1583,7 @@ jQuery(document).ready(function() {
 					<input type="text" name="serviceCode<%=i%>" size="4" maxlength="15"
 					       value="<%=request.getParameter("serviceCode"+i)!=null?request.getParameter("serviceCode"+i):""%>"
 					       onDblClick="scScriptAttach(this)" onBlur="upCaseCtrl(this)"
-					       />x 
+					       />x
 					<input type="text" name="serviceUnit<%=i%>" size="2" maxlength="2" style="width:20px;"
 					       value="<%=request.getParameter("serviceUnit"+i)!=null?request.getParameter("serviceUnit"+i):""%>"
 					       />@
@@ -1598,12 +1601,12 @@ jQuery(document).ready(function() {
 				    <td nowrap width="30%" align="center"><b>Billing Physician</b></td>
 				    <td width="20%">
 
-<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) 
+<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable())
 { // multisite start ==========================================
         	SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
           	List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-          	
-      %> 
+
+      %>
       <script>
 var _providers = [];
 <%	for (int i=0; i<sites.size(); i++) { %>
@@ -1636,10 +1639,10 @@ function changeSite(sel) {
       			 <%=sites.get(i).getName().toString().equals(selectedSite)?"selected":"" %>><%= sites.get(i).getName() %></option>
       	<% } %>
       	</select>
-      	<select id="xml_provider" name="xml_provider" style="width:140px" onChange="onBillingDefaultsDropdownChange(this);"></select>
+      	<select id="xml_provider" name="xml_provider" style="width:140px"></select>
       	<script>
      	changeSite(document.getElementById("site"));
-      	document.getElementById("xml_provider").value='<%=request.getParameter("xml_provider")==null?xmlp:request.getParameter("xml_provider")%>';     	
+      	document.getElementById("xml_provider").value='<%=request.getParameter("xml_provider")==null?xmlp:request.getParameter("xml_provider")%>';
       	</script>
 <% // multisite end ==========================================
 } else {
@@ -1680,8 +1683,8 @@ function changeSite(sel) {
 	    }
 %>
 					</select>
-<% } %>				
-					
+<% } %>
+
 				    </td>
 				    <td nowrap width="30%" align="center"><b>Assig. Phys.</b></td>
 				    <td width="20%">
@@ -1695,9 +1698,9 @@ function changeSite(sel) {
 				    <td width="20%">
 					<select name="xml_visittype" onChange="onBillingDefaultsDropdownChange(this);">
 						<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
-						<% 
-						ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
-						ArrayList<ClinicNbr> nbrs = cnDao.findAll();									            
+						<%
+						ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao");
+						ArrayList<ClinicNbr> nbrs = cnDao.findAll();
 			            ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
 			            String providerSearch = apptProvider_no.equalsIgnoreCase("none") ? user_no : apptProvider_no;
 			            Provider p = providerDao.getProvider(providerSearch);
@@ -1789,7 +1792,7 @@ function changeSite(sel) {
         	  MiscUtils.getLogger().error("Error", inPatientEx);
 	     admDate = "";
           }
-            
+
 	  if (visitType.startsWith("02")) admDate = visitdate;
           %>
 					<!--input type="text" name="xml_vdate" id="xml_vdate" value="<%--=request.getParameter("xml_vdate")!=null? request.getParameter("xml_vdate"):visitdate--%>" size='10' maxlength='10' -->
@@ -1806,8 +1809,8 @@ function changeSite(sel) {
 
 				    </td>
 				</tr>
-<% if (!org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) 
-{ 
+<% if (!org.oscarehr.common.IsPropertiesOn.isMultisitesEnable())
+{
     OscarProperties props = OscarProperties.getInstance();
     boolean bMoreAddr = props.getProperty("scheduleSiteID", "").equals("") ? false : true;
     if(bMoreAddr) {
@@ -1826,13 +1829,13 @@ function changeSite(sel) {
 						<b><%=siteList[i]%></b>
 					    </option>
 <%	} %>
-					</select>							
+					</select>
 				    </td>
 				</tr>
 <%  }
-} 
+}
 %>
-			   
+
 			</table>
 		    </td>
 		</tr>
@@ -1868,21 +1871,21 @@ function changeSite(sel) {
 		servicePercentage = propT.getProperty("servicePercentage");
 		serviceType = propT.getProperty("serviceType");
 		displayStyle = propT.getProperty("displaystyle");
-		sliFlag = Boolean.parseBoolean(propT.getProperty("serviceSLI")); 
-        
+		sliFlag = Boolean.parseBoolean(propT.getProperty("serviceSLI"));
+
 		if (propPremium.getProperty(serviceCode) != null) premiumFlag = "A";
 		else premiumFlag = "";
-		
+
 		String bgcolor = i % 2 == 0 ? "bgcolor='#FFFFFF'" : "class='myGreen'";
 		if (request.getParameter("xml_" + serviceCode) != null) bgcolor = "bgcolor='#66FF66'";
 %>
 			    <tr <%=bgcolor%>>
 				<td align="left" style="<%=displayStyle%>" nowrap>
 				    <input type="checkbox" id="xml_<%=serviceCode%>" name="xml_<%=serviceCode%>" value="checked" onclick="refreshServicesChecked(this);"
-					   <%=request.getParameter("xml_"+serviceCode)!=null?request.getParameter("xml_"+serviceCode):""%> 
-					   <%=bSingleClick? "onClick='onClickServiceCode(this)'" :""%> />				    
+					   <%=request.getParameter("xml_"+serviceCode)!=null?request.getParameter("xml_"+serviceCode):""%>
+					   <%=bSingleClick? "onClick='onClickServiceCode(this)'" :""%> />
 					<span id="sc<%=(""+i).substring(0,1)+serviceCode%>" ondblclick="onDblClickServiceCode(this)"><%=serviceCode%></span>
-				    
+
 				</td>
 				<td <%=serviceDesc.length()>30?"title=\""+serviceDesc+"\"":""%> <%=displayStyle.equals("")? "class=\"smallFont\"": "style=\"" + displayStyle + "\""%>>
 				    <div><%=serviceDesc.length() > 30 ? serviceDesc.substring(0, 30) + "..." : serviceDesc%> <!--<input type="hidden" name="desc_xml_<%=serviceCode%>" value="<%=serviceDesc%>" />-->
@@ -1899,7 +1902,7 @@ function changeSite(sel) {
 			</table>
 			</div>
 <%   }   %>
-			
+
 		    </td>
 		    <td width="33%" valign="top">
 <%         for( int j=0; j< listServiceType.size(); j++) {
@@ -1909,8 +1912,8 @@ function changeSite(sel) {
                 headerTitle2 = titleMap.get("group2_".concat(listServiceType.get(j)));
 %>
             <div id="group2_<%=listServiceType.get(j) %>" style="display: none;">
-  		    
-		    
+
+
 			<table width="100%" border="1" cellspacing="0" cellpadding="1" height="0"
 			       bordercolorlight="#99A005" bordercolordark="#FFFFFF">
 			    <tr class="myYellow">
@@ -1918,7 +1921,7 @@ function changeSite(sel) {
 				<th width="70%"><div class="smallFont">Description</div></th>
 				<th><div class="smallFont">Fee</div></th>
 			    </tr>
-			    
+
 <%	    for (int i = 0; i < vecCodeCol2.size(); i++) {
 		propT = vecCodeCol2.get(i);
 		serviceCode = propT.getProperty("serviceCode");
@@ -1928,7 +1931,7 @@ function changeSite(sel) {
 		serviceType = propT.getProperty("serviceType");
 		displayStyle = propT.getProperty("displaystyle");
 		sliFlag = Boolean.parseBoolean(propT.getProperty("serviceSLI"));
-		
+
 		if (propPremium.getProperty(serviceCode) != null) premiumFlag = "A";
 		else premiumFlag = "";
 
@@ -1938,10 +1941,10 @@ function changeSite(sel) {
 			    <tr <%=bgcolor%>>
 				<td align="left" style="<%=displayStyle%>" nowrap>
 				    <input type="checkbox" id="xml_<%=serviceCode%>" name="xml_<%=serviceCode%>" value="checked" onclick="refreshServicesChecked(this);"
-					   <%=request.getParameter("xml_"+serviceCode)!=null?request.getParameter("xml_"+serviceCode):""%> 
-					   <%=bSingleClick? "onClick='onClickServiceCode(this)'" :""%> />				   
+					   <%=request.getParameter("xml_"+serviceCode)!=null?request.getParameter("xml_"+serviceCode):""%>
+					   <%=bSingleClick? "onClick='onClickServiceCode(this)'" :""%> />
 				       <span id="sc<%=(""+i).substring(0,1)+serviceCode%>" onDblClick="onDblClickServiceCode(this)"><%=serviceCode%></span>
-				   
+
 			        </td>
 				<td <%=serviceDesc.length()>30?"title=\""+serviceDesc+"\"":""%> <%=displayStyle.equals("")? "class=\"smallFont\"": "style=\"" + displayStyle + "\""%>>
 				    <div>
@@ -1960,7 +1963,7 @@ function changeSite(sel) {
 			</table>
 		 </div>
 <%   }   %>
-			
+
 		    </td>
 		    <td width="33%" valign="top">
  <%         for( int j=0; j< listServiceType.size(); j++) {
@@ -1971,8 +1974,8 @@ function changeSite(sel) {
 %>
                 <div id="group3_<%=listServiceType.get(j) %>" style="display: none;">
 
-		    
-		    
+
+
 			<table width="100%" border="1" cellspacing="0" cellpadding="1" height="0"
 			       bordercolorlight="#99A005" bordercolordark="#FFFFFF">
 			    <tr class="myYellow">
@@ -1980,7 +1983,7 @@ function changeSite(sel) {
 				<th width="70%"><div class="smallFont">Description</div></th>
 				<th><div class="smallFont">Fee</div></th>
 			    </tr>
-			    
+
 <%	    for (int i = 0; i < vecCodeCol3.size(); i++) {
 		propT = vecCodeCol3.get(i);
 		serviceCode = propT.getProperty("serviceCode");
@@ -1990,7 +1993,7 @@ function changeSite(sel) {
 		serviceType = propT.getProperty("serviceType");
 		displayStyle = propT.getProperty("displaystyle");
 		sliFlag = Boolean.parseBoolean(propT.getProperty("serviceSLI"));
-		
+
 		if (propPremium.getProperty(serviceCode) != null) premiumFlag = "A";
 		else premiumFlag = "";
 
@@ -2001,8 +2004,8 @@ function changeSite(sel) {
 				<td align="left" style="<%=displayStyle%>" nowrap>
 				    <input type="checkbox" id="xml_<%=serviceCode%>" name="xml_<%=serviceCode%>" value="checked" onclick="refreshServicesChecked(this);"
 					   <%=request.getParameter("xml_"+serviceCode)!=null?request.getParameter("xml_"+serviceCode):""%>
-					   <%=bSingleClick? "onClick='onClickServiceCode(this)'" :""%> />				   
-				       <span id="sc<%=(""+i).substring(0,1)+serviceCode%>" onDblClick="onDblClickServiceCode(this)"><%=serviceCode%></span>				   
+					   <%=bSingleClick? "onClick='onClickServiceCode(this)'" :""%> />
+				       <span id="sc<%=(""+i).substring(0,1)+serviceCode%>" onDblClick="onDblClickServiceCode(this)"><%=serviceCode%></span>
 			       </td>
 				<td <%=serviceDesc.length()>30?"title=\""+serviceDesc+"\"":""%> <%=displayStyle.equals("")? "class=\"smallFont\"": "style=\"" + displayStyle + "\""%>>
 				    <div>
@@ -2019,9 +2022,9 @@ function changeSite(sel) {
 			    </tr>
 <%		} %>
 			</table>
-		 </div>     
+		 </div>
 <%  }  %>
-			
+
 		    </td>
 		</tr>
 	    </table>
@@ -2126,14 +2129,14 @@ Calendar.setup( { inputField : "xml_vdate", ifFormat : "%Y-%m-%d", showsTime :fa
 			ret = paraName;
 		} else if (vec != null && vec.size() > 0 && vec.get(0) != null) {
 			ret = ((Properties) vec.get(0)).getProperty(propName, "");
-		}   
+		}
 		return ret;
 	}
 
 
         String noNull(String str){
             if (str != null){
-               return str;    
+               return str;
             }
             return "";
         }

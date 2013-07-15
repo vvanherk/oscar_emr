@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * MessageUploader.java
  *
@@ -66,7 +91,7 @@ public final class MessageUploader {
 		String retVal = "";
 		try {
 			MessageHandler h = Factory.getHandler(type, hl7Body);
-			Base64 base64 = new Base64();
+			Base64 base64 = new Base64(0);
 
 			String firstName = h.getFirstName();
 			String lastName = h.getLastName();
@@ -109,9 +134,9 @@ public final class MessageUploader {
 					docNums = findProvidersForSpireLab(docSpireNums);
 				}
             }
-            logger.info("docNums:");
+            //logger.debug("docNums:");
             for (int i=0; i < docNums.size(); i++) {
-				logger.info(i + " " + docNums.get(i));
+				//logger.debug(i + " " + docNums.get(i));
 			}
 
 			try {
@@ -280,45 +305,6 @@ public final class MessageUploader {
 	}
 	
 	/**
-	 * Method findProvidersForSpireLab
-	 * Finds the providers that are associated with a spire lab.  (need to do this using doctor names, as
-	 * spire labs don't have a valid ohip number associated with them).
-	 */ 
-	/*
-	private static ArrayList<String> findProvidersForSpireLab(List<String> docNames) {
-		List<String> docNums = new ArrayList<String>();
-		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
-		
-		for (int i=0; i < docNames.size(); i++) {
-			String[] firstLastName = docNames.get(i).split("\\s");
-			if (firstLastName != null && firstLastName.length >= 2) {
-				//logger.debug("Searching for provider with first and last name: " + firstLastName[0] + " " + firstLastName[firstLastName.length-1]);
-				List<Provider> provList = providerDao.getProviderLikeFirstLastName("%"+firstLastName[0]+"%", firstLastName[firstLastName.length-1]);
-				if (provList != null) {
-					int provIndex = findProviderWithShortestFirstName(provList);
-					if (provIndex != -1 && provList.size() >= 1 && !provList.get(provIndex).getProviderNo().equals("0")) {
-						docNums.add( provList.get(provIndex).getProviderNo() );
-						//logger.debug("ADDED1: " + provList.get(provIndex).getProviderNo());
-					} else {
-						// prepend 'dr ' to first name and try again
-						provList = providerDao.getProviderLikeFirstLastName("dr " + firstLastName[0], firstLastName[1]);
-						if (provList != null) {
-							provIndex = findProviderWithShortestFirstName(provList);
-							if (provIndex != -1 && provList.size() == 1 && !provList.get(provIndex).getProviderNo().equals("0")) {
-								//logger.debug("ADDED2: " + provList.get(provIndex).getProviderNo());
-								docNums.add( provList.get(provIndex).getProviderNo() );
-							}
-						}
-					}
-				}
-			}
-		}
-		
-		return (ArrayList<String>)docNums;
-	}
-	*/
-	
-	/**
 	 * Method findProviderWithShortestFirstName
 	 * Finds the provider with the shortest first name in a list of providers.
 	 */ 
@@ -343,7 +329,7 @@ public final class MessageUploader {
 	 * Attempt to match the doctors from the lab to a provider
 	 */ 
 	private static void providerRouteReport(String labId, ArrayList docNums, Connection conn, String altProviderNo, String labType, String search_on, Integer limit, boolean orderByLength) throws Exception {
-		ArrayList providerNums = new ArrayList();
+		ArrayList<String> providerNums = new ArrayList<String>();
 		PreparedStatement pstmt;
 		String sql = "";
 		String sqlLimit = "";
@@ -364,13 +350,12 @@ public final class MessageUploader {
 		
 		if (docNums != null) {
 			for (int i = 0; i < docNums.size(); i++) {
+
 				if (docNums.get(i) != null && !((String) docNums.get(i)).trim().equals("")) {
 					sql = "select provider_no from provider where "+ sqlSearchOn +" = '" + ((String) docNums.get(i)) + "'" + sqlOrderByLength + sqlLimit;
-					logger.info("here 3b: " + sql);
 					pstmt = conn.prepareStatement(sql);
 					ResultSet rs = pstmt.executeQuery();
 					while (rs.next()) {
-						logger.info("here 4: " + oscar.Misc.getString(rs, "provider_no"));
 						providerNums.add(oscar.Misc.getString(rs, "provider_no"));
 					}
 					rs.close();
@@ -395,7 +380,7 @@ public final class MessageUploader {
 		ProviderLabRouting routing = new ProviderLabRouting();
 		if (providerNums.size() > 0) {
 			for (int i = 0; i < providerNums.size(); i++) {
-				String provider_no = (String) providerNums.get(i);
+				String provider_no = providerNums.get(i);
 				routing.route(labId, provider_no, conn, "HL7");
 			}
 		} else {
@@ -444,14 +429,27 @@ public final class MessageUploader {
 
 			if (!firstName.equals("")) firstName = firstName.substring(0, 1);
 			if (!lastName.equals("")) lastName = lastName.substring(0, 1);
-
-			if (hinMod.equals("%")) {
-				sql = "select demographic_no, provider_no from demographic where" + " last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
-			} else if (OscarProperties.getInstance().getBooleanProperty("LAB_NOMATCH_NAMES", "yes")) {
-				sql = "select demographic_no, provider_no from demographic where hin='" + hinMod + "' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
-			} else {
-				sql = "select demographic_no, provider_no from demographic where hin='" + hinMod + "' and " + " last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
+			
+			String nameCondition = "";
+			String hinCondition = "";
+		
+			if (!OscarProperties.getInstance().getBooleanProperty("LAB_NOMATCH_NAMES", "yes")) {
+				nameCondition = "and last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' ";
 			}
+
+			if (!hinMod.equals("%")) {
+				hinCondition = "and hin='"+ hinMod +"' ";
+			}
+			
+			sql = 	"select d.demographic_no, d.provider_no from demographic d left join demographic_merged dm on dm.demographic_no = d.demographic_no  where " +
+					"year_of_birth like '" + dobYear + "' " +
+					"and month_of_birth like '" + dobMonth + "' " +
+					"and date_of_birth like '" + dobDay + "' " +
+					"and sex like '" + sex + "%' " +
+					"and dm.merged_to is NULL " +
+					nameCondition +
+					hinCondition
+			;
 
 			logger.info(sql);
 			PreparedStatement pstmt = conn.prepareStatement(sql);

@@ -1,24 +1,25 @@
-/*
-* 
-* Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License. 
-* This program is free software; you can redistribute it and/or 
-* modify it under the terms of the GNU General Public License 
-* as published by the Free Software Foundation; either version 2 
-* of the License, or (at your option) any later version. * 
-* This program is distributed in the hope that it will be useful, 
-* but WITHOUT ANY WARRANTY; without even the implied warranty of 
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-* along with this program; if not, write to the Free Software 
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-* 
-* <OSCAR TEAM>
-* 
-* This software was written for 
-* Centre for Research on Inner City Health, St. Michael's Hospital, 
-* Toronto, Ontario, Canada 
-*/
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
 
 package org.oscarehr.survey.web;
 
@@ -54,6 +55,7 @@ import org.oscarehr.survey.service.SurveyTestManager;
 import org.oscarehr.survey.web.formbean.PageNavEntry;
 import org.oscarehr.survey.web.formbean.SurveyManagerFormBean;
 import org.oscarehr.surveymodel.DateDocument;
+import org.oscarehr.surveymodel.DateDocument.Date.Enum;
 import org.oscarehr.surveymodel.Page;
 import org.oscarehr.surveymodel.Question;
 import org.oscarehr.surveymodel.Section;
@@ -579,10 +581,10 @@ public class SurveyManagerAction extends AbstractSurveyAction {
 		if(question != null && question.getType().isSetDate()) {
 			DateDocument.Date.Enum enum1 = question.getType().getDate();
 			List dateFormats = new ArrayList();
-			for(int x=1;x<=enum1.table.lastInt();x++) {
+			for(int x=1;x<=Enum.table.lastInt();x++) {
 				LabelValueBean bean = new LabelValueBean();
-				bean.setValue(String.valueOf(enum1.table.forInt(x).intValue()));
-				bean.setLabel(enum1.table.forInt(x).toString());
+				bean.setValue(String.valueOf(Enum.table.forInt(x).intValue()));
+				bean.setLabel(Enum.table.forInt(x).toString());
 				dateFormats.add(bean);
 			}
 			formBean.setDateFormat(String.valueOf(enum1.intValue()));

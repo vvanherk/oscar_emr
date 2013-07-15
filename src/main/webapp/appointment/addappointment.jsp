@@ -1,3 +1,28 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
@@ -38,10 +63,11 @@
 <%--RJ 07/07/2006 --%>
 <jsp:useBean id="providerBean" class="java.util.Properties" scope="session" />
 <%@page import="org.oscarehr.util.SpringUtils" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ page import="oscar.oscarEncounter.data.EctFormData"%>
 <%@page import="org.oscarehr.common.model.DemographicCust" %>
 <%@page import="org.oscarehr.common.dao.DemographicCustDao" %>
+<%@ page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%
 	DemographicCustDao demographicCustDao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
 %>
@@ -58,33 +84,6 @@
   AppointmentStatusMgr apptStatusMgr = (AppointmentStatusMgr)webApplicationContext.getBean("AppointmentStatusMgr");
   List allStatus = apptStatusMgr.getAllActiveStatus();
 %>
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
-
--->
-
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.oscarehr.common.model.Site"%><html:html locale="true">
 <head>
@@ -97,6 +96,11 @@
     <link rel="stylesheet" href="appointmentstyle.css" type="text/css">
 <% }%>
 <title><bean:message key="appointment.addappointment.title" /></title>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
+   <script>
+     jQuery.noConflict();
+   </script>
+<oscar:customInterface section="addappt"/>
 <script type="text/javascript">
 
 <!--
@@ -230,6 +234,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
         document.forms[0].notes.value = "<%=apptObj.getNotes()%>";
         //document.forms[0].location.value = "<%=apptObj.getLocation()%>";
         document.forms[0].resources.value = "<%=apptObj.getResources()%>";
+        document.forms[0].type.value = "<%=apptObj.getType()%>";
         if('<%=apptObj.getUrgency()%>' == 'critical') {
                 document.forms[0].urgency.checked = "checked";
         }
@@ -413,8 +418,8 @@ function pasteAppt(multipleSameDayGroupAppt) {
             displayStyle="display:block";
         }
   }
-%>
-<div id="tooManySameDayGroupApptWarning" style="<%=displayStyle%>">
+  %>
+  <div id="tooManySameDayGroupApptWarning" style="<%=displayStyle%>">
     <table width="98%" BGCOLOR="red" border=1 align='center'>
         <tr>
             <th>
@@ -478,6 +483,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
 
         }
 	}
+	if( request.getParameter("demographic_no")!=null && !"".equals(request.getParameter("demographic_no")) ) {
 	DemographicCust demographicCust = demographicCustDao.find(Integer.parseInt(request.getParameter("demographic_no")));
 
 		if (demographicCust != null && demographicCust.getAlert() != null && !demographicCust.getAlert().equals("") ) {
@@ -492,7 +498,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
 <%
 
 		}
-
+	}
   }
 
 
@@ -518,9 +524,14 @@ function pasteAppt(multipleSameDayGroupAppt) {
 	</tr>
 </table>
 <% } %>
-<FORM NAME="ADDAPPT" METHOD="post" ACTION="appointmentcontrol.jsp"
+<FORM NAME="ADDAPPT" METHOD="post" ACTION="<%=request.getContextPath()%>/appointment/appointmentcontrol.jsp"
 	onsubmit="return(calculateEndTime())"><INPUT TYPE="hidden"
 	NAME="displaymode" value="">
+	<input type="hidden" name="year" value="<%=request.getParameter("year") %>" >
+    <input type="hidden" name="month" value="<%=request.getParameter("month") %>" >
+    <input type="hidden" name="day" value="<%=request.getParameter("day") %>" >
+    <input type="hidden" name="fromAppt" value="1" >
+	
 <div class="header deep">
     <div class="title">
         <!-- We display a shortened title for the mobile version -->
@@ -549,13 +560,13 @@ function pasteAppt(multipleSameDayGroupAppt) {
                     <% for (int i = 0; i < allStatus.size(); i++) { %>
                     <option
                             value="<%=((AppointmentStatus)allStatus.get(i)).getStatus()%>"
-                            <%=((AppointmentStatus)allStatus.get(i)).getStatus().equals("t")?"SELECTED":""%>><%=((AppointmentStatus)allStatus.get(i)).getDescription()%></option>
+                            <%=((AppointmentStatus)allStatus.get(i)).getStatus().equals(request.getParameter("status"))?"SELECTED":""%>><%=((AppointmentStatus)allStatus.get(i)).getDescription()%></option>
                     <% } %>
             </select> <%
             }
             if (strEditable==null || !strEditable.equalsIgnoreCase("yes")){
             %> <INPUT TYPE="TEXT" NAME="status"
-					VALUE='<%=bFirstDisp?"t":request.getParameter("status").equals("")?"":request.getParameter("status")%>'
+					VALUE='<%=bFirstDisp?"t":request.getParameter("status")==null?"":request.getParameter("status").equals("")?"":request.getParameter("status")%>'
 					WIDTH="25" HEIGHT="20" border="0" hspace="2"> <%}%>
             </div>
         </li>
@@ -570,8 +581,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
 
             <%
 				    // multisites start ==================
-				    boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(
-);
+				    boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
 				    SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
 				    List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
 				    // multisites end ==================
@@ -607,26 +617,36 @@ function pasteAppt(multipleSameDayGroupAppt) {
             <div class="label"><bean:message key="Appointment.formDoctor" />:</div>
             <div class="input">
                 <INPUT type="TEXT" readonly
-                       value="<%=bFirstDisp ? "" : providerBean.getProperty(curDoctor_no,"")%>">
+                       value="<%=bFirstDisp ? "" : StringEscapeUtils.escapeHtml(providerBean.getProperty(curDoctor_no,""))%>">
             </div>
         </li>
         <li class="row deep">
             <div class="label"><bean:message key="appointment.addappointment.formSurName" />:</div>
             <div class="input">
+            	<% 
+            		String name="";
+            		name = String.valueOf((bFirstDisp && !bFromWL)?"":request.getParameter("name")==null?session.getAttribute("appointmentname")==null?"":session.getAttribute("appointmentname"):request.getParameter("name"));
+            	%>
                 <INPUT TYPE="TEXT" NAME="keyword"
-                        VALUE='<%=(bFirstDisp && !bFromWL)?"":request.getParameter("name")==null?session.getAttribute("appointmentname")==null?"":session.getAttribute("appointmentname"):request.getParameter("name")%>'
+                        VALUE="<%=name%>"
                         HEIGHT="20" border="0" hspace="2" width="25" tabindex="1">
             </div>
             <div class="space">
                 <a href=# onclick="onNotBook();"><font size='-1' color='brown'>Not book</font></a>
             </div>
             <INPUT TYPE="hidden" NAME="orderby" VALUE="last_name, first_name">
-            <INPUT TYPE="hidden" NAME="search_mode" VALUE="search_name">
-            <INPUT TYPE="hidden" NAME="originalpage" VALUE="../appointment/addappointment.jsp">
-            <INPUT TYPE="hidden" NAME="limit1" VALUE="0">
-            <INPUT TYPE="hidden" NAME="limit2" VALUE="5">
-            <INPUT TYPE="hidden" NAME="ptstatus" VALUE="active">
-		<input type="hidden" name="outofdomain" value="<%=OscarProperties.getInstance().getProperty("pmm.client.search.outside.of.domain.enabled","")%>"/>
+<%
+    String searchMode = request.getParameter("search_mode");
+    if (searchMode == null || searchMode.isEmpty()) {
+        searchMode = OscarProperties.getInstance().getProperty("default_search_mode","search_name");
+    }
+%> 
+            <INPUT TYPE="hidden" NAME="search_mode" VALUE="<%=searchMode%>"> 
+            <INPUT TYPE="hidden" NAME="originalpage" VALUE="../appointment/addappointment.jsp"> 
+            <INPUT TYPE="hidden" NAME="limit1" VALUE="0"> 
+            <INPUT TYPE="hidden" NAME="limit2" VALUE="5"> 
+            <INPUT TYPE="hidden" NAME="ptstatus" VALUE="active"> 
+			<input type="hidden" name="outofdomain" value="<%=OscarProperties.getInstance().getProperty("pmm.client.search.outside.of.domain.enabled","true")%>"/> 
             <!--input type="hidden" name="displaymode" value="Search " -->
             <div class="label">
                 <INPUT TYPE="submit" style="width:auto;"
@@ -692,7 +712,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
             <div class="label"><bean:message key="Appointment.formCreator" />:</div>
             <div class="input">
                 <INPUT TYPE="TEXT" NAME="user_id" readonly
-                    VALUE='<%=bFirstDisp?(userlastname+", "+userfirstname):request.getParameter("user_id").equals("")?"Unknown":request.getParameter("user_id")%>'
+                    VALUE='<%=bFirstDisp?(StringEscapeUtils.escapeHtml(userlastname)+", "+StringEscapeUtils.escapeHtml(userfirstname)):request.getParameter("user_id").equals("")?"Unknown":request.getParameter("user_id")%>'
                     WIDTH="25" HEIGHT="20" border="0" hspace="2">
             </div>
             <div class="space">&nbsp;</div>
@@ -707,7 +727,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
                 <INPUT TYPE="TEXT" NAME="createdatetime" readonly VALUE="<%=strDateTime%>" WIDTH="25" HEIGHT="20" border="0" hspace="2">
                 <INPUT TYPE="hidden" NAME="provider_no" VALUE="<%=curProvider_no%>">
                 <INPUT TYPE="hidden" NAME="dboperation" VALUE="add_apptrecord">
-                <INPUT TYPE="hidden" NAME="creator" VALUE='<%=userlastname+", "+userfirstname%>'>
+                <INPUT TYPE="hidden" NAME="creator" VALUE='<%=StringEscapeUtils.escapeHtml(userlastname)+", "+StringEscapeUtils.escapeHtml(userfirstname)%>'>
                 <INPUT TYPE="hidden" NAME="remarks" VALUE="">
             </div>
         </li>
@@ -832,17 +852,17 @@ function pasteAppt(multipleSameDayGroupAppt) {
         <%}%>
     </td>
     <td valign="top">
-    <% 
+    <%
         String formTblProp = props.getProperty("appt_formTbl","");
         String[] formTblNames = formTblProp.split(";");
-               
+
         int numForms = 0;
         for (String formTblName : formTblNames){
             if ((formTblName != null) && !formTblName.equals("")) {
                 //form table name defined
                 resultList = oscarSuperManager.find("appointmentDao", "search_formtbl", new Object [] {formTblName});
                 if (resultList.size() > 0) {
-                    //form table exists                            
+                    //form table exists
                     Map mFormName = resultList.get(0);
                     String formName = (String) mFormName.get("form_name");
                     pageContext.setAttribute("formName", formName);
@@ -860,23 +880,23 @@ function pasteAppt(multipleSameDayGroupAppt) {
                     <th colspan="2">
                         <bean:message key="appointment.addappointment.msgFormsSaved"/>
                     </th>
-                </tr>              
+                </tr>
     <%              }%>
-             
+
                 <tr bgcolor="#c0c0c0" align="left">
                     <th style="padding-right: 20px"><c:out value="${formName}:"/></th>
     <%              if (formComplete){  %>
                         <td><bean:message key="appointment.addappointment.msgFormCompleted"/></td>
     <%              } else {            %>
                         <td><bean:message key="appointment.addappointment.msgFormNotCompleted"/></td>
-    <%              } %>               
+    <%              } %>
                 </tr>
-    <%                         
+    <%
                 }
             }
         }
-               
-        if (numForms > 0) {        
+
+        if (numForms > 0) {
     %>
          </table>
     <%  }   %>

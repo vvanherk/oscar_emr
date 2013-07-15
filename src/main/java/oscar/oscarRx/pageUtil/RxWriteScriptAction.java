@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.oscarRx.pageUtil;
 
 import java.io.IOException;
@@ -74,11 +76,11 @@ public final class RxWriteScriptAction extends DispatchAction {
 	private static UserPropertyDAO userPropertyDAO;
 	private static final String DEFAULT_QUANTITY = "30";
 	private static final PartialDateDao partialDateDao = (PartialDateDao)SpringUtils.getBean("partialDateDao");
-	
+
 	String removeExtraChars(String s){
 		return s.replace(""+((char) 130 ),"").replace(""+((char) 194 ),"").replace(""+((char) 195 ),"").replace(""+((char) 172 ),"");
 	}
-	
+
 	public ActionForward unspecified(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException, Exception {
 
 		RxWriteScriptForm frm = (RxWriteScriptForm) form;
@@ -119,7 +121,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 			rx.setRepeat(frm.getRepeat());
 			rx.setLastRefillDate(RxUtil.StringToDate(frm.getLastRefillDate(), "yyyy-MM-dd"));
 			rx.setNosubs(frm.getNosubs());
-			rx.setPrn(frm.getPrn());			
+			rx.setPrn(frm.getPrn());
 			rx.setSpecial(removeExtraChars(frm.getSpecial()));
 			rx.setAtcCode(frm.getAtcCode());
 			rx.setRegionalIdentifier(frm.getRegionalIdentifier());
@@ -207,7 +209,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		return mapping.findForward(fwd);
 	}
 
-	public ActionForward updateReRxDrug(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public ActionForward updateReRxDrug(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
 		if (bean == null) {
 			response.sendRedirect("error.html");
@@ -230,7 +232,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 
 	}
 
-	public ActionForward saveCustomName(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public ActionForward saveCustomName(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
 		if (bean == null) {
 			response.sendRedirect("error.html");
@@ -287,7 +289,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		return rx;
 	}
 
-	public ActionForward newCustomNote(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public ActionForward newCustomNote(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		logger.debug("=============Start newCustomNote RxWriteScriptAction.java===============");
 
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
@@ -345,7 +347,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		return (mapping.findForward("newRx"));
 	}
 
-	public ActionForward listPreviousInstructions(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public ActionForward listPreviousInstructions(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		logger.debug("=============Start listPreviousInstructions RxWriteScriptAction.java===============");
 		String randomId = request.getParameter("randomId");
 		randomId = randomId.trim();
@@ -368,7 +370,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		return null;
 	}
 
-	public ActionForward newCustomDrug(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public ActionForward newCustomDrug(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		logger.debug("=============Start newCustomDrug RxWriteScriptAction.java===============");
 
 		MessageResources messages = getResources(request);
@@ -428,7 +430,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		return (mapping.findForward("newRx"));
 	}
 
-	public ActionForward normalDrugSetCustom(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public ActionForward normalDrugSetCustom(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
 		if (bean == null) {
 			response.sendRedirect("error.html");
@@ -473,7 +475,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		}
 	}
 
-	public ActionForward createNewRx(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public ActionForward createNewRx(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		logger.debug("=============Start createNewRx RxWriteScriptAction.java===============");
 		// set default quantity
 		setDefaultQuantity(request);
@@ -510,7 +512,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 			//save the list in a separate variable to make a drop down in the interface.
 			if(dmono != null && dmono.drugForm!=null && dmono.drugForm.indexOf(",")!=-1) {
 				String[] forms = dmono.drugForm.split(",");
-				rx.setDrugForm(forms[0]);				
+				rx.setDrugForm(forms[0]);
 			} else if(dmono.drugForm != null){
 				rx.setDrugForm(dmono.drugForm);
 			} else if(dmono.drugForm == null) {
@@ -536,7 +538,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 			// if user specified route in instructions, it'll be changed to the one specified.
 			String dosage = "";
 			String unit = "";
-			Vector comps = (Vector) dmono.components;
+			Vector comps = dmono.components;
 			for (int i = 0; i < comps.size(); i++) {
 				RxDrugData.DrugMonograph.DrugComponent drugComp = (RxDrugData.DrugMonograph.DrugComponent) comps.get(i);
 				String strength = drugComp.strength;
@@ -578,7 +580,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		return (mapping.findForward("newRx"));
 	}
 
-	public ActionForward updateDrug(ActionMapping mapping, ActionForm aform, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException {
+	public ActionForward updateDrug(ActionMapping mapping, ActionForm aform, HttpServletRequest request, HttpServletResponse response) throws IOException {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
 		if (bean == null) {
 			response.sendRedirect("error.html");
@@ -714,7 +716,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		}
 	}
 
-	public ActionForward iterateStash(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException, Exception {
+	public ActionForward iterateStash(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response)  {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
 		List<RxPrescriptionData.Prescription> listP = Arrays.asList(bean.getStash());
 		if (listP.size() == 0) {
@@ -726,7 +728,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 
 	}
 
-	public ActionForward updateSpecialInstruction(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException, Exception {
+	public ActionForward updateSpecialInstruction(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		// get special instruction from parameter
 		// get rx from random Id
 		// rx.setspecialisntruction
@@ -743,7 +745,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		return null;
 	}
 
-	public ActionForward updateProperty(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException, Exception {
+	public ActionForward updateProperty(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
 		String elem = request.getParameter("elementId");
 		String val = request.getParameter("propertyValue");
@@ -816,7 +818,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		for (int i = 0; i < bean.getStashSize(); i++) {
 			allIndex.add(i);
 		}
-		
+
 		List<Integer> existingIndex = new ArrayList();
 		for (String num : randNum) {
 			int stashIndex = bean.getIndexFromRx(Integer.parseInt(num));
@@ -831,7 +833,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 					boolean patientComplianceN = false;
 					boolean isOutsideProvider = false;
 					boolean isLongTerm = false;
-					boolean isPastMed = false;					
+					boolean isPastMed = false;
 					boolean isStartDateUnknown = false;
                                         boolean isNonAuthoritative = false;
                                         Date pickupDate;
@@ -902,7 +904,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 								rx.setRxDate(RxUtil.StringToDate("0000-00-00", "yyyy-MM-dd"));
 							} else {
 								rx.setRxDate(RxUtil.StringToDate(val, "yyyy-MM-dd"));
-							}     
+							}
                                                 } else if (elem.equals("pickupDate_" + num)) {
 							if ((val == null) || (val.equals(""))) {
 								rx.setPickupDate(null);
@@ -941,7 +943,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 								isPastMed = true;
 							} else {
 								isPastMed = false;
-							}						
+							}
 						} else if (elem.equals("startDateUnknown_" + num)) {
 							if (val.equals("on")) {
 								isStartDateUnknown = true;
@@ -977,14 +979,14 @@ public final class RxWriteScriptAction extends DispatchAction {
 						} else if (elem.equals("drugForm_"+num)){
 							rx.setDrugForm(val);
 						}
-                                                
+
 					}
 
 					if (!isOutsideProvider) {
 						rx.setOutsideProviderName("");
 						rx.setOutsideProviderOhip("");
 					}
-					rx.setPastMed(isPastMed);					
+					rx.setPastMed(isPastMed);
 					rx.setStartDateUnknown(isStartDateUnknown);
 					rx.setLongTerm(isLongTerm);
                                         rx.setNonAuthoritative(isNonAuthoritative);
@@ -1052,7 +1054,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		return null;
 	}
 
-        public ActionForward getDemoNameAndHIN(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException, Exception {
+        public ActionForward getDemoNameAndHIN(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, Exception {
             String demoNo=request.getParameter("demoNo").trim();
             DemographicDao demographicDAO=(DemographicDao)SpringUtils.getBean("demographicDao") ;
             Demographic d=demographicDAO.getDemographic(demoNo);
@@ -1068,7 +1070,7 @@ public final class RxWriteScriptAction extends DispatchAction {
             response.getOutputStream().write(jo.toString().getBytes());
             return null;
         }
-	public ActionForward changeToLongTerm(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException, Exception {
+	public ActionForward changeToLongTerm(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, Exception {
 		String strId = request.getParameter("ltDrugId");
 		if (strId != null) {
 			int drugId = Integer.parseInt(strId);
@@ -1077,7 +1079,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 				response.sendRedirect("error.html");
 				return null;
 			}
-			
+
 			RxPrescriptionData rxData = new RxPrescriptionData();
 			RxPrescriptionData.Prescription oldRx = rxData.getPrescription(drugId);
 			oldRx.setLongTerm(true);
@@ -1097,7 +1099,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		}
 	}
 
-	public void saveDrug(final HttpServletRequest request) throws IOException, ServletException, Exception {
+	public void saveDrug(final HttpServletRequest request) throws Exception {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
 
 		RxPrescriptionData.Prescription rx = null;
@@ -1112,7 +1114,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 				bean.addRandomIdDrugIdPair(rx.getRandomId(), rx.getDrugId());
 				auditStr.append(rx.getAuditString());
 				auditStr.append("\n");
-				
+
 				//write partial date
 				if (StringUtils.filled(rx.getWrittenDateFormat()))
 					partialDateDao.setPartialDate(PartialDate.DRUGS, rx.getDrugId(), PartialDate.DRUGS_WRITTENDATE, rx.getWrittenDateFormat());
@@ -1147,7 +1149,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 		return;
 	}
 
-	public ActionForward checkNoStashItem(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException, Exception {
+	public ActionForward checkNoStashItem(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, Exception {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
 		int n = bean.getStashSize();
 		HashMap hm = new HashMap();

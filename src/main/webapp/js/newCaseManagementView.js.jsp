@@ -1,7 +1,31 @@
+<%--
+
+
+    Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for
+    Centre for Research on Inner City Health, St. Michael's Hospital,
+    Toronto, Ontario, Canada
+
+--%>
 <%@page contentType="text/javascript"%>
 <%@page import="org.oscarehr.casemgmt.common.Colour"%>
 
-	var numNotes;   //How many saved notes do we have?
+	var numNotes = 0;   //How many saved notes do we have?
     var ctx;        //url context
     var providerNo;
     var demographicNo;
@@ -83,7 +107,7 @@
             }
 
             //check to see if we need to save
-            if( tmpSaveNeeded && (origCaseNote != $(caseNote).value || origObservationDate != $("observationDate").value) ) {
+            if( $(caseNote) != null && tmpSaveNeeded && (origCaseNote != $(caseNote).value || origObservationDate != $("observationDate").value) ) {
                 tmpSaveNeeded = false;
                 //autoSave(false);
                 document.forms['caseManagementEntryForm'].sign.value='persist';
@@ -227,6 +251,14 @@ function setupNotes(){
 
     $(caseNote).focus();
 }
+
+function setupOneNote(note) {
+	if (!NiftyCheck())
+		return;
+
+	Rounded("div#nc" + note, "all", "transparent", "#CCCCCC", "big border #000000");
+}
+
 var minDelta =  0.93;
 var minMain;
 var minWin;
@@ -330,6 +362,47 @@ function showIssueNotes() {
     }
 }
 
+var notesOffset = 0;
+var notesIncrement = 20;
+var notesRetrieveOk = false;
+var notesCurrentTop = null;
+var notesScrollCheckInterval = null;
+
+function notesIncrementAndLoadMore() {
+	if (notesRetrieveOk && $("encMainDiv").scrollTop == 0) {				
+		if($("encMainDiv").scrollHeight > $("encMainDiv").getHeight()) {	
+			notesOffset += notesIncrement;
+			notesRetrieveOk = false;
+			notesCurrentTop = $("encMainDiv").children[0].id;
+			notesLoader(notesOffset, notesIncrement, demographicNo);
+		}
+	}
+}
+
+function notesLoader(offset, numToReturn, demoNo) {
+	$("notesLoading").style.display = "inline";
+	var params = "method=viewNotesOpt&offset=" + offset + "&numToReturn=" + numToReturn + "&demographicNo=" + demoNo;
+	var params2 = jQuery("input[name='filter_providers'],input[name='filter_roles'],input[name='issues'],input[name='note_sort']").serialize();
+	if(params2.length>0)
+		params = params + "&" + params2;
+	new Ajax.Updater("encMainDiv",
+			ctx + "/CaseManagementView.do",
+			{
+				method: 'post',
+				postBody: params,
+				evalScripts: true,
+				insertion: Insertion.Top,
+				onSuccess: function(data) {
+					notesRetrieveOk = (data.responseText.replace(/\s+/g, '').length > 0);
+					if (!notesRetrieveOk) clearInterval(scrollCheckInterval);
+				},
+				onComplete: function() {
+					$("notesLoading").style.display = "none";
+					if (notesCurrentTop != null) $(notesCurrentTop).scrollIntoView();
+				}
+			});
+}
+
 function navBarLoader() {
 
 
@@ -352,33 +425,36 @@ function navBarLoader() {
     this.load = function() {
 
             var leftNavBar = [
-                  ctx + "/oscarEncounter/displayPrevention.do?hC=<%=Colour.prevention%>",
-                  ctx + "/oscarEncounter/displayTickler.do?hC=<%=Colour.tickler%>",
-                  ctx + "/oscarEncounter/displayDisease.do?hC=<%=Colour.disease%>",
-                  ctx + "/oscarEncounter/displayForms.do?hC=<%=Colour.forms%>",
-                  ctx + "/oscarEncounter/displayEForms.do?hC=<%=Colour.eForms%>",
-                  ctx + "/oscarEncounter/displayDocuments.do?hC=<%=Colour.documents%>",
-                  ctx + "/oscarEncounter/displayLabs.do?hC=<%=Colour.labs%>",
-                  ctx + "/oscarEncounter/displayMessages.do?hC=<%=Colour.messages%>",
-                  ctx + "/oscarEncounter/displayMeasurements.do?hC=<%=Colour.measurements%>",
-                  ctx + "/oscarEncounter/displayConsultation.do?hC=",
-                  ctx + "/oscarEncounter/displayHRM.do?hC="
+                  ctx + "/oscarEncounter/displayPrevention.do?hC=" + Colour.prevention,
+                  ctx + "/oscarEncounter/displayTickler.do?hC=" + Colour.tickler,
+                  ctx + "/oscarEncounter/displayDisease.do?hC=" + Colour.disease,
+                  ctx + "/oscarEncounter/displayForms.do?hC=" + Colour.forms,
+                  ctx + "/oscarEncounter/displayEForms.do?hC=" + Colour.eForms,
+                  ctx + "/oscarEncounter/displayDocuments.do?hC=" + Colour.documents,
+                  ctx + "/oscarEncounter/displayLabs.do?hC=" + Colour.labs,
+                  ctx + "/oscarEncounter/displayMessages.do?hC=" + Colour.messages,
+                  ctx + "/oscarEncounter/displayMeasurements.do?hC=" + Colour.measurements,
+                  ctx + "/oscarEncounter/displayConsultation.do?hC=" + Colour.consultation,
+                  ctx + "/oscarEncounter/displayHRM.do?hC=",
+                  ctx + "/oscarEncounter/displayMyOscar.do?hC="                 
               ];
 
-            var leftNavBarTitles = [ "preventions", "tickler", "Dx", "forms", "eforms", "docs","labs", "msgs", "measurements", "consultation","HRM"];
+            var leftNavBarTitles = [ "preventions", "tickler", "Dx", "forms", "eforms", "docs","labs", "msgs", "measurements", "consultation","HRM","myoscar"];
 
             var rightNavBar = [
-                  ctx + "/oscarEncounter/displayAllergy.do?hC=<%=Colour.allergy%>",
-                  ctx + "/oscarEncounter/displayRx.do?hC=<%=Colour.rx%>&numToDisplay=12",
-                  ctx + "/CaseManagementView.do?hc=<%=Colour.omed%>&method=listNotes&providerNo=" + providerNo + "&demographicNo=" + demographicNo + "&issue_code=OMeds&title=" + oMedsLabel + "&cmd=OMeds" + "&appointment_no="+appointmentNo,
-                  ctx + "/CaseManagementView.do?hc=<%=Colour.riskFactors%>&method=listNotes&providerNo=" + providerNo + "&demographicNo=" + demographicNo + "&issue_code=RiskFactors&title=" + riskFactorsLabel + "&cmd=RiskFactors"+ "&appointment_no="+appointmentNo,
-                  ctx + "/CaseManagementView.do?hc=<%=Colour.familyHistory%>&method=listNotes&providerNo=" + providerNo + "&demographicNo=" + demographicNo + "&issue_code=FamHistory&title=" + famHistoryLabel + "&cmd=FamHistory"+ "&appointment_no="+appointmentNo,
-                  ctx + "/oscarEncounter/displayIssues.do?hC=<%=Colour.unresolvedIssues%>",
-                  ctx + "/oscarEncounter/displayResolvedIssues.do?hC=<%=Colour.resolvedIssues%>",
-                  ctx + "/oscarEncounter/displayDecisionSupportAlerts.do?providerNo=" + providerNo + "&demographicNo=" + demographicNo
+                  ctx + "/oscarEncounter/displayAllergy.do?hC=" + Colour.allergy,
+                  ctx + "/oscarEncounter/displayRx.do?hC=" + Colour.rx + "&numToDisplay=12",
+                  ctx + "/CaseManagementView.do?hc=" + Colour.omed + "&method=listNotes&providerNo=" + providerNo + "&demographicNo=" + demographicNo + "&issue_code=OMeds&title=" + oMedsLabel + "&cmd=OMeds" + "&appointment_no="+appointmentNo,
+                  ctx + "/CaseManagementView.do?hc=" + Colour.riskFactors + "&method=listNotes&providerNo=" + providerNo + "&demographicNo=" + demographicNo + "&issue_code=RiskFactors&title=" + riskFactorsLabel + "&cmd=RiskFactors"+ "&appointment_no="+appointmentNo,
+                  ctx + "/CaseManagementView.do?hc=" + Colour.familyHistory + "&method=listNotes&providerNo=" + providerNo + "&demographicNo=" + demographicNo + "&issue_code=FamHistory&title=" + famHistoryLabel + "&cmd=FamHistory"+ "&appointment_no="+appointmentNo,
+                  ctx + "/oscarEncounter/displayIssues.do?hC=" + Colour.unresolvedIssues,
+                  ctx + "/oscarEncounter/displayResolvedIssues.do?hC=" + Colour.resolvedIssues,
+                  ctx + "/oscarEncounter/displayDecisionSupportAlerts.do?providerNo=" + providerNo + "&demographicNo=" + demographicNo,                                       
+                  ctx + "/oscarEncounter/displayEpisodes.do?hC=" + Colour.episode,
+                  ctx + "/oscarEncounter/displayPregnancies.do?hC="+ Colour.episode
               ];
 
-            var rightNavBarTitles = [ "allergies", "Rx", "OMeds", "RiskFactors", "FamHistory", "unresolvedIssues", "resolvedIssues", "Guidelines" ];
+            var rightNavBarTitles = [ "allergies", "Rx", "OMeds", "RiskFactors", "FamHistory", "unresolvedIssues", "resolvedIssues", "Guidelines","episode","pregnancy" ];
 
 
           var navbar = "leftNavBar";
@@ -1200,6 +1276,21 @@ function changeToView(id) {
         if( !confirm(unsavedNoteWarning))
             return false;
         else {
+       	// Prevent saving of note if the current note isn't properly assigned to a program and role. (note_program_ui_enabled = true)
+            if ((typeof jQuery("form[name='caseManagementEntryForm'] input[name='_note_program_no']").val() != "undefined") &&
+        			(typeof jQuery("form[name='caseManagementEntryForm'] input[name='_note_role_id']").val() != "undefined")) {
+        		if (jQuery("form[name='caseManagementEntryForm'] input[name='_note_program_no']").val().trim().length == 0 ||
+        				jQuery("form[name='caseManagementEntryForm'] input[name='_note_role_id']").val().trim().length == 0) {
+        			// For weird cases where the role id or program number is missing.
+        			_missingRoleProgramIdError();
+        			return false;
+        		} else if (jQuery("form[name='caseManagementEntryForm'] input[name='_note_program_no']").val() == "-2" ||
+        				jQuery("form[name='caseManagementEntryForm'] input[name='_note_role_id']").val() == "-2") {
+        			// For the case where you're trying to save a note with no available programs or roles
+        			_noVisibleProgramsError();
+        			return false;
+        		}
+        	}        
             saving = true;
             if( ajaxSaveNote(sig,nId,tmp) == false)
                 return false;
@@ -1245,6 +1336,7 @@ function changeToView(id) {
     if( !saving && $("observationDate") != null ) {
         var observationDate = $("observationDate").value;
 
+		new Insertion.After("observationDate", " <span id='obs" + nId + "'>" + observationDate + "</span>");
         Element.remove("observationDate");
         Element.remove("observationDate_cal");
 
@@ -1264,6 +1356,12 @@ function changeToView(id) {
     if( $("noteIssues") != null )
         Element.remove("noteIssues");
 
+	if( $("noteIssues-resolved") != null )
+		Element.remove("noteIssues-resolved");
+		
+	if( $("noteIssues-unresolved") != null )
+		Element.remove("noteIssues-unresolved");
+		
     var selectEnc = "encTypeSelect" + nId;
 
     if( $(selectEnc) != null ) {
@@ -1289,7 +1387,7 @@ function changeToView(id) {
     if( !saving ) {
         if( largeNote(tmp) ) {
             var btmImg = "<img title='Minimize Display' id='bottomQuitImg" + nId + "' alt='Minimize Display' onclick='minView(event)' style='float:right; margin-right:5px; margin-bottom:3px; ' src='" + ctx + "/oscarEncounter/graphics/triangle_up.gif'>";
-            new Insertion.Top(parent, btmImg);
+            new Insertion.Before(sig, btmImg);
         }
 
         //$(txt).style.fontSize = normalFont;
@@ -1303,7 +1401,7 @@ function changeToView(id) {
         var printImg = "print" + nId;
         var img = "<img title='Minimize' id='quitImg" + nId + "' onclick='minView(event)' style='float:right; margin-right:5px; margin-top: 2px;' src='" + ctx + "/oscarEncounter/graphics/triangle_up.gif'>";
         var printimg = "<img title='Print' id='" + printImg + "' alt='Toggle Print Note' onclick='togglePrint(" + nId + ", event)' style='float:right; margin-right:5px; margin-top: 2px;' src='" + ctx + "/oscarEncounter/graphics/printer.png'>";
-        var input = "<span id='txt" + nId + "'>" + tmp + "<\/span>";
+        var input = "<div id='txt" + nId + "'>" + tmp + "<\/div>";
 
         var func;
         var editWarn = "editWarn" + nId;
@@ -1315,13 +1413,22 @@ function changeToView(id) {
         }
 
         var editAnchor = "<a title='Edit' id='edit"+ nId + "' href='#' onclick='" + func + " return false;' style='float: right; margin-right: 5px; font-size:8px;'>" + editLabel + "</a>";
+        var editAnchor = "<a title='Edit' id='edit"+ nId + "' href='#' onclick='" + func + " return false;' style='float: right; margin-right: 5px; font-size:8px;'>" + editLabel + "</a>";
+        var editId = "edit" + nId;
 
-        new Insertion.Top(parent, input);
+        var attribName = "anno" + (new Date().getTime());
+        var attribAnchor = "<input id='anno" + nId + "' height='10px;' width='10px' type='image' src='" + ctx + "/oscarEncounter/graphics/annotation.png' title='" + annotationLabel + "' style='float: right; margin-right: 5px; margin-bottom: 3px;'" +
+        	"onclick=\"window.open('" + ctx + "/annotation/annotation.jsp?atbname=" + attribName + "&table_id=" + nId + "&display=EChartNote&demo=" + demographicNo + "','anwin','width=400,height=500');$('annotation_attribname').value='" + attribName + "'; return false;\">";
+
         new Insertion.Top(parent, editAnchor);
+        new Insertion.After(editId, input);
+        
 
-        if( nId.substr(0,1) != "0" ) {
+         if( nId.substr(0,1) != "0" ) {
             Element.remove(printImg);
-            new Insertion.Top(parent, printimg);
+            new Insertion.Before(editId, printimg);
+            new Insertion.After(editId, attribAnchor);
+            new Insertion.Top(parent, img);
         }
 
         new Insertion.Top(parent, img);
@@ -1419,7 +1526,7 @@ function minView(e) {
     line = line.replace(/<br>/g," ");
     var dateValue = $(dateId) != null ? $(dateId).innerHTML : "";
     dateValue = dateValue.substring(0,dateValue.indexOf(" "));
-    line = "<div id='" + date + "' style='float:left; font-size:1.0em; width:10%;'><b>" + dateValue + "<\/b><\/div><div id='" + content + "' style='float:left; font-size:1.0em; width:70%;'>" + line + "<\/div>";
+    line = "<div id='" + date + "' style='font-size:1.0em; width:10%;'><b>" + dateValue + "<\/b><\/div><div id='" + content + "' style='float:left; font-size:1.0em; width:70%;'>" + line + "<\/div>";
     $("txt"+nId).hide();
     $("sig"+nId).hide();
     new Insertion.Top(txt,line);
@@ -1453,17 +1560,7 @@ function shrink(id, toScale) {
 	idHeight = $(id).getHeight();
     curElemHeight = idHeight;
     var delta = Math.ceil(curElemHeight/5);
-    shrinkTimer = self.setInterval("shrinkImpl('"+id+"', " + toScale+", "+delta+")",1);
-}
-function shrinkImpl(id, minHeight, delta) {
-    curElemHeight -= delta;
-    if( curElemHeight <= minHeight ) {
-        $(id).setStyle({height:minHeight + 'px'});
-        window.clearInterval(shrinkTimer);
-        return;
-    }
- 	$(id).setStyle('height',curElemHeight + 'px');
-   // $(id).style.height = curElemHeight;
+    $(id).style.height = toScale + "px";
 }
 
 //this func fires only if maximize button is clicked after fullView
@@ -1688,6 +1785,7 @@ function editNote(e) {
     var nId = regEx.exec(el.id);
     var txt = "n" + nId;
     var xpandId = "xpImg" + nId;
+    var sig = "sig" + nId;
 
     if( $(xpandId) != null ) {
         xpandView(e);
@@ -1703,6 +1801,11 @@ function editNote(e) {
             return;
         }
     }
+    
+    // Only works with "note_program_ui_enabled = true" (noteProgram.js)
+    if (typeof _setCurrentProgramAndRoleIdForNote == "function") {
+    	_setCurrentProgramAndRoleIdForNote(nId);
+    }
 
     //get rid of minimize and print buttons
     var nodes = $(txt).getElementsBySelector('img');
@@ -1712,11 +1815,18 @@ function editNote(e) {
 
 
     var editAnchor = "edit" + nId;
+    var annoAnchor = "anno" + nId;
     var date = "d" + nId;
     var content = "c" + nId;
 
     //remove edit anchor
-    Element.remove(editAnchor);
+    //remove edit anchor
+    if ($(editAnchor) != null)
+    	Element.remove(editAnchor);
+
+    // Remove annotation anchor
+    if ($(annoAnchor) != null)
+    	Element.remove(annoAnchor);
 
     //check for line item displayed when note is minimized
     if( $(date) != null ) {
@@ -1794,8 +1904,8 @@ function editNote(e) {
 
 
     //AutoCompleter for Issues
-    var issueURL = ctx + "/CaseManagementEntry.do?method=issueList&demographicNo=${demographicNo}&providerNo=" + providerNo;
-    issueAutoCompleter = new Ajax.Autocompleter("issueAutocomplete", "issueAutocompleteList", issueURL, {minChars: 4, indicator: 'busy', afterUpdateElement: saveIssueId, onShow: autoCompleteShowMenu, onHide: autoCompleteHideMenu});
+    var issueURL = ctx + "/CaseManagementEntry.do?method=issueList&demographicNo=" + demographicNo + "&providerNo=" + providerNo;
+	issueAutoCompleter = new Ajax.Autocompleter("issueAutocomplete", "issueAutocompleteList", issueURL, {minChars: 4, indicator: 'busy', afterUpdateElement: saveIssueId, onShow: autoCompleteShowMenu, onHide: autoCompleteHideMenu});
 
     //if note is already signed, remove save button to force edits to be signed
     var sign = "signed" + nId;
@@ -1858,6 +1968,35 @@ function showIssues(e) {
 
 }
 
+function showHideIssues(e, issueType) {
+				
+	Event.stop(e);
+	//Element.toggle('noteIssues');
+	if(issueType=="hide" || issueType=="")
+		showIssue = false;
+	else
+		showIssue = true;
+				
+	if( showIssue ) {
+		if(issueType == "noteIssues-unresolved") {
+			Element.toggle('noteIssues-unresolved');
+			$("noteIssues-unresolved").scrollIntoView(false);			
+		} else if(issueType == "noteIssues-resolved") {
+			Element.toggle('noteIssues-resolved');
+			$("noteIssues-resolved").scrollIntoView(false);			
+		} else if(issueType == "noteIssues") {
+			Element.toggle('noteIssues');
+			$("noteIssues").scrollIntoView(false);
+		}
+				
+		$("issueAutocomplete").focus();
+	} else {
+		$(caseNote).focus();
+	}
+				
+	return false;
+}
+			
 function scrollEncDown() {
 	//$("encMainDiv").scrollTop= $("encMainDiv").scrollHeight;
 	$("noteIssues").scrollIntoView(false);
@@ -2112,12 +2251,12 @@ function saveNoteAjax(method, chain) {
             alert(assignIssueError);
             return false;
         }
-
+/* the observationDate could be the default one as today.
         if( requireObsDate && $("observationDate").value.length == 0 ) {
             alert(assignObservationDateError);
             return false;
         }
-
+*/
         if($("encTypeSelect0") != null && $("encTypeSelect0").options[$("encTypeSelect0").selectedIndex].value.length == 0 ) {
         	alert(assignEncTypeError);
         	return false;
@@ -2192,6 +2331,21 @@ function saveNoteAjax(method, chain) {
 
 
 function savePage(method, chain) {
+	if ((typeof jQuery("form[name='caseManagementEntryForm'] input[name='_note_program_no']").val() != "undefined") &&
+			(typeof jQuery("form[name='caseManagementEntryForm'] input[name='_note_role_id']").val() != "undefined")) {
+		if (jQuery("form[name='caseManagementEntryForm'] input[name='_note_program_no']").val().trim().length == 0 ||
+				jQuery("form[name='caseManagementEntryForm'] input[name='_note_role_id']").val().trim().length == 0) {
+			// For weird cases where the role id or program number is missing.
+			_missingRoleProgramIdError();
+			return false;
+		} else if (jQuery("form[name='caseManagementEntryForm'] input[name='_note_program_no']").val() == "-2" ||
+				jQuery("form[name='caseManagementEntryForm'] input[name='_note_role_id']").val() == "-2") {
+			// For the case where you're trying to save a note with no available programs or roles
+			_noVisibleProgramsError();
+			return false;
+		}
+	}
+
 	var noteStr;
 	noteStr = $F(caseNote);
     /*
@@ -2297,6 +2451,36 @@ function savePage(method, chain) {
         return false;
     }
 
+function changeDiagnosisResolved(issueId) {
+	var methodArg = "ajaxChangeDiagnosis";
+	var divIdArg = $("noteIssues-resolved").up().id;
+	var thisObj = {};
+	changeIssueFunc = updateIssues.bindAsEventListener(thisObj, methodArg, divIdArg);
+			
+	document.forms['caseManagementEntryForm'].change_diagnosis_id.value=issueId;
+	$("asgnIssues").value= changeIssueMsg;
+		
+	Element.stopObserving('asgnIssues', 'click', addIssueFunc);
+	Element.observe('asgnIssues', 'click', changeIssueFunc);
+	$("issueAutocomplete").focus();
+	return false;
+}
+
+function changeDiagnosisUnresolved(issueId) {
+	var methodArg = "ajaxChangeDiagnosis";
+	var divIdArg = $("noteIssues-unresolved").up().id;
+	var thisObj = {};
+	changeIssueFunc = updateIssues.bindAsEventListener(thisObj, methodArg, divIdArg);
+			
+	document.forms['caseManagementEntryForm'].change_diagnosis_id.value=issueId;
+	$("asgnIssues").value= changeIssueMsg;
+				
+	Element.stopObserving('asgnIssues', 'click', addIssueFunc);
+	Element.observe('asgnIssues', 'click', changeIssueFunc);
+	$("issueAutocomplete").focus();
+	return false;
+}
+			
     function toggleNotePasswd() {
         if( passwordEnabled ) {
             Element.toggle('notePasswd');
@@ -2897,8 +3081,10 @@ function autoCompleteShowMenuCPP(element, update) {
         var pos;
         var imgId;
 
-        for( idx = 0; idx <= numNotes; ++idx ) {
+        for( idx = 1; idx <= maxNcId; ++idx ) {
+        	
         	if($("nc"+idx) == null) continue;
+        	noteDate = null;
             notesDiv = $("nc" + idx).down('div');
             noteId = notesDiv.id.substr(1);  //get note id
             if(noteId==0) continue;
@@ -2913,7 +3099,7 @@ function autoCompleteShowMenuCPP(element, update) {
 
             //trim leading and trailing whitespace from date
             noteDate = noteDate.replace(/^\s+|\s+$/g,"");
-
+			
             if( noteDate != null ) {
                 //grab date and splice off time and format for js date object
                 noteDate = noteDate.substr(0,noteDate.indexOf(" "));
@@ -2921,6 +3107,7 @@ function autoCompleteShowMenuCPP(element, update) {
                 formatdate = tmp[1] + " " + tmp[0] + ", " + tmp[2];
                 msnote = Date.parse(formatdate);
                 pos = noteIsQeued(noteId);
+                                
                 if( msnote >= msbeg && msnote <= msend ) {
                     if( pos == -1 )
                         addPrintQueue(noteId);
@@ -3031,7 +3218,10 @@ function autoCompleteShowMenuCPP(element, update) {
        Event.stop(e);
 
         //cycle through container divs for each note
-        for( idx = 1; idx <= numNotes; ++idx ) {
+        for( idx = 1; idx <= maxNcId; ++idx ) {
+        
+        	if( $("nc" + idx) == null ) continue;
+        	
             notesDiv = $("nc" + idx).down('div');
             noteId = notesDiv.id.substr(1);  //get note id
             imgId = "print"+noteId;
@@ -3063,7 +3253,10 @@ function autoCompleteShowMenuCPP(element, update) {
         //$("notes2print").value = "";
 
         //cycle through container divs for each note
-        for( idx = 1; idx <= numNotes; ++idx ) {
+        for( idx = 1; idx <= maxNcId; ++idx ) {
+        
+        	if( $("nc" + idx) == null ) continue;
+        
             notesDiv = $("nc" + idx).down('div');
             noteId = notesDiv.id.substr(1);  //get note id
           //if print img present, add note to print queue if not already there
@@ -3093,4 +3286,17 @@ function autoCompleteShowMenuCPP(element, update) {
     	currentNoteText += jQuery("#noteEditTxt").val();
     	jQuery("#caseNote_note"+currentNoteId).val(currentNoteText);
     }
+    
+  	function selectGroup(programId,demographicNo) {
+  			var noteId = document.forms["caseManagementEntryForm"].noteId.value;
+		 	var url='groupNoteSelect.jsp?programId='+programId + '&demographicNo='+demographicNo;
+	    	popupPage(600,700,'group',url);
 
+	}	
+	
+	function setIssueCheckbox(val) {
+		jQuery("input[name='issues']").each(function(){
+			if(jQuery(this).val() == val)
+				jQuery(this).attr("checked","checked");
+		});
+	}

@@ -1,28 +1,29 @@
 <%--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
 --%>
+
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
@@ -123,10 +124,8 @@ if(session.getAttribute("user") == null ) //|| !((String) session.getValue("user
   String [][] dbQueries=null;
   if (org.oscarehr.common.IsPropertiesOn.isCaisiEnable() && org.oscarehr.common.IsPropertiesOn.isTicklerPlusEnable()){
   dbQueries=new String[][] {
-    {"provider_add_record", "insert into provider (provider_no,last_name,first_name,provider_type,specialty,team,sex,dob,address,phone,work_phone,email,ohip_no,rma_no,billing_no,hso_no,status,comments,provider_activity,practitionerNo,lastUpdateUser,lastUpdateDate) values(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,now())" },
     {"provider_search_titlename", "select provider_no,first_name,last_name,specialty,sex,team,phone,status from provider where "+fieldname+ " "+regularexp+" ? " +orderby + " "+limit},
     {"provider_search_detail", "select * from provider where provider_no=?"},
-    {"provider_update_record", "update provider set last_name=?,first_name=?, provider_type=?, specialty=?,team=?,sex=?,dob=?, address=?,phone=?,work_phone=?,email=?,ohip_no=?,rma_no=?,billing_no=?,hso_no=?,status=?, comments=?, provider_activity=?, practitionerNo=?, lastUpdateUser=?, lastUpdateDate=now()  where provider_no=? and provider_no!='super'"},
     {"search_provider_doc", "select * from provider where provider_type='doctor' and status='1' order by last_name"},
 
     {"demographic_search_titlename", "select demographic_no,first_name,last_name,roster_status,sex,year_of_birth,month_of_birth,date_of_birth  from demographic where "+fieldname+ " "+regularexp+" ? " +orderby + " "+limit},
@@ -136,20 +135,12 @@ if(session.getAttribute("user") == null ) //|| !((String) session.getValue("user
     {"demographic_search_demoaddno", "select demographic_no from demographic where last_name=? and first_name =? and year_of_birth=? and month_of_birth=? and date_of_birth=? and hin=? and ver=?"},
     {"search_lastfirstnamedob", "select demographic_no from demographic where last_name=? and first_name=? and year_of_birth=? and month_of_birth=? and date_of_birth=?"},
 
-    {"security_add_record", "insert into security (user_name,password,provider_no,pin,b_ExpireSet,date_ExpireDate,b_LocalLockSet,b_RemoteLockSet) values(?,?,?,?,?,?,?,?)" },
     {"security_search_titlename", "select * from security where "+fieldname+ " "+regularexp+" ? " +orderby + " "+limit},
     {"security_search_detail", "select * from security where security_no=?"},
-    {"security_delete", "delete from security where security_no=? and provider_no!='super'"},
-    {"security_update_record", "update security set user_name=?,password=?,provider_no=?,pin=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
-    {"security_update_record2", "update security set user_name=?,password=?,provider_no=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
-    {"security_update_record3", "update security set user_name=?,provider_no=?,pin=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
-    {"security_update_record4", "update security set user_name=?,provider_no=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
 
     {"searchmygroupcount", "select count(provider_no) from mygroup where mygroup_no=? "},
     {"searchmygroupprovider", "select provider_no, last_name, first_name from mygroup where mygroup_no=? "},
     {"searchmygroupall", "select * from mygroup order by mygroup_no"},
-    {"deletegroupmember", "delete from mygroup where mygroup_no=? and provider_no=?"},
-    {"savemygroup", "insert into mygroup (mygroup_no,provider_no,last_name,first_name) values(?,?,?,?)" },
     {"searchprovider", "select provider_no, last_name, first_name from provider where provider_type='doctor' and status='1' order by last_name"},
     {"searchproviderall", "select provider_no, last_name, first_name from provider where status='1' order by last_name"},
 
@@ -167,10 +158,8 @@ if(session.getAttribute("user") == null ) //|| !((String) session.getValue("user
   };
 	}else{
 	dbQueries=new String[][] {
-    {"provider_add_record", "insert into provider (provider_no,last_name,first_name,provider_type,specialty,team,sex,dob,address,phone,work_phone,email,ohip_no,rma_no,billing_no,hso_no,status,comments,provider_activity,practitionerNo, lastUpdateUser, lastUpdateDate) values(?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,?,?,?,?, ?,now())" },
     {"provider_search_titlename", "select provider_no,first_name,last_name,specialty,sex,team,phone,status from provider where "+fieldname+ " "+regularexp+" ? " +orderby + " "+limit},
     {"provider_search_detail", "select * from provider where provider_no=?"},
-    {"provider_update_record", "update provider set last_name=?,first_name=?, provider_type=?, specialty=?,team=?,sex=?,dob=?, address=?,phone=?,work_phone=?,email=?,ohip_no=?,rma_no=?,billing_no=?,hso_no=?,status=?, comments=?, provider_activity=?, practitionerNo=?, lastUpdateUser=?, lastUpdateDate=now()  where provider_no=? and provider_no!='super'"},
     {"search_provider_doc", "select * from provider where provider_type='doctor' and status='1' order by last_name"},
 
     {"demographic_search_titlename", "select demographic_no,first_name,last_name,roster_status,sex,year_of_birth,month_of_birth,date_of_birth  from demographic where "+fieldname+ " "+regularexp+" ? " +orderby + " "+limit},
@@ -179,20 +168,12 @@ if(session.getAttribute("user") == null ) //|| !((String) session.getValue("user
     {"demographic_search_demoaddno", "select demographic_no from demographic where last_name=? and first_name =? and year_of_birth=? and month_of_birth=? and date_of_birth=? and hin=? and ver=?"},
     {"search_lastfirstnamedob", "select demographic_no from demographic where last_name=? and first_name=? and year_of_birth=? and month_of_birth=? and date_of_birth=?"},
 
-    {"security_add_record", "insert into security (user_name,password,provider_no,pin,b_ExpireSet,date_ExpireDate,b_LocalLockSet,b_RemoteLockSet) values(?,?,?,?,?,?,?,?)" },
     {"security_search_titlename", "select * from security where "+fieldname+ " "+regularexp+" ? " +orderby + " "+limit},
     {"security_search_detail", "select * from security where security_no=?"},
-    {"security_delete", "delete from security where security_no=? and provider_no!='super'"},
-    {"security_update_record", "update security set user_name=?,password=?,provider_no=?,pin=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
-    {"security_update_record2", "update security set user_name=?,password=?,provider_no=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
-    {"security_update_record3", "update security set user_name=?,provider_no=?,pin=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
-    {"security_update_record4", "update security set user_name=?,provider_no=?,b_ExpireSet=?,date_ExpireDate=?,b_LocalLockSet=?,b_RemoteLockSet=? where security_no=?" },
 
     {"searchmygroupcount", "select count(provider_no) from mygroup where mygroup_no=? "},
     {"searchmygroupprovider", "select provider_no, last_name, first_name from mygroup where mygroup_no=? "},
     {"searchmygroupall", "select * from mygroup order by mygroup_no"},
-    {"deletegroupmember", "delete from mygroup where mygroup_no=? and provider_no=?"},
-    {"savemygroup", "insert into mygroup (mygroup_no,provider_no,last_name,first_name) values(?,?,?,?)" },
     {"searchprovider", "select provider_no, last_name, first_name from provider where provider_type='doctor' and status='1' order by last_name"},
     {"searchproviderall", "select provider_no, last_name, first_name from provider where status='1' order by last_name"},
 

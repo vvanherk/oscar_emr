@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package org.oscarehr.phr.util;
 
 import java.util.List;
@@ -10,6 +35,7 @@ import org.oscarehr.myoscar_server.ws.MessageTransfer;
 import org.oscarehr.myoscar_server.ws.MessageWs;
 import org.oscarehr.myoscar_server.ws.NoSuchItemException_Exception;
 import org.oscarehr.myoscar_server.ws.NotAuthorisedException_Exception;
+import org.oscarehr.myoscar_server.ws.UnsupportedEncodingException_Exception;
 import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
@@ -69,8 +95,9 @@ public class MyOscarMessageManager {
 	/**
 	 * @return Returns the ID of the new message that is created ie the reply message.
 	 * @throws NoSuchItemException_Exception 
+	 * @throws UnsupportedEncodingException_Exception 
 	 */
-	public static Long sendReply(Long myOscarUserId, String myOscarPassword, Long messageId, String contents) throws NotAuthorisedException_Exception, NoSuchItemException_Exception
+	public static Long sendReply(Long myOscarUserId, String myOscarPassword, Long messageId, String contents) throws NotAuthorisedException_Exception, NoSuchItemException_Exception, UnsupportedEncodingException_Exception
 	{
 		MessageWs messageWs=MyOscarServerWebServicesManager.getMessageWs(myOscarUserId, myOscarPassword);
 		Long repliedMessageId = messageWs.replyToMessage(messageId, contents);
@@ -78,7 +105,7 @@ public class MyOscarMessageManager {
 		return repliedMessageId;
 	}
 
-	public static void sendMessage(Long myOscarUserId, String myOscarPassword, Long recipientPersonId, String subject, String contents) throws NotAuthorisedException_Exception
+	public static void sendMessage(Long myOscarUserId, String myOscarPassword, Long recipientPersonId, String subject, String contents) throws NotAuthorisedException_Exception, UnsupportedEncodingException_Exception
 	{
 		MessageWs messageWs=MyOscarServerWebServicesManager.getMessageWs(myOscarUserId, myOscarPassword);
 		messageWs.sendMessage(recipientPersonId, subject, contents);

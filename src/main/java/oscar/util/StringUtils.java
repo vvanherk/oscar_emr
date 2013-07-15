@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.util;
 
 import java.io.InputStream;
@@ -44,11 +46,11 @@ public class StringUtils {
     public final static String ELLIPSIS = "...";
 
     /**
-     * use to have a maximum string length view 
+     * use to have a maximum string length view
      * ie "hello world !!!" would be "hello wor..."
      *
      *  with maxlength 13 and shorted 8 and added "..."
-     * 
+     *
      * BENZOICUM ACIDUM 1CH - 30CH
      *
      *  would equal
@@ -210,10 +212,10 @@ public class StringUtils {
                 ret = true;
             } catch (NumberFormatException e) {
                 ret = false;
-            } 
-            
+            }
+
                 return ret;
-           
+
         }
         return ret;
     }
@@ -242,9 +244,9 @@ public class StringUtils {
             fmt.parse(dateString);
             ret = true;
         } catch (ParseException ex) {
-        } 
+        }
             return ret;
-       
+
     }
 
     public static String readFileStream(FormFile file) {
@@ -286,8 +288,8 @@ public class StringUtils {
         return result.toString();
     }
 
-    public static ArrayList split(String rawString, String delimiter) {
-        ArrayList result = new ArrayList();
+    public static ArrayList<String> split(String rawString, String delimiter) {
+        ArrayList<String> result = new ArrayList<String>();
         StringTokenizer st = new StringTokenizer(rawString, delimiter);
 
         while (st.hasMoreTokens()) {
@@ -326,7 +328,7 @@ public class StringUtils {
     }
 
     /**
-     * Strips linebreaks   
+     * Strips linebreaks
      * Replace linebreaks and multiple spaces by a single space
      * johnchwk Apr 2008
      */
@@ -365,26 +367,26 @@ public class StringUtils {
 
         return mystringBuffer.toString();
     }
-    
+
     public static boolean nullSafeEquals(String s1, String s2) {
     	if (s1==null && s2==null) return true;
     	if (s1!=null)
     		return s1.equals(s2);
     	else
     		return s2==null;
-    	
+
     }
 
     public static boolean nullSafeEqualsIgnoreCase(String s1, String s2) {
 		return nullSafeEquals(s1.toUpperCase(), s2.toUpperCase());
     }
-    
+
     public static boolean containsIgnoreCase(String text, String searchWord) {
     	if (text==null || searchWord==null) return false;
-    	
+
     	text = text.toUpperCase();
     	searchWord = searchWord.toUpperCase();
-    	
+
     	return text.contains(searchWord);
     }
 

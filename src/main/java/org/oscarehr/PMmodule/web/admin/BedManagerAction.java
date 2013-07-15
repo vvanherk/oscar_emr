@@ -1,3 +1,26 @@
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 package org.oscarehr.PMmodule.web.admin;
 
 import java.util.ArrayList;
@@ -40,7 +63,7 @@ public class BedManagerAction extends BaseAction {
     private ProgramManager programManager;
 
     private RoomManager roomManager;
-    
+
     private FacilityDao facilityDao;
 
     public void setFacilityDao(FacilityDao facilityDao) {
@@ -137,11 +160,7 @@ public class BedManagerAction extends BaseAction {
         try {
             roomManager.saveRooms(rooms);
         }
-        catch (RoomHasActiveBedsException e) {
-            ActionMessages messages = new ActionMessages();
-            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("room.active.beds.error", e.getMessage()));
-            saveMessages(request, messages);
-        }
+
         catch (DuplicateRoomNameException e) {
             ActionMessages messages = new ActionMessages();
             messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("room.duplicate.name.error", e.getMessage()));
@@ -259,7 +278,7 @@ public class BedManagerAction extends BaseAction {
     public ActionForward addRooms(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
         BedManagerForm bForm = (BedManagerForm) form;
         Integer numRooms = bForm.getNumRooms();
-        
+
 /*????what is roomlines used for?
         Integer roomslines = 0;
         if ("".equals(request.getParameter("roomslines")) == false) {
@@ -276,14 +295,8 @@ public class BedManagerAction extends BaseAction {
         }
 */
         if (numRooms != null && numRooms > 0) {
-            try {
-                roomManager.addRooms(bForm.getFacilityId(), numRooms);
-            }
-            catch (RoomHasActiveBedsException e) {
-                ActionMessages messages = new ActionMessages();
-                messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("room.active.beds.error", e.getMessage()));
-                saveMessages(request, messages);
-            }
+            roomManager.addRooms(bForm.getFacilityId(), numRooms);
+
         }
 
         return manage(mapping, form, request, response);
@@ -294,9 +307,9 @@ public class BedManagerAction extends BaseAction {
         BedManagerForm bForm = (BedManagerForm) form;
         Integer numBeds = bForm.getNumBeds();
         Integer roomId = bForm.getBedRoomFilterForBed();
-        
+
         int occupancyOfRoom = roomManager.getRoom(roomId).getOccupancy().intValue();
-        
+
         //bedslines is the current total number of bed in the room.
         Integer bedslines = 0;
         if ("".equals(request.getParameter("bedslines")) == false) {
@@ -322,11 +335,11 @@ public class BedManagerAction extends BaseAction {
                 saveMessages(request, messages);
             }
         } else {
-        	
+
 	        	ActionMessages messages = new ActionMessages();
 	            messages.add(ActionMessages.GLOBAL_MESSAGE, new ActionMessage("message", "The number of the beds in this room already reaches the maximum."));
 	            saveMessages(request, messages);
-        	
+
         }
 
         return manage(mapping, form, request, response);
@@ -384,7 +397,7 @@ public class BedManagerAction extends BaseAction {
         }
         /*
          * List<Bed> filteredBedsList = null; Room[] filteredRooms = roomManager.getAssignedBedRooms(facilityId, bedFilteredProgram, bedStatusBoolean); for(int i=0; filteredRooms != null && i < filteredRooms.length; i++){
-         * 
+         *
          * if(filteredRooms[i] != null){ filteredBedsList = bedManager.getBedsByFilter(facilityId, filteredRooms[i].getId(), bedStatusBoolean, false); filteredBeds.addAll(filteredBedsList); } }
          */
 

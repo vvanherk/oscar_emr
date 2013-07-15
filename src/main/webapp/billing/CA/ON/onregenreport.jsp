@@ -1,21 +1,22 @@
-<!-- 
-/*
- * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * Yi Li
- */
-  -->
+<%--
+
+    Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+--%>
 <%if (session.getAttribute("user") == null)
 				response.sendRedirect("../../../logout.jsp");
 %>
@@ -23,10 +24,14 @@
 <%@ page import="java.util.*" errorPage="errorpage.jsp"%>
 <%@ page import="oscar.oscarBilling.ca.on.pageUtil.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
+<%@ page import="oscar.oscarProvider.data.ProviderBillCenter"%>
+
 
 <%//
 			String diskId = request.getParameter("diskId");
 			String mohOffice = request.getParameter("billcenter");
+			boolean useProviderMOH = "true".equals(request.getParameter("useProviderMOH"));
+			String defaultMOH = mohOffice;
 
 			//get date from JdbcBillingClamImpl.getPrevDiskCreateDate(id), getDiskCreateDate(id)
 			JdbcBillingClaimImpl dateObj = new JdbcBillingClaimImpl();
@@ -41,6 +46,17 @@
 			if (lProvider != null && lProvider.size() == 1 && ((BillingProviderData) lProvider.get(0)).getBillingGroupNo().equals("0000")) {
 				BillingProviderData dataProvider = (BillingProviderData) lProvider.get(0);
 
+				if (useProviderMOH) {
+					ProviderBillCenter pbc = new ProviderBillCenter();
+					String billCenter = pbc.getBillCenter(dataProvider.getProviderNo());
+					if (billCenter != null && billCenter.length() == 1) {
+						mohOffice = billCenter;						
+					}
+					else {
+						mohOffice = defaultMOH;
+					}
+				}
+				
 				// create the billing file 
 				int headerId = obj.updateBatchHeader(dataProvider, diskId, mohOffice, "1", (String) session
 						.getAttribute("user"));
@@ -63,7 +79,7 @@
 				objFile.setDateRange(dateRange);
 				//
 				
-				objFile.createBillingFileStr("" + headerId, "(status='B')");
+				objFile.createBillingFileStr("" + headerId, "(status='B')", false, mohOffice, false, false);
 				objFile.writeFile(objFile.getValue());
 				objFile.writeHtml(objFile.getHtmlCode());
 				// update the diskname 
@@ -108,7 +124,7 @@
 						//}
 						objFile.setDateRange(dateRange);
 						//
-						objFile.createBillingFileStr("" + headerId, "(status='B')");
+						objFile.createBillingFileStr("" + headerId, "(status='B')", false, mohOffice, false, false);						
 						value += objFile.getValue() + "\n";
 						objFile.writeHtml(objFile.getHtmlCode());
 						objFile.updateDisknameSum(Integer.parseInt(diskId));
@@ -124,4 +140,3 @@
 <jsp:forward page='billingONMRI.jsp'>
 	<jsp:param name="year" value='' />
 </jsp:forward>
-

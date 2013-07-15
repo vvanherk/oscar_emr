@@ -1,32 +1,34 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version. *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * *  
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada   Creates a new instance of Prevention
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
  *
- * CombinePDFAction.java
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * Created on July 29, 2006, 8:35 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package oscar.dms.actions;
 
+import java.sql.SQLException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Enumeration;
@@ -43,6 +45,7 @@ import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
 
+import org.apache.http.impl.cookie.DateUtils;
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
@@ -53,6 +56,7 @@ import org.oscarehr.PMmodule.model.SecUserRole;
 import org.oscarehr.PMmodule.utility.UtilDateUtilities;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.DocumentResultsDao;
+import org.oscarehr.common.dao.InboxResultsDao;
 import org.oscarehr.common.dao.ProviderInboxRoutingDao;
 import org.oscarehr.common.dao.QueueDao;
 import org.oscarehr.common.dao.QueueDocumentLinkDao;
@@ -70,6 +74,8 @@ import oscar.oscarLab.ca.all.Hl7textResultsData;
 import oscar.oscarLab.ca.on.CommonLabResultData;
 import oscar.oscarLab.ca.on.HRMResultsData;
 import oscar.oscarLab.ca.on.LabResultData;
+import oscar.oscarMDS.data.CategoryData;
+import oscar.oscarMDS.data.PatientInfo;
 import oscar.oscarProvider.data.ProviderData;
 import oscar.util.OscarRoleObjectPrivilege;
 
@@ -82,7 +88,7 @@ import org.oscarehr.common.model.SpireCommonAccessionNumber;
 
 public class DmsInboxManageAction extends DispatchAction {
 	private static Logger logger=MiscUtils.getLogger();
-	
+
 	private ProviderInboxRoutingDao providerInboxRoutingDAO = null;
 	private QueueDocumentLinkDao queueDocumentLinkDAO = null;
 	private SecObjectNameDao secObjectNameDao = null;
@@ -107,21 +113,21 @@ public class DmsInboxManageAction extends DispatchAction {
 	}
 
 	private void setProviderDocsInSession(ArrayList<EDoc> privatedocs, HttpServletRequest request) {
-		ArrayList providers = ProviderData.getProviderListOfAllTypes();
-		Hashtable providerDocs = new Hashtable();
+		ArrayList<Hashtable<String,String>> providers = ProviderData.getProviderListOfAllTypes();
+		Hashtable<String,List<EDoc>> providerDocs = new Hashtable<String,List<EDoc>>();
 		for (int i = 0; i < providers.size(); i++) {
-			Hashtable ht = (Hashtable) providers.get(i);
-			List<EDoc> EDocs = new ArrayList();
-			String providerNo = (String) ht.get("providerNo");
+			Hashtable<String,String>ht =  providers.get(i);
+			List<EDoc> EDocs = new ArrayList<EDoc>();
+			String providerNo =  ht.get("providerNo");
 			providerDocs.put(providerNo, EDocs);
 		}
 		for (int i = 0; i < privatedocs.size(); i++) {
 			EDoc eDoc = privatedocs.get(i);
-			List providerList = new ArrayList();
+			List<String> providerList = new ArrayList<String>();
 			String createrId = eDoc.getCreatorId();
 			if (providerDocs.containsKey(createrId)) {
-				List<EDoc> EDocs = new ArrayList();
-				EDocs = (List<EDoc>) providerDocs.get(createrId);
+				List<EDoc> EDocs = new ArrayList<EDoc>();
+				EDocs = providerDocs.get(createrId);
 				EDocs.add(eDoc);
 				providerDocs.put(createrId, EDocs);
 			}
@@ -133,20 +139,20 @@ public class DmsInboxManageAction extends DispatchAction {
 				String routingPId = pii.getProviderNo();
 
 				if (!routingPId.equals(createrId) && providerDocs.containsKey(routingPId)) {
-					List<EDoc> EDocs = new ArrayList();
-					EDocs = (List<EDoc>) providerDocs.get(routingPId);
+					List<EDoc> EDocs = new ArrayList<EDoc>();
+					EDocs = providerDocs.get(routingPId);
 					EDocs.add(eDoc);
 					providerDocs.put(routingPId, EDocs);
 				}
 			}
 		}
 		// remove providers which has no docs linked to
-		Enumeration keys = providerDocs.keys();
+		Enumeration<String> keys = providerDocs.keys();
 		while (keys.hasMoreElements()) {
-			String key = (String) keys.nextElement();
+			String key = keys.nextElement();
 
-			List<EDoc> EDocs = new ArrayList();
-			EDocs = (List<EDoc>) providerDocs.get(key);
+			List<EDoc> EDocs = new ArrayList<EDoc>();
+			EDocs = providerDocs.get(key);
 			if (EDocs == null || EDocs.size() == 0) {
 				providerDocs.remove(key);
 
@@ -162,15 +168,14 @@ public class DmsInboxManageAction extends DispatchAction {
 		QueueDao queueDao = (QueueDao) SpringUtils.getBean("queueDao");
 		List<Hashtable> queues = queueDao.getQueues();
 		for (int i = 0; i < queues.size(); i++) {
-			Hashtable ht = (Hashtable) queues.get(i);
-			List<EDoc> EDocs = new ArrayList();
+			Hashtable ht = queues.get(i);
+			List<EDoc> EDocs = new ArrayList<EDoc>();
 			String queueId = (String) ht.get("id");
 			queueDocs.put(queueId, EDocs);
 		}
 		logger.debug("queueDocs=" + queueDocs);
 		for (int i = 0; i < privatedocs.size(); i++) {
 			EDoc eDoc = privatedocs.get(i);
-			List queueList = new ArrayList();
 			String docIdStr = eDoc.getDocId();
 			Integer docId = -1;
 			if (docIdStr != null && !docIdStr.equalsIgnoreCase("")) {
@@ -183,7 +188,7 @@ public class DmsInboxManageAction extends DispatchAction {
 				String qidStr = qidInt.toString();
 				logger.debug("qid in link=" + qidStr);
 				if (queueDocs.containsKey(qidStr)) {
-					List<EDoc> EDocs = new ArrayList();
+					List<EDoc> EDocs = new ArrayList<EDoc>();
 					EDocs = (List<EDoc>) queueDocs.get(qidStr);
 					EDocs.add(eDoc);
 					logger.debug("add edoc id to queue id=" + eDoc.getDocId());
@@ -196,7 +201,7 @@ public class DmsInboxManageAction extends DispatchAction {
 		Enumeration queueIds = queueDocs.keys();
 		while (queueIds.hasMoreElements()) {
 			String queueId = (String) queueIds.nextElement();
-			List<EDoc> eDocs = new ArrayList();
+			List<EDoc> eDocs = new ArrayList<EDoc>();
 			eDocs = (List<EDoc>) queueDocs.get(queueId);
 			if (eDocs == null || eDocs.size() == 0) {
 				queueDocs.remove(queueId);
@@ -219,11 +224,11 @@ public class DmsInboxManageAction extends DispatchAction {
 		}
 	}
 
-	private boolean isSegmentIDUnique(ArrayList doclabs, LabResultData data) {
+	private boolean isSegmentIDUnique(ArrayList<LabResultData> doclabs, LabResultData data) {
 		boolean unique = true;
 		String sID = (data.segmentID).trim();
 		for (int i = 0; i < doclabs.size(); i++) {
-			LabResultData lrd = (LabResultData) doclabs.get(i);
+			LabResultData lrd = doclabs.get(i);
 			if (sID.equals((lrd.segmentID).trim())) {
 				unique = false;
 				break;
@@ -239,14 +244,14 @@ public class DmsInboxManageAction extends DispatchAction {
 		String providerNo = request.getParameter("providerNo");
 		String searchProviderNo = request.getParameter("searchProviderNo");
 		String ackStatus = request.getParameter("ackStatus");
-		ArrayList<EDoc> docPreview = new ArrayList();
-		ArrayList labPreview = new ArrayList();
+		ArrayList<EDoc> docPreview = new ArrayList<EDoc>();
+		ArrayList<LabResultData> labPreview = new ArrayList<LabResultData>();
 
 		if (docs.length() == 0) {
 			// do nothing
 		} else {
 			String[] did = docs.split(",");
-			List<String> didList = new ArrayList();
+			List<String> didList = new ArrayList<String>();
 			for (int i = 0; i < did.length; i++) {
 				if (did[i].length() > 0) {
 					didList.add(did[i]);
@@ -260,7 +265,7 @@ public class DmsInboxManageAction extends DispatchAction {
 			// do nothing
 		} else {
 			String[] labids = labs.split(",");
-			List<String> ls = new ArrayList();
+			List<String> ls = new ArrayList<String>();
 			for (int i = 0; i < labids.length; i++) {
 				if (labids.length > 0) ls.add(labids[i]);
 			}
@@ -281,7 +286,80 @@ public class DmsInboxManageAction extends DispatchAction {
 		return mapping.findForward("doclabPreview");
 	}
 
-	public ActionForward prepareForIndexPage(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+	public ActionForward prepareForIndexPage(ActionMapping mapping, ActionForm form, HttpServletRequest request,
+			HttpServletResponse response) {
+		HttpSession session = request.getSession();
+		try {
+			if (session.getAttribute("userrole") == null)
+				response.sendRedirect("../logout.jsp");
+		} catch (Exception e) {
+
+		}
+		String roleName = (String) session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
+
+		String providerNo = (String) session.getAttribute("user");
+		String searchProviderNo = request.getParameter("searchProviderNo");
+		String status = request.getParameter("status");
+		String demographicNo = request.getParameter("demographicNo"); // used when searching for labs by patient instead of provider
+		String scannedDocStatus = request.getParameter("scannedDocument");
+
+		scannedDocStatus = "I";
+		boolean providerSearch = !"-1".equals(searchProviderNo);
+
+		if (status == null) {
+			status = "N";
+		} // default to new labs only
+		else if ("-1".equals(status)) {
+			status = "";
+		}
+		if (providerNo == null) {
+			providerNo = "";
+		}
+		if (searchProviderNo == null) {
+			searchProviderNo = providerNo;
+		} // default to current provider
+
+		String patientFirstName = request.getParameter("fname");
+		String patientLastName = request.getParameter("lname");
+		String patientHealthNumber = request.getParameter("hnum");
+
+		if (patientFirstName == null) {
+			patientFirstName = "";
+		}
+		if (patientLastName == null) {
+			patientLastName = "";
+		}
+		if (patientHealthNumber == null) {
+			patientHealthNumber = "";
+		}
+		boolean patientSearch = !"".equals(patientFirstName) || !"".equals(patientLastName)
+				|| !"".equals(patientHealthNumber);
+		try {
+			CategoryData cData = new CategoryData(patientLastName, patientFirstName, patientHealthNumber,
+					patientSearch, providerSearch, searchProviderNo, status);
+			cData.populateCountsAndPatients();
+			request.setAttribute("patientFirstName", patientFirstName);
+			request.setAttribute("patientLastName", patientLastName);
+			request.setAttribute("patientHealthNumber", patientHealthNumber);
+			request.setAttribute("patients", new ArrayList<PatientInfo>(cData.getPatients().values()));
+			request.setAttribute("unmatchedDocs", cData.getUnmatchedDocs());
+			request.setAttribute("unmatchedLabs", cData.getUnmatchedLabs());
+			request.setAttribute("totalDocs", cData.getTotalDocs());
+			request.setAttribute("totalLabs", cData.getTotalLabs());
+			request.setAttribute("abnormalCount", cData.getAbnormalCount());
+			request.setAttribute("normalCount", cData.getNormalCount());
+			request.setAttribute("totalNumDocs", cData.getTotalNumDocs());
+			request.setAttribute("providerNo", providerNo);
+			request.setAttribute("searchProviderNo", searchProviderNo);
+			request.setAttribute("ackStatus", status);
+			request.setAttribute("categoryHash", cData.getCategoryHash());
+			return mapping.findForward("dms_index");
+		} catch (SQLException e) {
+			return mapping.findForward("error");
+		}
+	}
+
+	public ActionForward prepareForContentPage(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		HttpSession session = request.getSession();
 		try {
 			if (session.getAttribute("userrole") == null) response.sendRedirect("../logout.jsp");
@@ -299,10 +377,35 @@ public class DmsInboxManageAction extends DispatchAction {
 		String ackStatus = request.getParameter("status");
 		String demographicNo = request.getParameter("demographicNo"); // used when searching for labs by patient instead of provider
 		String scannedDocStatus = request.getParameter("scannedDocument");
+		Integer page = 0;
+		try {
+			page = Integer.parseInt(request.getParameter("page"));
+			if (page > 0) {
+				page--;
+			}
+		} catch (NumberFormatException nfe) {
+			page = 0;
+		}
+		Integer pageSize = 20;
+		try {
+			String tmp = request.getParameter("pageSize");
+			pageSize = Integer.parseInt(tmp);
+		} catch (NumberFormatException nfe) {
+			pageSize = 20;
+		}
 		scannedDocStatus = "I";
 
 		String startDateStr = request.getParameter("startDate");
 		String endDateStr = request.getParameter("endDate");
+
+
+
+		String view = request.getParameter("view");
+		if (view == null || "".equals(view)) {
+			view = "all";
+		}
+
+		boolean mixLabsAndDocs = "normal".equals(view) || "all".equals(view);
 
 		Date startDate = null;
 		Date endDate = null;
@@ -314,6 +417,12 @@ public class DmsInboxManageAction extends DispatchAction {
 			startDate = null;
 			endDate = null;
 		}
+
+		Boolean isAbnormal = null;
+		if ("abnormal".equals(view))
+			isAbnormal = new Boolean(true);
+		if ("normal".equals(view))
+			isAbnormal = new Boolean(false);
 
 		if (ackStatus == null) {
 			ackStatus = "N";
@@ -348,7 +457,24 @@ public class DmsInboxManageAction extends DispatchAction {
 		
 		labdocs = collapseSpireLabs(labdocs);
 
-		ArrayList validlabdocs = new ArrayList();
+		InboxResultsDao inboxResultsDao = (InboxResultsDao) SpringUtils.getBean("inboxResultsDao");
+		String patientFirstName = request.getParameter("fname");
+		String patientLastName = request.getParameter("lname");
+		String patientHealthNumber = request.getParameter("hnum");
+
+		ArrayList<LabResultData> labdocs = new ArrayList<LabResultData>();
+
+		if (!"labs".equals(view) && !"abnormal".equals(view)) {
+			labdocs = inboxResultsDao.populateDocumentResultsData(searchProviderNo, demographicNo, patientFirstName,
+					patientLastName, patientHealthNumber, ackStatus, true, page, pageSize, mixLabsAndDocs, isAbnormal);
+		}
+		if (!"documents".equals(view)) {
+			labdocs.addAll(comLab.populateLabResultsData(searchProviderNo, demographicNo, patientFirstName,
+					patientLastName, patientHealthNumber, ackStatus, scannedDocStatus, true, page, pageSize,
+					mixLabsAndDocs, isAbnormal));
+		}
+
+		ArrayList<LabResultData> validlabdocs = new ArrayList<LabResultData>();
 
 		DocumentResultsDao documentResultsDao = (DocumentResultsDao) SpringUtils.getBean("documentResultsDao");
 		// check privilege for documents only
@@ -398,24 +524,46 @@ public class DmsInboxManageAction extends DispatchAction {
 				}
 			}
 		}
-		// labdocs=validlabdocs;
+
+		// Find the oldest lab returned in labdocs, use that as the limit date for the HRM query
+		Date oldestLab = null;
+		Date newestLab = null;
+		if (request.getParameter("newestDate") != null) {
+			try {
+				SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+				newestLab = formatter.parse(request.getParameter("newestDate"));
+			} catch (Exception e) {
+				logger.error("Couldn't parse date + " + request.getParameter("newestDate"), e);
+			}
+		}
+
+		for (LabResultData result : labdocs) {
+			if (result.getDateObj() != null) {
+				if (oldestLab == null || oldestLab.compareTo(result.getDateObj()) > 0)
+					oldestLab = result.getDateObj();
+				if (request.getParameter("newestDate") != null && (newestLab == null || newestLab.compareTo(result.getDateObj()) < 0))
+					newestLab = result.getDateObj();
+			}
+		}
+
 		HRMResultsData hrmResult = new HRMResultsData();
 
-		Integer page = 0;
-		Integer pageSize = 20;
+		Collection<LabResultData> hrmDocuments = hrmResult.populateHRMdocumentsResultsData(searchProviderNo, ackStatus, newestLab, oldestLab);
+		if (oldestLab == null) {
+			for (LabResultData hrmDocument : hrmDocuments) {
+				if (oldestLab == null || (hrmDocument.getDateObj() != null && oldestLab.compareTo(hrmDocument.getDateObj()) > 0))
+					oldestLab = hrmDocument.getDateObj();
+			}
+		}
 
-		logger.debug("before labdocs.size()="+labdocs.size());
-		labdocs.addAll(hrmResult.populateHRMdocumentsResultsData(searchProviderNo, page, pageSize, ackStatus));
+		labdocs.addAll(hrmDocuments);
 		Collections.sort(labdocs);
-		logger.debug("after labdocs.size()="+labdocs.size());
 
 		HashMap<String,LabResultData> labMap = new HashMap<String,LabResultData>();
 		LinkedHashMap<String,ArrayList<String>> accessionMap = new LinkedHashMap<String,ArrayList<String>>();
-		LabResultData result;
 
-		for (int i = 0; i < labdocs.size(); i++) {
-			result = labdocs.get(i);
-
+		int accessionNumCount = 0;
+		for (LabResultData result : labdocs) {
 			if (startDate != null && startDate.after(result.getDateObj())) {
 				continue;
 			}
@@ -424,14 +572,21 @@ public class DmsInboxManageAction extends DispatchAction {
 				continue;
 			}
 
-			labMap.put(result.segmentID, result);
+			String segmentId = result.getSegmentID();
+			if (result.isDocument())
+				segmentId += "d";
+			else if (result.isHRM())
+				segmentId += "h";
+
+			labMap.put(segmentId, result);
 			ArrayList<String> labNums = new ArrayList<String>();
 
 			if (result.accessionNumber == null || result.accessionNumber.equals("")) {
-				labNums.add(result.segmentID);
-				accessionMap.put("noAccessionNum" + i + result.labType, labNums);
+				labNums.add(segmentId);
+				accessionNumCount++;
+				accessionMap.put("noAccessionNum" + accessionNumCount + result.labType, labNums);
 			} else if (!accessionMap.containsKey(result.accessionNumber + result.labType)) {
-				labNums.add(result.segmentID);
+				labNums.add(segmentId);
 				accessionMap.put(result.accessionNumber + result.labType, labNums);
 
 				// Different MDS Labs may have the same accession Number if they are seperated
@@ -446,7 +601,9 @@ public class DmsInboxManageAction extends DispatchAction {
 					Date dateA = result.getDateObj();
 					Date dateB = matchingResult.getDateObj();
 					int monthsBetween = 0;
-					if (dateA.before(dateB)) {
+					if (dateA == null || dateB == null) {
+						monthsBetween = 5;
+					} else if (dateA.before(dateB)) {
 						monthsBetween = UtilDateUtilities.getNumMonths(dateA, dateB);
 					} else {
 						monthsBetween = UtilDateUtilities.getNumMonths(dateB, dateA);
@@ -458,30 +615,22 @@ public class DmsInboxManageAction extends DispatchAction {
 					}
 				}
 				if (!matchFlag) {
-					labNums.add(result.segmentID);
+					labNums.add(segmentId);
 					accessionMap.put(result.accessionNumber + result.labType, labNums);
 				}
 			}
 		}
-		ArrayList<ArrayList<String>> labArrays = new ArrayList<ArrayList<String>>(accessionMap.values());
-		logger.debug("labArrays.size()="+labArrays.size());
+
 		labdocs.clear();
 
-		for (int i = 0; i < labArrays.size(); i++) {
-			ArrayList<String> labNums = labArrays.get(i);
+		for (ArrayList<String> labNums : accessionMap.values()) {
 			// must sort through in reverse to keep the labs in the correct order
 			for (int j = labNums.size() - 1; j >= 0; j--) {
 				labdocs.add(labMap.get(labNums.get(j)));
 			}
 		}
-
-		Collections.sort(labdocs);
 		logger.debug("labdocs.size()="+labdocs.size());
 
-		int pageNum = 1;
-		if (request.getParameter("pageNum") != null) {
-			pageNum = Integer.parseInt(request.getParameter("pageNum"));
-		}
 		/* find all data for the index.jsp page */
 		Hashtable patientDocs = new Hashtable();
 		Hashtable patientIdNames = new Hashtable();
@@ -491,16 +640,16 @@ public class DmsInboxManageAction extends DispatchAction {
 		Hashtable<String, List<String>> ab_NormalDoc = new Hashtable();
 
 		for (int i = 0; i < labdocs.size(); i++) {
-			LabResultData data = (LabResultData) labdocs.get(i);
+			LabResultData data = labdocs.get(i);
 
-			List<String> segIDs = new ArrayList();
+			List<String> segIDs = new ArrayList<String>();
 			String labPatientId = data.getLabPatientId();
 			if (labPatientId == null || labPatientId.equals("-1")) labPatientId = "-1";
 
 			if (data.isAbnormal()) {
 				List<String> abns = ab_NormalDoc.get("abnormal");
 				if (abns == null) {
-					abns = new ArrayList();
+					abns = new ArrayList<String>();
 					abns.add(data.getSegmentID());
 				} else {
 					abns.add(data.getSegmentID());
@@ -509,7 +658,7 @@ public class DmsInboxManageAction extends DispatchAction {
 			} else {
 				List<String> ns = ab_NormalDoc.get("normal");
 				if (ns == null) {
-					ns = new ArrayList();
+					ns = new ArrayList<String>();
 					ns.add(data.getSegmentID());
 				} else {
 					ns.add(data.getSegmentID());
@@ -541,22 +690,22 @@ public class DmsInboxManageAction extends DispatchAction {
 
 			if (valType.equalsIgnoreCase("DOC")) {
 				if (typeDocLab.containsKey("DOC")) {
-					List<String> docids = (List<String>) typeDocLab.get("DOC");
+					List<String> docids = typeDocLab.get("DOC");
 					docids.add(keyDocLabId);// add doc id to list
 					typeDocLab.put("DOC", docids);
 				} else {
-					List<String> docids = new ArrayList();
+					List<String> docids = new ArrayList<String>();
 					docids.add(keyDocLabId);
 					typeDocLab.put("DOC", docids);
 				}
 				totalDocs++;
 			} else if (valType.equalsIgnoreCase("HL7")) {
 				if (typeDocLab.containsKey("HL7")) {
-					List<String> hl7ids = (List<String>) typeDocLab.get("HL7");
+					List<String> hl7ids = typeDocLab.get("HL7");
 					hl7ids.add(keyDocLabId);
 					typeDocLab.put("HL7", hl7ids);
 				} else {
-					List<String> hl7ids = new ArrayList();
+					List<String> hl7ids = new ArrayList<String>();
 					hl7ids.add(keyDocLabId);
 					typeDocLab.put("HL7", hl7ids);
 				}
@@ -582,9 +731,9 @@ public class DmsInboxManageAction extends DispatchAction {
 		List<String> abnormals = ab_NormalDoc.get("abnormal");
 
 		logger.debug("labdocs.size()="+labdocs.size());
-		
+
 		// set attributes
-		request.setAttribute("pageNum", pageNum);
+		request.setAttribute("pageNum", page);
 		request.setAttribute("docType", docType);
 		request.setAttribute("patientDocs", patientDocs);
 		request.setAttribute("providerNo", providerNo);
@@ -603,8 +752,9 @@ public class DmsInboxManageAction extends DispatchAction {
 		request.setAttribute("abnormals", abnormals);
 		request.setAttribute("totalNumDocs", totalNumDocs);
 		request.setAttribute("patientIdNamesStr", patientIdNamesStr);
+		request.setAttribute("oldestLab", oldestLab != null ? DateUtils.formatDate(oldestLab, "yyyy-MM-dd HH:mm:ss") : null);
 
-		return mapping.findForward("dms_index");
+		return mapping.findForward("dms_page");
 	}
 	
 	/**
@@ -824,7 +974,7 @@ public class DmsInboxManageAction extends DispatchAction {
 			}
 			List<ProviderInboxItem> providers = providerInboxRoutingDAO.getProvidersWithRoutingForDocument("DOC", Integer.toString(docid));
 			if (providers.size() > 0) {
-				ProviderInboxItem pii = (ProviderInboxItem) providers.get(0);
+				ProviderInboxItem pii = providers.get(0);
 				docStatus.put(docid, pii.getStatus());
 			}
 			if (patientDocs.containsKey(demoNo)) {
@@ -838,7 +988,7 @@ public class DmsInboxManageAction extends DispatchAction {
 			}
 			if (queueDocNos.containsKey(qid)) {
 
-				List<Integer> ds = (List<Integer>) queueDocNos.get(qid);
+				List<Integer> ds = queueDocNos.get(qid);
 				ds.add(docid);
 				queueDocNos.put(qid, ds);
 

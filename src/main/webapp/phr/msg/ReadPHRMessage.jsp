@@ -1,37 +1,40 @@
-<%--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
 --%>
+
 <%@page import="oscar.util.DateUtils"%>
 <%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@page import="org.oscarehr.myoscar_server.ws.MessageTransfer"%>
 <%@page import="org.oscarehr.phr.web.MyOscarMessagesHelper"%>
 <%@page import="oscar.oscarDemographic.data.*, java.util.Enumeration" %>
+<%@page import="oscar.util.UtilDateUtilities,java.util.*" %>
+<%@page import="org.oscarehr.phr.util.MyOscarUtils,org.oscarehr.common.model.Demographic"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://jakarta.apache.org/struts/tags-html-el" prefix="html-el" %>
 
 <%
@@ -42,7 +45,6 @@
 
 <html:html locale="true">
 <head>
-
 <link rel="stylesheet" type="text/css" href="../oscarMessenger/encounterStyles.css" media="screen">
 <link rel="stylesheet" type="text/css" href="../oscarMessenger/printable.css" media="print">    
 
@@ -50,12 +52,18 @@
 <%-- bean:message key="indivoMessenger.ViewIndivoMessage.title"/--%>View Message
 </title>
 
-
+<script type="text/javascript" src="../share/javascript/Oscar.js"></script>
 <script type="text/javascript">
 function BackToOscar()
 {
        window.close();
 }
+
+function gotoEchart3(demoNo) {
+    var url = '<%=request.getContextPath()%>/oscarEncounter/IncomingEncounter.do?demographicNo='+ demoNo+'&reason=&appointmentDate=<%=UtilDateUtilities.DateToString(new Date())%>';
+    openedWindow = popup(755,1048,url,'apptProvider');
+}
+
 </script>
 
 </head>
@@ -155,7 +163,18 @@ function BackToOscar()
                                     <td bgcolor="#EEEEFF" >
                                         <textarea name="msgBody" wrap="hard" readonly="true" rows="18" cols="60" ><%=StringEscapeUtils.escapeHtml(messageTransfer.getContents())%></textarea><br>
                                         <input class="ControlPushButton" type="button" value="<bean:message key="oscarMessenger.ViewMessage.btnReply"/>" onclick="window.location.href='<%=request.getContextPath()%>/phr/msg/CreatePHRMessage.jsp?replyToMessageId=<%=messageId%>&demographicNo=<%=demographicNo%>'"/>
-                                     </td>
+                                        <%String myOscarUserName=messageTransfer.getSenderPersonUserName();
+		                                Demographic demographic=MyOscarUtils.getDemographicByMyOscarUserName(myOscarUserName);
+		                                %>
+                                        
+                                        
+                                    	<input 
+                                    	<%if (demographic == null){%>
+		                                   disabled="disabled"
+		                                   title="<bean:message key="global.no.myoscar.account.registered"/>"
+		                                <%}%> 
+                                    	class="ControlPushButton" type="button" onclick="gotoEchart3('<%=demographicNo%>');" value="<bean:message key="oscarMessenger.CreateMessage.btnOpenEchart"/>" >
+                                    </td>
                                 </tr>
                                 <tr>
                                     <td bgcolor="#EEEEFF" ></td>

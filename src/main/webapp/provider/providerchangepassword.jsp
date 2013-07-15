@@ -1,28 +1,28 @@
-<!--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 
 <%
   if(session.getValue("user") == null )
@@ -99,14 +99,14 @@ function checkPwdPolicy() {
 			key="provider.providerchangepassword.msgEnterOld" /> <b><bean:message
 			key="provider.providerchangepassword.formOldPassword" />:</b></font></td>
 		<td><input type=password name="oldpassword" value="" size=20
-			maxlength=10></td>
+			maxlength=32></td>
 	</tr>
 	<tr>
 		<td width="50%" align="right"><font face="arial"><bean:message
 			key="provider.providerchangepassword.msgChooseNew" /> <b><bean:message
 			key="provider.providerchangepassword.formNewPassword" />:</b></font></td>
 		<td><input type=password name="mypassword" value="" size=20
-			maxlength=10> <font size="-2">(<bean:message
+			maxlength=32> <font size="-2">(<bean:message
 			key="provider.providerchangepassword.msgAtLeast" />
 			<%=op.getProperty("password_min_length")%> <bean:message
 			key="provider.providerchangepassword.msgSymbols" />)</font></td>
@@ -116,7 +116,7 @@ function checkPwdPolicy() {
 			key="provider.providerchangepassword.msgConfirm" /> <b><bean:message
 			key="provider.providerchangepassword.formNewPassword" />:</b></font></td>
 		<td><input type=password name="confirmpassword" value="" size=20
-			maxlength=10> <font size="-2">(<bean:message
+			maxlength=32> <font size="-2">(<bean:message
 			key="provider.providerchangepassword.msgAtLeast" />
 			<%=op.getProperty("password_min_length")%> <bean:message
 			key="provider.providerchangepassword.msgSymbols" />)</font></td>

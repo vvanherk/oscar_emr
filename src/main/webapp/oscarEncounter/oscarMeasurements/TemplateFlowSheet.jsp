@@ -1,10 +1,37 @@
-<% long startTime = System.currentTimeMillis(); %>
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+<%long startTime = System.currentTimeMillis();%>
 <%@page import="oscar.oscarRx.data.RxPatientData"%>
 <%@page  import="oscar.oscarDemographic.data.*,java.util.*,oscar.oscarPrevention.*,oscar.oscarEncounter.oscarMeasurements.*,oscar.oscarEncounter.oscarMeasurements.bean.*,java.net.*"%>
 <%@page import="org.springframework.web.context.support.WebApplicationContextUtils,oscar.log.*"%>
 <%@page import="org.springframework.web.context.WebApplicationContext,oscar.oscarResearch.oscarDxResearch.bean.*"%>
-<%@page import="org.oscarehr.common.dao.FlowSheetCustomizerDAO,org.oscarehr.common.model.FlowSheetCustomization"%>
-<%@page import="org.oscarehr.common.dao.FlowSheetDrugDAO,org.oscarehr.common.model.FlowSheetDrug,org.oscarehr.util.MiscUtils"%>
+<%@page import="org.oscarehr.common.dao.FlowSheetCustomizationDao,org.oscarehr.common.model.FlowSheetCustomization"%>
+<%@page import="org.oscarehr.common.dao.FlowSheetDrugDao,org.oscarehr.common.dao.FlowSheetDxDao,org.oscarehr.common.model.FlowSheetDrug,org.oscarehr.util.MiscUtils"%>
+<%@page import="org.oscarehr.caisi_integrator.ws.CachedMeasurement,org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager,org.oscarehr.util.LoggedInInfo" %>
+<%@page import="oscar.util.UtilDateUtilities" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
@@ -13,7 +40,7 @@
 <%@page import="oscar.OscarProperties"%>
 
 <%
-    if(session.getValue("user") == null) response.sendRedirect("../../logout.jsp");
+	if(session.getValue("user") == null) response.sendRedirect("../../logout.jsp");
     //int demographic_no = Integer.parseInt(request.getParameter("demographic_no"));
     if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
     String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
@@ -25,24 +52,32 @@
     <security:oscarSec roleName="<%=roleName$%>" objectName="_flowsheet" rights="r" reverse="<%=true%>">
         "You have no right to access this page!"
         <%
-         LogAction.addLog((String) session.getAttribute("user"), LogConst.NORIGHT+LogConst.READ, LogConst.CON_FLOWSHEET,  temp , request.getRemoteAddr(),demographic_no);
-        response.sendRedirect("../../noRights.html"); %>
+    	LogAction.addLog((String) session.getAttribute("user"), LogConst.NORIGHT+LogConst.READ, LogConst.CON_FLOWSHEET,  temp , request.getRemoteAddr(),demographic_no);
+            response.sendRedirect("../../noRights.html");
+    %>
     </security:oscarSec>
 </oscar:oscarPropertiesCheck>
 
-<%if (OscarProperties.getInstance().getBooleanProperty("new_flowsheet_enabled", "true")) { %>
-	<%if (temp.equals("diab2")) {%>
+<%
+	if (OscarProperties.getInstance().getBooleanProperty("new_flowsheet_enabled", "true")) {
+%>
+	<%
+		if (temp.equals("diab3")) {
+	%>
 		<jsp:forward page="DiabFlowSheet.jsp" />
-	<%} else if (temp.equals("diab3")) {%>
+	<%
+		} else if (request.getAttribute("temp") != null && request.getAttribute("temp").equals("diab3")) {
+	%>
 		<jsp:forward page="DiabFlowSheet.jsp" />
-	<%} else if (request.getAttribute("temp") != null && request.getAttribute("temp").equals("diab3")) {%>
-		<jsp:forward page="DiabFlowSheet.jsp" />
-	<%}%>
-<%}%>
+	<%
+		}
+	%>
+<%
+	}
+%>
 
 <%
-
-    LogAction.addLog((String) session.getAttribute("user"), LogConst.READ, LogConst.CON_FLOWSHEET,  temp , request.getRemoteAddr(),demographic_no);
+	LogAction.addLog((String) session.getAttribute("user"), LogConst.READ, LogConst.CON_FLOWSHEET,  temp , request.getRemoteAddr(),demographic_no);
 
 
     int numElementsToShow = 4;
@@ -74,10 +109,10 @@
 
     WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
 
-    FlowSheetCustomizerDAO flowSheetCustomizerDAO = (FlowSheetCustomizerDAO) ctx.getBean("flowSheetCustomizerDAO");
-    FlowSheetDrugDAO flowSheetDrugDAO = (FlowSheetDrugDAO) ctx.getBean("flowSheetDrugDAO");
-
-    List custList = flowSheetCustomizerDAO.getFlowSheetCustomizations( temp,(String) session.getAttribute("user"),demographic_no);
+    FlowSheetCustomizationDao flowSheetCustomizationDao = (FlowSheetCustomizationDao) ctx.getBean("flowSheetCustomizationDao");
+    FlowSheetDrugDao flowSheetDrugDao = (FlowSheetDrugDao) ctx.getBean("flowSheetDrugDao");
+	FlowSheetDxDao flowSheetDxDao = (FlowSheetDxDao) ctx.getBean("flowSheetDxDao");
+    List<FlowSheetCustomization> custList = flowSheetCustomizationDao.getFlowSheetCustomizations( temp,(String) session.getAttribute("user"),demographic_no);
 
     ////Start
     MeasurementTemplateFlowSheetConfig templateConfig = MeasurementTemplateFlowSheetConfig.getInstance();
@@ -114,38 +149,9 @@
     ArrayList<String> warnings = mi.getWarnings();
     ArrayList<String> recomendations = mi.getRecommendations();
     ArrayList comments = new ArrayList();
-
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
 "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-
-
-<!--
-/*
-*
-* Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License.
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License
-* as published by the Free Software Foundation; either version 2
-* of the License, or (at your option) any later version. *
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-*
-* <OSCAR TEAM>
-*
-* This software was written for the
-* Department of Family Medicine
-* McMaster Unviersity test2
-* Hamilton
-* Ontario, Canada
-*/
--->
-
 <html:html locale="true">
 
 <head>
@@ -484,9 +490,9 @@ div.recommendations li{
                     dxResearchBean code = (dxResearchBean)patientDx.get(i);  // code.getEnd_date() code.getStart_date()
                     String desc = code.getDescription();
                     desc = org.apache.commons.lang.StringUtils.abbreviate(desc,lim) ;
-                    HashMap dxMap = flowSheetDrugDAO.getFlowSheetDxMap( temp, demographic_no);
+                    HashMap<String,String> dxMap = flowSheetDxDao.getFlowSheetDxMap( temp, demographic_no);
 
-                    String pDx = (String) dxMap.get(code.getType()+""+code.getDxSearchCode());
+                    String pDx = dxMap.get(code.getType()+""+code.getDxSearchCode());
 
             %>
             <li>
@@ -640,6 +646,9 @@ div.recommendations li{
             }
             String prevName = (String) h.get("name");
             ArrayList<EctMeasurementsDataBean> alist = mi.getMeasurementData(measure);
+            if (LoggedInInfo.loggedInInfo.get().currentFacility.isIntegratorEnabled()) {
+               EctMeasurementsDataBeanHandler.addRemoteMeasurements(alist,measure,Integer.parseInt(demographic_no));
+            }
             String extraColour = "";
             if(mi.hasRecommendation(measure)){
                 extraColour = "style=\"background-color: "+mFlowsheet.getRecommendationColour()+"\" ";
@@ -681,7 +690,7 @@ div.recommendations li{
             mFlowsheet.runRulesForMeasurement(mdb);
             Hashtable hdata = new Hashtable();//(Hashtable) alist.get(k);
             hdata.put("age",mdb.getDataField());
-            hdata.put("prevention_date",mdb.getDateObserved());
+            hdata.put("prevention_date",UtilDateUtilities.DateToString(mdb.getDateObservedAsDate()));
             hdata.put("id",""+mdb.getId());
             String com = mdb.getComments();
             boolean comb = false;
@@ -716,12 +725,17 @@ div.recommendations li{
             }
 
     %>
-    <div class="preventionProcedure" <%=hider%>  onclick="javascript:fsPopup(760,670,'AddMeasurementData.jsp?measurement=<%= response.encodeURL( measure) %>&amp;id=<%=hdata.get("id")%>&amp;demographic_no=<%=demographic_no%>&amp;template=<%= URLEncoder.encode(temp,"UTF-8") %>','addMeasurementData')" >
+    <div class="preventionProcedure" <%=hider%>  
+    <%if(mdb.getRemoteFacility() == null){ %>
+    onclick="javascript:fsPopup(760,670,'AddMeasurementData.jsp?measurement=<%= response.encodeURL( measure) %>&amp;id=<%=hdata.get("id")%>&amp;demographic_no=<%=demographic_no%>&amp;template=<%= URLEncoder.encode(temp,"UTF-8") %>','addMeasurementData')" 
+    <%}%>
+    >
         <p <%=indColour%> title="fade=[on] header=[<%=hdata.get("age")%> -- Date:<%=hdata.get("prevention_date")%>] body=[<%=com%>&lt;br/&gt;Entered By:<%=mdb.getProviderFirstName()%> <%=mdb.getProviderLastName()%>]"><%=h2.get("value_name")%>: <%=hdata.get("age")%> <br/>
             <%=hdata.get("prevention_date")%>&nbsp;<%=mdb.getNumMonthSinceObserved()%>M
             <%if (comb) {%>
             <span class="footnote"><%=comments.size()%></span>
             <%}%>
+           <%=getFromFacilityMsg(mdb) %> 
         </p>
     </div>
     <%}%>
@@ -796,7 +810,7 @@ function createAddAll(d,t,h){
     oscar.oscarRx.data.RxPrescriptionData prescriptData = new oscar.oscarRx.data.RxPrescriptionData();
     oscar.oscarRx.data.RxPrescriptionData.Prescription [] arr = {};
 
-    List<FlowSheetDrug> atcCodes = flowSheetDrugDAO.getFlowSheetDrugs(temp,demographic_no);
+    List<FlowSheetDrug> atcCodes = flowSheetDrugDao.getFlowSheetDrugs(temp,demographic_no);
     for(FlowSheetDrug fsd : atcCodes){
             arr = prescriptData.getPrescriptionScriptsByPatientATC(Integer.parseInt(demographic_no),fsd.getAtcCode());
 
@@ -856,8 +870,7 @@ function createAddAll(d,t,h){
 </body>
 </html:html>
 
-<%!
-    String refused(Object re){
+<%!String refused(Object re){
         String ret = "Given";
         if (re instanceof java.lang.String){
 
@@ -892,7 +905,14 @@ function createAddAll(d,t,h){
 
        }
     }
-
-
-
-%>
+    
+    
+    public String getFromFacilityMsg(EctMeasurementsDataBean emdb){
+		if (emdb.getRemoteFacility()!=null)	return("<br /><span style=\"color:#990000\">(At facility : "+emdb.getRemoteFacility()+")<span>");
+		else return("");
+	}
+    
+    
+    
+    
+    %>

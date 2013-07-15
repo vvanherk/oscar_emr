@@ -1,24 +1,26 @@
-/*
-*
-* Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License.
-* This program is free software; you can redistribute it and/or
-* modify it under the terms of the GNU General Public License
-* as published by the Free Software Foundation; either version 2
-* of the License, or (at your option) any later version. *
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-* along with this program; if not, write to the Free Software
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-*
-* <OSCAR TEAM>
-*
-* This software was written for
-* Centre for Research on Inner City Health, St. Michael's Hospital,
-* Toronto, Ontario, Canada
-*/
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
+
 
 package org.oscarehr.billing.CA.ON.dao;
 
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.Query;
 
@@ -357,11 +360,11 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
         
         return q.getResultList();
     }
-    
-    @SuppressWarnings("unchecked")
+
+	@SuppressWarnings("unchecked")
     public List<BillingClaimHeader1> getInvoices(String demographic_no, String appointment_no) {
     	String sql = "select h1 from BillingClaimHeader1 h1 where " +
-                " h1.demographic_no = :demo and h1.appointment_no = :apt and h1.status != 'D' order by h1.billing_date desc, h1.billing_time desc";
+                " h1.demographic_no = :demo and h1.appointment_no = :apt and h1.status != 'D' order by h1.billing_date desc";
         Query q = entityManager.createQuery(sql);
         
         q.setParameter("demo", new Integer(demographic_no));
@@ -384,6 +387,44 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
     }
     
     @SuppressWarnings("unchecked")
+    public BillingClaimHeader1 getInvoice(Integer id) {    	
+    	String sql = "select h1 from BillingClaimHeader1 h1 where h1.id = :id";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("id", id);
+        
+        List<BillingClaimHeader1> results = q.getResultList();
+        
+        if (results == null || results.size() < 1)
+			return null;
+			
+		return results.get(0);
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<BillingClaimHeader1> getInvoicesByIds(List<Integer> ids) {
+    	if(ids.size()==0) return new ArrayList<BillingClaimHeader1>();
+    	
+    	String sql = "select h1 from BillingClaimHeader1 h1 where h1.id in (:ids)";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("ids", ids);
+        
+        return q.getResultList();
+    }
+    
+    @SuppressWarnings("unchecked")
+    public List<Map<String,Object>> getInvoicesMeta(String demographic_no) {
+    	String sql = "select new map(h1.id as id, h1.billing_date as billing_date, h1.billing_time as billing_time, h1.provider_no as provider_no) from BillingClaimHeader1 h1 where " +
+                " h1.demographic_no = :demo and h1.status != 'D' order by h1.billing_date desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("demo", new Integer(demographic_no));
+        
+        return q.getResultList();
+    }
+
+	@SuppressWarnings("unchecked")
     public List<BillingClaimHeader1> getInvoices(String provider_no, Date startTime, Date endTime) {
     	String sql = "select h1 from BillingClaimHeader1 h1 where " +
                 " h1.provider_no = :prov and h1.billing_date >= :startTime and h1.billing_date <= :endTime and h1.status != 'D' order by h1.billing_date desc, h1.billing_time desc";
@@ -443,6 +484,21 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
 
 		return numRows.intValue();
     }
+
+	@SuppressWarnings("unchecked")
+    public List<BillingClaimHeader1> getInvoicesByDemographic(String demographic_no, Date startDate, Date endDate) {
+    	String sql = "select h1 from BillingClaimHeader1 h1 where " +
+                " h1.demographic_no = :demo and h1.billing_date >= (:startDate) and h1.billing_date <= (:endDate) and h1.status != 'D' order by h1.billing_date, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("demo", new Integer(demographic_no));
+        q.setParameter("startDate", startDate);
+        q.setParameter("endDate", endDate);
+        
+        return q.getResultList();
+    }
+
+	
 
     /**
      * @return the gstCtontrolDao

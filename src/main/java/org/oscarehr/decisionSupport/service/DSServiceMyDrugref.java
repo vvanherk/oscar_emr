@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
@@ -5,6 +30,7 @@
 
 package org.oscarehr.decisionSupport.service;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Hashtable;
@@ -36,22 +62,23 @@ public class DSServiceMyDrugref extends DSService {
 
     public void fetchGuidelinesFromService(String providerNo) {
 
-        Vector<String> params = new Vector();
+        Vector<String> params = new Vector<String>();
         params.addElement(this.getMyDrugrefId(providerNo));
         RxMyDrugrefInfoAction myDrugrefAction = new RxMyDrugrefInfoAction();
         try {
             logger.debug("CALLING MYDRUGREF");
-            Vector<Hashtable> providerGuidelines = (Vector) myDrugrefAction.callWebserviceLite("GetGuidelineIds", params);
+            @SuppressWarnings("unchecked")
+            Vector<Hashtable<String,String>> providerGuidelines = (Vector<Hashtable<String,String>>) myDrugrefAction.callWebserviceLite("GetGuidelineIds", params);
             if (providerGuidelines == null) {
                 logger.error("Could not get provider decision support guidelines from MyDrugref.");
                 return;
             }
             logger.debug("MyDrugref call returned: " + providerGuidelines.size() + " guidelines");
-            ArrayList<String> guidelinesToFetch = new ArrayList();
-            for (Hashtable providerGuideline: providerGuidelines) {
+            ArrayList<String> guidelinesToFetch = new ArrayList<String>();
+            for (Hashtable<String,String> providerGuideline: providerGuidelines) {
 
-                String uuid = (String) providerGuideline.get("uuid");
-                String versionNumberStr = (String) providerGuideline.get("version");
+                String uuid =  providerGuideline.get("uuid");
+                String versionNumberStr =  providerGuideline.get("version");
                 Integer versionNumber = Integer.parseInt(versionNumberStr);
 
                 logger.debug("uuid: " + uuid);
@@ -74,8 +101,8 @@ public class DSServiceMyDrugref extends DSService {
             }
             //Do mappings-guideline mappings;
             List<DSGuidelineProviderMapping> uuidsMapped = dsGuidelineDAO.getMappingsByProvider(providerNo);
-            for (Hashtable newMapping: providerGuidelines) {
-                String newUuid = (String) newMapping.get("uuid");
+            for (Hashtable<String,String> newMapping: providerGuidelines) {
+                String newUuid = newMapping.get("uuid");
                 DSGuidelineProviderMapping newUuidObj = new DSGuidelineProviderMapping(newUuid, providerNo);
                 if (uuidsMapped.contains(newUuidObj)) {
                     uuidsMapped.remove(newUuidObj);
@@ -93,15 +120,15 @@ public class DSServiceMyDrugref extends DSService {
 
     }
 
-    public List<DSGuideline> fetchGuidelines(List<String> uuids) throws Exception {
-        
+    public List<DSGuideline> fetchGuidelines(List<String> uuids)  {
+
         RxMyDrugrefInfoAction myDrugrefAction = new RxMyDrugrefInfoAction();
         Vector params = new Vector();
         params.addElement(new Vector(uuids));
-        
+
         Vector<Hashtable> fetchedGuidelines = (Vector<Hashtable>) myDrugrefAction.callWebserviceLite("GetGuidelines", params);
-        ArrayList newGuidelines = new ArrayList();
-        for (Hashtable fetchedGuideline: fetchedGuidelines) {
+        ArrayList<DSGuideline> newGuidelines = new ArrayList<DSGuideline>();
+        for (Hashtable<String,Serializable> fetchedGuideline: fetchedGuidelines) {
             logger.debug("Title: " + (String) fetchedGuideline.get("name"));
             logger.debug("Author: " + (String) fetchedGuideline.get("author"));
             logger.debug("UUID: " + (String) fetchedGuideline.get("uuid"));
@@ -109,7 +136,7 @@ public class DSServiceMyDrugref extends DSService {
 
             DSGuidelineFactory factory = new DSGuidelineFactory();
             DSGuideline newGuideline = factory.createBlankGuideline();
-            try { 
+            try {
                 newGuideline.setUuid((String) fetchedGuideline.get("uuid"));
                 newGuideline.setTitle((String) fetchedGuideline.get("name"));
                 newGuideline.setVersion(Integer.parseInt((String) fetchedGuideline.get("version")));
@@ -118,13 +145,13 @@ public class DSServiceMyDrugref extends DSService {
                 newGuideline.setSource("mydrugref");
                 newGuideline.setDateStart(new Date());
                 newGuideline.setStatus('A');
-                
+
                 newGuideline.setXml((String) fetchedGuideline.get("body"));
                 newGuidelines.add(newGuideline);
 
                 newGuideline.parseFromXml();
 
-                
+
             } catch (Exception e) {
                 DecisionSupportException newException = new DecisionSupportException("Error parsing drug with with title: '" + (String) fetchedGuideline.get("name") + "' uuid: '" + (String) fetchedGuideline.get("uuid") + "'", e);
                 logger.error("Error", newException);

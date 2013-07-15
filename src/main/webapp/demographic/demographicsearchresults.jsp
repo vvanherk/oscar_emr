@@ -1,15 +1,41 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+<%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <c:set var="ctx" value="${pageContext.request.contextPath}" />
 
 <%
         long loadPage = System.currentTimeMillis();
     if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
     String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
-    
+
 %>
 
 
@@ -30,43 +56,24 @@
 	String deepColor = "#CCCCFF", weakColor = "#EEEEFF" ;
 	if(request.getParameter("limit1")!=null) strLimit1 = request.getParameter("limit1");
 	if(request.getParameter("limit2")!=null) strLimit2 = request.getParameter("limit2");
-      //  boolean fromMessenger = request.getParameter("fromMessenger") == null ? false : (request.getParameter("fromMessenger")).equalsIgnoreCase("true")?true:false;            
+      //  boolean fromMessenger = request.getParameter("fromMessenger") == null ? false : (request.getParameter("fromMessenger")).equalsIgnoreCase("true")?true:false;
 
         GregorianCalendar now=new GregorianCalendar();
         int curYear = now.get(Calendar.YEAR);
         int curMonth = (now.get(Calendar.MONTH)+1);
-        int curDay = now.get(Calendar.DAY_OF_MONTH);    
+        int curDay = now.get(Calendar.DAY_OF_MONTH);
         String curProvider_no = (String) session.getAttribute("user");
 %>
-<!--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
--->
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
 <script type="text/javascript" src="<c:out value="${ctx}/share/javascript/Oscar.js"/>"></script>
+<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
+   <script>
+     jQuery.noConflict();
+   </script>
+<oscar:customInterface section="demoSearch"/>
+
 <title><bean:message
 	key="demographic.demographicsearchresults.title" /></title>
 <% if (isMobileOptimized) { %>
@@ -111,15 +118,15 @@ function setfocus() {
 
 function checkTypeIn() {
   var dob = document.titlesearch.keyword; typeInOK = true;
-  
+
   if (dob.value.indexOf('%b610054') == 0 && dob.value.length > 18){
      document.titlesearch.keyword.value = dob.value.substring(8,18);
-     document.titlesearch.search_mode[4].checked = true;                  
+     document.titlesearch.search_mode[4].checked = true;
   }
   	if(document.titlesearch.search_mode[0].checked) {
-		var keyword = document.titlesearch.keyword.value; 
+		var keyword = document.titlesearch.keyword.value;
       	var keywordLowerCase = keyword.toLowerCase();
-      	document.titlesearch.keyword.value = keywordLowerCase;		
+      	document.titlesearch.keyword.value = keywordLowerCase;
 	}
   if(document.titlesearch.search_mode[2].checked) {
     if(dob.value.length==8) {
@@ -129,7 +136,7 @@ function checkTypeIn() {
       alert("<bean:message key="demographic.search.msgWrongDOB"/>");
       typeInOK = false;
     }
-    
+
     return typeInOK ;
   } else {
     return true;
@@ -155,7 +162,7 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
   if (popup != null) {
     if (popup.opener == null) {
       popup.opener = self;
-    }    
+    }
     popup.focus();
   }
 }
@@ -238,10 +245,10 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
 	</li>
 	<%
     java.util.Locale vLocale =(java.util.Locale)session.getAttribute(org.apache.struts.Globals.LOCALE_KEY);
-    	
-	int age=0; 
+
+	int age=0;
 	ResultSet rs=null ;
-    
+
 	String dboperation = request.getParameter("dboperation");
 	String keyword=request.getParameter("keyword").trim();
 	//keyword.replace('*', '%').trim();
@@ -255,9 +262,9 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
     String sDbType = oscar.OscarProperties.getInstance().getProperty("db_type").trim();
     if (sDbType.equalsIgnoreCase("oracle")) {
 	  if(request.getParameter("search_mode").equals("search_name")) {
-	 	 if(keyword.indexOf(",")==-1) 
+	 	 if(keyword.indexOf(",")==-1)
 		    rs = apptMainBean.queryResults_paged("%" + keyword + "%", dboperation, iRSOffSet) ; //lastname
-		 else if(keyword.indexOf(",")==(keyword.length()-1))  
+		 else if(keyword.indexOf(",")==(keyword.length()-1))
 		    rs = apptMainBean.queryResults_paged("%" + keyword.substring(0,(keyword.length()-1)) + "%", dboperation, iRSOffSet);//lastname
 		 else { //lastname,firstname
             String[] param =new String[2];
@@ -271,16 +278,16 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
 		 rs = apptMainBean.queryResults_paged(param, dboperation, iRSOffSet);
       } else if(request.getParameter("search_mode").equals("search_address") || request.getParameter("search_mode").equals("search_phone") ||
          request.getParameter("search_mode").equals("search_hin")) {
-         if(keyword.length()>0) keyword="%" + request.getParameter("keyword") + "%";		
+         if(keyword.length()>0) keyword="%" + request.getParameter("keyword") + "%";
          keyword = keyword.replaceAll("-", "%-%");
          rs = apptMainBean.queryResults_paged(keyword, dboperation, iRSOffSet);
 	  } else {
-		 keyword="%" + request.getParameter("keyword") + "%";		
+		 keyword="%" + request.getParameter("keyword") + "%";
 		 rs = apptMainBean.queryResults_paged(keyword, dboperation, iRSOffSet);
 	  }
-    
+
     }else{  //MySQL
-          dboperation += "_mysql";          
+          dboperation += "_mysql";
 	  if(request.getParameter("search_mode").equals("search_name")) {
 		 keyword="^"+keyword;
 		 if(keyword.indexOf(",")==-1)
@@ -296,22 +303,22 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
             rs = apptMainBean.queryResults(param, dboperation);
    		 }
 	  } else if(request.getParameter("search_mode").equals("search_dob")) {
-		 String[] param = searchDOBParams(keyword);		 
+		 String[] param = searchDOBParams(keyword);
 		 rs = apptMainBean.queryResults(param, dboperation);
-                 
+
       } else if(request.getParameter("search_mode").equals("search_address") || request.getParameter("search_mode").equals("search_phone")) {
          keyword = keyword.replaceAll("-", "-?");
          if (keyword.length() < 1) keyword="^";
          rs = apptMainBean.queryResults(keyword, dboperation);
 	  } else {
-		 keyword="^"+request.getParameter("keyword");		
+		 keyword="^"+request.getParameter("keyword");
 		 rs = apptMainBean.queryResults(keyword, dboperation);
 	  }
     }
-    
+
 	boolean bodd=false;
 	int nItems=0;
-  
+
 	if(rs==null) {
 		out.println("failed!!!");
 	} else {
@@ -319,16 +326,16 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
 			bodd=bodd?false:true; //for the color of rows
 			nItems++; //to calculate if it is the end of records
 
-			//if( !(apptMainBean.getString(rs,"month_of_birth").equals("")) && !apptMainBean.getString(rs,"year_of_birth").equals("") && !apptMainBean.getString(rs,"date_of_birth").equals("") ) {  
+			//if( !(apptMainBean.getString(rs,"month_of_birth").equals("")) && !apptMainBean.getString(rs,"year_of_birth").equals("") && !apptMainBean.getString(rs,"date_of_birth").equals("") ) {
     		//age = UtilDateUtilities.calcAge(apptMainBean.getString(rs,"year_of_birth"), apptMainBean.getString(rs,"month_of_birth"), apptMainBean.getString(rs,"date_of_birth"));
-			//}	
+			//}
 %>
 	<li style="background-color: <%=bodd?"white":"#EEEEFF"%>">
 		<div class="demoIdSearch">
 		<%DemographicMerged dmDAO = new DemographicMerged();
-            String dem_no = apptMainBean.getString(rs,"demographic_no");    
+            String dem_no = apptMainBean.getString(rs,"demographic_no");
             String head = dmDAO.getHead(dem_no);
-                       
+
             if(head != null && !head.equals(dem_no)) {
             	//skip non head records
             	continue;
@@ -351,6 +358,12 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
 			<a class="rxBtn" title="Prescriptions" href="#" onclick="popup(700,1027,'../oscarRx/choosePatient.do?providerNo=<%=rs.getString("provider_no")%>&demographicNo=<%=dem_no%>')">Rx</a>
 		</security:oscarSec></div>
 		<%}%>
+		<% if (OscarProperties.getInstance().isPropertyActive("new_eyeform_enabled")) { %>
+		<security:oscarSec roleName="<%=roleName$%>"
+			objectName="_eChart" rights="r">
+			<a title="Eyeform" href="#" onclick="popup(800, 1280, '../eyeform/eyeform.jsp?demographic_no=<%=dem_no %>&reason=')">EF</a>
+		</security:oscarSec>
+		<% } %>
 		<div class="name"><%=Misc.toUpperLowerCase(rs.getString("last_name"))%>, <%=Misc.toUpperLowerCase(rs.getString("first_name"))%></div>
 		<div class="chartNo"><%=apptMainBean.getString(rs,"chart_no")==null||apptMainBean.getString(rs,"chart_no").equals("")?"&nbsp;":apptMainBean.getString(rs,"chart_no")%></div>
 		<div class="sex"><%=apptMainBean.getString(rs,"sex")%></div>
@@ -397,9 +410,9 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
 </body>
 </html:html>
 <%!
-	String[] searchDOBParams(String keyword) {		
+	String[] searchDOBParams(String keyword) {
 		String[] param =new String[3];
-		
+
 		if( keyword.indexOf("-") != -1 ) {
 	 		param[0] = keyword.substring(0,4);
 	 		param[1] = keyword.substring(keyword.indexOf("-")+1, keyword.lastIndexOf("-"));
@@ -409,13 +422,13 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
 			param[0] = keyword.substring(0,4);
 			param[1] = keyword.substring(4,6);
 			param[2] = keyword.substring(6);
-		}		
+		}
 		else {
 			param[0] = "%";
 			param[1] = "%";
 			param[2] = "%";
 		}
-		
+
 		return param;
 	}
 

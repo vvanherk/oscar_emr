@@ -1,27 +1,27 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License.
-// * This program is free software; you can redistribute it and/or
-// * modify it under the terms of the GNU General Public License
-// * as published by the Free Software Foundation; either version 2
-// * of the License, or (at your option) any later version. *
-// * This program is distributed in the hope that it will be useful,
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
-// * along with this program; if not, write to the Free Software
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
-// *
-// * <OSCAR TEAM>
-// * This software was written for the
-// * Department of Family Medicine
-// * McMaster University
-// * Hamilton
-// * Ontario, Canada
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
 
 package oscar.oscarEncounter.pageUtil;
 
@@ -132,26 +132,26 @@ public class EctDisplayLabAction2 extends EctDisplayAction {
 			StringBuilder func;
 			int hash;
 
-			LinkedHashMap accessionMap = new LinkedHashMap();
+			LinkedHashMap<String,LabResultData> accessionMap = new LinkedHashMap<String,LabResultData>();
 
 			for (int i = 0; i < labs.size(); i++) {
-				result = (LabResultData) labs.get(i);
+				result = labs.get(i);
 				if (result.accessionNumber == null || result.accessionNumber.equals("")) {
 					accessionMap.put("noAccessionNum" + i + result.labType, result);
 				} else {
 					if (!accessionMap.containsKey(result.accessionNumber + result.labType)) accessionMap.put(result.accessionNumber + result.labType, result);
 				}
 			}
-			labs = new ArrayList(accessionMap.values());
+			labs = new ArrayList<LabResultData>(accessionMap.values());
 			logger.info("number of labs: " + labs.size());
 			for (int j = 0; j < labs.size(); j++) {
-				result = (LabResultData) labs.get(j);
+				result = labs.get(j);
 				Date date = result.getDateObj();
 				String formattedDate = DateUtils.getDate(date, "dd-MMM-yyyy", request.getLocale());
 				// String formattedDate = DateUtils.getDate(date);
 				func = new StringBuilder("popupPage(700,960,'");
 				label = result.getLabel();
-				
+
 				String remoteFacilityIdQueryString = "";
 				if (result.getRemoteFacilityId() != null) {
 					try {
@@ -183,17 +183,17 @@ public class EctDisplayLabAction2 extends EctDisplayAction {
 				}
 				String labRead = "";
 				if(!oscarLogDao.hasRead(( (String) request.getSession().getAttribute("user")   ),"lab",result.segmentID)){
-                	labRead = "*";	
+                	labRead = "*";
                 }
-				
-				NavBarDisplayDAO.Item item = Dao.Item();
+
+				NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
 				logger.info("Adding link: " + labDisplayName + " : " + formattedDate);
 				item.setLinkTitle(labDisplayName + " " + formattedDate);
 				labDisplayName = StringUtils.maxLenString(labDisplayName, MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES); // +" "+formattedDate;
 				hash = winName.hashCode();
 				hash = hash < 0 ? hash * -1 : hash;
 				func.append(hash + "','" + url + "'); return false;");
-				
+
 				item.setTitle(labRead+labDisplayName+labRead);
 				item.setURL(func.toString());
 				item.setDate(date);
@@ -201,7 +201,7 @@ public class EctDisplayLabAction2 extends EctDisplayAction {
 					item.setColour("red");
 				}
 
-				
+
 				// item.setBgColour(bgcolour);
 				Dao.addItem(item);
 			}

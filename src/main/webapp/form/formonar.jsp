@@ -1,27 +1,9 @@
-<%--  
-/*
- * 
- * Copyright (c) 2005- Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * Yi Li
- */
---%>
 <%@ page import="oscar.form.*"%>
 <%
     int demoNo = Integer.parseInt(request.getParameter("demographic_no"));
     int formId = Integer.parseInt(request.getParameter("formId"));
-
+    String pg = request.getParameter("pg");
+    
 	// for oscarcitizens
     String historyet = request.getParameter("historyet") == null ? "" : ("&historyet=" + request.getParameter("historyet"));
 
@@ -33,7 +15,12 @@
 			FrmRecord rec = (new FrmRecordFactory()).factory("ONAR");
 			java.util.Properties props = rec.getFormRecord(demoNo, formId);
 
-			pageContext.forward("formonar" + props.getProperty("c_lastVisited", "pg1") 
+			String suffix =  props.getProperty("c_lastVisited", "pg1");
+			if(pg != null && pg.length()>0) {
+				suffix = "pg"+pg;
+			}
+			
+			pageContext.forward("formonar" + suffix
 				+ ".jsp?demographic_no=" + demoNo + "&formId=" + formId + historyet)  ;
 		}
 		return;

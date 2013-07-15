@@ -1,30 +1,28 @@
-/*
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * Jason Gallagher
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
  * McMaster University
  * Hamilton
- * Ontario, Canada   Creates a new instance of EfmData
- *
- *
- * EfmData.java
- *
- * Created on July 28, 2005, 1:54 PM
+ * Ontario, Canada
  */
+
+
 package oscar.eform.data;
 
 import java.util.ArrayList;
@@ -33,11 +31,14 @@ import java.util.Hashtable;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
 import org.apache.struts.action.ActionMessages;
 import org.oscarehr.common.OtherIdManager;
 import org.oscarehr.common.dao.EFormDataDao;
 import org.oscarehr.common.model.EFormData;
+import org.oscarehr.ui.servlet.ImageRenderingServlet;
+import org.oscarehr.util.DigitalSignatureUtils;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 
@@ -53,7 +54,7 @@ public class EForm extends EFormBase {
 	private static Logger log = MiscUtils.getLogger();
 
 	private String appointment_no = "-1";
-	private HashMap sql_params = new HashMap<String, String>();
+	private HashMap<String,String> sql_params = new HashMap<String, String>();
 	private String parentAjaxId = null;
         private String eform_link = null;
 	private HashMap<String, String> fieldValues = new HashMap<String, String>();
@@ -104,7 +105,7 @@ public class EForm extends EFormBase {
 	}
 
 	public void loadEForm(String fid, String demographicNo) {
-		Hashtable loaded = (Hashtable) EFormUtil.loadEForm(fid);
+		Hashtable loaded = EFormUtil.loadEForm(fid);
 		this.fid = fid;
 		this.formName = (String) loaded.get("formName");
 		this.formHtml = (String) loaded.get("formHtml");
@@ -183,7 +184,7 @@ public class EForm extends EFormBase {
 	}
 
 	// ------------------Saving the Form (inserting value= statements)---------------------
-	public void setValues(ArrayList names, ArrayList values) {
+	public void setValues(ArrayList<String> names, ArrayList<String> values) {
             if (names.size() != values.size()) return;
             StringBuilder html = new StringBuilder(this.formHtml);
             int pointer = -1;
@@ -193,7 +194,7 @@ public class EForm extends EFormBase {
                 int i;
                 if ((i = names.indexOf(fieldName)) < 0) continue;
 
-                String val = (String)values.get(i);
+                String val = values.get(i);
                 pointer = nextSpot(html, pointer);
                 html = putValue(val, getFieldType(fieldHeader), pointer, html);
             }
@@ -203,7 +204,8 @@ public class EForm extends EFormBase {
 	// ------------------Saving the Form (inserting fdid$value= statements)---------------------
 	public void setOpenerValues(ArrayList<String> names, ArrayList<String> values) {
 		StringBuilder html = new StringBuilder(this.formHtml);
-		String opener = EFormLoader.getInstance().getOpener(); // default: opener: "oscarOPEN="
+		EFormLoader.getInstance();
+		String opener = EFormLoader.getOpener(); // default: opener: "oscarOPEN="
                 int markerLoc = -1;
                 while ((markerLoc = getFieldIndex(html, markerLoc + 1)) >= 0) {
                         String fieldHeader = getFieldHeader(html, markerLoc);
@@ -232,7 +234,8 @@ public class EForm extends EFormBase {
 	// --------------------------Setting APs utilities----------------------------------------
 	public void setDatabaseAPs() {
 		StringBuilder html = new StringBuilder(this.formHtml);
-		String marker = EFormLoader.getInstance().getMarker(); // default: marker: "oscarDB="
+		EFormLoader.getInstance();
+		String marker = EFormLoader.getMarker(); // default: marker: "oscarDB="
 		for (int i = 0; i < 2; i++) { // run the following twice if "count"-type field is found
 			int markerLoc = -1;
 			while ((markerLoc = getFieldIndex(html, markerLoc + 1)) >= 0) {
@@ -250,14 +253,15 @@ public class EForm extends EFormBase {
 
 				int needing = needValueInForm;
 				String fieldType = getFieldType(fieldHeader); // textarea, text, hidden etc..
-				if ((fieldType.equals("")) || (apName0.equals(""))) continue;
-                                
+				if ((fieldType==null || fieldType.equals("")) || (apName0==null || apName0.equals(""))) continue;
+
 				// sets up the pointer where to write the value
 				int pointer = markerLoc + EFormUtil.getAttributePos(marker,fieldHeader) + marker.length() + 1;
 				if (!fieldType.equals("textarea")) {
 					pointer += apName.length();
 				}
-				DatabaseAP curAP = EFormLoader.getInstance().getAP(apName0);
+				EFormLoader.getInstance();
+				DatabaseAP curAP = EFormLoader.getAP(apName0);
 				if (curAP == null) curAP = getAPExtra(apName0, fieldHeader);
 				if (curAP == null) continue;
 				if (!setAP2nd) { // 1st run
@@ -277,10 +281,54 @@ public class EForm extends EFormBase {
 		}
 	}
 
+	// Gets all the fields that are "input" (i.e. write-to-database) fields.
+	public void setupInputFields() {
+		String marker = EFormLoader.getInputMarker();
+		StringBuilder html = new StringBuilder(this.formHtml);
+		int markerLoc;
+		int pointer = 0;
+		while ((markerLoc = StringBuilderUtils.indexOfIgnoreCase(html, marker, pointer)) >= 0) {
+			pointer = (markerLoc + marker.length());
+			updateFields.add(getFieldName(html, pointer));
+		}
+
+		generateInputCode();
+	}
+
+	private void generateInputCode() {
+		if (updateFields.size() > 0) {
+
+			StringBuilder html = new StringBuilder(this.formHtml);
+			int formEndLoc = StringBuilderUtils.indexOfIgnoreCase(html, "</form>", 0);
+			int scriptEndLoc = StringBuilderUtils.indexOfIgnoreCase(html, "</script>", 0);
+
+			if (formEndLoc < 0) formEndLoc = 1;
+
+			if (scriptEndLoc < 0) scriptEndLoc = 0;
+			else scriptEndLoc += 9;
+
+			String fieldValue = "";
+			for (String field : updateFields) {
+				fieldValue += field + "%";
+			}
+
+			html.insert(formEndLoc-1, "<span id='_oscardodatabaseupdatespan' style='position: absolute;' class='DoNotPrint'><input type='checkbox' name='_oscardodatabaseupdate' onchange='_togglehighlight()' /> Update Fields in Database<br />" +
+					"<input type='button' id='_oscarrefreshfieldsbtn' name='_oscarrefreshfieldsbtn' value='Refresh DB Fields' onclick='_refreshfields()' /></span> " +
+					"<input type='hidden' id='_oscarupdatefields' name='_oscarupdatefields' value='" + fieldValue + "' />" +
+					"<input type='hidden' id='_oscardemographicno' name='_oscardemographicno' value='" + this.demographicNo + "' />" +
+					"<input type='hidden' id='_oscarproviderno' name='_oscarproviderno' value='" + this.providerNo + "' />" +
+					"<input type='hidden' id='_oscarfid' name='_oscarfid' value='" + this.fid + "' />");
+
+			this.formHtml = html.insert(scriptEndLoc, "<script type='text/javascript' src='../share/javascript/jquery/jquery-1.4.2.js'></script>" +
+			"<script type='text/javascript' src='../js/eform_highlight.js'></script>").toString();
+		}
+	}
+
 	// --------------------------Setting oscarOPEN behaviours ----------------------------------------
 	public void setOscarOPEN(String requestURI) {
 		StringBuilder html = new StringBuilder(this.formHtml);
-		String opener = EFormLoader.getInstance().getOpener(); // default: opener: "oscarOPEN="
+		EFormLoader.getInstance();
+		String opener = EFormLoader.getOpener(); // default: opener: "oscarOPEN="
                 int markerLoc = -1;
                 while ((markerLoc = getFieldIndex(html, markerLoc + 1)) >= 0) {
                         log.debug("=============START OPENER CYCLE===========");
@@ -294,7 +342,8 @@ public class EForm extends EFormBase {
                         log.debug("OPEN ==== " + efmName);
                         // sets up the pointer where to write the value
                         String fdid = EFormUtil.removeQuotes(EFormUtil.getAttribute(OPENER_VALUE, fieldHeader));
-                        String onclick = EFormLoader.getInstance().getOpenEform(requestURI, fdid, EFormUtil.removeQuotes(efmName), fieldName, this);
+                        EFormLoader.getInstance();
+						String onclick = EFormLoader.getOpenEform(requestURI, fdid, EFormUtil.removeQuotes(efmName), fieldName, this);
                         int pointer = EFormUtil.getAttributePos("onclick", fieldHeader);
                         String type = pointer<0 ? "onclick" : "onclick_append";
                         if (pointer<0) {
@@ -315,7 +364,7 @@ public class EForm extends EFormBase {
 		this.formDate = UtilDateUtilities.DateToString(UtilDateUtilities.now(), "yyyy-MM-dd");
 	}
 
-	public ActionMessages setMeasurements(ArrayList names, ArrayList values) {
+	public ActionMessages setMeasurements(ArrayList<String> names, ArrayList<String> values) {
 		return (WriteNewMeasurements.addMeasurements(names, values, this.demographicNo, this.providerNo));
 	}
 
@@ -328,7 +377,8 @@ public class EForm extends EFormBase {
 
         public ArrayList<String> getOpenerNames() {
             ArrayList<String> openerNames = new ArrayList<String>();
-            String opener = EFormLoader.getInstance().getOpener(); // default: opener: "oscarOPEN="
+            EFormLoader.getInstance();
+			String opener = EFormLoader.getOpener(); // default: opener: "oscarOPEN="
             StringBuilder html = new StringBuilder(this.formHtml);
             int markerLoc = -1;
             while ((markerLoc = getFieldIndex(html, markerLoc + 1)) >= 0) {
@@ -415,7 +465,8 @@ public class EForm extends EFormBase {
 				type += "_ref";
 				if (ref_value == null) type += "name";
 			}
-			curAP = EFormLoader.getInstance().getAP("_eform_values_" + type);
+			EFormLoader.getInstance();
+			curAP = EFormLoader.getAP("_eform_values_" + type);
 			if (curAP != null) {
 				setSqlParams(VAR_NAME, field);
 				setSqlParams(REF_VAR_NAME, ref_name);
@@ -426,7 +477,8 @@ public class EForm extends EFormBase {
 		} else if (module.equals("o")) {
 			log.debug("SWITCHING TO OTHER_ID");
 			String table_name = "", table_id = "";
-			curAP = EFormLoader.getInstance().getAP("_other_id");
+			EFormLoader.getInstance();
+			curAP = EFormLoader.getAP("_other_id");
 			if (type.equalsIgnoreCase("patient")) {
 				table_name = OtherIdManager.DEMOGRAPHIC.toString();
 				table_id = this.demographicNo;
@@ -570,14 +622,14 @@ public class EForm extends EFormBase {
 		if (!EFormUtil.blank(sql)) {
 			sql = replaceAllFields(sql);
 			log.debug("SQL----" + sql);
-			ArrayList names = DatabaseAP.parserGetNames(output); // a list of ${apName} --> apName
+			ArrayList<String> names = DatabaseAP.parserGetNames(output); // a list of ${apName} --> apName
 			sql = DatabaseAP.parserClean(sql); // replaces all other ${apName} expressions with 'apName'
-			ArrayList values = EFormUtil.getValues(names, sql);
+			ArrayList<String> values = EFormUtil.getValues(names, sql);
 			if (values.size() != names.size()) {
 				output = "";
 			} else {
 				for (int i = 0; i < names.size(); i++) {
-					output = DatabaseAP.parserReplace((String) names.get(i), (String) values.get(i), output);
+					output = DatabaseAP.parserReplace( names.get(i), values.get(i), output);
 				}
 			}
 		}
@@ -600,7 +652,7 @@ public class EForm extends EFormBase {
 		return (html);
 	}
 
-	private String replaceAllFields(String sql) {
+	public String replaceAllFields(String sql) {
 		sql = DatabaseAP.parserReplace("demographic", demographicNo, sql);
 		sql = DatabaseAP.parserReplace("provider", providerNo, sql);
 		sql = DatabaseAP.parserReplace("appt_no", appointment_no, sql);
@@ -618,8 +670,8 @@ public class EForm extends EFormBase {
 
 	private String getSqlParams(String key) {
 		if (sql_params.containsKey(key)) {
-		    String val = (String) sql_params.get(key);
-		    return val==null ? "" : val.replace("\"", "\\\"");
+		    String val =  sql_params.get(key);
+		    return val==null ? "" : StringEscapeUtils.escapeSql(val);
 		}
 		return "";
 	}
@@ -654,8 +706,8 @@ public class EForm extends EFormBase {
 
 			return -1;
 		}
-		
-		
+
+
 		/*  Code too slow, replaced with regex
 		if (html == null) return -1;
 
@@ -675,6 +727,36 @@ public class EForm extends EFormBase {
 
 		return min;
 		*/
+	}
+
+	private String getFieldName(StringBuilder html, int pointer) {
+		//pointer can be any place in the tag - isolates tag and sends back field type
+		int open = html.substring(0, pointer).lastIndexOf("<");
+		int close = html.substring(pointer).indexOf(">") + pointer + 1;
+		String tag = html.substring(open, close);
+		log.debug("TAG ====" + tag);
+		int start;  //<input type="^text".....
+		int end;    //<input type="text^"....
+		if ((start = tag.toLowerCase().indexOf(" name=")) >= 0) {
+			start += 6;
+			if (tag.charAt(start) == '"') {
+				start += 1;
+				end = tag.indexOf('"', start);
+			} else if (tag.charAt(start) == '\'') {
+				start += 1;
+				end = tag.indexOf('\'', start);
+			} else {
+				int nextSpace = tag.indexOf(" ", start);
+				int nextBracket = tag.indexOf(">", start);
+				if (nextSpace < 0) end = nextBracket;
+				else if ((nextBracket < 0) || (nextSpace < nextBracket)) end = nextSpace;
+				else end = nextBracket;
+			}
+
+			return tag.substring(start, end);
+		} else {
+			return "";
+		}
 	}
 
 	private String getFieldHeader(String html, int fieldIndex) {
@@ -746,5 +828,41 @@ public class EForm extends EFormBase {
 		String refFid = EFormUtil.getEFormIdByName(eform_name);
 		if (EFormUtil.blank(refFid)) refFid = fid;
 		return refFid;
+	}
+	
+	public void setSignatureCode(String contextPath, String userAgent, String demographicNo, String providerId) {
+		String signatureRequestId = DigitalSignatureUtils.generateSignatureRequestId(providerId);
+		String imageUrl = contextPath+"/imageRenderingServlet?source="+ImageRenderingServlet.Source.signature_preview.name()+"&"+DigitalSignatureUtils.SIGNATURE_REQUEST_ID_KEY+"="+signatureRequestId;
+		String storedImgUrl = contextPath+"/imageRenderingServlet?source="+ImageRenderingServlet.Source.signature_stored.name()+"&digitalSignatureId=";
+
+		StringBuilder html = new StringBuilder(this.formHtml);
+		int signatureLoc = StringBuilderUtils.indexOfIgnoreCase(html, signatureMarker, 0);
+
+		if (signatureLoc > -1) {
+			String browserType = "";
+			if (userAgent != null) {
+				if (userAgent.toLowerCase().indexOf("ipad") > -1) {
+					browserType = "IPAD";
+				} else {
+					browserType = "ALL";
+				}
+			}
+
+			String signatureCode = "<script type='text/javascript' src='${oscar_javascript_path}../jquery/jquery-1.4.2.js'></script>" +
+			"<script type='text/javascript' src='${oscar_javascript_path}signature.js'></script>" +
+			"<script type='text/javascript'>\n" +
+			"var _signatureRequestId = '" + signatureRequestId + "';\n" + 
+			"var _imageUrl = '" + imageUrl + "';\n" +
+			"var _storedImgUrl = '" + storedImgUrl + "';\n" +
+			"var _contextPath = '" + contextPath + "';\n" + 
+			"var _digitalSignatureRequestIdKey = '" + DigitalSignatureUtils.SIGNATURE_REQUEST_ID_KEY + "';\n" +
+			"var _browserType = '" + browserType + "';\n" +
+			"var _demographicNo = '" + demographicNo + "';\n" +
+			"</script>";
+
+
+			html.replace(signatureLoc, signatureLoc + signatureMarker.length(), signatureCode);
+			this.formHtml = html.toString();
+		}
 	}
 }

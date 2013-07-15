@@ -1,24 +1,25 @@
-/*
-* 
-* Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License. 
-* This program is free software; you can redistribute it and/or 
-* modify it under the terms of the GNU General Public License 
-* as published by the Free Software Foundation; either version 2 
-* of the License, or (at your option) any later version. * 
-* This program is distributed in the hope that it will be useful, 
-* but WITHOUT ANY WARRANTY; without even the implied warranty of 
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-* along with this program; if not, write to the Free Software 
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-* 
-* <OSCAR TEAM>
-* 
-* This software was written for 
-* Centre for Research on Inner City Health, St. Michael's Hospital, 
-* Toronto, Ontario, Canada 
-*/
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
 
 package org.oscarehr.PMmodule.dao;
 
@@ -47,7 +48,7 @@ public class ProgramAccessDAO extends HibernateDaoSupport {
     		results=getHibernateTemplate().find(q, new Object[] {programId});
     		if (results!=null) programAccessListByProgramIdCache.put(programId, results);
     	}
-    		
+
         return results;
     }
 
@@ -58,7 +59,7 @@ public class ProgramAccessDAO extends HibernateDaoSupport {
             throw new IllegalArgumentException();
         }
 
-        ProgramAccess result = (ProgramAccess)this.getHibernateTemplate().get(ProgramAccess.class, id);
+        ProgramAccess result = this.getHibernateTemplate().get(ProgramAccess.class, id);
 
         if (log.isDebugEnabled()) {
             log.debug("getProgramAccess: id=" + id + ",found=" + (result != null));
@@ -87,6 +88,12 @@ public class ProgramAccessDAO extends HibernateDaoSupport {
         return result;
     }
 
+	@SuppressWarnings("unchecked")
+	public List<ProgramAccess> getProgramAccessListByType(Long programId, String accessType) {
+		String q = "from ProgramAccess pa where pa.ProgramId = ? and pa.AccessType.Name like ?";
+		return this.getHibernateTemplate().find(q, new Object[] { programId, accessType });
+	}
+
     public void saveProgramAccess(ProgramAccess pa) {
         if (pa == null) {
             throw new IllegalArgumentException();
@@ -94,7 +101,7 @@ public class ProgramAccessDAO extends HibernateDaoSupport {
 
         getHibernateTemplate().saveOrUpdate(pa);
         programAccessListByProgramIdCache.remove(pa.getProgramId());
-        
+
         if (log.isDebugEnabled()) {
             log.debug("saveProgramAccess:" + pa.getId());
         }
@@ -115,8 +122,8 @@ public class ProgramAccessDAO extends HibernateDaoSupport {
 
     }
 
-    public List getAccessTypes() {
-        List results = this.getHibernateTemplate().find("from AccessType at");
+    public List<AccessType> getAccessTypes() {
+        List<AccessType> results = this.getHibernateTemplate().find("from AccessType at");
 
         if (log.isDebugEnabled()) {
             log.debug("getAccessTypes: # of results=" + results.size());
@@ -129,7 +136,7 @@ public class ProgramAccessDAO extends HibernateDaoSupport {
             throw new IllegalArgumentException();
         }
 
-        AccessType result = (AccessType)this.getHibernateTemplate().get(AccessType.class, id);
+        AccessType result = this.getHibernateTemplate().get(AccessType.class, id);
 
         if (log.isDebugEnabled()) {
             log.debug("getAccessType: id=" + id + ",found=" + (result != null));

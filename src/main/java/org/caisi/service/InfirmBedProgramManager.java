@@ -1,24 +1,25 @@
-/*
-* 
-* Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
-* This software is published under the GPL GNU General Public License. 
-* This program is free software; you can redistribute it and/or 
-* modify it under the terms of the GNU General Public License 
-* as published by the Free Software Foundation; either version 2 
-* of the License, or (at your option) any later version. * 
-* This program is distributed in the hope that it will be useful, 
-* but WITHOUT ANY WARRANTY; without even the implied warranty of 
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-* GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-* along with this program; if not, write to the Free Software 
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-* 
-* <OSCAR TEAM>
-* 
-* This software was written for 
-* Centre for Research on Inner City Health, St. Michael's Hospital, 
-* Toronto, Ontario, Canada 
-*/
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
 
 package org.caisi.service;
 
@@ -31,14 +32,14 @@ import java.util.List;
 
 import org.apache.struts.util.LabelValueBean;
 import org.caisi.dao.BedProgramDao;
-import org.caisi.dao.ProviderDefaultProgramDao;
-import org.caisi.model.ProviderDefaultProgram;
 import org.oscarehr.PMmodule.dao.ProgramDao;
 import org.oscarehr.PMmodule.dao.ProgramProviderDAO;
 import org.oscarehr.PMmodule.model.Program;
 import org.oscarehr.PMmodule.model.ProgramProvider;
 import org.oscarehr.common.dao.DemographicDao;
+import org.oscarehr.common.dao.ProviderDefaultProgramDao;
 import org.oscarehr.common.model.Demographic;
+import org.oscarehr.common.model.ProviderDefaultProgram;
 import org.springframework.beans.factory.annotation.Required;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,8 +48,14 @@ public class InfirmBedProgramManager {
     private BedProgramDao bedProgramDao;
     private DemographicDao demographicDao;
     private ProgramProviderDAO programProviderDAOT;
-    private ProviderDefaultProgramDao providerDefaultProgramDao;
+    private ProviderDefaultProgramDao providerDefaultProgramDao ;
+
     private ProgramDao programDao;
+
+    @Required
+    public void setProviderDefaultProgramDao(ProviderDefaultProgramDao providerDefaultProgramDao) {
+    	this.providerDefaultProgramDao = providerDefaultProgramDao;
+    }
 
     @Required
     public void setBedProgramDao(BedProgramDao dao) {
@@ -58,11 +65,6 @@ public class InfirmBedProgramManager {
     @Required
     public void setProgramDao(ProgramDao dao) {
         this.programDao = dao;
-    }
-
-    @Required
-    public void setProviderDefaultProgramDao(ProviderDefaultProgramDao dao) {
-        this.providerDefaultProgramDao = dao;
     }
 
     @Required
@@ -81,9 +83,9 @@ public class InfirmBedProgramManager {
         return rs;
     }
 
-    public List getProgramBeans() {
+    public List<LabelValueBean> getProgramBeans() {
         Iterator iter = bedProgramDao.getAllProgram().iterator();
-        ArrayList pList = new ArrayList();
+        ArrayList<LabelValueBean> pList = new ArrayList<LabelValueBean>();
         while (iter.hasNext()) {
             Program p = (Program)iter.next();
             if (p != null) {
@@ -94,18 +96,18 @@ public class InfirmBedProgramManager {
         return pList;
     }
 
-    public List getProgramBeans(String providerNo, Integer facilityId) {
-        if (providerNo == null || "".equalsIgnoreCase(providerNo.trim())) return new ArrayList();
+    public List<LabelValueBean> getProgramBeans(String providerNo, Integer facilityId) {
+        if (providerNo == null || "".equalsIgnoreCase(providerNo.trim())) return new ArrayList<LabelValueBean>();
         Iterator iter = programProviderDAOT.getProgramProvidersByProvider(providerNo).iterator();
-        ArrayList pList = new ArrayList();
+        ArrayList<LabelValueBean> pList = new ArrayList<LabelValueBean>();
         while (iter.hasNext()) {
             ProgramProvider p = (ProgramProvider)iter.next();
             if (p != null && p.getProgramId() != null && p.getProgramId().longValue() > 0) {
                 //logger.debug("programName="+p.getProgram().getName()+"::"+"programId="+p.getProgram().getId().toString());
                 Program program = programDao.getProgram(new Integer(p.getProgramId().intValue()));
-                
+
                 if (facilityId!=null && program.getFacilityId()!=facilityId.intValue()) continue;
-                
+
                 if (program != null && program.isActive()) pList.add(new LabelValueBean(program.getName(), program.getId().toString()));
             }
         }
@@ -113,9 +115,9 @@ public class InfirmBedProgramManager {
     }
 
     public List getProgramForApptViewBeans(String providerNo, Integer facilityId) {
-        if (providerNo == null || "".equalsIgnoreCase(providerNo.trim())) return new ArrayList();
+        if (providerNo == null || "".equalsIgnoreCase(providerNo.trim())) return new ArrayList<LabelValueBean>();
         Iterator iter = programProviderDAOT.getProgramProvidersByProvider(providerNo).iterator();
-        ArrayList pList = new ArrayList();
+        ArrayList<LabelValueBean> pList = new ArrayList<LabelValueBean>();
         while (iter.hasNext()) {
             ProgramProvider p = (ProgramProvider)iter.next();
             if (p != null && p.getProgramId() != null && p.getProgramId().longValue() > 0) {
@@ -123,7 +125,7 @@ public class InfirmBedProgramManager {
                 Program program = programDao.getProgramForApptView(new Integer(p.getProgramId().intValue()));
                 if(program==null) continue;
                 if (facilityId!=null && program.getFacilityId()!=facilityId.intValue()) continue;
-                
+
                 if (program.isActive()) pList.add(new LabelValueBean(program.getName(), program.getId().toString()));
             }
         }
@@ -140,15 +142,15 @@ public class InfirmBedProgramManager {
         cal.set(Calendar.MINUTE, 59);
         cal.set(Calendar.SECOND, 59);
         dt = cal.getTime();
-        Iterator iter;
+        Iterator<Demographic> iter;
 
-        if (archiveView != null && archiveView.equals("true")) iter = demographicDao.getArchiveDemographicByProgramOptimized(programId, dt, defdt).iterator();        
+        if (archiveView != null && archiveView.equals("true")) iter = demographicDao.getArchiveDemographicByProgramOptimized(programId, dt, defdt).iterator();
         else iter = demographicDao.getActiveDemographicByProgram(programId, dt, defdt).iterator();
 
-        ArrayList demographicList = new ArrayList();
+        ArrayList<LabelValueBean> demographicList = new ArrayList<LabelValueBean>();
         Demographic de = null;
         while (iter.hasNext()) {
-            de = (Demographic)iter.next();
+            de = iter.next();
             //logger.info("demoName="+de.getLastName()+","+de.getFirstName()+"::"+"demoID="+de.getDemographicNo().toString());
             demographicList.add(new LabelValueBean(de.getLastName() + ", " + de.getFirstName(), de.getDemographicNo().toString()));
 
@@ -166,12 +168,12 @@ public class InfirmBedProgramManager {
 
     public int getDefaultProgramId(String providerNo) {
         int defProgramId = 0;
-        List rs = providerDefaultProgramDao.getProgramByProviderNo(providerNo);
+        List<ProviderDefaultProgram> rs = providerDefaultProgramDao.getProgramByProviderNo(providerNo);
         if (rs.isEmpty()) {
             //setDefaultProgramId(providerNo,defProgramId);
             return defProgramId;
         }
-        else return ((ProviderDefaultProgram)rs.get(0)).getProgramId().intValue();
+        else return rs.get(0).getProgramId();
 
     }
 
@@ -180,17 +182,17 @@ public class InfirmBedProgramManager {
     }
 
     public Boolean getProviderSig(String providerNo) {
-        List list = providerDefaultProgramDao.getProgramByProviderNo(providerNo);
+        List<ProviderDefaultProgram> list = providerDefaultProgramDao.getProgramByProviderNo(providerNo);
         if (list.isEmpty()) {
             ProviderDefaultProgram pdp = new ProviderDefaultProgram();
             pdp.setProgramId(new Integer(0));
             pdp.setProviderNo(providerNo);
-            pdp.setSignnote(false);
+            pdp.setSign(false);
             providerDefaultProgramDao.saveProviderDefaultProgram(pdp);
             return(new Boolean(false));
         }
-        ProviderDefaultProgram pro = (ProviderDefaultProgram)list.get(0);
-        return new Boolean(pro.isSignnote());
+        ProviderDefaultProgram pro = list.get(0);
+        return new Boolean(pro.isSign());
 
     }
 

@@ -1,30 +1,25 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  Jason Gallagher
- *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
- *
- * PHRLoginAction.java
- *
- * Created on April 16, 2007, 3:28 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
 
 package org.oscarehr.phr.web;
@@ -39,30 +34,42 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.ActionRedirect;
 import org.apache.struts.actions.DispatchAction;
+import org.oscarehr.common.dao.ProviderPreferenceDao;
+import org.oscarehr.common.model.ProviderPreference;
 import org.oscarehr.phr.PHRAuthentication;
-import org.oscarehr.phr.service.PHRService;
+import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
+import org.oscarehr.util.SpringUtils;
 
-/**
- *
- * @author jay
- */
 public class PHRLogoutAction extends DispatchAction {
-     private static Logger log = MiscUtils.getLogger();
-    
-    /**
-     * Creates a new instance of PHRLoginAction
-     */
-    public PHRLogoutAction() {
-    }
-    
-     
-    public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
-       HttpSession session = request.getSession();
-       session.removeAttribute(PHRAuthentication.SESSION_PHR_AUTH);
-       session.removeAttribute(PHRService.SESSION_PHR_EXCHANGE_TIME);
-       String forwardTo = request.getParameter("forwardto");
-       ActionRedirect ar = new ActionRedirect(forwardTo);
-       return ar;
-    }
+	private static Logger log = MiscUtils.getLogger();
+
+	public PHRLogoutAction() {
+	}
+
+	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		HttpSession session = request.getSession();
+		session.removeAttribute(PHRAuthentication.SESSION_PHR_AUTH);
+
+		clearSavedMyOscarPassword();
+
+		String forwardTo = request.getParameter("forwardto");
+		ActionRedirect ar = new ActionRedirect(forwardTo);
+		return ar;
+	}
+
+	private void clearSavedMyOscarPassword() {
+		try {
+			LoggedInInfo loggedInInfo = LoggedInInfo.loggedInInfo.get();
+
+			ProviderPreferenceDao providerPreferenceDao = (ProviderPreferenceDao) SpringUtils.getBean("providerPreferenceDao");
+			ProviderPreference providerPreference = providerPreferenceDao.find(loggedInInfo.loggedInProvider.getProviderNo());
+			if (providerPreference.getEncryptedMyOscarPassword() != null) {
+				providerPreference.setEncryptedMyOscarPassword(null);
+				providerPreferenceDao.merge(providerPreference);
+			}
+		} catch (Exception e) {
+			log.error("Error clearing myoscarPassword.", e);
+		}
+	}
 }

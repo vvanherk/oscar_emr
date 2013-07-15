@@ -1,6 +1,14 @@
+/**
+ * Copyright (c) 2008-2012 Indivica Inc.
+ *
+ * This software is made available under the terms of the
+ * GNU General Public License, Version 2, 1991 (GPLv2).
+ * License details are available via "indivica.ca/gplv2"
+ * and "gnu.org/licenses/gpl-2.0.html".
+ */
+
 package oscar.oscarLab.ca.all.upload.handlers;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
@@ -18,21 +26,21 @@ import oscar.oscarLab.ca.all.util.PFHTUtilities;
 public class PFHTHandler implements MessageHandler {
 
 	 Logger logger = Logger.getLogger(PFHTHandler.class);
-	    
+
 	    public String parse(String serviceName, String fileName,int fileId){
-	        
+
 	        PFHTUtilities u = new PFHTUtilities();
-	      
+
 	        int i = 0;
 	        try {
 	            ArrayList messages = u.separateMessages(fileName);
 	            for (i=0; i < messages.size(); i++){
-	                
+
 	                String msg = (String) messages.get(i);
 	                MessageUploader.routeReport(serviceName, "PFHT", msg,fileId);
-	                
+
 	            }
-	            
+
 	            // Since the gdml labs show more than one lab on the same page when grouped
 	            // by accession number their abnormal status must be updated to reflect the
 	            // other labs that they are grouped with aswell
@@ -44,21 +52,21 @@ public class PFHTHandler implements MessageHandler {
 	            return null;
 	        }
 	        return("success");
-	        
+
 	    }
-	    
-	    
+
+
 	    // recheck the abnormal status of the last 'n' labs
-	    private void updateLabStatus(int n) throws SQLException {
-	        
+	    private void updateLabStatus(int n) {
+
 	    	Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao) SpringUtils.getBean("hl7TextInfoDao");
 			 List<Hl7TextInfo> labList = hl7TextInfoDao.getAllLabsByLabNumberResultStatus();
 			 ListIterator<Hl7TextInfo> iter = labList.listIterator();
-			 
+
 			 while (iter.hasNext() && n>0) {
 				 if (!iter.next().getResultStatus().equals("A")) {
 					 oscar.oscarLab.ca.all.parsers.MessageHandler h = Factory.getHandler(((Integer)iter.next().getLabNumber()).toString());
-					 
+
 		                int i=0;
 		                int j=0;
 		                String resultStatus = "";
@@ -69,7 +77,7 @@ public class PFHTHandler implements MessageHandler {
 		                        if(h.isOBXAbnormal(i, j)){
 		                            resultStatus = "A";
 		                            hl7TextInfoDao.updateResultStatusByLabId("A", iter.next().getLabNumber());
-		                            
+
 		                        }
 		                        j++;
 		                    }
@@ -78,6 +86,6 @@ public class PFHTHandler implements MessageHandler {
 				 }
 				 n--;
 			 }
-		        
+
 	    }
 }

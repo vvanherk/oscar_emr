@@ -1,29 +1,30 @@
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
+<%--
 
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
+<%@page import="org.oscarehr.common.service.AcceptableUseAgreementManager"%>
 <%@page import="oscar.OscarProperties, javax.servlet.http.Cookie, oscar.oscarSecurity.CookieSecurity, oscar.login.UAgentInfo" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -84,6 +85,13 @@ Boolean isMobileOptimized = session.getAttribute("mobileOptimized") != null;
         <!--LINK REL="StyleSheet" HREF="web.css" TYPE="text/css"-->
 
         <script language="JavaScript">
+        function showHideItem(id){
+            if(document.getElementById(id).style.display == 'none')
+                document.getElementById(id).style.display = 'block';
+            else
+                document.getElementById(id).style.display = 'none';
+        }
+        
   <!-- hide
   function setfocus() {
     document.loginForm.username.focus();
@@ -174,7 +182,7 @@ Boolean isMobileOptimized = session.getAttribute("mobileOptimized") != null;
                         <input type="text" name="username" value="" size="15" maxlength="15" autocomplete="off"/>
                         <br/>                
                         <bean:message key="loginApplication.formPwd"/><br/>
-                        <input type="password" name="password" value="" size="15" maxlength="15" autocomplete="off"/><br/>
+                        <input type="password" name="password" value="" size="15" maxlength="32" autocomplete="off"/><br/>
                                 <input type="submit" value="<bean:message key="index.btnSignIn"/>" />
                         <br/>
                         <bean:message key="index.formPIN"/>: 
@@ -186,6 +194,12 @@ Boolean isMobileOptimized = session.getAttribute("mobileOptimized") != null;
                         </span>
                         <input type=hidden name='propname' value='<bean:message key="loginApplication.propertyFile"/>' />
                         </html:form>
+                        
+                        <%if (AcceptableUseAgreementManager.hasAUA()){ %>
+                        <span class="extrasmall">
+                        	<bean:message key="global.aua" /> &nbsp; <a href="javascript:void(0);" onclick="showHideItem('auaText');"><bean:message key="global.showhide"/></a>
+                        </span>
+                        <%} %>
                         <hr width="100%" color="navy">
                         
                         <span class="extrasmall">
@@ -195,7 +209,7 @@ Boolean isMobileOptimized = session.getAttribute("mobileOptimized") != null;
                             </div>
                             <div id="browserInfo"><bean:message key="loginApplication.leftRmk1"/></div>
                             <bean:message key="loginApplication.leftRmk2" />
-                            <a href=# onClick='popupPage(500,700,"<bean:message key="loginApplication.gpltext"/>")'><bean:message key="loginApplication.gplLink"/></a>
+                            <a href=# onClick='popupPage(500,700,"http://www.gnu.org/licenses/gpl-2.0.txt")'><bean:message key="loginApplication.gplLink"/></a>
                             <br/>
                             <img style="width: 26px; height: 18px;" alt="<bean:message key="loginApplication.image.i18nAlt"/>"
                             title="<bean:message key="loginApplication.image.i18nTitle"/>"
@@ -206,6 +220,12 @@ Boolean isMobileOptimized = session.getAttribute("mobileOptimized") != null;
                     <!-- left side end-->
                 </td>
                 <td id="logoImg" align="center" valign="top">
+                	<%if (AcceptableUseAgreementManager.hasAUA()){ %>
+                	<div style="float:right;text-align:center;z-index:3;display:none;" id="auaText">
+            				<h3><bean:message key="provider.login.title.confidentiality"/></h3>
+        					<div style="margin-left:auto; margin-right:auto; text-align:left; width:70%; padding:5px; border:2px groove black;"><%=AcceptableUseAgreementManager.getAUAText()%></div>
+        			</div>
+                	<%}%>
                     <div style="margin-top:25px;"><% if (props.getProperty("loginlogo", "").equals("")) { %>
                             <html:img srcKey="loginApplication.image.logo" width="450" height="274"/>
                             <% } else { %>

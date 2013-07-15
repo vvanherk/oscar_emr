@@ -1,3 +1,27 @@
+<%--
+
+
+    Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for
+    Centre for Research on Inner City Health, St. Michael's Hospital,
+    Toronto, Ontario, Canada
+
+--%>
 <%@ include file="/taglibs.jsp"%>
 <%@ page import="org.oscarehr.PMmodule.web.formbean.*"%>
 <%@page import="org.oscarehr.PMmodule.web.utils.UserRoleUtils"%>
@@ -11,6 +35,10 @@
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.PMmodule.service.AdmissionManager"%>
 <%@page import="org.oscarehr.util.SessionConstants"%>
+<%@page import="oscar.util.OscarRoleObjectPrivilege"%>
+<%@page import="java.util.ArrayList"%>
+<%@page import="java.util.List"%>
+<%@page import="java.util.Properties" %>
 
 <html:form action="/PMmodule/ClientManager.do">
 
@@ -52,7 +80,15 @@
 		<tr>
 			<%
 			boolean admin = false;
-		
+			boolean bedRoomReservation = false;
+			String roleName = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
+			
+			ArrayList v = new ArrayList(OscarRoleObjectPrivilege.getPrivilegeProp("_pmm_client.BedRoomReservation"));
+			
+			if(OscarRoleObjectPrivilege.checkPrivilege(roleName, (Properties)v.get(0), (List<String>)v.get(1), (List<String>)v.get(2), "r")){
+				bedRoomReservation = true;
+			}
+			
 			if (session.getAttribute("userrole") != null && ((String) session.getAttribute("userrole")).indexOf("admin") != -1) {
 				admin = true;
 			}
@@ -84,6 +120,8 @@
 						continue;					
 				}
 				
+				if(!bedRoomReservation && "Bed/Room Reservation".equalsIgnoreCase(ClientManagerFormBean.tabs[x])) 
+					continue;
 				
 				if (ClientManagerFormBean.tabs[x].equals(selectedTab)) {
 			%>
@@ -98,7 +136,7 @@
 					
 					if (requireActiveTab && !activeInFacility)
 					{
-						%>
+						%>			
 			<td style="color: silver"><%=ClientManagerFormBean.tabs[x]%></td>
 			<%
 					}

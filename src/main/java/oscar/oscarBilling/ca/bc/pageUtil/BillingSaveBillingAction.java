@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.oscarBilling.ca.bc.pageUtil;
 
 import java.io.IOException;
@@ -42,13 +44,14 @@ import org.apache.struts.action.ActionMapping;
 import org.oscarehr.common.dao.AppointmentArchiveDao;
 import org.oscarehr.common.dao.OscarAppointmentDao;
 import org.oscarehr.common.model.Appointment;
+import org.oscarehr.common.model.Billing;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
+import oscar.MyDateFormat;
 import oscar.OscarProperties;
-import oscar.entities.Billing;
 import oscar.entities.Billingmaster;
 import oscar.oscarBilling.ca.bc.MSP.MSPBillingNote;
 import oscar.oscarBilling.ca.bc.MSP.MSPReconcile;
@@ -56,7 +59,6 @@ import oscar.oscarBilling.ca.bc.data.BillingHistoryDAO;
 import oscar.oscarBilling.ca.bc.data.BillingNote;
 import oscar.oscarBilling.ca.bc.data.BillingmasterDAO;
 import oscar.service.OscarSuperManager;
-import oscar.util.UtilDateUtilities;
 
 public class BillingSaveBillingAction extends Action {
 
@@ -86,7 +88,7 @@ public class BillingSaveBillingAction extends Action {
 
         Date curDate = new Date();
         String billingid = "";
-        ArrayList<String> billingIds = new ArrayList();
+        ArrayList<String> billingIds = new ArrayList<String>();
         String dataCenterId = OscarProperties.getInstance().getProperty("dataCenterId");
         String billingMasterId = "";
 
@@ -120,7 +122,7 @@ public class BillingSaveBillingAction extends Action {
         char billingAccountStatus = getBillingAccountStatus( bean);
 
         //String billingSQL = insertIntoBilling(bean, curDate, billingAccountStatus);
-        Billing billing = getBillingObj(bean, curDate, billingAccountStatus);
+        //* moved Billing billing = getBillingObj(bean, curDate, billingAccountStatus);
 
         ArrayList<oscar.oscarBilling.ca.bc.pageUtil.BillingBillingManager.BillingItem> billItem = bean.getBillItem();
 
@@ -131,6 +133,7 @@ public class BillingSaveBillingAction extends Action {
 ////        if (bean.getBillingType().equals("MSP") || bean.getBillingType().equals("ICBC") || bean.getBillingType().equals("Pri") || bean.getBillingType().equals("WCB")) {
         for (oscar.oscarBilling.ca.bc.pageUtil.BillingBillingManager.BillingItem bItem: billItem){
 
+            Billing billing = getBillingObj(bean, curDate, billingAccountStatus);
             if(request.getParameter("dispPrice+"+bItem.getServiceCode())!= null){
                 String updatedPrice = request.getParameter("dispPrice+"+bItem.getServiceCode());
                 log.debug(bItem.getServiceCode()+"Original "+bItem.price+ " updated price "+Double.parseDouble(updatedPrice));
@@ -138,9 +141,8 @@ public class BillingSaveBillingAction extends Action {
                 bItem.getLineTotal();
             }
 
-            billing.setBillingNo(0);
             billingmasterDAO.save(billing);
-            billingid = ""+billing.getBillingNo(); //getInsertIdFromBilling(billingSQL);
+            billingid = ""+billing.getId(); //getInsertIdFromBilling(billingSQL);
             //log.debug("billing id " + billingid + "   sql " + billingSQL);
             billingIds.add(billingid);
             if (paymentMode == 'E') {
@@ -336,13 +338,13 @@ public class BillingSaveBillingAction extends Action {
         bill.setAppointmentNo(apptNo);
         bill.setDemographicName(bean.getPatientName());
         bill.setHin(bean.getPatientPHN());
-        bill.setUpdateDate(UtilDateUtilities.DateToString(curDate));
-        bill.setBillingDate(bean.getServiceDate());
+        bill.setUpdateDate(curDate);
+        bill.setBillingDate(MyDateFormat.getSysDate(bean.getServiceDate()));
         bill.setTotal(bean.getGrandtotal());
         bill.setStatus(""+billingAccountStatus);
         bill.setDob(bean.getPatientDoB());
-        bill.setVisitdate(bean.getAdmissionDate());
-        bill.setVisittype(bean.getVisitType());
+        bill.setVisitDate(MyDateFormat.getSysDate(bean.getAdmissionDate()));
+        bill.setVisitType(bean.getVisitType());
         bill.setProviderOhipNo(bean.getBillingPracNo());
         bill.setApptProviderNo(bean.getApptProviderNo());
         bill.setCreator(bean.getCreator());

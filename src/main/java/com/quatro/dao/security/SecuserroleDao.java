@@ -1,13 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2008, 2009 Quatro Group Inc. and others.
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU General Public License
- * which accompanies this distribution, and is available at
- * Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+/**
+ * Copyright (c) 2005, 2009 IBM Corporation and others.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * Contributors:
  *     <Quatro Group Software Systems inc.>  <OSCAR Team>
- *******************************************************************************/
+ */
+
 package com.quatro.dao.security;
 
 import java.util.List;
@@ -30,8 +41,8 @@ import com.quatro.model.security.Secuserrole;
  * transactions or they can be augmented to handle user-managed Spring
  * transactions. Each of these methods provides additional information for how
  * to configure it for the desired type of transaction control.
- * 
- * @see com.quatro.model.Secuserrole
+ *
+ * @see com.quatro.model.security.Secuserrole
  * @author MyEclipse Persistence Tools
  */
 
@@ -48,13 +59,13 @@ public class SecuserroleDao extends HibernateDaoSupport {
 		try {
 			for(int i =0; i< list.size(); i++){
 				Secuserrole obj = (Secuserrole)list.get(i);
-				
+
 				int rowcount = update(obj);
-				
+
 				if(rowcount <= 0){
 					getSession().save(obj);
 				}
-				
+
 			}
 			//this.getHibernateTemplate().saveOrUpdateAll(list);
 			logger.debug("save ALL successful");
@@ -66,14 +77,22 @@ public class SecuserroleDao extends HibernateDaoSupport {
 	public void save(Secuserrole transientInstance) {
 		logger.debug("saving Secuserrole instance");
 		try {
-			getSession().save(transientInstance);
+			getSession().saveOrUpdate(transientInstance);
 			logger.debug("save successful");
 		} catch (RuntimeException re) {
 			logger.error("save failed", re);
 			throw re;
 		}
 	}
-	
+
+	public void updateRoleName(Integer id, String roleName) {
+		Secuserrole sur = this.getHibernateTemplate().get(Secuserrole.class, id);
+		if(sur != null) {
+			sur.setRoleName(roleName);
+			this.getHibernateTemplate().update(sur);
+		}
+	}
+
 	public void delete(Secuserrole persistentInstance) {
 		logger.debug("deleting Secuserrole instance");
 		try {
@@ -87,9 +106,9 @@ public class SecuserroleDao extends HibernateDaoSupport {
 	public int deleteByOrgcd(String orgcd) {
 		logger.debug("deleting Secuserrole by orgcd");
 		try {
-			
+
 			return getHibernateTemplate().bulkUpdate("delete Secuserrole as model where model.orgcd =?", orgcd);
-			
+
 		} catch (RuntimeException re) {
 			logger.error("delete failed", re);
 			throw re;
@@ -98,21 +117,21 @@ public class SecuserroleDao extends HibernateDaoSupport {
 	public int deleteByProviderNo(String providerNo) {
 		logger.debug("deleting Secuserrole by providerNo");
 		try {
-			
+
 			return getHibernateTemplate().bulkUpdate("delete Secuserrole as model where model.providerNo =?", providerNo);
-			
+
 		} catch (RuntimeException re) {
 			logger.error("delete failed", re);
 			throw re;
 		}
 	}
-	
+
 	public int deleteById(Integer id) {
 		logger.debug("deleting Secuserrole by ID");
 		try {
-			
+
 			return getHibernateTemplate().bulkUpdate("delete Secuserrole as model where model.id =?", id);
-			
+
 		} catch (RuntimeException re) {
 			logger.error("delete failed", re);
 			throw re;
@@ -125,11 +144,11 @@ public class SecuserroleDao extends HibernateDaoSupport {
 				+ " where model.providerNo ='" + instance.getProviderNo() + "'"
 				+ " and model.roleName ='" + instance.getRoleName() + "'"
 				+ " and model.orgcd ='" + instance.getOrgcd() + "'";
-			
+
 			Query queryObject = getSession().createQuery(queryString);
-			
+
 			return queryObject.executeUpdate();
-						
+
 		} catch (RuntimeException re) {
 			logger.error("Update failed", re);
 			throw re;
@@ -139,7 +158,7 @@ public class SecuserroleDao extends HibernateDaoSupport {
 		logger.debug("getting Secuserrole instance with id: " + id);
 		try {
 			Secuserrole instance = (Secuserrole) getSession().get(
-					"com.quatro.model.Secuserrole", id);
+					"com.quatro.model.security.Secuserrole", id);
 			return instance;
 		} catch (RuntimeException re) {
 			logger.error("get failed", re);
@@ -151,7 +170,7 @@ public class SecuserroleDao extends HibernateDaoSupport {
 		logger.debug("finding Secuserrole instance by example");
 		try {
 			List results = getSession().createCriteria(
-					"com.quatro.model.Secuserrole").add(
+					"com.quatro.model.security.Secuserrole").add(
 					Example.create(instance)).list();
 			logger.debug("find by example successful, result size: "
 					+ results.size());
@@ -192,48 +211,48 @@ public class SecuserroleDao extends HibernateDaoSupport {
 		(select codecsv from lst_orgcd where code = 'P200011') b
 		where b.codecsv like '%' || s.orgcd || ',%'
 		and not (s.orgcd like 'R%' or s.orgcd like 'O%')
-		
+
 		*/
 		logger.debug("Find staff instance .");
 		try {
-			
+
 			String queryString = "select a from Secuserrole a, LstOrgcd b, SecProvider p"
 				+ " where a.providerNo=p.providerNo and b.code ='" + orgcd + "'";
 			if (activeOnly) queryString += " and p.status='1'";
 
-			queryString = queryString 	
+			queryString = queryString
 				+ " and b.codecsv like '%' || a.orgcd || ',%'"
 				+ " and not (a.orgcd like 'R%' or a.orgcd like 'O%')";
-						
-						
+
+
 			return this.getHibernateTemplate().find(queryString);
-			
+
 		} catch (RuntimeException re) {
 			logger.error("Find staff failed", re);
 			throw re;
 		}
-		
+
 	}
 	public List searchByCriteria(StaffForm staffForm){
-		
+
 		logger.debug("Search staff instance .");
 		try {
-			
-			
+
+
 			String AND = " and ";
 			//String OR = " or ";
-			
-			
+
+
 			String orgcd = staffForm.getOrgcd();
-			
+
 			String queryString = "select a from Secuserrole a, LstOrgcd b"
 				+ " where b.code ='" + orgcd + "'"
 				+ " and b.codecsv like '%' || a.orgcd || ',%'"
 				+ " and not (a.orgcd like 'R%' or a.orgcd like 'O%')";
-			
+
 			String fname = staffForm.getFirstName();
 			String lname = staffForm.getLastName();
-			
+
 			if (fname != null && fname.length() > 0) {
 				fname = StringEscapeUtils.escapeSql(fname);
 				fname = fname.toLowerCase();
@@ -244,15 +263,15 @@ public class SecuserroleDao extends HibernateDaoSupport {
 				lname = lname.toLowerCase();
 				queryString = queryString + AND + "lower(a.providerLName) like '%" + lname + "%'";
 			}
-			
+
 			return this.getHibernateTemplate().find(queryString);
-			
+
 		} catch (RuntimeException re) {
 			logger.error("Search staff failed", re);
 			throw re;
 		}
 	}
-	
+
 	public List findByActiveyn(Object activeyn) {
 		return findByProperty(ACTIVEYN, activeyn);
 	}

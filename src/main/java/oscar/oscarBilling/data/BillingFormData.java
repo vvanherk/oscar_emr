@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,19 +21,27 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.oscarBilling.data;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
 
+import org.oscarehr.common.dao.DiagnosticCodeDao;
+import org.oscarehr.common.model.DiagnosticCode;
 import org.oscarehr.util.MiscUtils;
+import org.oscarehr.util.SpringUtils;
 
 import oscar.oscarDB.DBHandler;
 
 
 
 public class BillingFormData {
+
+	private DiagnosticCodeDao diagnosticCodeDao = SpringUtils.getBean(DiagnosticCodeDao.class);
 
     public String getBillingFormDesc(BillingForm[] billformlist,String billForm){
         for (int i = 0; i < billformlist.length; i++){
@@ -50,10 +58,10 @@ public class BillingFormData {
 
         try {
 
-            ArrayList lst = new ArrayList();
+            ArrayList<BillingService> lst = new ArrayList<BillingService>();
             BillingService billingservice;
 
-            
+
             ResultSet rs;
             String sql;
 
@@ -74,7 +82,7 @@ public class BillingFormData {
             }
 
             rs.close();
-            arr = (BillingService[])lst.toArray(arr);
+            arr = lst.toArray(arr);
 
         } catch (SQLException e) {
             MiscUtils.getLogger().error("Error", e);
@@ -90,10 +98,10 @@ public class BillingFormData {
 
         try {
 
-            ArrayList lst = new ArrayList();
+            ArrayList<Diagnostic> lst = new ArrayList<Diagnostic>();
             Diagnostic diagnostic;
 
-            
+
             ResultSet rs;
             String sql;
 
@@ -113,7 +121,7 @@ public class BillingFormData {
             }
 
             rs.close();
-            arr = (Diagnostic[])lst.toArray(arr);
+            arr = lst.toArray(arr);
 
         } catch (SQLException e) {
             MiscUtils.getLogger().error("Error", e);
@@ -130,10 +138,10 @@ public class BillingFormData {
 
         try {
 
-            ArrayList lst = new ArrayList();
+            ArrayList<Location> lst = new ArrayList<Location>();
             Location location;
 
-            
+
             ResultSet rs;
             String sql;
 
@@ -152,7 +160,7 @@ public class BillingFormData {
             }
 
             rs.close();
-            arr = (Location[])lst.toArray(arr);
+            arr = lst.toArray(arr);
 
         } catch (SQLException e) {
             MiscUtils.getLogger().error("Error", e);
@@ -169,10 +177,10 @@ public class BillingFormData {
 
         try {
 
-            ArrayList lst = new ArrayList();
+            ArrayList<BillingVisit> lst = new ArrayList<BillingVisit>();
             BillingVisit billingvisit;
 
-            
+
             ResultSet rs;
             String sql;
 
@@ -191,7 +199,7 @@ public class BillingFormData {
             }
 
             rs.close();
-            arr = (BillingVisit[])lst.toArray(arr);
+            arr = lst.toArray(arr);
 
         } catch (SQLException e) {
             MiscUtils.getLogger().error("Error", e);
@@ -208,10 +216,10 @@ public class BillingFormData {
 
         try {
 
-            ArrayList lst = new ArrayList();
+            ArrayList<BillingPhysician> lst = new ArrayList<BillingPhysician>();
             BillingPhysician billingphysician;
 
-            
+
             ResultSet rs;
             String sql;
 
@@ -230,7 +238,7 @@ public class BillingFormData {
             }
 
             rs.close();
-            arr = (BillingPhysician[])lst.toArray(arr);
+            arr = lst.toArray(arr);
 
         } catch (SQLException e) {
             MiscUtils.getLogger().error("Error", e);
@@ -249,10 +257,10 @@ public class BillingFormData {
 
         try {
 
-            ArrayList lst = new ArrayList();
+            ArrayList<BillingForm> lst = new ArrayList<BillingForm>();
             BillingForm billingForm;
 
-            
+
             ResultSet rs;
             String sql;
 
@@ -271,7 +279,7 @@ public class BillingFormData {
             }
 
             rs.close();
-            arr = (BillingForm[])lst.toArray(arr);
+            arr = lst.toArray(arr);
 
         } catch (SQLException e) {
             MiscUtils.getLogger().error("Error", e);
@@ -440,7 +448,7 @@ public class BillingFormData {
         String provider_n="";
         try{
 
-            
+
             ResultSet rs;
             String sql;
 
@@ -472,7 +480,7 @@ public class BillingFormData {
         String prac_no="";
         try{
 
-            
+
             ResultSet rs;
             String sql;
 
@@ -505,7 +513,7 @@ public class BillingFormData {
         String prac_no="";
         try{
 
-            
+
             ResultSet rs;
             String sql;
 
@@ -536,21 +544,9 @@ public class BillingFormData {
 
     public String getDiagDesc(String dx, String reg){
         String dxdesc="";
-        try{
-            
-            ResultSet rs;
-            String sql;
-            // SELECT b.service_code, b.description , b.value, b.percentage FROM BillingForm b, ctl_BillingForm c WHERE b.service_code=c.service_code and b.region='BC' and c.service_group='Group1';
-            sql = "SELECT description from diagnosticcode where diagnostic_code='" + dx + "' and region='" + reg + "'";
-
-            rs = DBHandler.GetSQL(sql);
-            MiscUtils.getLogger().debug("getDiagDesc "+sql);
-            while(rs.next()) {
-                dxdesc = rs.getString("description");
-            }
-            rs.close();
-        } catch (SQLException e) {
-            MiscUtils.getLogger().error("Error", e);
+        List<DiagnosticCode> dcodes = diagnosticCodeDao.findByDiagnosticCodeAndRegion(dx, reg);
+        for(DiagnosticCode dcode:dcodes) {
+        	dxdesc = dcode.getDescription();
         }
         return dxdesc;
     }
@@ -559,7 +555,7 @@ public class BillingFormData {
     public String getServiceDesc(String code, String reg){
         String codeDesc="";
         try{
-            
+
             ResultSet rs;
             String sql;
             sql = "select description from billingservice where service_code = '"+code+"' and region = '"+reg+"' ";
@@ -581,7 +577,7 @@ public class BillingFormData {
         String ret = "";
 
         try {
-            
+
             ResultSet rs;
             String sql = "SELECT service_group_name FROM ctl_billingservice WHERE service_group='"
             + serviceGroup +"'";

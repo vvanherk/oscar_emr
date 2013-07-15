@@ -1,19 +1,21 @@
-/*
- * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved. *
+/**
+ * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * Yi Li
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
+
 package oscar.oscarBilling.ca.on.data;
 
 import java.sql.ResultSet;
@@ -25,12 +27,12 @@ import java.util.Vector;
 
 import org.apache.log4j.Logger;
 import org.oscarehr.common.dao.AppointmentArchiveDao;
-import org.oscarehr.common.dao.BillingreferralDao;
 import org.oscarehr.common.dao.ClinicLocationDao;
 import org.oscarehr.common.dao.OscarAppointmentDao;
+import org.oscarehr.common.dao.ProfessionalSpecialistDao;
 import org.oscarehr.common.model.Appointment;
-import org.oscarehr.common.model.Billingreferral;
 import org.oscarehr.common.model.ClinicLocation;
+import org.oscarehr.common.model.ProfessionalSpecialist;
 import org.oscarehr.util.SpringUtils;
 
 import oscar.SxmlMisc;
@@ -41,7 +43,7 @@ public class JdbcBillingPageUtil {
 	BillingONDataHelp dbObj = new BillingONDataHelp();
 	AppointmentArchiveDao appointmentArchiveDao = (AppointmentArchiveDao)SpringUtils.getBean("appointmentArchiveDao");
     OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
-    BillingreferralDao billingReferralDao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
+    ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
     ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao");
 
 	public List getCurTeamProviderStr(String provider_no) {
@@ -389,9 +391,9 @@ public class JdbcBillingPageUtil {
 
 	public String getReferDocSpet(String billingNo) {
 		String retval = null;
-		Billingreferral billingReferral = billingReferralDao.getByReferralNo(billingNo);
-        if(billingReferral != null) {
-        	return billingReferral.getSpecialty();
+		ProfessionalSpecialist specialist = professionalSpecialistDao.getByReferralNo(billingNo);
+        if(specialist != null) {
+        	return specialist.getSpecialtyType();
         }
 
 		return retval;

@@ -1,28 +1,29 @@
-<!--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
+
 <%
   if(session.getValue("user") == null) response.sendRedirect("../../logout.jsp");
   String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
@@ -115,58 +116,53 @@
 					</security:oscarSec> 
 					
 				</tr>
-				<logic:iterate id="data" name="measurementsData"
-					property="measurementsDataVector" indexId="ctr">
-					<logic:present name="data" property="canPlot">
-						<tr class="data">
-							<td width="5"><img src="img/chart.gif"
-								title="<bean:message key="oscarEncounter.oscarMeasurements.displayHistory.plot"/>"
-								onclick="window.open('../../servlet/oscar.oscarEncounter.oscarMeasurements.pageUtil.ScatterPlotChartServlet?type=<bean:write name="data" property="type"/>&mInstrc=<bean:write name="data" property="measuringInstrc"/>')" /></td>
-							<td width="5"><a
-								title="<bean:write name="data" property="typeDescription" />"><bean:write
-								name="data" property="type" /></a></td>
-							<td width="20"><bean:write name="data"
-								property="providerFirstName" /> <bean:write name="data"
-								property="providerLastName" /></td>
-							<td width="200"><bean:write name="data"
-								property="measuringInstrc" /></td>
-							<td width="10"><bean:write name="data" property="dataField" /></td>
-							<td width="300"><bean:write name="data" property="comments" /></td>
-							<td width="150"><bean:write name="data"
-								property="dateObserved" /></td>
-							<td width="150"><bean:write name="data"
-								property="dateEntered" /></td>
-							<security:oscarSec roleName="<%=roleName$%>" objectName="_flowsheet" rights="w">	
-							<td width="10"><input type="checkbox" name="deleteCheckbox"
-								value="<bean:write name="data" property="id" />"></td>
-							</security:oscarSec> 	
-							
-						</tr>
+				<logic:iterate id="data" name="measurementsData" property="measurementsDataVector" indexId="ctr">
+					<logic:present name="data" property="remoteFacility">
+						<tr class="data" style="background-color:#ffcccc" >
 					</logic:present>
-					<logic:notPresent name="data" property="canPlot">
-						<tr class="data">
-							<td width="5" colspan=2><a
-								title="<bean:write name="data" property="typeDescription" />"><bean:write
-								name="data" property="type" /></a></td>
-							<td width="20"><bean:write name="data"
-								property="providerFirstName" /> <bean:write name="data"
-								property="providerLastName" /></td>
-							<td width="200"><bean:write name="data"
-								property="measuringInstrc" /></td>
+					<logic:notPresent name="data" property="remoteFacility">
+					    <tr class="data" >
+					</logic:notPresent>
+						<logic:present name="data" property="canPlot">
+							<td width="5">
+								<img src="img/chart.gif" title="<bean:message key="oscarEncounter.oscarMeasurements.displayHistory.plot"/>"
+								onclick="window.open('../../servlet/oscar.oscarEncounter.oscarMeasurements.pageUtil.ScatterPlotChartServlet?type=<bean:write name="data" property="type"/>&mInstrc=<bean:write name="data" property="measuringInstrc"/>')" />
+							</td>
+							<td width="5">
+								<a title="<bean:write name="data" property="typeDescription" />"><bean:write name="data" property="type" /></a>
+							</td>
+						</logic:present>
+						<logic:notPresent name="data" property="canPlot">
+							<td width="5" colspan=2>
+								<a title="<bean:write name="data" property="typeDescription" />">
+								<bean:write name="data" property="type" /></a>
+							</td>
+						</logic:notPresent>		
+							<td width="20">
+								<bean:write name="data" property="providerFirstName" /> 
+								<bean:write name="data" property="providerLastName" />
+								<logic:present name="data" property="remoteFacility">
+									<br /><span style="color:#990000"> @: <bean:write name="data" property="remoteFacility" /><span>
+								</logic:present>
+							</td>
+							<td width="200"><bean:write name="data"	property="measuringInstrc" /></td>
 							<td width="10"><bean:write name="data" property="dataField" /></td>
 							<td width="300"><bean:write name="data" property="comments" /></td>
-							<td width="150"><bean:write name="data"
-								property="dateObserved" /></td>
-							<td width="150"><bean:write name="data"
-								property="dateEntered" /></td>
+							<td width="150"><bean:write name="data" property="dateObservedAsDate" format="yyyy-MM-dd" /></td>
+							<td width="150"><bean:write name="data" property="dateEnteredAsDate" format="yyyy-MM-dd"/></td>
 							<security:oscarSec roleName="<%=roleName$%>" objectName="_flowsheet" rights="w">
 							<td width="10">
-                              <input type="checkbox" name="deleteCheckbox" value="<bean:write name="data" property="id" />">
-                             </td>
-                             </security:oscarSec>
-						</tr>
-					</logic:notPresent>
-				</logic:iterate>
+							<logic:present name="data" property="remoteFacility">
+					    		&nbsp;
+							</logic:present>
+							<logic:notPresent name="data" property="remoteFacility">
+					    		<input type="checkbox" name="deleteCheckbox" value="<bean:write name="data" property="id" />">
+							</logic:notPresent>
+                              
+                            </td>
+                            </security:oscarSec>
+						</tr>					
+					</logic:iterate>
 				</td>
 				</tr>
 			</table>
@@ -203,6 +199,3 @@
 </html:form>
 </body>
 </html:html>
-
-
-

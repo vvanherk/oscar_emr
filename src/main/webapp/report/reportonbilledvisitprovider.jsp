@@ -1,28 +1,3 @@
-<!--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
--->
 <%
   if (session.getAttribute("user") == null) {
     response.sendRedirect("../logout.jsp");
@@ -35,6 +10,12 @@
 <%@ page import="java.util.*"%>
 <%@ page import="java.sql.*"%>
 <%@ page import="oscar.oscarBilling.data.BillingONDataHelp"%>
+<%@ page import="org.oscarehr.util.SpringUtils"%>
+<%@ page import="com.quatro.model.security.Secuserrole"%>
+<%@ page import="com.quatro.dao.security.SecuserroleDao"%>
+<%
+	SecuserroleDao secuserroleDao = (SecuserroleDao)SpringUtils.getBean("secuserroleDao");
+%>
 <%
   DBPreparedHandler dbObj = new DBPreparedHandler();
 
@@ -43,19 +24,19 @@
     String number = request.getParameter("providerId");
     String name   = request.getParameter("name" + number);
 
-    String sql = "update secUserRole set role_name='" + name + "' where provider_no='" + number + "'";
-
-    dbObj.queryExecuteUpdate(sql);
-  } 
+    List<Secuserrole> surs = secuserroleDao.findByProviderNo(number);
+    for(Secuserrole sur:surs) {
+    	secuserroleDao.updateRoleName(sur.getId(), name);
+    }
+  }
 
   // save the role list
   if (request.getParameter("submit") != null && request.getParameter("submit").equals("Add Role(s)")) {
     Properties prop  = new Properties();
-    String     query = "select u.provider_no from secUserRole u ";
-    ResultSet  rs    = dbObj.queryResults(query);
 
-    while (rs.next()) {
-      prop.setProperty(Misc.getString(rs,"provider_no"), "");
+    List<Secuserrole> surs=secuserroleDao.findAll();
+    for(Secuserrole sur:surs) {
+    	prop.setProperty(sur.getProviderNo(), "");
     }
 
     for (Enumeration e = request.getParameterNames(); e.hasMoreElements(); ) {
@@ -65,11 +46,11 @@
         continue;
       }
 
-      String value = request.getParameter(temp);
-      String sql   = "insert into secUserRole(provider_no, role_name) values('" + temp.substring(4, temp.length()) + "', '" +
-              value + "')";
+      Secuserrole sur = new Secuserrole();
+      sur.setProviderNo(temp.substring(4, temp.length()));
+      sur.setRoleName(request.getParameter(temp));
+      secuserroleDao.save(sur);
 
-      dbObj.queryExecuteUpdate(sql);
     }
   }
 %>
@@ -263,7 +244,7 @@ function submit(form) {
           for (int i = 0; i < oldRoleList.size(); i += 4) {
             k++;
 %>
-	
+
 	<tr bgcolor="<%=k%2==0?"white":color%>">
 		<form name="mySecform<%=i%>" action="reportonbilledvisitprovider.jsp"
 			method="POST">

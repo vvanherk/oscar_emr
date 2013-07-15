@@ -1,33 +1,33 @@
-
 <%--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
 --%>
+
 <%@page import="oscar.oscarRx.data.RxPatientData"%>
 <%@ taglib uri="/WEB-INF/caisi-tag.tld" prefix="caisi"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <c:set var="ctx" value="${pageContext.request.contextPath}"
 	scope="request" />
 <%
@@ -50,7 +50,7 @@
 <security:oscarSec roleName="<%=roleName$%>" objectName="<%=eChart$%>"
 	rights="o" reverse="<%=false%>">
 You have no rights to access the data!
-<% response.sendRedirect("../noRights.html");  %>
+<% response.sendRedirect("../acctLocked.html");  %>
 </security:oscarSec>
 
 <%-- only principal has the save rights --%>
@@ -109,8 +109,9 @@ You have no rights to access the data!
 <!-- check to see if new case management is request -->
 <%
     ArrayList<String> users = (ArrayList<String>)session.getServletContext().getAttribute("CaseMgmtUsers");
-
-    if( users != null && users.size() > 0 && (users.get(0).equalsIgnoreCase("all") || Collections.binarySearch(users, bean.providerNo)>=0)) {
+	String userNo = (String) request.getSession().getAttribute("user"); 
+	Boolean useNewEchart = (Boolean) request.getSession().getServletContext().getAttribute("useNewEchart");
+	if( userNo != null && (useNewEchart != null && useNewEchart.equals(Boolean.TRUE)) ) {
         session.setAttribute("newCaseManagement", "true");
 %>
 <caisi:isModuleLoad moduleName="caisi" reverse="true">

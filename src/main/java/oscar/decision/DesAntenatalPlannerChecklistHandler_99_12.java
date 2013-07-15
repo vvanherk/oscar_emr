@@ -1,30 +1,32 @@
-// -----------------------------------------------------------------------------------------------------------------------
-// *
-// *
-// * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
-// * This software is published under the GPL GNU General Public License. 
-// * This program is free software; you can redistribute it and/or 
-// * modify it under the terms of the GNU General Public License 
-// * as published by the Free Software Foundation; either version 2 
-// * of the License, or (at your option) any later version. * 
-// * This program is distributed in the hope that it will be useful, 
-// * but WITHOUT ANY WARRANTY; without even the implied warranty of 
-// * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-// * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
-// * along with this program; if not, write to the Free Software 
-// * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
-// * 
-// * <OSCAR TEAM>
-// * This software was written for the 
-// * Department of Family Medicine 
-// * McMaster University 
-// * Hamilton 
-// * Ontario, Canada 
-// *
-// -----------------------------------------------------------------------------------------------------------------------
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package oscar.decision;
 
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Properties;
 
@@ -92,14 +94,14 @@ public class DesAntenatalPlannerChecklistHandler_99_12 extends DefaultHandler {
                         count = Integer.parseInt(atts.getValue(i));
                     }
                 }
-                cal.set(now.get(now.YEAR), now.get(now.MONTH), now.get(now.DAY_OF_MONTH));
-                cal.add(cal.DATE, count*7);
+                cal.set(now.get(Calendar.YEAR), now.get(Calendar.MONTH), now.get(Calendar.DAY_OF_MONTH));
+                cal.add(Calendar.DATE, count*7);
                 results += "<table border=0 cellspacing=1 cellpadding=1 width=\"100%\" datasrc='#xml_list'>\n";
                 results += "<tr bgcolor='#CCFFCC'><td width='5%'></td><td width='5%'></td><td colspan='1'><span CLASS='.title'>\n";
                 if (count == 0) {
                     results += "Initial Assessment - Week "+count;
                 } else {
-                    results += monthNames[cal.get(cal.MONTH)] + " " + cal.get(cal.DAY_OF_MONTH) + ", " + cal.get(cal.YEAR) +" - Week "+count;
+                    results += monthNames[cal.get(Calendar.MONTH)] + " " + cal.get(Calendar.DAY_OF_MONTH) + ", " + cal.get(Calendar.YEAR) +" - Week "+count;
                 }
                 
                 results += "</span></td></tr>";
@@ -221,8 +223,7 @@ public class DesAntenatalPlannerChecklistHandler_99_12 extends DefaultHandler {
 			now.setTime(df.parse(savedar1params.getProperty("finalEDB")) ); 
 		} catch (java.text.ParseException pe) {
 		}
-		now.add(now.DATE, -280);
+		now.add(Calendar.DATE, -280);
 	}
 
 }
-

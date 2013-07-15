@@ -1,29 +1,27 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version. *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
  *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
  *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * Send2IndivoAction.java
- *
- * Created on January 8, 2007, 4:39 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package oscar.dms.actions;
 
@@ -41,7 +39,7 @@ import org.oscarehr.common.dao.RemoteDataLogDao;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.RemoteDataLog;
 import org.oscarehr.myoscar_server.ws.ItemAlreadyExistsException_Exception;
-import org.oscarehr.myoscar_server.ws.MedicalDataTransfer2;
+import org.oscarehr.myoscar_server.ws.MedicalDataTransfer3;
 import org.oscarehr.myoscar_server.ws.MedicalDataType;
 import org.oscarehr.myoscar_server.ws.MedicalDataWs;
 import org.oscarehr.phr.PHRAuthentication;
@@ -112,7 +110,7 @@ public class SendDocToPhrAction extends Action {
     		GregorianCalendar dateOfData=new GregorianCalendar();
     		if (eDoc.getDateTimeStampAsDate()!=null) dateOfData.setTime(eDoc.getDateTimeStampAsDate());
 
-			MedicalDataTransfer2 medicalDataTransfer=new MedicalDataTransfer2();
+			MedicalDataTransfer3 medicalDataTransfer=new MedicalDataTransfer3();
 			medicalDataTransfer.setActive(true);
 			medicalDataTransfer.setCompleted(true);
 			medicalDataTransfer.setData(docAsString);
@@ -123,7 +121,7 @@ public class SendDocToPhrAction extends Action {
 			medicalDataTransfer.setOriginalSourceId(loggedInInfo.currentFacility.getName()+":eDoc:"+eDoc.getDocId());
 			medicalDataTransfer.setOwningPersonId(patientMyOscarUserId);
 
-    		medicalDataWs.addMedicalData2(medicalDataTransfer);
+    		medicalDataWs.addMedicalData3(medicalDataTransfer);
 
     		// log the send
     		RemoteDataLog remoteDataLog=new RemoteDataLog();

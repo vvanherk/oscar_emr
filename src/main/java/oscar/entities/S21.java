@@ -1,3 +1,4 @@
+
 package oscar.entities;
 
 public class S21 {

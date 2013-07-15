@@ -1,31 +1,32 @@
-/*
-* Copyright (c) 2007-2008. CAISI, Toronto. All Rights Reserved.
-* This software is published under the GPL GNU General Public License. 
-* This program is free software; you can redistribute it and/or 
-* modify it under the terms of the GNU General Public License 
-* as published by the Free Software Foundation; either version 2 
-* of the License, or (at your option) any later version. 
-* 
-* This program is distributed in the hope that it will be useful, 
-* but WITHOUT ANY WARRANTY; without even the implied warranty of 
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
-* GNU General Public License for more details. 
-* 
-* You should have received a copy of the GNU General Public License 
-* along with this program; if not, write to the Free Software 
-* Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  
-* 
-* This software was written for 
-* CAISI, 
-* Toronto, Ontario, Canada 
-*/
-
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
+ */
 package org.oscarehr.PMmodule.dao;
 
 import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.hibernate.Query;
+import org.oscarehr.PMmodule.model.Admission;
 import org.oscarehr.PMmodule.model.ProgramClientStatus;
 import org.oscarehr.util.MiscUtils;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
@@ -48,7 +49,7 @@ public class ProgramClientStatusDAO extends HibernateDaoSupport {
         }
 
         ProgramClientStatus pcs = null;
-        pcs = (ProgramClientStatus)this.getHibernateTemplate().get(ProgramClientStatus.class, new Integer(id));
+        pcs = this.getHibernateTemplate().get(ProgramClientStatus.class, new Integer(id));
         if (pcs != null) return pcs;
         else return null;
     }
@@ -79,7 +80,7 @@ public class ProgramClientStatusDAO extends HibernateDaoSupport {
         return !teams.isEmpty();
     }
 
-    public List getAllClientsInStatus(Integer programId, Integer statusId) {
+    public List<Admission> getAllClientsInStatus(Integer programId, Integer statusId) {
         if (programId == null || programId <= 0) {
             throw new IllegalArgumentException();
         }
@@ -88,7 +89,7 @@ public class ProgramClientStatusDAO extends HibernateDaoSupport {
             throw new IllegalArgumentException();
         }
 
-        List results = this.getHibernateTemplate().find("from Admission a where a.ProgramId = ? and a.TeamId = ? and a.AdmissionStatus='current'", new Object[] {programId, statusId});
+        List<Admission> results = this.getHibernateTemplate().find("from Admission a where a.ProgramId = ? and a.TeamId = ? and a.AdmissionStatus='current'", new Object[] {programId, statusId});
 
         if (log.isDebugEnabled()) {
             log.debug("getAdmissionsInTeam: programId= " + programId + ",statusId=" + statusId + ",# results=" + results.size());

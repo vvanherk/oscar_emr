@@ -1,21 +1,23 @@
-<!--
- *
- * Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * Yi Li
- */
--->
+<%--
+
+    Copyright (c) 2006-. OSCARservice, OpenSoft System. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+--%>
+<%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
 	List<String> mgrSites = new ArrayList<String>();
 %>
@@ -170,9 +172,17 @@ if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
        adding a calendar a matter of 1 or 2 lines of code. -->
 <script type="text/javascript"
 	src="../../../share/calendar/calendar-setup.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
+   <script>
+     jQuery.noConflict();
+   </script>
+<oscar:customInterface section="editInvoice"/>
+
 <script language="JavaScript">
 <!--
-function setfocus() {
+
+
+function setfocus() {	
 	document.form1.billing_no.focus();
 	document.form1.billing_no.select();
 }
@@ -298,10 +308,8 @@ function checkSettle(status) {
         if( payElem != null ) {
             payElem.value = document.getElementById("billTotal").value;
         }
-    }
-    
-    //enable 3rd party elements
-    if( status == 'P') {
+    }        
+    else if( status == 'P') {
     	document.getElementById("thirdParty").style.display = "inline";
     	document.getElementById("thirdPartyPymnt").style.display = "inline";
     	
@@ -311,7 +319,7 @@ function checkSettle(status) {
     	document.getElementById("refund").disabled = false;
     	document.getElementById("billTo").disabled = false;
     }
-    else if( status != 'S' ){
+    else {
     	document.getElementById("thirdParty").style.display = "none";
     	document.getElementById("thirdPartyPymnt").style.display = "none";
     	
@@ -360,7 +368,6 @@ function checkSettle(status) {
                                     }
 
                                 }
-				
 				if (billNo != null && billNo.length() > 0) {
 					bFlag = true;
 				}
@@ -703,7 +710,6 @@ if(bFlag) {
 			src="../../../images/cal.gif" id="xml_appointment_date_cal" />: <input
 			type="text" id="xml_appointment_date" name="xml_appointment_date"
 			value="<%=BillDate%>" size=10 /></td>
-			
 	</tr>
 	<tr>
 		<td width="54%"><b><bean:message

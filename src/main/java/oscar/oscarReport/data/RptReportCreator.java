@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version. 
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 /*
  * Created on 2005-8-1
  */
@@ -26,12 +51,12 @@ public final class RptReportCreator {
     public String getSelectField(String recordId) throws SQLException {
         StringBuilder ret = new StringBuilder();
         String sql = "select * from reportConfig where report_id = " + recordId + " order by order_no";
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         while (rs.next()) {
-            String caption = dbObj.getString(rs,"caption");
-            ret.append( (ret.length() < 8 ? " " : ", ") + dbObj.getString(rs,"table_name") + "." + dbObj.getString(rs,"name") );
+            String caption = DBHelp.getString(rs,"caption");
+            ret.append( (ret.length() < 8 ? " " : ", ") + DBHelp.getString(rs,"table_name") + "." + DBHelp.getString(rs,"name") );
             if(caption != null && caption.length() > 0){
-               ret.append(" as '" + StringEscapeUtils.escapeSql(dbObj.getString(rs,"caption")) + "'");
+               ret.append(" as '" + StringEscapeUtils.escapeSql(DBHelp.getString(rs,"caption")) + "'");
             }
         }
         rs.close();
@@ -43,9 +68,9 @@ public final class RptReportCreator {
         String ret = "  ";
         String sql = "select distinct table_name from reportConfig where report_id = " + recordId
                 + " order by table_name desc";
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         if (rs.next()) {
-            ret = dbObj.getString(rs,"table_name");
+            ret = DBHelp.getString(rs,"table_name");
         }
         rs.close();
         return ret;
@@ -57,9 +82,9 @@ public final class RptReportCreator {
         Vector vec = new Vector();
         String sql = "select distinct table_name from reportConfig where report_id = " + recordId
                 + " order by table_name desc";
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         while (rs.next()) {
-            vec.add(dbObj.getString(rs,"table_name"));
+            vec.add(DBHelp.getString(rs,"table_name"));
         }
         rs.close();
         for (int i = 0; i < vec.size(); i++) {
@@ -69,7 +94,7 @@ public final class RptReportCreator {
     }
 
     // tableName: formBCAR,formBCNewBorn... how to handle??
-    public String getWhereJoinClause(String tableName, boolean bDemo) throws SQLException {
+    public String getWhereJoinClause(String tableName, boolean bDemo) {
         String ret = "";
         if (bDemo)
             ret = tableName + ".demographic_no=demographic.demographic_no";
@@ -77,7 +102,7 @@ public final class RptReportCreator {
     }
 
     // Replace the result one by one if not null
-    public static String getWhereValueClause(String value, Vector vec) throws SQLException {
+    public static String getWhereValueClause(String value, Vector vec)  {
         String ret = "";
         for (int i = 0; i < 100; i++) {
             if (value.matches("[^\\{\\}\\$]*\\$\\{[^\\{\\}]+\\}.*")) {
@@ -91,7 +116,7 @@ public final class RptReportCreator {
         return ret;
     }
 
-    public static boolean isIncludeDemo(String value) throws SQLException {
+    public static boolean isIncludeDemo(String value)  {
         boolean ret = false;
         if (value.indexOf("demographic.") >= 0)
             ret = true;
@@ -99,7 +124,7 @@ public final class RptReportCreator {
     }
 
     // get ${var} vars inside the string
-    public static Vector getVarVec(String value) throws SQLException {
+    public static Vector getVarVec(String value) {
         Vector ret = new Vector();
         // if no ${}, return original string
         if (!value.matches(".*\\$\\{.*\\}.*"))
@@ -133,7 +158,7 @@ public final class RptReportCreator {
     public String getRltSubQuery(String sql) throws SQLException {
         String ret = "0";
 
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         MiscUtils.getLogger().debug(" tempVal: " + sql);
         while (rs.next()) {
             if ("0".equals(ret)) {
@@ -151,13 +176,13 @@ public final class RptReportCreator {
         Vector ret = new Vector();
         Properties prop = null;
 
-        ResultSet rs = dbObj.searchDBRecord(sql);
+        ResultSet rs = DBHelp.searchDBRecord(sql);
         while (rs.next()) {
             prop = new Properties();
             for (int i = 0; i < vecFieldName.size(); i++) {
                 try {
                     prop.setProperty((String) vecFieldName.get(i),
-                            dbObj.getString(rs,(String) vecFieldName.get(i)) == null ? "" : rs
+                            DBHelp.getString(rs,(String) vecFieldName.get(i)) == null ? "" : rs
                                     .getString((String) vecFieldName.get(i)));
                 } catch (SQLException e) {
                     prop.setProperty((String) vecFieldName.get(i), "" + rs.getInt((String) vecFieldName.get(i)));

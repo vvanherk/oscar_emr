@@ -1,12 +1,25 @@
+/**
+ * Copyright (c) 2008-2012 Indivica Inc.
+ *
+ * This software is made available under the terms of the
+ * GNU General Public License, Version 2, 1991 (GPLv2).
+ * License details are available via "indivica.ca/gplv2"
+ * and "gnu.org/licenses/gpl-2.0.html".
+ */
+
 package org.oscarehr.common.model;
+
+import java.io.Serializable;
 
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
-public class Hl7TextMessageInfo extends AbstractModel<Integer>{
+@Table(name = "hl7TextMessageInfo")
+public class Hl7TextMessageInfo extends AbstractModel<Integer> implements Serializable {
 	
 	
 	public String message;

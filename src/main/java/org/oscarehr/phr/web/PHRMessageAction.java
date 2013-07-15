@@ -1,31 +1,27 @@
-/*
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version.
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details.
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
  * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *  Jason Gallagher
- *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada
- *
- * PHRMessageAction.java
- *
- * Created on June 4, 2007, 4:51 PM
- *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package org.oscarehr.phr.web;
 
@@ -105,7 +101,7 @@ public class PHRMessageAction extends DispatchAction {
 		ArrayList<PHRMessage> messages = null;
 //		List<PHRAction> actionsPendingApproval = phrActionDAO.getActionsByStatus(PHRAction.STATUS_APPROVAL_PENDING, providerNo);
 		if (docs != null) {
-			messages = new ArrayList(docs.size());
+			messages = new ArrayList<PHRMessage>(docs.size());
 			for (int idx = 0; idx < docs.size(); ++idx) {
 				PHRDocument doc = (PHRDocument) docs.get(idx);
 				PHRMessage msg = new PHRMessage(doc);
@@ -124,17 +120,17 @@ public class PHRMessageAction extends DispatchAction {
 		return mapping.findForward("view");
 	}
 
-	public ActionForward viewSentMessages(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	public ActionForward viewSentMessages(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response)  {
 
 		return mapping.findForward("view");
 	}
 
-	public ActionForward viewArchivedMessages(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	public ActionForward viewArchivedMessages(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 
 		return mapping.findForward("view");
 	}
 
-	public ActionForward read(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	public ActionForward read(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		/*
 		 * PHRAuthentication auth = (PHRAuthentication) request.getSession().getAttribute(PHRAuthentication.SESSION_PHR_AUTH); log.debug("AUTH "+auth); String indivoId = auth.getUserId(); String ticket = auth.getToken();
 		 */
@@ -145,19 +141,29 @@ public class PHRMessageAction extends DispatchAction {
 	//
 	// Reply is a create but displays the message being re
 	//
-	public ActionForward reply(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	public ActionForward reply(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 
 		return mapping.findForward("create");
 	}
 
-	public ActionForward createMessage(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	public ActionForward createMessage(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		// PHRAuthentication auth = (PHRAuthentication) request.getSession().getAttribute(PHRAuthentication.SESSION_PHR_AUTH);
 		String demographicNo = request.getParameter("demographicNo");
 		String provNo = (String) request.getSession().getAttribute("user");
+		
+		PHRAuthentication auth = (PHRAuthentication) request.getSession().getAttribute(PHRAuthentication.SESSION_PHR_AUTH);
+        
+        if (auth == null || auth.getMyOscarUserId() == null) {
+            request.setAttribute("forwardToOnSuccess", request.getContextPath() + "/phr/PhrMessage.do?method=createMessage&providerNo="+provNo+"&demographicNo=" + demographicNo);
+            return mapping.findForward("loginAndRedirect");
+        }
+		
+		
+		
 		DemographicData dd = new DemographicData();
 		org.oscarehr.common.model.Demographic d = dd.getDemographic(demographicNo);
 		ProviderData pp = new ProviderData();
-		String providerName = pp.getProviderName(provNo);
+		String providerName = ProviderData.getProviderName(provNo);
 
 		String toName = d.getFirstName() + " " + d.getLastName();
 		String toId = demographicNo;
@@ -181,23 +187,23 @@ public class PHRMessageAction extends DispatchAction {
 	public ActionForward sendReply(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		Long replyToMessageId=new Long(request.getParameter("replyToMessageId"));
 		String message=StringUtils.trimToNull(request.getParameter("body"));
-		
+
 		PHRAuthentication auth=MyOscarUtils.getPHRAuthentication(request.getSession());
 		Long messageId = MyOscarMessageManager.sendReply(auth.getMyOscarUserId(), auth.getMyOscarPassword(), replyToMessageId, message);
-		
+
 		if(request.getParameter("andPasteToEchart")!= null && request.getParameter("andPasteToEchart").equals("yes")){
 			ActionRedirect redirect = new ActionRedirect(mapping.findForward("echart"));
 			redirect.addParameter("myoscarmsg", messageId.toString());
 			redirect.addParameter("remyoscarmsg",replyToMessageId.toString());
 			redirect.addParameter("appointmentDate",UtilDateUtilities.DateToString(new Date())); //Makes echart note have todays date, which makes sense because we are reply now
-			redirect.addParameter("demographicNo",request.getParameter("demographicNo")); 
+			redirect.addParameter("demographicNo",request.getParameter("demographicNo"));
 			return redirect;
 		}
-		
-		
-		return mapping.findForward("view");		
+
+
+		return mapping.findForward("view");
 	}
-		
+
 	public ActionForward sendPatient(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String subject = request.getParameter("subject");
 		String messageBody = request.getParameter("body");
@@ -209,11 +215,11 @@ public class PHRMessageAction extends DispatchAction {
 		Long recipientMyOscarUserId = MyOscarUtils.getMyOscarUserId(auth, demo.getDemographic(demographicId).getMyOscarUserName());
 
 		MyOscarMessageManager.sendMessage(auth.getMyOscarUserId(), auth.getMyOscarPassword(), recipientMyOscarUserId, subject, messageBody);
-		
+
 		return mapping.findForward("view");
 	}
 
-	public ActionForward delete(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	public ActionForward delete(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		/*
 		 * PHRAuthentication auth = (PHRAuthentication) request.getSession().getAttribute(PHRAuthentication.SESSION_PHR_AUTH); log.debug("AUTH "+auth); String indivoId = auth.getUserId(); String ticket = auth.getToken();
 		 */
@@ -230,7 +236,7 @@ public class PHRMessageAction extends DispatchAction {
 		return viewSentMessages(mapping, form, request, response);
 	}
 
-	public ActionForward resend(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	public ActionForward resend(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		/*
 		 * PHRAuthentication auth = (PHRAuthentication) request.getSession().getAttribute(PHRAuthentication.SESSION_PHR_AUTH); log.debug("AUTH "+auth); String indivoId = auth.getUserId(); String ticket = auth.getToken();
 		 */
@@ -249,10 +255,10 @@ public class PHRMessageAction extends DispatchAction {
 
 	public ActionForward flipActive(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		Long messageId=new Long(request.getParameter("messageId"));
-		
+
 		PHRAuthentication auth = (PHRAuthentication) request.getSession().getAttribute(PHRAuthentication.SESSION_PHR_AUTH);
 		MyOscarMessageManager.flipActive(auth.getMyOscarUserId(), auth.getMyOscarPassword(), messageId);
-		
+
 		return mapping.findForward("view");
 	}
 

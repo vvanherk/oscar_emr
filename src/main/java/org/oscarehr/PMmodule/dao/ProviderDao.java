@@ -1,23 +1,24 @@
-/*
- * 
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for 
- * Centre for Research on Inner City Health, St. Michael's Hospital, 
- * Toronto, Ontario, Canada 
+/**
+ *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
 
 package org.oscarehr.PMmodule.dao;
@@ -34,8 +35,12 @@ import org.hibernate.SQLQuery;
 import org.hibernate.criterion.Expression;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
+import org.oscarehr.common.dao.ProviderFacilityDao;
 import org.oscarehr.common.model.Provider;
+import org.oscarehr.common.model.ProviderFacility;
+import org.oscarehr.common.model.ProviderFacilityPK;
 import org.oscarehr.util.MiscUtils;
+import org.oscarehr.util.SpringUtils;
 import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import oscar.OscarProperties;
@@ -45,6 +50,8 @@ import org.oscarehr.util.SpringUtils;
 
 import org.oscarehr.common.model.ProviderSpireIdMap;
 import org.oscarehr.common.dao.ProviderSpireIdMapDao;
+
+import com.quatro.model.security.SecProvider;
 
 public class ProviderDao extends HibernateDaoSupport {
 	private static Logger log = MiscUtils.getLogger();
@@ -105,31 +112,31 @@ public class ProviderDao extends HibernateDaoSupport {
 		}
 		return rs;
 	}
-	
+
     public List<Provider> getProviderFromFirstLastName(String firstname,String lastname){
             firstname=firstname.trim();
             lastname=lastname.trim();
             String s="From Provider p where p.FirstName=? and p.LastName=?";
-            ArrayList paramList=new ArrayList();
+            ArrayList<Object> paramList=new ArrayList<Object>();
             paramList.add(firstname);
             paramList.add(lastname);
             Object params[]=paramList.toArray(new Object[paramList.size()]);
             return getHibernateTemplate().find(s,params);
     }
-    
+
     public List<Provider> getProviderLikeFirstLastName(String firstname,String lastname){
     	firstname=firstname.trim();
     	lastname=lastname.trim();
     	String s="From Provider p where p.FirstName like ? and p.LastName like ?";
-    	ArrayList paramList=new ArrayList();
+    	ArrayList<Object> paramList=new ArrayList<Object>();
     	paramList.add(firstname);
     	paramList.add(lastname);
     	Object params[]=paramList.toArray(new Object[paramList.size()]);
     	return getHibernateTemplate().find(s,params);
 	}
-    
-    public List getActiveProviders(Integer programId) {
-        ArrayList paramList = new ArrayList();
+
+    public List<SecProvider> getActiveProviders(Integer programId) {
+        ArrayList<Object> paramList = new ArrayList<Object>();
 
     	String sSQL="FROM  SecProvider p where p.status='1' and p.providerNo in " +
     	"(select sr.providerNo from secUserRole sr, LstOrgcd o " +
@@ -137,7 +144,7 @@ public class ProviderDao extends HibernateDaoSupport {
     	" and o.codecsv  like '%' || sr.orgcd || ',%' " +
     	" and not (sr.orgcd like 'R%' or sr.orgcd like 'O%'))" +
     	" ORDER BY p.lastName";
-    		 	
+
     	paramList.add(programId);
     	Object params[] = paramList.toArray(new Object[paramList.size()]);
 
@@ -145,7 +152,7 @@ public class ProviderDao extends HibernateDaoSupport {
 	}
 
 	public List<Provider> getActiveProviders(String facilityId, String programId) {
-		ArrayList paramList = new ArrayList();
+		ArrayList<Object> paramList = new ArrayList<Object>();
 
 		String sSQL;
 		List<Provider> rs;
@@ -185,7 +192,7 @@ public class ProviderDao extends HibernateDaoSupport {
 		}
 		return rs;
 	}
-	
+
 	@SuppressWarnings("unchecked")
     public List<Provider> getBillableProviders() {
 		List<Provider> rs = getHibernateTemplate().find("FROM Provider p where p.OhipNo != '' and p.Status = '1'");
@@ -199,28 +206,28 @@ public class ProviderDao extends HibernateDaoSupport {
 		return rs;
 	}
 
-    public List getActiveProviders(String providerNo, Integer shelterId) {
+    public List<Provider> getActiveProviders(String providerNo, Integer shelterId) {
     	//@SuppressWarnings("unchecked")
     	String sql;
     	if (shelterId == null || shelterId.intValue() == 0)
     		sql = "FROM  Provider p where p.Status='1'" +
     				" and p.ProviderNo in (select sr.providerNo from Secuserrole sr " +
     				" where sr.orgcd in (select o.code from LstOrgcd o, Secuserrole srb " +
-    				" where o.codecsv  like '%' || srb.orgcd || ',%' and srb.providerNo =?))" + 
+    				" where o.codecsv  like '%' || srb.orgcd || ',%' and srb.providerNo =?))" +
     				" ORDER BY p.LastName";
     	else
     		sql = "FROM  Provider p where p.Status='1'" +
 			" and p.ProviderNo in (select sr.providerNo from Secuserrole sr " +
 			" where sr.orgcd in (select o.code from LstOrgcd o, Secuserrole srb " +
-			" where o.codecsv like '%S" + shelterId.toString()+ ",%' and o.codecsv like '%' || srb.orgcd || ',%' and srb.providerNo =?))" + 
+			" where o.codecsv like '%S" + shelterId.toString()+ ",%' and o.codecsv like '%' || srb.orgcd || ',%' and srb.providerNo =?))" +
 			" ORDER BY p.LastName";
-    	
-    	ArrayList paramList = new ArrayList();
+
+    	ArrayList<Object> paramList = new ArrayList<Object>();
     	paramList.add(providerNo);
 
     	Object params[] = paramList.toArray(new Object[paramList.size()]);
-    	
-    	List rs = getHibernateTemplate().find(sql,params);
+
+    	List<Provider> rs = getHibernateTemplate().find(sql,params);
 
 		if (log.isDebugEnabled()) {
 			log.debug("getProviders: # of results=" + rs.size());
@@ -262,7 +269,7 @@ public class ProviderDao extends HibernateDaoSupport {
 
 		return results;
 	}
-	
+
 	public List getShelterIds(String provider_no)
 	{
 		/*
@@ -270,17 +277,17 @@ public class ProviderDao extends HibernateDaoSupport {
 		sql += " where code in (select orgcd from secuserrole where provider_no=?)";
 		sql += " and fullcode like '%S%'";
 		*/
-		String sql ="select distinct c.id as shelter_id from lst_shelter c, lst_orgcd a, secUserRole b  where instr('RO',substr(b.orgcd,1,1)) = 0 and a.codecsv like '%' || b.orgcd || ',%'" + 
+		String sql ="select distinct c.id as shelter_id from lst_shelter c, lst_orgcd a, secUserRole b  where instr('RO',substr(b.orgcd,1,1)) = 0 and a.codecsv like '%' || b.orgcd || ',%'" +
 				" and b.provider_no=? and a.codecsv like '%S' || c.id  || ',%'";
-	
+
 		Query query = getSession().createSQLQuery(sql);
-    	((SQLQuery) query).addScalar("shelter_id", Hibernate.INTEGER); 
+    	((SQLQuery) query).addScalar("shelter_id", Hibernate.INTEGER);
     	query.setString(0, provider_no);
         List lst=query.list();
         return lst;
 
 	}
-	
+
 	public List<Provider> getActiveProvidersByType(String type) {
 		@SuppressWarnings("unchecked")
 		List<Provider> results = this.getHibernateTemplate().find(
@@ -292,8 +299,12 @@ public class ProviderDao extends HibernateDaoSupport {
 
 	public static void addProviderToFacility(String provider_no, int facilityId) {
 		try {
-			SqlUtils.update("insert into provider_facility values ('"
-					+ provider_no + "'," + facilityId + ')');
+			ProviderFacility pf = new ProviderFacility();
+			pf.setId(new ProviderFacilityPK());
+			pf.getId().setProviderNo(provider_no);
+			pf.getId().setFacilityId(facilityId);
+			ProviderFacilityDao pfDao = SpringUtils.getBean(ProviderFacilityDao.class);
+			pfDao.persist(pf);
 		} catch (RuntimeException e) {
 			// chances are it's a duplicate unique entry exception so it's safe
 			// to ignore.
@@ -321,21 +332,21 @@ public class ProviderDao extends HibernateDaoSupport {
 						+ facilityId));
 	}
 
-    public void updateProvider( Provider provider) {        
+    public void updateProvider( Provider provider) {
         this.getHibernateTemplate().update(provider);
     }
-    
-    public void saveProvider( Provider provider) {        
+
+    public void saveProvider( Provider provider) {
         this.getHibernateTemplate().save(provider);
     }
-    
+
 	public Provider getProviderByPractitionerNo(String practitionerNo) {
 		if (practitionerNo == null || practitionerNo.length() <= 0) {
 			throw new IllegalArgumentException();
 		}
 
 		List<Provider> providerList = getHibernateTemplate().find("From Provider p where p.practitionerNo=?",new Object[]{practitionerNo});
-	
+
 		if(providerList.size()>1) {
 			logger.warn("Found more than 1 provider with practitionerNo="+practitionerNo);
 		}

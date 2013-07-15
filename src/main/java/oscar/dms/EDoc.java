@@ -1,18 +1,19 @@
-/*
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -20,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.dms;
 
 import java.io.File;
@@ -34,6 +37,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.builder.ReflectionToStringBuilder;
 import org.apache.log4j.Logger;
 import org.apache.struts.upload.FormFile;
+import org.oscarehr.common.model.Provider;
 import org.oscarehr.util.MiscUtils;
 
 import oscar.OscarProperties;
@@ -72,7 +76,7 @@ public class EDoc extends TagObject implements Comparable {
 	private boolean indivoRegistered = false;
 	private int numberOfPages = 0;
 	private Integer appointmentNo = -1;
-	
+
 	/** Creates a new instance of EDoc */
 	public EDoc() {
 	}
@@ -245,11 +249,6 @@ public class EDoc extends TagObject implements Comparable {
 		this.moduleId = moduleId;
 	}
 
-	public String getModuleName() {
-		String moduleName = EDocUtil.getModuleName(module, moduleId);
-		return moduleName;
-	}
-
 	public String getType() {
 		return type;
 	}
@@ -295,7 +294,7 @@ public class EDoc extends TagObject implements Comparable {
 	}
 
 	public String getCreatorName() {
-		String creatorName = EDocUtil.getModuleName("provider", creatorId);
+		String creatorName = EDocUtil.getProviderName(creatorId);
 		return creatorName;
 	}
 
@@ -308,7 +307,7 @@ public class EDoc extends TagObject implements Comparable {
 	}
 
 	public String getResponsibleName() {
-		String responsibleName = EDocUtil.getModuleName("provider", responsibleId);
+		String responsibleName = EDocUtil.getProviderName(responsibleId);
 		return responsibleName;
 	}
 
@@ -358,17 +357,33 @@ public class EDoc extends TagObject implements Comparable {
 		else if (docPublic == null || docPublic.length() == 0) this.docPublic = "0";
 		else this.docPublic = docPublic;
 	}
-
 	/**
 	 *Returns true if document a PDF.
 	 */
 	public boolean isPDF() {
-		if (this.contentType != null && this.contentType.equalsIgnoreCase("application/pdf")) {
+		if (this.contentType != null && this.contentType.contains("/pdf")) {
 			return true;
 		}
 		return false;
 	}
 
+	/**
+	 * Returns true if this document's content type is that of an image.	
+	 * @return true if document is an image and false otherwise
+	 */
+	public boolean isImage() {
+		return this.contentType != null && !isPDF() && this.contentType.toLowerCase().contains("image/");
+	}
+	
+	/**
+	 * Returns true if this document is printable to PDF format.
+	 * @return true if this document is printable to PDF format and false otherwise
+	 */
+	public boolean isPrintable() {		
+		// At this time only PDF  and image files are supported.
+		return isPDF() || isImage();
+	}
+	
 	public String getObservationDate() {
 		return observationDate;
 	}
@@ -405,8 +420,8 @@ public class EDoc extends TagObject implements Comparable {
 	public void setProgramId(Integer programId) {
 		this.programId = programId;
 	}
-	
-	
+
+
 
 	public Integer getAppointmentNo() {
 		return appointmentNo;
@@ -429,12 +444,16 @@ public class EDoc extends TagObject implements Comparable {
 	}
 
 	public String getReviewerName() {
-		String reviewerName = EDocUtil.getModuleName("provider", reviewerId);
+		String reviewerName = EDocUtil.getProviderName(reviewerId);
 		return reviewerName;
 	}
 
 	public String getReviewerOhip() {
-		return EDocUtil.getProviderInfo("ohip_no", reviewerId);
+		Provider provider = EDocUtil.getProvider(reviewerId);
+		if(provider != null) {
+			return provider.getOhipNo();
+		}
+		return "";
 	}
 
 	public void setReviewerId(String reviewerId) {
@@ -456,7 +475,7 @@ public class EDoc extends TagObject implements Comparable {
 	public void setNumberOfPages(int n) {
 		this.numberOfPages = n;
 	}
-	
+
 	@Override
     public String toString()
 	{

@@ -1,33 +1,33 @@
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 <%@include file="/casemgmt/taglibs.jsp"%>
 <%@ page import="oscar.oscarProvider.data.ProviderData, java.util.ArrayList,java.util.Map, java.util.List, org.oscarehr.util.SpringUtils"%>
 <%@ page import="org.oscarehr.common.dao.ProviderLabRoutingFavoritesDao, org.oscarehr.common.model.ProviderLabRoutingFavorite" %>
 <%@ page import="org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.common.model.Provider" %>
-<!--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University 
- * Hamilton 
- * Ontario, Canada 
- */
--->
-<c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>	
+<c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>
 <html>
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
@@ -51,54 +51,55 @@
 
 <script type="text/javascript">
 function prepSubmit() {
-    
+
   	var fwdProviders = "";
   	var fwdFavorites = "";
-  	
-    
+
+
     for (i=0; i < $("fwdProviders").options.length; i++) {
-           
+
            if (fwdProviders != "") {
            	fwdProviders = fwdProviders + ",";
            }
-           
-           fwdProviders = fwdProviders + $("fwdProviders").options[i].value;            
+
+           fwdProviders = fwdProviders + $("fwdProviders").options[i].value;
     }
-       
+
 	for (i=0; i < $("favorites").options.length; i++) {
-           
+
            if (fwdFavorites != "") {
            	fwdFavorites = fwdFavorites + ",";
            }
-           
-           fwdFavorites = fwdFavorites + $("favorites").options[i].value;            
+
+           fwdFavorites = fwdFavorites + $("favorites").options[i].value;
        }
-       
-       self.opener.document.reassignForm.selectedProviders.value = fwdProviders;
-       self.opener.document.reassignForm.favorites.value = fwdFavorites;
-       self.opener.document.reassignForm.submit();
-       self.close();
-    
+
+
+	self.opener.document.forms["reassignForm"].selectedProviders.value = fwdProviders;
+    self.opener.document.forms["reassignForm"].favorites.value = fwdFavorites;
+    self.opener.document.forms["reassignForm"].submit();
+    self.close();
+
 }
-	
+
 
 /*function pageLoad() {
 var url = "<c:out value="${ctx}"/>/provider/SearchProvider.do";
 
 new Ajax.Autocompleter("autocompleteProvider", "providerList", url, {
-	  paramName: "value", 
-	  minChars: 2, 
-	  indicator: 'working', 
+	  paramName: "value",
+	  minChars: 2,
+	  indicator: 'working',
 	});
 
-   
+
 };
 */
 
 </script>
 </head>
 <body>
-<form name="providerSelectForm" method="post" action="AssignLab.do">
+<form name="providerSelectForm">
 <p style="text-align:center; background-color:#9999CC; border-color:#CCCCFF #6666CC #6666CC #CCCCFF;
 border-left:thin solid #CCCCFF; border-right:thin solid #6666CC; border-style:solid; border-width:thin; color:white;
 font-weight:bold;">
@@ -112,7 +113,7 @@ font-weight:bold;">
 	Forward List<br>
 	<select id="fwdProviders" size="5" style="width:250px;" multiple="multiple" ondblclick="removeProvider(this);"></select>
 </div>
-<div style="float:right; margin:30px 30px 30px 30px;">		
+<div style="float:right; margin:30px 30px 30px 30px;">
 	<input type="button" value=">>" onclick="copyProvider('fwdProviders','favorites');"><br>
 	<input type="button" value="<<" onclick="copyProvider('favorites','fwdProviders');">
 </div>
@@ -121,9 +122,9 @@ font-weight:bold;">
 	<select id="favorites" size="5" style="width:250px;" multiple="multiple" ondblclick="removeProvider(this);">
 	<%
 	ProviderLabRoutingFavoritesDao favDao = (ProviderLabRoutingFavoritesDao)SpringUtils.getBean("ProviderLabRoutingFavoritesDao");
-	String user = (String)request.getSession().getAttribute("user");	
+	String user = (String)request.getSession().getAttribute("user");
 	ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
-	
+
 	List<ProviderLabRoutingFavorite>currentFavorites = favDao.findFavorites(user);
 	for( ProviderLabRoutingFavorite fav : currentFavorites) {
 		Provider prov = providerDao.getProvider(fav.getRoute_to_provider_no());
@@ -132,12 +133,12 @@ font-weight:bold;">
 	<%
 	}
 	%>
-	
+
 	</select>
 </div>
 <div style="text-align:center;">
 	<p><bean:message key="oscarMDS.forward.msgInstruction2"/></p>
-	<input type="submit" value="Submit" onclick="prepSubmit();return false;">
+	<input type="button" value="Submit" onclick="prepSubmit();return false;">
 </div>
 </form>
 <script type="text/javascript">
@@ -152,7 +153,7 @@ YAHOO.example.BasicRemote = function() {
     };
     // Enable caching
     oDS.maxCacheEntries = 0;
-    
+
     // Instantiate the AutoComplete
     var oAC = new YAHOO.widget.AutoComplete("autocompleteprov", "autocomplete_choicesprov", oDS);
     oAC.queryMatchSubset = true;
@@ -161,18 +162,18 @@ YAHOO.example.BasicRemote = function() {
     oAC.formatResult = resultFormatter3;
     //oAC.typeAhead = true;
     oAC.queryMatchContains = true;
-    
+
     oAC.itemSelectEvent.subscribe(function(type, args) {
     	$("autocompleteprov").value = "";
     	var name = args[2][2] + ", " + args[2][1];
     	var id = args[2][0];
-    	
+
     	var selectObj = $("fwdProviders");
     	var option = document.createElement("option");
     	option.text = name;
     	option.value = id;
     	option.id = id;
-    	
+
     	try {
     	  // for IE earlier than version 8
     	  selectObj.add(option,selectObj.options[null]);
@@ -180,10 +181,10 @@ YAHOO.example.BasicRemote = function() {
     	catch (e) {
     		selectObj.add(option,null);
     	}
-    	
+
     });
-    
-    
+
+
     return {
         oDS: oDS,
         oAC: oAC
@@ -199,12 +200,12 @@ function removeProvider(selectObj) {
 function copyProvider(to, from) {
 	var fromOptions = $(from).options;
 	var toOptions = $(to).options;
-	
+
 	for( var idx = 0; idx < fromOptions.length; ++idx) {
 		if( fromOptions[idx].selected && toOptions.namedItem(fromOptions[idx].id) == null) {
-			
+
 			fromOptions[idx].selected = false;
-			
+
 			var option = document.createElement("option");
 	    	option.text = fromOptions[idx].text;
 	    	option.value = fromOptions[idx].value;
@@ -216,10 +217,10 @@ function copyProvider(to, from) {
 		    catch (e) {
 		    	$(to).add(option,null);
 		    }
-		}	
+		}
 	}
-	
-} 
+
+}
 </script>
 </body>
 </html>

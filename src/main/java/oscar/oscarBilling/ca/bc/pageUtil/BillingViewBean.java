@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version. 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -21,6 +21,8 @@
  * Hamilton
  * Ontario, Canada
  */
+
+
 package oscar.oscarBilling.ca.bc.pageUtil;
 
 import java.sql.ResultSet;
@@ -51,7 +53,7 @@ public class BillingViewBean {
   private String apptDate = null;
   private String apptStart = null;
   private String apptStatus = null;
-  private ArrayList billitem;
+  private ArrayList<BillingItem> billitem;
   private String xml_billtype = null;
   private String xml_location = null;
   private String xml_starttime = null;
@@ -91,7 +93,7 @@ public class BillingViewBean {
   private String defaultPayeeLastName;
   public void loadBilling(String billing_no) {
     try {
-      
+
       ResultSet rs;
       String sql;
 
@@ -141,7 +143,7 @@ public class BillingViewBean {
 
   }
 
-  public List getBillRecipient(String billingNo) {
+  public List<BillRecipient> getBillRecipient(String billingNo) {
     return SqlUtils.getBeanList(
         "select * from bill_recipients where billingNo = " +
         billingNo, BillRecipient.class);
@@ -154,16 +156,17 @@ public class BillingViewBean {
    * @param paymentMethod String - The paymentMethod code
    */
   public void updateBill(String billingNo,String payeeNo) {
-    
+
     try {
-      
-      List billingMasterNos = SqlUtils.getQueryResultsList(
+
+      @SuppressWarnings("unchecked")
+    List<String[]> billingMasterNos = SqlUtils.getQueryResultsList(
           "select billingmaster_no from billingmaster where billing_no = " +
           billingNo);
 
       if (billingMasterNos != null) {
         for (int i = 0; i < billingMasterNos.size(); i++) {
-          String[] values = (String[]) billingMasterNos.get(i);
+          String[] values = billingMasterNos.get(i);
           String billingMasternum = values[0];
           DBHandler.RunSQL("update billingmaster set payee_no = '" + payeeNo + "' " +
                     " where billingmaster_no = " + billingMasternum + "");
@@ -181,15 +184,15 @@ public class BillingViewBean {
   }
 
   public String getMessageNotesByBillingNo(String billingNo) {
-    
+
     ResultSet rs = null;
     StringBuilder res = new StringBuilder();
     try {
-      
+
       rs = DBHandler.GetSQL(
           "select billingmaster_no from billingmaster where billing_no = " +
           billingNo);
-      ArrayList billingMasterNos = new ArrayList();
+      ArrayList<String> billingMasterNos = new ArrayList<String>();
       while (rs.next()) {
         billingMasterNos.add(rs.getString(1));
         res.append(new BillingNote().getNote(this.getBillingMasterNo()));
@@ -437,11 +440,11 @@ public class BillingViewBean {
     this.xml_visittype = RHS;
   }
 
-  public ArrayList getBillItem() {
+  public ArrayList<BillingItem> getBillItem() {
     return this.billitem;
   }
 
-  public void setBillItem(ArrayList RHS) {
+  public void setBillItem(ArrayList<BillingItem> RHS) {
     this.billitem = RHS;
   }
 
@@ -613,13 +616,13 @@ public class BillingViewBean {
     this.defaultPayeeLastName = defaultPayeeLastName;
   }
 
-  public List getPaymentTypes() {
-    ArrayList types = new ArrayList();
+  public List<PaymentType> getPaymentTypes() {
+    ArrayList<PaymentType> types = new ArrayList<PaymentType>();
     String sql = "select * from billing_payment_type";
-    
+
     ResultSet rs = null;
     try {
-      
+
       rs = DBHandler.GetSQL(sql);
 
       while (rs.next()) {
@@ -647,8 +650,8 @@ public class BillingViewBean {
    */
   public double calculateSubtotal() {
     double ret = 0.0;
-    for (Iterator iter = this.billitem.iterator(); iter.hasNext(); ) {
-      BillingItem billingItem = (BillingItem) iter.next();
+    for (Iterator<BillingItem> iter = this.billitem.iterator(); iter.hasNext(); ) {
+      BillingItem billingItem = iter.next();
       ret += billingItem.price;
     }
     return ret;

@@ -1,31 +1,27 @@
 /**
- *  Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- *  This software is published under the GPL GNU General Public License.
- *  This program is free software; you can redistribute it and/or
- *  modify it under the terms of the GNU General Public License
- *  as published by the Free Software Foundation; either version 2
- *  of the License, or (at your option) any later version. *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- *  GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
  *
- *  Jason Gallagher
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
  *
- *  This software was written for the
- *  Department of Family Medicine
- *  McMaster University
- *  Hamilton
- *  Ontario, Canada   Creates a new instance of CommonLabResultData
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- *
- *
- * CommonLabResultData.java
- *
- * Created on April 21, 2005, 4:25 PM
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
  */
+
 
 package oscar.oscarLab.ca.on;
 
@@ -38,6 +34,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
 import org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager;
+import org.oscarehr.PMmodule.caisi_integrator.IntegratorFallBackManager;
 import org.oscarehr.caisi_integrator.ws.CachedDemographicLabResult;
 import org.oscarehr.caisi_integrator.ws.DemographicWs;
 import org.oscarehr.common.dao.DocumentResultsDao;
@@ -95,7 +92,7 @@ public class CommonLabResultData {
 			labs.addAll(cmlLabs);
 		}
 		if (epsilon != null && epsilon.trim().equals("yes")) {
-			ArrayList cmlLabs = mDSData.populateCMLResultsData(demographicNo, reqId, attach);
+			ArrayList<LabResultData> cmlLabs = mDSData.populateCMLResultsData(demographicNo, reqId, attach);
 			labs.addAll(cmlLabs);
 		}
 
@@ -115,45 +112,52 @@ public class CommonLabResultData {
 
 		return labs;
 	}
-	
-	
+
+
     public ArrayList<LabResultData> populateLabResultsData(String providerNo, String demographicNo, String patientFirstName, String patientLastName, String patientHealthNumber, String status, boolean isPaged, Integer page, Integer pageSize, boolean mixLabsAndDocs, Boolean isAbnormal) {
-    		
+
     		ArrayList<LabResultData> labs = new ArrayList<LabResultData>();
     		oscar.oscarMDS.data.MDSResultsData mDSData = new oscar.oscarMDS.data.MDSResultsData();
-    		
+
     		OscarProperties op = OscarProperties.getInstance();
-    		
+
     		String cml = op.getProperty("CML_LABS");
     		String mds = op.getProperty("MDS_LABS");
     		String pathnet = op.getProperty("PATHNET_LABS");
     		String hl7text = op.getProperty("HL7TEXT_LABS");
-    		
-    		
+
+
     		if(!isPaged && cml != null && cml.trim().equals("yes")){
-    			ArrayList cmlLabs = mDSData.populateCMLResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+    			ArrayList<LabResultData> cmlLabs = mDSData.populateCMLResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
     			labs.addAll(cmlLabs);
     		}
-    		
+
     		if (!isPaged && mds != null && mds.trim().equals("yes")){
-    			ArrayList mdsLabs = mDSData.populateMDSResultsData2(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+    			ArrayList<LabResultData> mdsLabs = mDSData.populateMDSResultsData2(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
     			labs.addAll(mdsLabs);
-    		
+
     		}
     		if (!isPaged && pathnet != null && pathnet.trim().equals("yes")){
     			PathnetResultsData pathData = new PathnetResultsData();
-    			ArrayList pathLabs = pathData.populatePathnetResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+    			ArrayList<LabResultData> pathLabs = pathData.populatePathnetResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
     			labs.addAll(pathLabs);
     		}
-    		
+
     		if (hl7text != null && hl7text.trim().equals("yes")){
-    			ArrayList hl7Labs = Hl7textResultsData.populateHl7ResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
-    			labs.addAll(hl7Labs);
-    		
-    		}		
+    			if (isPaged) {
+    		        ArrayList<LabResultData> hl7Labs = Hl7textResultsData.populateHl7ResultsData(providerNo, demographicNo, patientFirstName, patientLastName,
+    		        												   patientHealthNumber, status, true, page, pageSize, mixLabsAndDocs, isAbnormal);
+    		        labs.addAll(hl7Labs);
+                }
+                else {
+                	ArrayList<LabResultData> hl7Labs = Hl7textResultsData.populateHl7ResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+    		        labs.addAll(hl7Labs);
+                }
+
+    		}
     		return labs;
     }
-	
+
     public ArrayList<LabResultData> populateLabResultsData(String providerNo, String demographicNo, String patientFirstName, String patientLastName, String patientHealthNumber, String ackStatus, String docScanStatus, boolean isPaged, Integer page, Integer pageSize, boolean mixLabsAndDocs, Boolean isAbnormal) {
     		return populateLabResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, ackStatus, isPaged, page, pageSize, mixLabsAndDocs, isAbnormal);
     }
@@ -177,26 +181,26 @@ public class CommonLabResultData {
 		if (scannedDocStatus != null && (scannedDocStatus.equals("N") || scannedDocStatus.equals("I") || scannedDocStatus.equals(""))) {
 
 			if (epsilon != null && epsilon.trim().equals("yes")) {
-				ArrayList cmlLabs = mDSData.populateEpsilonResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+				ArrayList<LabResultData> cmlLabs = mDSData.populateEpsilonResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
 				labs.addAll(cmlLabs);
 			}
 
 			if (cml != null && cml.trim().equals("yes")) {
-				ArrayList cmlLabs = mDSData.populateCMLResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+				ArrayList<LabResultData> cmlLabs = mDSData.populateCMLResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
 				labs.addAll(cmlLabs);
 			}
 			if (mds != null && mds.trim().equals("yes")) {
-				ArrayList mdsLabs = mDSData.populateMDSResultsData2(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+				ArrayList<LabResultData> mdsLabs = mDSData.populateMDSResultsData2(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
 				labs.addAll(mdsLabs);
 			}
 			if (pathnet != null && pathnet.trim().equals("yes")) {
 				PathnetResultsData pathData = new PathnetResultsData();
-				ArrayList pathLabs = pathData.populatePathnetResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+				ArrayList<LabResultData> pathLabs = pathData.populatePathnetResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
 				labs.addAll(pathLabs);
 			}
 			if (hl7text != null && hl7text.trim().equals("yes")) {
 
-				ArrayList hl7Labs = Hl7textResultsData.populateHl7ResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+				ArrayList<LabResultData> hl7Labs = Hl7textResultsData.populateHl7ResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
 				labs.addAll(hl7Labs);
 			}
 		}
@@ -204,7 +208,7 @@ public class CommonLabResultData {
 		if (scannedDocStatus != null && (scannedDocStatus.equals("O") || scannedDocStatus.equals("I") || scannedDocStatus.equals(""))) {
 
 			DocumentResultsDao documentResultsDao = (DocumentResultsDao) SpringUtils.getBean("documentResultsDao");
-			ArrayList docs = documentResultsDao.populateDocumentResultsDataOfAllProviders(providerNo, demographicNo, status);
+			ArrayList<LabResultData> docs = documentResultsDao.populateDocumentResultsDataOfAllProviders(providerNo, demographicNo, status);
 			labs.addAll(docs);
 		}
 
@@ -251,6 +255,7 @@ public class CommonLabResultData {
 		String pathnet = op.getProperty("PATHNET_LABS");
 		String hl7text = op.getProperty("HL7TEXT_LABS");
 		String epsilon = op.getProperty("Epsilon_LABS");
+		String spire = op.getProperty("Spire_LABS");
 
 		if (scannedDocStatus != null && (scannedDocStatus.equals("N") || scannedDocStatus.equals("I") || scannedDocStatus.equals(""))) {
 
@@ -277,6 +282,12 @@ public class CommonLabResultData {
 				ArrayList<LabResultData> hl7Labs = Hl7textResultsData.populateHl7ResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
 				labs.addAll(hl7Labs);
 			}
+			
+			if (spire != null && spire.trim().equals("yes")) {
+				//SpireResultsData spireData = new SpireResultsData();
+				//ArrayList<LabResultData> spireLabs = spireData.populateSpireResultsData(providerNo, demographicNo, patientFirstName, patientLastName, patientHealthNumber, status);
+				//labs.addAll(spireLabs);
+			}
 		}
 		return labs;
 	}
@@ -297,9 +308,9 @@ public class CommonLabResultData {
 			String sql = "select id, status from providerLabRouting where lab_type = '" + labType + "' and provider_no = '" + providerNo + "' and lab_no = '" + labNo + "'";
 
 			ResultSet rs = db.queryResults(sql);
-
-			if (rs.next()) { //
-
+			boolean empty = true;
+			while (rs.next()) { //
+				empty = false;
 				String id = oscar.Misc.getString(rs, "id");
 				sql = "update providerLabRouting set status='" + status + "', comment=? where id = '" + id + "'";
 				if (!oscar.Misc.getString(rs, "status").equals("A")) {
@@ -307,7 +318,8 @@ public class CommonLabResultData {
 					db.queryExecute(sql, new String[] { comment });
 
 				}
-			} else {
+			} 
+			if (empty) {
 
 				sql = "insert ignore into providerLabRouting (provider_no, lab_no, status, comment,lab_type) values ('" + providerNo + "', '" + labNo + "', '" + status + "', ?,'" + labType + "')";
 				db.queryExecute(sql, new String[] { comment });
@@ -328,9 +340,9 @@ public class CommonLabResultData {
 		}
 	}
 
-	public ArrayList getStatusArray(String labId, String labType) {
+	public ArrayList<ReportStatus> getStatusArray(String labId, String labType) {
 
-		ArrayList statusArray = new ArrayList();
+		ArrayList<ReportStatus> statusArray = new ArrayList<ReportStatus>();
 
 		String sql = "select provider.first_name, provider.last_name, provider.provider_no, providerLabRouting.status, providerLabRouting.comment, providerLabRouting.timestamp from provider, providerLabRouting where provider.provider_no = providerLabRouting.provider_no and providerLabRouting.lab_no='" + labId + "' and providerLabRouting.lab_type = '" + labType + "'";
 		try {
@@ -411,7 +423,7 @@ public class CommonLabResultData {
 		}
 	}
 
-	public static boolean updateLabRouting(ArrayList flaggedLabs, String selectedProviders) {
+	public static boolean updateLabRouting(ArrayList<String[]> flaggedLabs, String selectedProviders) {
 		boolean result;
 
 		try {
@@ -422,7 +434,7 @@ public class CommonLabResultData {
 			ProviderLabRouting plr = new ProviderLabRouting();
 			// MiscUtils.getLogger().info(flaggedLabs.size()+"--");
 			for (int i = 0; i < flaggedLabs.size(); i++) {
-				String[] strarr = (String[]) flaggedLabs.get(i);
+				String[] strarr = flaggedLabs.get(i);
 				String lab = strarr[0];
 				String labType = strarr[1];
 
@@ -457,12 +469,12 @@ public class CommonLabResultData {
 	}
 
 	// //
-	public static boolean fileLabs(ArrayList flaggedLabs, String provider) {
+	public static boolean fileLabs(ArrayList<String[]> flaggedLabs, String provider) {
 
 		CommonLabResultData data = new CommonLabResultData();
 
 		for (int i = 0; i < flaggedLabs.size(); i++) {
-			String[] strarr = (String[]) flaggedLabs.get(i);
+			String[] strarr = flaggedLabs.get(i);
 			String lab = strarr[0];
 			String labType = strarr[1];
 			String labs = data.getMatchingLabs(lab, labType);
@@ -498,7 +510,7 @@ public class CommonLabResultData {
 		} else if (lab_type.equals(LabResultData.DOCUMENT)) {
 			labs = lab_no;// one document is only linked to one patient.
 		}else if (lab_type.equals(LabResultData.HRM)){
-        		labs = lab_no; 
+        		labs = lab_no;
         	}
 
 		return labs;
@@ -577,7 +589,7 @@ public class CommonLabResultData {
 		return ret;
 	}
 
-	
+
 	public int getAckCount(String labId, String labType) {
 		int ret = 0;
 		try {
@@ -605,8 +617,20 @@ public class CommonLabResultData {
 		ArrayList<LabResultData> results = new ArrayList<LabResultData>();
 
 		try {
-			DemographicWs demographicWs = CaisiIntegratorManager.getDemographicWs();
-			List<CachedDemographicLabResult> labResults = demographicWs.getLinkedCachedDemographicLabResults(demographicId);
+			List<CachedDemographicLabResult> labResults  = null;
+			try {
+				if (!CaisiIntegratorManager.isIntegratorOffline()){
+					DemographicWs demographicWs = CaisiIntegratorManager.getDemographicWs();
+					labResults = CaisiIntegratorManager.getDemographicWs().getLinkedCachedDemographicLabResults(demographicId);
+				}
+			} catch (Exception e) {
+				MiscUtils.getLogger().error("Unexpected error.", e);
+				CaisiIntegratorManager.checkForConnectionError(e);
+			}
+
+			if(CaisiIntegratorManager.isIntegratorOffline()){
+				labResults = IntegratorFallBackManager.getLabResults(demographicId);
+			}
 
 			for (CachedDemographicLabResult cachedDemographicLabResult : labResults) {
 				results.add(toLabResultData(cachedDemographicLabResult));

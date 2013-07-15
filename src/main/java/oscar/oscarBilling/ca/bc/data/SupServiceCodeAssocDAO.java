@@ -1,19 +1,19 @@
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * GNU General Public License for more details.
  *
- * <OSCAR TEAM>
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
  * This software was written for the
  * Department of Family Medicine
@@ -70,9 +70,9 @@ public class SupServiceCodeAssocDAO {
           HashMap map = new HashMap();
           map.put("id", item[0]);
           map.put("billingServiceNo",
-                  this.getBillingServiceValue(item[1], this.VALUE_BY_ID));
+                  this.getBillingServiceValue(item[1], SupServiceCodeAssocDAO.VALUE_BY_ID));
           map.put("billingServiceTrayNo",
-                  this.getBillingServiceValue(item[2], this.VALUE_BY_ID));
+                  this.getBillingServiceValue(item[2], SupServiceCodeAssocDAO.VALUE_BY_ID));
           map.put("associationStatus", "");
           ret.add(map);
         }
@@ -96,7 +96,7 @@ public class SupServiceCodeAssocDAO {
       for (Iterator iter = list.iterator(); iter.hasNext(); ) {
         String[] item = (String[]) iter.next();
         if (item != null && item.length > 0) {
-          ret.put(this.getBillingServiceValue(item[0], this.VALUE_BY_ID),this.getBillingServiceValue(item[1], this.VALUE_BY_ID));
+          ret.put(this.getBillingServiceValue(item[0], SupServiceCodeAssocDAO.VALUE_BY_ID),this.getBillingServiceValue(item[1], SupServiceCodeAssocDAO.VALUE_BY_ID));
         }
       }
     }
@@ -113,9 +113,9 @@ public class SupServiceCodeAssocDAO {
     
     ResultSet rs = null;
     String primaryCodeId = this.getBillingServiceValue(primaryCode,
-        this.VALUE_BY_CODE);
+        SupServiceCodeAssocDAO.VALUE_BY_CODE);
     String secondaryCodeId = this.getBillingServiceValue(secondaryCode,
-        this.VALUE_BY_CODE);
+        SupServiceCodeAssocDAO.VALUE_BY_CODE);
 
     try {
       
@@ -165,9 +165,9 @@ public class SupServiceCodeAssocDAO {
    */
   private String getBillingServiceValue(String code, int type) {
     String ret = "";
-    String criteria = type == this.VALUE_BY_CODE ? "service_code" :
+    String criteria = type == SupServiceCodeAssocDAO.VALUE_BY_CODE ? "service_code" :
         "billingservice_no";
-    String select = type == this.VALUE_BY_CODE ? "billingservice_no" :
+    String select = type == SupServiceCodeAssocDAO.VALUE_BY_CODE ? "billingservice_no" :
         "service_code";
     List results = SqlUtils.getQueryResultsList(
         "select " + select + " from billingservice where " + criteria + "= '" +

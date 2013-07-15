@@ -1,3 +1,28 @@
+/**
+ * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+ * This software is published under the GPL GNU General Public License.
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ *
+ * This software was written for the
+ * Department of Family Medicine
+ * McMaster University
+ * Hamilton
+ * Ontario, Canada
+ */
+
+
 package oscar.oscarDemographic.pageUtil;
 
 import java.io.BufferedReader;
@@ -38,15 +63,15 @@ import org.jdom.input.SAXBuilder;
 import org.oscarehr.casemgmt.model.CaseManagementNote;
 import org.oscarehr.casemgmt.model.CaseManagementNoteLink;
 import org.oscarehr.casemgmt.service.CaseManagementManager;
+import org.oscarehr.common.dao.DemographicExtDao;
 import org.oscarehr.common.dao.PartialDateDao;
+import org.oscarehr.common.model.Dxresearch;
 import org.oscarehr.common.model.PartialDate;
-import org.oscarehr.dx.model.DxResearch;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 
 import oscar.OscarProperties;
 import oscar.oscarDemographic.data.DemographicData;
-import oscar.oscarDemographic.data.DemographicExt;
 import oscar.oscarEncounter.oscarMeasurements.data.ImportExportMeasurements;
 import oscar.oscarEncounter.oscarMeasurements.data.LabMeasurements;
 import oscar.oscarEncounter.oscarMeasurements.data.MeasurementMapConfig;
@@ -85,6 +110,7 @@ public class DiabetesExportAction extends Action {
     private static final Logger logger = MiscUtils.getLogger();
     private static final CaseManagementManager cmm = (CaseManagementManager) SpringUtils.getBean("caseManagementManager");
     private static final PartialDateDao partialDateDao = (PartialDateDao) SpringUtils.getBean("partialDateDao");
+    private static final DemographicExtDao demographicExtDao = (DemographicExtDao) SpringUtils.getBean("demographicExtDao");
 
 
 public DiabetesExportAction(){}
@@ -99,7 +125,7 @@ public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServlet
     getListOfDINS();
 
     //Create Patient List from Patient Set
-    ArrayList patientList = new DemographicSets().getDemographicSet(setName);
+    List<String> patientList = new DemographicSets().getDemographicSet(setName);
 
     //Create export files
     String tmpDir = OscarProperties.getInstance().getProperty("TMP_DIR");
@@ -510,9 +536,8 @@ public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServlet
         data = demographic.getEmail();
         if (StringUtils.filled(data)) demo.setEmail(data);
 
-        DemographicExt ext = new DemographicExt();
         HashMap<String,String> demoExt = new HashMap<String,String>();
-        demoExt.putAll(ext.getAllValuesForDemo(demoNo));
+        demoExt.putAll(demographicExtDao.getAllValuesForDemo(demoNo));
 
         String phoneNo = Util.onlyNum(demographic.getPhone());
         if (StringUtils.filled(phoneNo) && phoneNo.length()>=7) {
@@ -667,10 +692,10 @@ public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServlet
             String annotation = getNonDumpNote(CaseManagementNoteLink.LABTEST, Long.valueOf(lab_no), other_id);
             if (StringUtils.filled(annotation)) labResults.setPhysiciansNotes(annotation);
 
-	    	HashMap<String,String> labRoutingInfo = new HashMap<String,String>();
+	    	HashMap<String,Object> labRoutingInfo = new HashMap<String,Object>();
 	    	labRoutingInfo.putAll(ProviderLabRouting.getInfo(lab_no));
 
-	    	String info = labRoutingInfo.get("provider_no");
+	    	String info = (String)labRoutingInfo.get("provider_no");
 	    	if (info!=null && !"0".equals(info)) {
 	    		ProviderData pd = new ProviderData(info);
 	    		if (StringUtils.noNull(pd.getOhip_no()).length()<=6) {
@@ -679,7 +704,7 @@ public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServlet
 	    			Util.writeNameSimple(reviewer.addNewName(), pd.getFirst_name(), pd.getLast_name());
     			}
 	    	}
-	    	String timestamp = labRoutingInfo.get("timestamp");
+	    	String timestamp = (String)labRoutingInfo.get("timestamp");
     		if (StringUtils.filled(timestamp)) {
     			labResults.addNewDateTimeResultReviewed().setFullDate(Util.calDate(timestamp));
     		}
@@ -805,11 +830,11 @@ public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServlet
 	String diagValue = "";
 	Date dateValue = null;
 	String dateFormat = null;
-	List<DxResearch> dxList = cmm.getDxByDemographicNo(demoNo);
-	for (DxResearch dx : dxList) {
+	List<Dxresearch> dxList = cmm.getDxByDemographicNo(demoNo);
+	for (Dxresearch dx : dxList) {
 	    if (diagValue.equals("E10.9")) break;
-	    if (dx.getCode().equals("25001")) diagValue = "E10.9";  //Type 1 diabetes
-	    else if (dx.getCode().equals("250")) diagValue = "E11.9";  //Type 2 diabetes
+	    if (dx.getDxresearchCode().equals("25001")) diagValue = "E10.9";  //Type 1 diabetes
+	    else if (dx.getDxresearchCode().equals("250")) diagValue = "E11.9";  //Type 2 diabetes
 	    else continue;
 
 	    dateValue = dx.getStartDate();

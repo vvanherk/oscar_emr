@@ -1,31 +1,28 @@
 <%--
-/*
- *
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License.
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
- *
- * <OSCAR TEAM>
- *
- * This software was written for the
- * Department of Family Medicine
- * McMaster University
- * Hamilton
- * Ontario, Canada
- */
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
 --%>
-
-
-
 
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
@@ -242,6 +239,31 @@ function checkDefaultDate(object, defaultValue) {
    }
 }
 
+function newDocType(){
+	var newOpt = prompt("Please enter new document type:", "");
+	if (newOpt != "") {
+	    document.getElementById("docType").options[document.getElementById("docType").length] = new Option(newOpt, newOpt);
+	    document.getElementById("docType").options[document.getElementById("docType").length-1].selected = true;
+		
+	    } else {
+	    alert("Invalid entry");
+	}
+	
+}
+
+function newDocTypeLink(){
+	var newOpt = prompt("Please enter new document type:", "");
+	if (newOpt != "") {
+	    document.getElementById("docType1").options[document.getElementById("docType1").length] = new Option(newOpt, newOpt);
+	    document.getElementById("docType1").options[document.getElementById("docType1").length-1].selected = true;
+		
+	    } else {
+	    alert("Invalid entry");
+	}
+	
+}
+
+
 var docSubClassList = [
         <% for (int i=0; i<subClasses.size(); i++) { %>
 "<%=subClasses.get(i)%>"<%=(i<subClasses.size()-1)?",":""%>
@@ -274,8 +296,7 @@ var docSubClassList = [
 	<input type="hidden" name="parentAjaxId" value="<%=parentAjaxId%>">
 	<input type="hidden" name="curUser" value="<%=curUser%>">
 	<input type="hidden" name="appointmentNo" value="<%=formdata.getAppointmentNo()%>"/>
-	<select name="docType" onchange="checkSel(this)"
-		<% if (docerrors.containsKey("typemissing")) {%> class="warning" <%}%>>
+	<select id="docType" name="docType" style="width: 160" > 
 		<option value=""><bean:message key="dms.addDocument.formSelect" /></option>
 		<%
                                    for (int i=0; i<doctypes.size(); i++) {
@@ -284,6 +305,7 @@ var docSubClassList = [
 			<%=(formdata.getDocType().equals(doctype))?" selected":""%>><%= doctype%></option>
 		<%}%>
 	</select>
+	<input id="docTypeinput1" type="button" size="20" onClick="newDocType();" value="<bean:message key="dms.documentEdit.formAddNewDocType"/>" /> 
 	<% if (module.equals("provider")) {%>
                                 Public: <input type="checkbox"
 		name="docPublic" <%=formdata.getDocPublic() + " "%> value="checked">
@@ -347,18 +369,16 @@ for (String reportClass : reportClasses) {
 	<input type="hidden" name="observationDate"
 		value="<%=formdata.getObservationDate()%>">
 		<input type="hidden" name="appointmentNo" value="<%=formdata.getAppointmentNo()%>"/>
-	<select name="docType" onchange="checkSel(this)"
-		<% if (linkhtmlerrors.containsKey("typemissing")) {%> class="warning"
-		<%}%>>
-		<option value=""><bean:message
-			key="dms.addDocument.formSelect" /></option>
+	<select id="docType1" name="docType" style="width: 160" > 
+ 		<option value=""><bean:message key="dms.addDocument.formSelect" /></option> 
 		<%
-                                   for (int i=0; i<doctypes.size(); i++) {
-                                      String doctype = (String) doctypes.get(i); %>
+         for (int i1=0; i1<doctypes.size(); i1++) {
+                                      String doctype = (String) doctypes.get(i1); %>
 		<option value="<%= doctype%>"
 			<%=(formdata.getDocType().equals(doctype))?" selected":""%>><%= doctype%></option>
 		<%}%>
 	</select>
+	<input id="docTypeinput1" type="button" size="20" onClick="newDocTypeLink();" value="<bean:message key="dms.documentEdit.formAddNewDocType"/>" />  
 	<% if (module.equals("provider")) {%>
                                 Public: <input type="checkbox"
 		name="docPublic" <%=formdata.getDocPublic() + " "%> value="checked">

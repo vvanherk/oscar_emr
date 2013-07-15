@@ -1,34 +1,35 @@
-<!--  
-/*
- * 
- * Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved. *
- * This software is published under the GPL GNU General Public License. 
- * This program is free software; you can redistribute it and/or 
- * modify it under the terms of the GNU General Public License 
- * as published by the Free Software Foundation; either version 2 
- * of the License, or (at your option) any later version. * 
- * This program is distributed in the hope that it will be useful, 
- * but WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the 
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License 
- * along with this program; if not, write to the Free Software 
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. * 
- * 
- * <OSCAR TEAM>
- * 
- * This software was written for the 
- * Department of Family Medicine 
- * McMaster University test2
- * Hamilton 
- * Ontario, Canada 
- */
--->
+<%--
+
+    Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
+    This software is published under the GPL GNU General Public License.
+    This program is free software; you can redistribute it and/or
+    modify it under the terms of the GNU General Public License
+    as published by the Free Software Foundation; either version 2
+    of the License, or (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program; if not, write to the Free Software
+    Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+
+    This software was written for the
+    Department of Family Medicine
+    McMaster University
+    Hamilton
+    Ontario, Canada
+
+--%>
 
 <%@page import="org.oscarehr.util.LocaleUtils"%>
 <%@page import="org.oscarehr.phr.util.MyOscarUtils"%>
 <%@page import="org.oscarehr.phr.PHRAuthentication"%>
 <%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.oscarehr.util.LoggedInInfo"%>
+<%@page import="org.oscarehr.common.dao.UserPropertyDAO, org.oscarehr.common.model.UserProperty, org.springframework.web.context.support.WebApplicationContextUtils" %>
 <%
 if(session.getValue("user") == null) response.sendRedirect("../logout.htm");
 if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
@@ -53,14 +54,14 @@ if(appointment != null && appointment.length()>0) {
 <%@ taglib uri="/WEB-INF/indivo-tag.tld" prefix="indivo"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
-<%@ taglib uri="http://java.sun.com/jstl/core" prefix="c"%>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 
 <%@ page import="java.math.*, java.util.*, java.io.*, java.sql.*, oscar.*, oscar.util.*, java.net.*,oscar.MyDateFormat, oscar.dms.*, oscar.dms.data.*, oscar.oscarProvider.data.ProviderMyOscarIdData, oscar.oscarDemographic.data.DemographicData"%>
 <%@ page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request" />
 <%
-   
+
 //if delete request is made
 if (request.getParameter("delDocumentNo") != null) {
     EDocUtil.deleteDocument(request.getParameter("delDocumentNo"));
@@ -95,13 +96,20 @@ if( !"".equalsIgnoreCase(moduleid) && (demographicNo == null || demographicNo.eq
 	demographicNo = moduleid;
 }
 
-String moduleName = EDocUtil.getModuleName(module, moduleid);
+//module can be either demographic or provider from what i can tell
+
+String moduleName = "";
+if(module.equals("demographic")) {
+	moduleName = EDocUtil.getDemographicName(moduleid);
+} else if(module.equals("provider")) {
+	moduleName = EDocUtil.getProviderName(moduleid);
+}
 
 String curUser = "";
 if (request.getParameter("curUser") != null) {
-    curUser = request.getParameter("curUser");    
+    curUser = request.getParameter("curUser");
 } else if (request.getAttribute("curUser") != null) {
-    curUser = (String) request.getAttribute("curUser");    
+    curUser = (String) request.getAttribute("curUser");
 }
 
 //sorting
@@ -134,11 +142,19 @@ if( request.getParameter("updateParent") != null )
     updateParent = request.getParameter("updateParent");
 else
     updateParent = "false";
-    
+
 String viewstatus = request.getParameter("viewstatus");
 if( viewstatus == null ) {
     viewstatus = "active";
 }
+
+UserPropertyDAO pref = (UserPropertyDAO) WebApplicationContextUtils.getWebApplicationContext(pageContext.getServletContext()).getBean("UserPropertyDAO"); 
+UserProperty up = pref.getProp(user_no, UserProperty.EDOC_BROWSER_IN_DOCUMENT_REPORT);
+Boolean DocumentBrowserLink=false;
+ 
+if ( up != null && up.getValue() != null && up.getValue().equals("yes")){ 
+   DocumentBrowserLink = true;
+                            }
 %>
 <html:html locale="true">
 <head>
@@ -211,7 +227,7 @@ function checkAll(checkboxId,parentEle, className){
 }
 
 function submitForm(actionPath) {
-    
+
     var form = document.forms[2];
     if(verifyChecks(form)) {
         form.action = actionPath;
@@ -223,7 +239,7 @@ function submitForm(actionPath) {
 }
 
 function submitPhrForm(actionPath, windowName) {
-    
+
     var form = document.forms[2];
     if(verifyChecks(form)) {
         form.onsubmit = phrActionPopup(actionPath, windowName);
@@ -237,8 +253,8 @@ function submitPhrForm(actionPath, windowName) {
 }
 
 function verifyChecks(t){
-   
-   if ( t.docNo == null ){ 
+
+   if ( t.docNo == null ){
          alert("No documents selected");
          return false;
    }else{
@@ -251,28 +267,28 @@ function verifyChecks(t){
             }
         }
       }
-      else 
+      else
         oneChecked = t.docNo.checked ? 1 : 0;
-        
+
       if ( oneChecked == 0 ){
          alert("No documents selected");
-         return false;            
+         return false;
       }
    }
    return true;
 }
 
-function popup1(height, width, url, windowName){   
-  var page = url;  
-  windowprops = "height="+height+",width="+width+",location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,screenX=0,screenY=0,top=0,left=0";  
-  var popup=window.open(url, windowName, windowprops);  
-  if (popup != null){  
-    if (popup.opener == null){  
-      popup.opener = self;  
-    }  
-  }  
-  popup.focus();  
-  
+function popup1(height, width, url, windowName){
+  var page = url;
+  windowprops = "height="+height+",width="+width+",location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,screenX=0,screenY=0,top=0,left=0";
+  var popup=window.open(url, windowName, windowprops);
+  if (popup != null){
+    if (popup.opener == null){
+      popup.opener = self;
+    }
+  }
+  popup.focus();
+
 }
 
 
@@ -280,7 +296,7 @@ function popup1(height, width, url, windowName){
     var update = "<%=updateParent%>";
     var parentId = "<%=parentAjaxId%>";
     var Url = window.opener.URLs;
-    
+
     if( update == "true" && !window.opener.closed )
         window.opener.popLeftColumn(Url[parentId], parentId, parentId);
   }
@@ -312,8 +328,8 @@ function popup1(height, width, url, windowName){
 		<td class="MainTableRightColumn" colspan="2" valign="top">
 			<jsp:include page="addDocument.jsp">
 				<jsp:param name="appointmentNo" value="<%=appointmentNo%>"/>
-			</jsp:include> 
-			
+			</jsp:include>
+
 			<html:form action="/dms/combinePDFs">
 			<input type="hidden" name="curUser" value="<%=curUser%>">
 			<input type="hidden" name="demoId" value="<%=moduleid%>">
@@ -325,7 +341,7 @@ function popup1(height, width, url, windowName){
                 MiscUtils.getLogger().debug("module="+module+", moduleid="+moduleid+", view="+view+", EDocUtil.PRIVATE="+EDocUtil.PRIVATE+", sort="+sort+", viewstatus="+viewstatus);
                 privatedocs = EDocUtil.listDocs(module, moduleid, view, EDocUtil.PRIVATE, sort, viewstatus);
                 MiscUtils.getLogger().debug("privatedocs:"+privatedocs.size());
-                
+
                 categories.add(privatedocs);
                 categoryKeys.add(moduleName + "'s Private Documents");
                 if (module.equals("provider")) {
@@ -334,7 +350,7 @@ function popup1(height, width, url, windowName){
                     categories.add(publicdocs);
                     categoryKeys.add("Public Documents");
                 }
-                
+
                 //--- get remote documents ---
                 LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
                 if (loggedInInfo.currentFacility.isIntegratorEnabled())
@@ -343,7 +359,7 @@ function popup1(height, width, url, windowName){
                	 	categories.add(remoteDocuments);
                     categoryKeys.add("Remote Documents");
                 }
-                
+
                 for (int i=0; i<categories.size();i++) {
                     String currentkey = (String) categoryKeys.get(i);
                     ArrayList category = (ArrayList) categories.get(i);
@@ -366,11 +382,25 @@ function popup1(height, width, url, windowName){
                           }
                           %> <a id="plusminus<%=i%>"
 				href="javascript: showhide('documentsInnerDiv<%=i%>', 'plusminus<%=i%>');">
-			-- <%= currentkey%> </a> <span class="tabs"> <bean:message key="dms.documentReport.msgView"/>: <a
-				href="?function=<%=module%>&functionid=<%=moduleid%>">All</a> <% for (int i3=0; i3<doctypes.size(); i3++) { %>
-			| <a
-				href="?function=<%=module%>&functionid=<%=moduleid%>&view=<%=(String) doctypes.get(i3)%>"><%=(String) doctypes.get(i3)%></a>
-			<%}%> </span></div>
+			-- <%= currentkey%> </a> 
+			<!-- Enter the deleted code here -->
+			<%if(DocumentBrowserLink) {%><a href="../dms/documentBrowser.jsp?function=<%=module%>&functionid=<%=moduleid%>&categorykey=<%=currentkey%>"><bean:message key="dms.documentReport.msgBrowser"/></a><%}%>
+			<span class="tabs"> <bean:message key="dms.documentReport.msgView"/>: 
+			<select id="viewdoctype" name="view"
+				style="text-size: 8px; margin-bottom: -4px;"
+				onchange="window.location.href='?function=<%=module%>&functionid=<%=moduleid%>&view='+this.options[this.selectedIndex].value;">
+			
+			    <option value="">All</option>
+				<%
+                 for (int i3=0; i3<doctypes.size(); i3++) {
+                           String doctype = (String) doctypes.get(i3); %>
+				<option value="<%= doctype%>"
+				<%=(view.equalsIgnoreCase(doctype))? "selected":""%>><%= doctype%></option>
+				<%}%>
+			
+			</select>
+			</span>
+			</div>
 			</div>
 			<div id="documentsInnerDiv<%=i%>" style="background-color: #f2f7ff;">
 			<table id="privateDocs" class="docTable">
@@ -413,10 +443,10 @@ function popup1(height, width, url, windowName){
                     } else {
 			contentType = curdoc.getContentType();
 		    }
-                    String dStatus = "";                    
-                    if ((curdoc.getStatus() + "").compareTo("H") == 0) 
+                    String dStatus = "";
+                    if ((curdoc.getStatus() + "").compareTo("H") == 0)
                         dStatus="html";
-                    else 
+                    else
                         dStatus="active";
 		    String reviewerName = curdoc.getReviewerName();
 		    if (reviewerName.equals("")) reviewerName = "- - -";
@@ -429,11 +459,11 @@ function popup1(height, width, url, windowName){
 					<%}else{%> &nbsp; <%}%>
 					</td>
 					<td>
-					<% 
-                                        
+					<%
+
                               String url = "ManageDocument.do?method=display&doc_no="+curdoc.getDocId()+"&providerNo="+user_no+(curdoc.getRemoteFacilityId()!=null?"&remoteFacilityId="+curdoc.getRemoteFacilityId():"");
                               //String url = "documentGetFile.jsp?document=" + StringEscapeUtils.escapeJavaScript(curdoc.getFileName()) + "&type=" + dStatus + "&doc_no=" + curdoc.getDocId();
-                      
+
 					%>	<a <%=curdoc.getStatus() == 'D' ? "style='text-decoration:line-through'" : ""%>
 						href="<%=url%>" target="_blank"> <%=curdoc.getDescription()%></a></td>
 					<td><%=contentType%></td>
@@ -447,19 +477,19 @@ function popup1(height, width, url, windowName){
 		    		<%
 		    			if (curdoc.getRemoteFacilityId()==null)
 		    			{
-			    			if( curdoc.getCreatorId().equalsIgnoreCase(user_no)) {  
+			    			if( curdoc.getCreatorId().equalsIgnoreCase(user_no)) {
 							    if( curdoc.getStatus() == 'D' ) { %>
 						     		<a href="documentReport.jsp?undelDocumentNo=<%=curdoc.getDocId()%>&function=<%=module%>&functionid=<%=moduleid%>&viewstatus=<%=viewstatus%>"><img
 									src="<c:out value="${ctx}/images/user-trash.png"/>"
 									title="<bean:message key="dms.documentReport.btnUnDelete"/>"></a>
 			    				<%
-			    				} else { 
+			    				} else {
 			    				%>
 						     		<a href="javascript: checkDelete('documentReport.jsp?delDocumentNo=<%=curdoc.getDocId()%>&function=<%=module%>&functionid=<%=moduleid%>&viewstatus=<%=viewstatus%>','<%=StringEscapeUtils.escapeJavaScript(curdoc.getDescription())%>')"><img
 									src="<c:out value="${ctx}/images/clear.png"/>" title="Delete"></a>
 			    				<%
-			    				}    
-							} else { 
+			    				}
+							} else {
 							%>
 								<security:oscarSec roleName="<%=roleName$%>" objectName="_admin,_admin.edocdelete" rights="r">
 			    				<%
@@ -468,7 +498,7 @@ function popup1(height, width, url, windowName){
 									src="<c:out value="${ctx}/images/user-trash.png"/>"
 									title="<bean:message key="dms.documentReport.btnUnDelete"/>"></a> &nbsp;
 			    				<%
-			    				} else { 
+			    				} else {
 			    				%>
 							    	<a href="javascript: checkDelete('documentReport.jsp?delDocumentNo=<%=curdoc.getDocId()%>&function=<%=module%>&functionid=<%=moduleid%>&viewstatus=<%=viewstatus%>','<%=StringEscapeUtils.escapeJavaScript(curdoc.getDescription())%>')"><img
 									src="<c:out value="${ctx}/images/clear.png"/>" title="Delete"></a> &nbsp;
@@ -478,42 +508,42 @@ function popup1(height, width, url, windowName){
 								</security:oscarSec>
 			    			<%
 			    			}
-				
+
 			    			if( curdoc.getStatus() != 'D' ) {
 				    			if (curdoc.getStatus() == 'H') { %>
 									<a href="#" onclick="popup(450, 600, 'addedithtmldocument.jsp?editDocumentNo=<%=curdoc.getDocId()%>&function=<%=module%>&functionid=<%=moduleid%>', 'EditDoc')">
 			    				<%
-			    				} else { 
-			    				%> 
+			    				} else {
+			    				%>
 									<a href="#" onclick="popup(350, 500, 'editDocument.jsp?editDocumentNo=<%=curdoc.getDocId()%>&function=<%=module%>&functionid=<%=moduleid%>', 'EditDoc')">
 			    				<%
 			    				}
 				    			%>
-								
+
 								<img height="15px" width="15px" src="<c:out value="${ctx}/images/notepad.gif"/>" title="<bean:message key="dms.documentReport.btnEdit"/>"></a>
 			    				<%
 			    			}
-			    			
+
 			    			if(module.equals("demographic")){%>
 						    	<a href="#" title="Annotation" onclick="window.open('../annotation/annotation.jsp?display=<%=annotation_display%>&table_id=<%=curdoc.getDocId()%>&demo=<%=moduleid%>','anwin','width=400,height=500');">
 						      	<img src="../images/notes.gif" border="0">
 						    	</a>
 	                         <%
-	                         } 
-			    			
+	                         }
+
 			    			 if(!moduleid.equals(session.getAttribute("user"))) {
-	                              
+
 	                              String tickler_url;
 		                          if( org.oscarehr.common.IsPropertiesOn.isTicklerPlusEnable() ) {
 		                          	tickler_url = request.getContextPath()+"/Tickler.do?method=edit&tickler.demographic_webName="+moduleName+"&tickler.demographic_no="+moduleid;
 		                          } else {
 		                          	tickler_url = request.getContextPath()+"/tickler/ForwardDemographicTickler.do?docType=DOC&docId="+curdoc.getDocId()+"&demographic_no="+moduleid;
 		                          }
-		                         
+
 		                          %>
-		                          
+
 		                          &nbsp;<a href="javascript:void(0);" title="Tickler" onclick="popup(450,600,'<%=tickler_url%>','tickler')">T</a>
-		                          
+
 	                         <%
 	                         }
 		    			 }
@@ -555,13 +585,13 @@ function popup1(height, width, url, windowName){
 
       						PHRAuthentication auth=MyOscarUtils.getPHRAuthentication(session);
       						if (auth!=null) onclickString="return submitPhrForm('SendDocToPhr.do', 'sendDocToPhr');";
-      						
+
 	      					%>
 	      					<input type="button" <%=MyOscarUtils.getDisabledStringForMyOscarSendButton(auth, Integer.parseInt(demographicNo))%> value="<%=LocaleUtils.getMessage(request, "SendToMyOscar")%>" onclick="<%=onclickString%>" />
-							<%                  		  
+							<%
                   	  }
                     }
-             	%> 
+             	%>
 			</div>
 		</html:form></td>
 	</tr>

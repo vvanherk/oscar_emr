@@ -1,31 +1,29 @@
-/*
+/**
  *
- * Copyright (c) 2001-2002. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved. *
+ * Copyright (c) 2005-2012. Centre for Research on Inner City Health, St. Michael's Hospital, Toronto. All Rights Reserved.
  * This software is published under the GPL GNU General Public License.
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version. *
+ * of the License, or (at your option) any later version.
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details. * * You should have received a copy of the GNU General Public License
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. *
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * <OSCAR TEAM>
- *
- * ProviderPropertyAction.java
- *
- * Created on December 20, 2007, 11:44 AM
- *
- *
- *
+ * This software was written for
+ * Centre for Research on Inner City Health, St. Michael's Hospital,
+ * Toronto, Ontario, Canada
  */
+
 
 package org.oscarehr.provider.web;
 
-import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -41,14 +39,16 @@ import org.apache.struts.action.ActionMapping;
 import org.apache.struts.action.DynaActionForm;
 import org.apache.struts.actions.DispatchAction;
 import org.apache.struts.util.LabelValueBean;
+import org.oscarehr.common.dao.CtlBillingServiceDao;
 import org.oscarehr.common.dao.QueueDao;
 import org.oscarehr.common.dao.UserPropertyDAO;
+import org.oscarehr.common.model.Facility;
 import org.oscarehr.common.model.UserProperty;
+import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 
 import oscar.eform.EFormUtil;
-import oscar.oscarDB.DBHandler;
 import oscar.oscarEncounter.oscarConsultationRequest.pageUtil.EctConsultationFormRequestUtil;
 
 /**
@@ -151,7 +151,7 @@ public class ProviderPropertyAction extends DispatchAction {
              prop = new UserProperty();
          }
 
-         ArrayList serviceList = new ArrayList();
+         ArrayList<LabelValueBean> serviceList = new ArrayList<LabelValueBean>();
          serviceList.add(new LabelValueBean("M", "M"));
          serviceList.add(new LabelValueBean("F", "F"));
 
@@ -218,7 +218,7 @@ public class ProviderPropertyAction extends DispatchAction {
          }
 
          // Add all provinces / states to serviceList
-         ArrayList serviceList = constructProvinceList();
+         ArrayList<LabelValueBean> serviceList = constructProvinceList();
 
          request.setAttribute("dropOpts",serviceList);
 
@@ -432,7 +432,7 @@ public class ProviderPropertyAction extends DispatchAction {
         }
         QueueDao queueDao = (QueueDao) SpringUtils.getBean("queueDao");
         List<Hashtable> queues= queueDao.getQueues();
-        Collection viewChoices=new ArrayList();
+        Collection<LabelValueBean> viewChoices=new ArrayList<LabelValueBean>();
         viewChoices.add(new LabelValueBean("None","-1"));
         for(Hashtable ht:queues){
             viewChoices.add(new LabelValueBean((String)ht.get("queue"),(String)ht.get("id")));
@@ -477,7 +477,7 @@ public class ProviderPropertyAction extends DispatchAction {
              }//element of array has to match exactly with viewChoices values
          }
          prop.setValueArray(propertyArray);
-         Collection viewChoices=new ArrayList();
+         Collection<LabelValueBean> viewChoices=new ArrayList<LabelValueBean>();
          viewChoices.add(new LabelValueBean("Current","show_current"));
          viewChoices.add(new LabelValueBean("All","show_all"));
          viewChoices.add(new LabelValueBean("Active","active"));
@@ -1030,7 +1030,7 @@ public class ProviderPropertyAction extends DispatchAction {
          conUtil.estTeams();
          Vector<String> vect = conUtil.teamVec;
 
-         ArrayList serviceList = new ArrayList();
+         ArrayList<LabelValueBean> serviceList = new ArrayList<LabelValueBean>();
          serviceList.add(new  LabelValueBean("All","-1"));
          for (String s: vect ){
                  serviceList.add(new LabelValueBean(s,s));
@@ -1091,7 +1091,7 @@ public class ProviderPropertyAction extends DispatchAction {
          conUtil.estTeams();
          Vector<String> vect = conUtil.teamVec;
 
-         ArrayList serviceList = new ArrayList();
+         ArrayList<LabelValueBean> serviceList = new ArrayList<LabelValueBean>();
          serviceList.add(new  LabelValueBean("All","-1"));
          for (String s: vect ){
                  serviceList.add(new LabelValueBean(s,s));
@@ -1123,22 +1123,13 @@ public class ProviderPropertyAction extends DispatchAction {
          String provider = (String) request.getSession().getAttribute("user");
          UserProperty prop = this.userPropertyDAO.getProp(provider, UserProperty.WORKLOAD_MANAGEMENT);
 
-         if (prop == null){
+         if (prop == null)
              prop = new UserProperty();
-         }
 
-
-         ArrayList serviceList = new ArrayList();
-         try{
-             ResultSet rs = DBHandler.GetSQL("select distinct servicetype, servicetype_name from ctl_billingservice where status='A'");
-             while (rs.next()){
-                 String servicetype     = rs.getString("servicetype");
-                 String servicetypename = rs.getString("servicetype_name");
-                 serviceList.add(new LabelValueBean(servicetypename,servicetype));
-             }
-         }catch(Exception e){
-             MiscUtils.getLogger().error("Error", e);
-         }
+         ArrayList<LabelValueBean> serviceList = new ArrayList<LabelValueBean>();         
+		 CtlBillingServiceDao dao = SpringUtils.getBean(CtlBillingServiceDao.class);
+		 for (Object[] service : dao.getUniqueServiceTypes())
+			serviceList.add(new LabelValueBean(String.valueOf(service[0]), String.valueOf(service[1])));
          serviceList.add(new  LabelValueBean("None",""));
 
          request.setAttribute("dropOpts",serviceList);
@@ -1183,17 +1174,10 @@ public class ProviderPropertyAction extends DispatchAction {
 
          this.userPropertyDAO.saveProp(prop);
 
-         ArrayList serviceList = new ArrayList();
-         try{
-             ResultSet rs = DBHandler.GetSQL("select distinct servicetype, servicetype_name from ctl_billingservice where status='A'");
-             while (rs.next()){
-                 String servicetype     = rs.getString("servicetype");
-                 String servicetypename = rs.getString("servicetype_name");
-                 serviceList.add(new LabelValueBean(servicetypename,servicetype));
-             }
-         }catch(Exception e){
-             MiscUtils.getLogger().error("Error", e);
-         }
+         ArrayList<LabelValueBean> serviceList = new ArrayList<LabelValueBean>();
+         CtlBillingServiceDao dao = SpringUtils.getBean(CtlBillingServiceDao.class);
+         for(Object[] service : dao.getUniqueServiceTypes())
+        	 serviceList.add(new LabelValueBean(String.valueOf(service[0]), String.valueOf(service[1])));
 
          request.setAttribute("dropOpts",serviceList);
 
@@ -1223,7 +1207,7 @@ public class ProviderPropertyAction extends DispatchAction {
              prop = new UserProperty();
          }
 
-         ArrayList serviceList = new ArrayList();
+         ArrayList<LabelValueBean> serviceList = new ArrayList<LabelValueBean>();
          serviceList.add(new LabelValueBean("Single Line", "single"));
          serviceList.add(new LabelValueBean("Multi Line", "multi"));
 
@@ -1277,9 +1261,9 @@ public class ProviderPropertyAction extends DispatchAction {
      }
     // Constructs a list of LabelValueBeans, to be used as the dropdown list
     // when viewing a HCType preference
-    public ArrayList constructProvinceList() {
+    public ArrayList<LabelValueBean> constructProvinceList() {
 
-         ArrayList provinces = new ArrayList();
+         ArrayList<LabelValueBean> provinces = new ArrayList<LabelValueBean>();
 
          provinces.add(new LabelValueBean("AB-Alberta", "AB"));
          provinces.add(new LabelValueBean("BC-British Columbia", "BC"));
@@ -1370,12 +1354,12 @@ public class ProviderPropertyAction extends DispatchAction {
         }
 
         frm.set("dateProperty", prop);
-        ArrayList<Hashtable> groups = EFormUtil.getEFormGroups();
-        ArrayList groupList = new ArrayList();
+        ArrayList<Hashtable<String,String>> groups = EFormUtil.getEFormGroups();
+        ArrayList<LabelValueBean> groupList = new ArrayList<LabelValueBean>();
         String name;
         groupList.add(new LabelValueBean("None",""));
-         for (Hashtable h: groups ){
-             name = (String)h.get("groupName");
+         for (Hashtable<String,String> h: groups ){
+             name = h.get("groupName");
              groupList.add(new LabelValueBean(name,name));
          }
 
@@ -1505,6 +1489,158 @@ public class ProviderPropertyAction extends DispatchAction {
 		request.setAttribute("method","saveUseCppSingleLine");
 
 		return actionmapping.findForward("genCppSingleLine");
+	}
+    
+public ActionForward viewEDocBrowserInDocumentReport(ActionMapping actionmapping,
+            ActionForm actionform,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+		DynaActionForm frm = (DynaActionForm)actionform;
+		String provider = (String) request.getSession().getAttribute("user");
+		UserProperty prop = this.userPropertyDAO.getProp(provider, UserProperty.EDOC_BROWSER_IN_DOCUMENT_REPORT);
+
+		String propValue="";
+		if (prop == null){
+			prop = new UserProperty();
+		}else{
+			propValue=prop.getValue();
+		}
+
+		boolean checked;
+		if(propValue.equalsIgnoreCase("yes"))
+			checked=true;
+		else
+			checked=false;
+
+		prop.setChecked(checked);
+		request.setAttribute("eDocBrowserInDocumentReportProperty", prop);
+		request.setAttribute("providertitle","provider.setEDocBrowserInDocumentReport.title"); 
+		request.setAttribute("providermsgPrefs","provider.setEDocBrowserInDocumentReport.msgPrefs");
+		request.setAttribute("providermsgProvider","provider.setEDocBrowserInDocumentReport.msgProfileView");
+		request.setAttribute("providermsgEdit","provider.setEDocBrowserInDocumentReport.msgEdit");
+		request.setAttribute("providerbtnSubmit","provider.setEDocBrowserInDocumentReport.btnSubmit");
+		request.setAttribute("providermsgSuccess","provider.setEDocBrowserInDocumentReport.msgSuccess");
+		request.setAttribute("method","saveEDocBrowserInDocumentReport");
+
+		frm.set("eDocBrowserInDocumentReportProperty", prop);
+
+		return actionmapping.findForward("genEDocBrowserInDocumentReport");
+	}
+
+
+    public ActionForward saveEDocBrowserInDocumentReport(ActionMapping actionmapping,ActionForm actionform,HttpServletRequest request,HttpServletResponse response){
+    	String provider=(String) request.getSession().getAttribute("user");
+
+    	DynaActionForm frm=(DynaActionForm)actionform;
+    	UserProperty Uprop=(UserProperty)frm.get("eDocBrowserInDocumentReportProperty");
+
+		boolean checked=false;
+		if(Uprop!=null)
+			checked = Uprop.isChecked();
+		UserProperty prop=this.userPropertyDAO.getProp(provider, UserProperty.EDOC_BROWSER_IN_DOCUMENT_REPORT);
+		if(prop==null){
+			prop=new UserProperty();
+			prop.setName(UserProperty.EDOC_BROWSER_IN_DOCUMENT_REPORT);
+			prop.setProviderNo(provider);
+		}
+		String propValue="no";
+		if(checked)
+			propValue="yes";
+
+		prop.setValue(propValue);
+		this.userPropertyDAO.saveProp(prop);
+
+		request.setAttribute("status", "success");
+		request.setAttribute("eDocBrowserInDocumentReportProperty",prop);
+		request.setAttribute("providertitle","provider.setEDocBrowserInDocumentReport.title");
+		request.setAttribute("providermsgPrefs","provider.setEDocBrowserInDocumentReport.msgPrefs");
+		request.setAttribute("providermsgProvider","provider.setEDocBrowserInDocumentReport.msgProfileView");
+		request.setAttribute("providermsgEdit","provider.setEDocBrowserInDocumentReport.msgEdit");
+		request.setAttribute("providerbtnSubmit","provider.setEDocBrowserInDocumentReport.btnSubmit");
+		if(checked)
+			request.setAttribute("providermsgSuccess","provider.setEDocBrowserInDocumentReport.msgSuccess_selected");
+		else
+			request.setAttribute("providermsgSuccess","provider.setEDocBrowserInDocumentReport.msgSuccess_unselected");
+		request.setAttribute("method","saveEDocBrowserInDocumentReport");
+
+		return actionmapping.findForward("genEDocBrowserInDocumentReport");
+	}
+
+    public ActionForward viewEDocBrowserInMasterFile(ActionMapping actionmapping,
+            ActionForm actionform,
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+		DynaActionForm frm = (DynaActionForm)actionform;
+		String provider = (String) request.getSession().getAttribute("user");
+		UserProperty prop = this.userPropertyDAO.getProp(provider, UserProperty.EDOC_BROWSER_IN_MASTER_FILE);
+
+		String propValue="";
+		if (prop == null){
+			prop = new UserProperty();
+		}else{
+			propValue=prop.getValue();
+		}
+
+		boolean checked;
+		if(propValue.equalsIgnoreCase("yes"))
+			checked=true;
+		else
+			checked=false;
+
+		prop.setChecked(checked);
+		request.setAttribute("eDocBrowserInMasterFileProperty", prop);
+		request.setAttribute("providertitle","provider.setEDocBrowserInMasterFile.title"); //=Select if you want to use Rx3
+		request.setAttribute("providermsgPrefs","provider.setEDocBrowserInMasterFile.msgPrefs"); //=Preferences
+		request.setAttribute("providermsgProvider","provider.setEDocBrowserInMasterFile.msgProfileView"); //=Use Rx3
+		request.setAttribute("providermsgEdit","provider.setEDocBrowserInMasterFile.msgEdit"); //=Do you want to use Rx3?
+		request.setAttribute("providerbtnSubmit","provider.setEDocBrowserInMasterFile.btnSubmit"); //=Save
+		request.setAttribute("providermsgSuccess","provider.setEDocBrowserInMasterFile.msgSuccess"); //=Rx3 Selection saved
+		request.setAttribute("method","saveEDocBrowserInMasterFile");
+
+		frm.set("eDocBrowserInMasterFileProperty", prop);
+
+		return actionmapping.findForward("genEDocBrowserInMasterFile");
+	}
+
+
+    public ActionForward saveEDocBrowserInMasterFile(ActionMapping actionmapping,ActionForm actionform,HttpServletRequest request,HttpServletResponse response){
+    	String provider=(String) request.getSession().getAttribute("user");
+
+    	DynaActionForm frm=(DynaActionForm)actionform;
+    	UserProperty Uprop=(UserProperty)frm.get("eDocBrowserInMasterFileProperty");
+
+		boolean checked=false;
+		if(Uprop!=null)
+			checked = Uprop.isChecked();
+		UserProperty prop=this.userPropertyDAO.getProp(provider, UserProperty.EDOC_BROWSER_IN_MASTER_FILE);
+		if(prop==null){
+			prop=new UserProperty();
+			prop.setName(UserProperty.EDOC_BROWSER_IN_MASTER_FILE);
+			prop.setProviderNo(provider);
+		}
+		String propValue="no";
+		if(checked)
+			propValue="yes";
+
+		prop.setValue(propValue);
+		this.userPropertyDAO.saveProp(prop);
+
+		request.setAttribute("status", "success");
+		request.setAttribute("eDocBrowserInMasterFileProperty",prop);
+		request.setAttribute("providertitle","provider.setEDocBrowserInMasterFile.title");
+		request.setAttribute("providermsgPrefs","provider.setEDocBrowserInMasterFile.msgPrefs");
+		request.setAttribute("providermsgProvider","provider.setEDocBrowserInMasterFile.msgProfileView");
+		request.setAttribute("providermsgEdit","provider.setEDocBrowserInMasterFile.msgEdit");
+		request.setAttribute("providerbtnSubmit","provider.setEDocBrowserInMasterFile.btnSubmit");
+		if(checked)
+			request.setAttribute("providermsgSuccess","provider.setEDocBrowserInMasterFile.msgSuccess_selected");
+		else
+			request.setAttribute("providermsgSuccess","provider.setEDocBrowserInMasterFile.msgSuccess_unselected");
+		request.setAttribute("method","saveEDocBrowserInMasterFile");
+
+		return actionmapping.findForward("genEDocBrowserInMasterFile");
 	}
 
     public ActionForward viewCommentLab(ActionMapping actionmapping,
@@ -1740,6 +1876,7 @@ public class ProviderPropertyAction extends DispatchAction {
 	}
 
     public ActionForward viewIntegratorProperties(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+    	Facility facility = LoggedInInfo.loggedInInfo.get().currentFacility;
         UserProperty[] integratorProperties = new UserProperty[20];
         integratorProperties[0] = this.userPropertyDAO.getProp(UserProperty.INTEGRATOR_DEMOGRAPHIC_SYNC);
         integratorProperties[1] = this.userPropertyDAO.getProp(UserProperty.INTEGRATOR_DEMOGRAPHIC_ADMISSIONS);
@@ -1759,7 +1896,7 @@ public class ProviderPropertyAction extends DispatchAction {
         integratorProperties[15] = this.userPropertyDAO.getProp(UserProperty.INTEGRATOR_FACILITY);
         integratorProperties[16] = this.userPropertyDAO.getProp(UserProperty.INTEGRATOR_PROGRAMS);
         integratorProperties[17] = this.userPropertyDAO.getProp(UserProperty.INTEGRATOR_PROVIDERS);
-        integratorProperties[18] = this.userPropertyDAO.getProp(UserProperty.INTEGRATOR_FULL_PUSH);
+        integratorProperties[18] = this.userPropertyDAO.getProp(UserProperty.INTEGRATOR_FULL_PUSH+facility.getId());
         integratorProperties[19] = this.userPropertyDAO.getProp(UserProperty.INTEGRATOR_LAST_PUSH);
 
         request.setAttribute("integratorProperties", integratorProperties);
@@ -1767,7 +1904,7 @@ public class ProviderPropertyAction extends DispatchAction {
     }
 
     public ActionForward saveIntegratorProperties(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-
+    	Facility facility = LoggedInInfo.loggedInInfo.get().currentFacility;
         this.userPropertyDAO.saveProp(UserProperty.INTEGRATOR_DEMOGRAPHIC_ADMISSIONS, request.getParameter("integrator_demographic_admissions"));
         this.userPropertyDAO.saveProp(UserProperty.INTEGRATOR_DEMOGRAPHIC_ALLERGIES, request.getParameter("integrator_demographic_allergies"));
         this.userPropertyDAO.saveProp(UserProperty.INTEGRATOR_DEMOGRAPHIC_APPOINTMENTS, request.getParameter("integrator_demographic_appointments"));
@@ -1788,13 +1925,71 @@ public class ProviderPropertyAction extends DispatchAction {
         this.userPropertyDAO.saveProp(UserProperty.INTEGRATOR_PROGRAMS, request.getParameter("integrator_programs"));
         this.userPropertyDAO.saveProp(UserProperty.INTEGRATOR_PROVIDERS, request.getParameter("integrator_providers"));
 
-        this.userPropertyDAO.saveProp(UserProperty.INTEGRATOR_FULL_PUSH, request.getParameter("integrator_full_push"));
+        this.userPropertyDAO.saveProp(UserProperty.INTEGRATOR_FULL_PUSH+facility.getId(), request.getParameter("integrator_full_push"));
 
         request.setAttribute("saved", true);
 
         return viewIntegratorProperties(mapping, form, request, response);
     }
+ public ActionForward viewPatientNameLength(ActionMapping actionmapping,ActionForm actionform,HttpServletRequest request, HttpServletResponse response) {
 
+		DynaActionForm frm = (DynaActionForm)actionform;
+		String provider = (String) request.getSession().getAttribute("user");
+
+		UserProperty length = this.userPropertyDAO.getProp(provider, UserProperty.PATIENT_NAME_LENGTH);
+
+		if (length == null){
+			length = new UserProperty();
+		}
+
+
+		request.setAttribute("patientnameLength",length);
+
+
+		request.setAttribute("providertitle","provider.patientNameLength.title"); 
+		request.setAttribute("providermsgPrefs","provider.patientNameLength.msgPrefs"); 
+		request.setAttribute("providermsgProvider","provider.patientNameLength.msgProvider"); 
+		request.setAttribute("providermsgEdit","provider.patientNameLength.msgEdit"); 
+		request.setAttribute("providerbtnSubmit","provider.patientNameLength.btnSubmit"); 
+		request.setAttribute("providermsgSuccess","provider.patientNameLength.msgSuccess"); 
+		request.setAttribute("method","savePatientNameLength");
+
+		frm.set("patientNameLength", length);
+
+		return actionmapping.findForward("genPatientNameLength");
+    }
+
+    public ActionForward savePatientNameLength(ActionMapping actionmapping,ActionForm actionform, HttpServletRequest request, HttpServletResponse response) {
+
+		DynaActionForm frm = (DynaActionForm)actionform;
+		UserProperty s = (UserProperty)frm.get("patientNameLength");
+
+		String length = s != null ? s.getValue() : "";
+
+		String provider = (String) request.getSession().getAttribute("user");
+
+		UserProperty wProperty = this.userPropertyDAO.getProp(provider,UserProperty.PATIENT_NAME_LENGTH);
+		if( wProperty == null ) {
+			wProperty = new UserProperty();
+			wProperty.setProviderNo(provider);
+			wProperty.setName(UserProperty.PATIENT_NAME_LENGTH);
+		}
+		wProperty.setValue(length);
+		userPropertyDAO.saveProp(wProperty);
+
+
+		request.setAttribute("status", "success");
+		request.setAttribute("providertitle","provider.patientNameLength.title"); //=Set myDrugref ID
+		request.setAttribute("providermsgPrefs","provider.patientNameLength.msgPrefs"); //=Preferences"); //
+		request.setAttribute("providermsgProvider","provider.patientNameLength.msgProvider"); //=myDrugref ID
+		request.setAttribute("providermsgEdit","provider.patientNameLength.msgEdit"); //=Enter your desired login for myDrugref
+		request.setAttribute("providerbtnSubmit","provider.patientNameLength.btnSubmit"); //=Save
+		request.setAttribute("providermsgSuccess","provider.patientNameLength.msgSuccess"); //=myDrugref Id saved
+		request.setAttribute("method","savePatientNameLength");
+
+		return actionmapping.findForward("genPatientNameLength");
+	}
+    
     /**
      * Creates a new instance of ProviderPropertyAction
      */
