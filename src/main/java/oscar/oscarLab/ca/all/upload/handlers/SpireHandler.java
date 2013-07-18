@@ -66,7 +66,6 @@ public class SpireHandler implements MessageHandler {
 		} catch (Exception e) {
 			MessageUploader.clean(fileId);
 			logger.error("Could not upload message: ", e);
-			MiscUtils.getLogger().error("Error", e);
 			return null;
 		}
 		return ("success");
@@ -76,6 +75,11 @@ public class SpireHandler implements MessageHandler {
 	private boolean isDuplicate(String msg) {
 		//OLIS requirements - need to see if this is a duplicate
 		oscar.oscarLab.ca.all.parsers.MessageHandler h = Factory.getHandler("Spire", msg);
+		
+		logger.info("isDuplicate: " + h);
+		logger.info("isDuplicate: " + h.getOrderStatus());
+		logger.info("isDuplicate: " + h.getAccessionNum());
+		
 		//if final
 		if(h.getOrderStatus().equals("CM")) {
 			String acc = h.getAccessionNum().substring(3);
