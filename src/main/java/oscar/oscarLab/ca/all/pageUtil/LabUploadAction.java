@@ -115,6 +115,8 @@ public class LabUploadAction extends Action {
 				if(type.equals("HHSEMR") && OscarProperties.getInstance().getProperty("lab.hhsemr.filter_ordering_provider", "false").equals("true")) {
                 	logger.info("Applying filter to HHS EMR lab");
                 	String hl7Data = FileUtils.readFileToString(file, "UTF-8");
+                	logger.info("Uploading lab with contents:");
+                	logger.info(hl7Data);
                 	HHSEmrDownloadHandler filterHandler = new HHSEmrDownloadHandler();
                 	filterHandler.init(hl7Data);
                 	OtherId providerOtherId = OtherIdManager.searchTable(OtherIdManager.PROVIDER, "STAR", filterHandler.getClientRef());
