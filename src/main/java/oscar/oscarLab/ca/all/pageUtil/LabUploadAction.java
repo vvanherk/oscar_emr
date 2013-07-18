@@ -287,7 +287,7 @@ public class LabUploadAction extends Action {
 		try {
 			OscarKeyDao oscarKeyDao = (OscarKeyDao) SpringUtils.getBean("oscarKeyDao");
 			OscarKey oscarKey = oscarKeyDao.find("oscar");
-			logger.info("oscar key: " + oscarKey);
+			logger.debug("oscar key: " + oscarKey);
 
 			privateKey = base64.decode(oscarKey.getPrivateKey().getBytes(MiscUtils.ENCODING));
 			PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(privateKey);
