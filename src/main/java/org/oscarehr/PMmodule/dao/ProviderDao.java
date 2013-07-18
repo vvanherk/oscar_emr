@@ -360,8 +360,6 @@ public class ProviderDao extends HibernateDaoSupport {
 		}
 		
 		String ohipNumbersAsString = "'" + StringUtils.join(ohipNumbers,"','") + "'";
-		
-		logger.info("ohipNumbersAsString: " + ohipNumbersAsString);
 
 		List<Provider> providerList = getHibernateTemplate().find("From Provider p where p.OhipNo in (" + ohipNumbersAsString + ")");
 
@@ -384,8 +382,6 @@ public class ProviderDao extends HibernateDaoSupport {
 		}
 		
 		String providerNumbersAsString = "'" + StringUtils.join(providerNumbers,"','") + "'";
-		
-		logger.info("providerNumbersAsString: " + providerNumbersAsString);
 
 		List<Provider> providerList = getHibernateTemplate().find("From Provider p where p.ProviderNo in (" + providerNumbersAsString + ")");
 
@@ -435,8 +431,6 @@ public class ProviderDao extends HibernateDaoSupport {
 			logger.warn("No OHIP Number associated with spire_id="+spireId);
 			return null;
 		}
-		
-		logger.info("OHIP NUMBER: " + ohipNumber);
 
 		List<Provider> providerList = getHibernateTemplate().find("From Provider p where OhipNo=?",new Object[]{ohipNumber});
 		
