@@ -32,6 +32,8 @@ import org.apache.log4j.Logger;
 
 import oscar.util.UtilDateUtilities;
 
+import oscar.SxmlMisc;
+
 public class JdbcBillingRAImpl {
 	private static final Logger _logger = Logger.getLogger(JdbcBillingRAImpl.class);
 	BillingONDataHelp dbObj = new BillingONDataHelp();

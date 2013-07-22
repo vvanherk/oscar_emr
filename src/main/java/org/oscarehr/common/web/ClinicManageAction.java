@@ -94,7 +94,7 @@ public class ClinicManageAction extends DispatchAction {
         return mapping.findForward("success");
     }
 
-    public ActionForward update(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+    public ActionForward update(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
         DynaActionForm frm = (DynaActionForm)form;
         Clinic clinic = (Clinic) frm.get("clinic");
         //weird hack, but not sure why struts isn't filling in the id.

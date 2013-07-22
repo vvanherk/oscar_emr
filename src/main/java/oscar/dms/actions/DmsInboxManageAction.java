@@ -453,9 +453,6 @@ public class DmsInboxManageAction extends DispatchAction {
 			Integer n = qdl.getQueueId();
 			docQueue.put(i.toString(), n.toString());
 		}
-		ArrayList<LabResultData> labdocs = comLab.populateLabResultsData2(searchProviderNo, demographicNo, request.getParameter("fname"), request.getParameter("lname"), request.getParameter("hnum"), ackStatus, scannedDocStatus);
-		
-		labdocs = collapseSpireLabs(labdocs);
 
 		InboxResultsDao inboxResultsDao = (InboxResultsDao) SpringUtils.getBean("inboxResultsDao");
 		String patientFirstName = request.getParameter("fname");
@@ -473,6 +470,8 @@ public class DmsInboxManageAction extends DispatchAction {
 					patientLastName, patientHealthNumber, ackStatus, scannedDocStatus, true, page, pageSize,
 					mixLabsAndDocs, isAbnormal));
 		}
+
+		labdocs = collapseSpireLabs(labdocs);
 
 		ArrayList<LabResultData> validlabdocs = new ArrayList<LabResultData>();
 
@@ -629,6 +628,8 @@ public class DmsInboxManageAction extends DispatchAction {
 				labdocs.add(labMap.get(labNums.get(j)));
 			}
 		}
+
+		Collections.sort(labdocs);
 		logger.debug("labdocs.size()="+labdocs.size());
 
 		/* find all data for the index.jsp page */
