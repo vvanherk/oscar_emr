@@ -100,7 +100,7 @@ public class ClinicDAO extends AbstractDao<Clinic> {
     }
 
 	public void delete(Clinic clinic) {
-        remove(clinic);
+        remove( clinic.getId() );
     }
 
 
