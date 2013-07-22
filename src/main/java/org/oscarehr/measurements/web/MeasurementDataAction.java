@@ -52,6 +52,7 @@ import org.oscarehr.util.SpringUtils;
 
 import oscar.oscarEncounter.oscarMeasurements.dao.MeasurementsDao;
 import oscar.oscarEncounter.oscarMeasurements.model.Measurements;
+import oscar.util.UtilMisc;
 
 public class MeasurementDataAction extends DispatchAction {
 

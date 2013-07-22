@@ -426,7 +426,6 @@ public class OcanReportUIBean implements CallbackHandler {
 		for(OCANv2SubmissionRecord submissionRecord:submissionRecords) {
 
 			String assessmentId = submissionRecord.getAssessmentID();
-			OcanStaffForm staffForm = ocanStaffFormDao.findLatestByAssessmentId(LoggedInInfo.loggedInInfo.get().currentFacility.getId(),Integer.parseInt(assessmentId));
 
 			String assessmentId_noPrefix = assessmentId;
 			String idPrefix = OscarProperties.getInstance().getProperty("ocan.iar.idPrefix");
