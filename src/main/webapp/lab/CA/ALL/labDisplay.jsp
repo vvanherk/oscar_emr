@@ -100,9 +100,13 @@ Hl7TextMessageDao hl7TxtMsgDao = (Hl7TextMessageDao)SpringUtils.getBean("hl7Text
 Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
 MeasurementMapDao measurementMapDao = (MeasurementMapDao) SpringUtils.getBean("measurementMapDao");
 Hl7TextMessage hl7TextMessage = hl7TxtMsgDao.find(Integer.parseInt(segmentID));
-java.util.Date date = hl7TextMessage.getCreated();
-String stringFormat = "yyyy-MM-dd HH:mm";
-String dateLabReceived = UtilDateUtilities.DateToString(date, stringFormat);
+
+String dateLabReceived = "n/a";
+if(hl7TextMessage != null){
+	java.util.Date date = hl7TextMessage.getCreated();
+	String stringFormat = "yyyy-MM-dd HH:mm";
+    dateLabReceived = UtilDateUtilities.DateToString(date, stringFormat);
+}
 
 boolean isLinkedToDemographic=false;
 ArrayList<ReportStatus> ackList=null;
@@ -163,6 +167,8 @@ if (remoteFacilityIdString==null) // local lab
 	}
 	
 	ackList = AcknowledgementData.getAcknowledgements(multiIdList);
+	//multiLabId = Hl7textResultsData.getMatchingLabs(segmentID);
+	//multiLabId = hl7TextInfoDao.getMatchingLabsByLabId(segmentID);
 	
 	MessageHandler h = Factory.getHandler(segmentID);
 	
@@ -185,8 +191,23 @@ if (remoteFacilityIdString==null) // local lab
 		if (map != null) {
 			List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
 			
+			MiscUtils.getLogger().info("size1: " + cAccns.size());
+			
+			for (SpireCommonAccessionNumber cAccn : cAccns) {
+				MiscUtils.getLogger().info("labId: " + cAccn.getLabNo() + " " + cAccn.getCommonAccessionNumber());
+			}
+			
 			// filter out older versions of labs
 			removeDuplicates(cAccns, hl7TextInfoDao, accn, lab_no);
+			
+			// Re-order the remaining labs based on their order number
+			//reorderLabs(cAccns);
+			
+			MiscUtils.getLogger().info("size2: " + cAccns.size());
+			
+			for (SpireCommonAccessionNumber cAccn : cAccns) {
+				MiscUtils.getLogger().info("labId: " + cAccn.getLabNo());
+			}
 			
 			for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 				handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
@@ -239,6 +260,7 @@ if (ackList != null) {
 			acknowledgmentInfo.put(report.getProviderName(), report);
 		} else {
 			// Reports that are unacknowledged/unfiled should be used over ones that have been acknowledged/filed
+			MiscUtils.getLogger().info("ack: " + report.getProviderName() + " " + r.getStatus() + " " + report.getStatus());
 			if (!report.getStatus().equals("A") && !report.getStatus().equals("F") && (r.getStatus().equals("A") || r.getStatus().equals("F"))) {
 				acknowledgmentInfo.put(report.getProviderName(), report);
 			} else if (r.getStatus().equals("A") || r.getStatus().equals("F")) {
@@ -277,9 +299,9 @@ for (Map.Entry<String, ReportStatus> entry : acknowledgmentInfo.entrySet()) {
 int lab_no = Integer.parseInt(segmentID);
 Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
 String label = "";
-if (hl7Lab.getLabel()!=null) label = hl7Lab.getLabel();
+if (hl7Lab != null && hl7Lab.getLabel()!=null) label = hl7Lab.getLabel();
 
-/********************** Converted to this sport *****************************/ 
+/********************** Converted to this sport *****************************/
 
 
 // check for errors printing
@@ -1026,6 +1048,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                     boolean startFlag = false;
                                     for (int j=multiID.length-1; j >=0; j--){
                                         ackList = AcknowledgementData.getAcknowledgements(multiID[j].trim());
+                                        MiscUtils.getLogger().info("BLAH: " + multiID[j] + " " + segmentID);
                                         if (multiID[j].trim().equals(segmentID))
                                             startFlag = true;                                                              
                                         if (startFlag) {
@@ -1057,7 +1080,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                                                 ackStatus = "Acknowledged"; 
                                                                             } else if (ackStatus.equals("F")) {
                                                                                 ackStatus = "Filed but not Acknowledged";
-                                                                            }else{
+                                                                            } else {
                                                                                 ackStatus = "Not Acknowledged";
                                                                             }
                                                                         %>
@@ -1166,7 +1189,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 															report = (ReportStatus) ackList.get(m);
 															int segId = Integer.parseInt(report.getSegmentID().trim());
 															String ackStatus = report.getStatus(); 
-															
+															MiscUtils.getLogger().info("status: " + ackStatus + " " + segId);
 															if (segId == info.getLabNumber() && !ackStatus.equals("A") && !ackStatus.equals("F") && report.getProviderNo().equals(providerNo)) {
 																newLabText = "<span style='color:red;'> NEW </span>";
 															}
@@ -1554,7 +1577,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 	                       } // end for handler.getMsgType().equals("MEDVUE")  
 						} 
                        %>
-                        
+
                         <table width="100%" border="0" cellspacing="0" cellpadding="3" class="MainTableBottomRowRightColumn" bgcolor="#003399">
                             <tr>
                                 <td align="left" width="50%">
@@ -1571,8 +1594,8 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                         </indivo:indivoRegistered>
                                     </oscarProperties:oscarPropertiesCheck>
                                     <% if ( searchProviderNo != null ) { // we were called from e-chart %>
-                                    <input type="button" value=" <bean:message key="oscarMDS.segmentDisplay.btnEChart"/> " onClick="popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handler.getLastName()+", "+handler.getFirstName())%>', 'searchPatientWindow')">
-
+                                    <input type="button" value=" <bean:message key="oscarMDS.segmentDisplay.btnEChart"/> " onClick="popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handlers.get(0).getLastName()+", "+handlers.get(0).getFirstName())%>', 'searchPatientWindow')">
+                                    
                                     <% } %>
                                 </td>
                                 <td width="50%" valign="center" align="left">
@@ -1643,7 +1666,11 @@ public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInf
 		
 		if (vers.size() > 1) {
 			Hl7TextInfo first = vers.get(0);
-			for (Hl7TextInfo ver : vers) {				
+			for (Hl7TextInfo ver : vers) {
+				
+				MiscUtils.getLogger().info("accn: " + currentAccn + " " + ver.getAccessionNumber());
+				MiscUtils.getLogger().info("labid: " + currentLabNo + " " + ver.getLabNumber());
+				
 				// Generally, we want to keep the first (i.e. newest) version of a lab
 				if (first == ver) {
 					// Unless newest lab is NOT the version the user wants to see
