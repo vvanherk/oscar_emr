@@ -168,7 +168,7 @@ public class ClinicManageAction extends DispatchAction {
     }
     
     private void putClinicsInRequest(HttpServletRequest request) {
-		List<Clinic> clinics = this.clinicDAO.findAll();
+		List<Clinic> clinics = this.clinicDAO.getClinics();
 		
 		request.setAttribute("clinics", clinics);
 	}

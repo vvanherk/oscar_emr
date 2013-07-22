@@ -63,6 +63,14 @@ public class ClinicDAO extends AbstractDao<Clinic> {
         }
         return null;
     }
+    
+    public List<Clinic> getClinics(){
+    	Query query = entityManager.createQuery("select c from Clinic c");
+        @SuppressWarnings("unchecked")
+        List<Clinic> codeList = query.getResultList();
+                
+        return codeList;
+    }
 
 	public Clinic find(long clinicNo){
 		Query query = entityManager.createQuery("select c from Clinic c where c.id = (:id)");
