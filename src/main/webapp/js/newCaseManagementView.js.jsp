@@ -57,6 +57,9 @@
         var calendar;
 
         function popupPage(vheight,vwidth,name,varpage) { //open a new popup window
+          if (varpage == null || varpage == -1) {
+		  	return false;
+		  }
           if( varpage.indexOf("..") == 0 ) {
             varpage = ctx + varpage.substr(2);
           }
@@ -389,6 +392,7 @@ function notesLoader(offset, numToReturn, demoNo) {
 			ctx + "/CaseManagementView.do",
 			{
 				method: 'post',
+				asynchronous:false,
 				postBody: params,
 				evalScripts: true,
 				insertion: Insertion.Top,
@@ -630,7 +634,7 @@ function showEdit(e,title, noteId, editors, date, revision, note, url, container
    		coords = Position.positionedOffset($("cppBoxes"));
     }
 
-    var top = coords[1];
+    var top = Math.max(coords[1], 0);
     var right = Math.round(coords[0]/0.66);
     var height = $("showEditNote").getHeight();
     var gutterMargin = 150;
@@ -2024,6 +2028,17 @@ function issueIsAssigned() {
 
 var filterError;
 
+function resetInputElements(element) {
+	if (Object.prototype.toString.call(element) == "[object NodeList]") {
+		var size = element.length;
+		for (var i = 0; i < size; i++) {
+			element[i].checked = false;
+		}
+	} else {
+		element.checked = false;
+	}
+}
+
 function filter(reset) {
     var url = ctx + "/CaseManagementEntry.do";
     var params = "ajaxview=ajaxView&fullChart=" + fullChart;
@@ -2036,6 +2051,13 @@ function filter(reset) {
     document.forms["caseManagementViewForm"].method.value = "view";
     document.forms["caseManagementViewForm"].resetFilter.value = reset;
 
+	if (reset) {
+		resetInputElements(document.forms["caseManagementViewForm"].filter_providers);
+		resetInputElements(document.forms["caseManagementViewForm"].filter_roles);
+		resetInputElements(document.forms["caseManagementViewForm"].note_sort);
+		resetInputElements(document.forms["caseManagementViewForm"].issues);
+	}
+	
     var caseMgtEntryfrm = document.forms["caseManagementEntryForm"];
     var caseMgtViewfrm = document.forms["caseManagementViewForm"];
     params +=  "&" + Form.serialize(caseMgtEntryfrm);
@@ -3252,8 +3274,19 @@ function autoCompleteShowMenuCPP(element, update) {
 
         //$("notes2print").value = "";
 
+		// load all notes before printing
+		var container = $('encMainDiv');		
+		if (container.hasChildNodes()) {
+    		while (container.childNodes.length >= 1) {
+        		container.removeChild(container.firstChild);
+        	}
+        }
+		var demographicNo = $("demographicNo").value;
+		notesLoader(0, 9999, demographicNo);
+		var size = $("encMainDiv").children.length;
+
         //cycle through container divs for each note
-        for( idx = 1; idx <= maxNcId; ++idx ) {
+        for( idx = 1; idx <= size; ++idx ) {
         
         	if( $("nc" + idx) == null ) continue;
         

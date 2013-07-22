@@ -39,6 +39,7 @@
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
 <%@page import="org.oscarehr.common.model.Provider"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
+<%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
 <html>
@@ -51,6 +52,12 @@
 
 //-->
 </SCRIPT>
+<script src="<c:out value="../js/jquery.js"/>"></script>
+<script>
+	jQuery.noConflict();
+</script>
+
+<oscar:customInterface section="billingONHistory"/>
 </head>
 <body topmargin="0">
 

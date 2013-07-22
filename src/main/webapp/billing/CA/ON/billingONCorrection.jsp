@@ -368,6 +368,7 @@ function checkSettle(status) {
                                     }
 
                                 }
+				
 				if (billNo != null && billNo.length() > 0) {
 					bFlag = true;
 				}

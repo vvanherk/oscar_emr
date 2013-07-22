@@ -869,6 +869,16 @@ function autoFillHin(){
 					type="text" name="eff_date_month" size="2" maxlength="2"> <input
 					type="text" name="eff_date_date" size="2" maxlength="2"> </b></td>
 			</tr>
+			<tr valign="top">
+				<td align="right">&nbsp;</td>
+				<td align="right">&nbsp;</td>
+				<td align="right"><b><bean:message
+					key="demographic.demographiceditdemographic.formHCRenewDate" /></b><b>: </b></td>
+				<td align="left"><b> <input type="text"
+					name="hc_renew_date_year" size="4" maxlength="4"> <input
+					type="text" name="hc_renew_date_month" size="2" maxlength="2"> <input
+					type="text" name="hc_renew_date_date" size="2" maxlength="2"> </b></td>
+			</tr>			
 			<tr>
 				<td align="right"><b><bean:message
 					key="demographic.demographicaddrecordhtm.formHCType" />: </b></td>
@@ -989,6 +999,7 @@ function autoFillHin(){
                                                 : </b></td>
       <td align="left" >
         <select name="staff">
+					<option value=""></option>
           <%
   UserPropertyDAO propertyDao = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
   ResultSet rsdemo = addDemoBean.queryResults("search_provider");

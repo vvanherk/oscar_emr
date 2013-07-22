@@ -1048,7 +1048,6 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                     boolean startFlag = false;
                                     for (int j=multiID.length-1; j >=0; j--){
                                         ackList = AcknowledgementData.getAcknowledgements(multiID[j].trim());
-                                        MiscUtils.getLogger().info("BLAH: " + multiID[j] + " " + segmentID);
                                         if (multiID[j].trim().equals(segmentID))
                                             startFlag = true;                                                              
                                         if (startFlag) {

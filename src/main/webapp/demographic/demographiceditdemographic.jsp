@@ -185,7 +185,6 @@
 <script src="<c:out value="${ctx}"/>/share/javascript/menutility.js"
 	type="text/javascript"></script>
 <script type="text/javascript" src="../share/javascript/prototype.js"></script>
-<script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
    <script>
      jQuery.noConflict();
    </script>
@@ -526,6 +525,8 @@ function referralScriptAttach2(elementName, name2) {
 
 function newStatus() {
     newOpt = prompt("<bean:message key="demographic.demographiceditdemographic.msgPromptStatus"/>:", "");
+    if(newOpt == null)
+    	return;
     if (newOpt != "") {
         document.updatedelete.patient_status.options[document.updatedelete.patient_status.length] = new Option(newOpt, newOpt);
         document.updatedelete.patient_status.options[document.updatedelete.patient_status.length-1].selected = true;
@@ -536,6 +537,8 @@ function newStatus() {
 
 function newStatus1() {
     newOpt = prompt("<bean:message key="demographic.demographiceditdemographic.msgPromptStatus"/>:", "");
+    if(newOpt == null)
+    	return;
     if (newOpt != "") {
         document.updatedelete.roster_status.options[document.updatedelete.roster_status.length] = new Option(newOpt, newOpt);
         document.updatedelete.roster_status.options[document.updatedelete.roster_status.length-1].selected = true;
@@ -1645,6 +1648,10 @@ if ( PatStat.equals(Dead) ) {%>
                                                             key="demographic.demographiceditdemographic.formEFFDate" />:</span>
                                                         <span class="info"><%=MyDateFormat.getMyStandardDate(demographic.getEffDate())%></span>
                                                     </li>
+                                                    <li><span class="label"><bean:message
+                                                            key="demographic.demographiceditdemographic.formHCRenewDate" />:</span>
+                                                        <span class="info"><%=MyDateFormat.getMyStandardDate(demographic.getHcRenewDate())%></span>
+                                                    </li>
 						</ul>
 						</div>
 
@@ -2293,13 +2300,28 @@ if ( PatStat.equals(Dead) ) {%>
 								<td align="left" nowrap><input type="text"
 									name="year_of_birth" <%=getDisabled("year_of_birth")%>
 									value="<%=birthYear%>"
-									size="3" maxlength="4"> <input type="text"
-									name="month_of_birth" <%=getDisabled("month_of_birth")%>
-									value="<%=birthMonth%>"
-									size="2" maxlength="2"> <input type="text"
-									name="date_of_birth" <%=getDisabled("date_of_birth")%>
-									value="<%=birthDate%>"
-									size="2" maxlength="2"> <b>Age: <input type="text"
+									size="3" maxlength="4"> 
+
+									<% 
+									String sbMonth;
+									String sbDay;
+									DecimalFormat dFormat = new DecimalFormat("00");
+									%>
+			                        <select name="month_of_birth" id="month_of_birth">
+									<% for(int i=1; i<=12; i++) {
+										sbMonth = dFormat.format(i); %>
+										<option value="<%=sbMonth%>"<%=birthMonth.equals(sbMonth)?" selected":""%>><%=sbMonth%></option>
+									<%} %>
+									</select>
+									
+			                         <select name="date_of_birth" id="date_of_birth">
+									<% for(int i=1; i<=31; i++) {
+										sbDay = dFormat.format(i); %>
+										<option value="<%=sbDay%>"<%=birthDate.equals(sbDay)?" selected":""%>><%=sbDay%></option>
+									<%} %>
+									</select>			
+									
+									<b>Age: <input type="text"
 									name="age" readonly value="<%=age%>" size="3"> </b></td>
 								<td align="right" nowrap><b><bean:message
 									key="demographic.demographiceditdemographic.formSex" />:</b></td>

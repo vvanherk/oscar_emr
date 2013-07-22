@@ -147,8 +147,8 @@ if(listRxDrugs!=null){
                         prnStr="prn";
                 drugName=drugName.replace("'", "\\'");
                 drugName=drugName.replace("\"","\\\"");
-                drugName=drugName.replace("�","");
-                drugName=drugName.replace("�","");
+                byte[] drugNameBytes = drugName.getBytes("ISO-8859-1");
+				drugName= new String(drugNameBytes, "UTF-8");
                 
 		//ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
 		ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
@@ -494,7 +494,8 @@ if(listRxDrugs!=null){
             }
 
             var specArr=new Array();
-            var specStr='<%=specStr%>';
+            var specStr='<%=org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(specStr)%>';
+            
             specArr=specStr.split("*");// * is used as delimiter
             //oscarLog("specArr="+specArr);
             YAHOO.example.BasicLocal = function() {

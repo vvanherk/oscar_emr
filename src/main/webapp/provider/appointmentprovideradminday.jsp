@@ -1,3 +1,4 @@
+
 <%--
 
     Copyright (c) 2001-2002. Department of Family Medicine, McMaster University. All Rights Reserved.
@@ -228,6 +229,10 @@ public boolean patientHasOutstandingPrivateBills(String demographicNo){
     for( String formName : forms ) {
     	ectFormNames = ectFormNames.append("&encounterFormName=" + formName);
     }
+    
+    boolean prescriptionQrCodes = providerPreference2.isPrintQrCodeOnPrescriptions();
+    boolean erx_enable = providerPreference2.isERxEnabled();
+    boolean erx_training_mode = providerPreference2.isERxTrainingMode();
 
     boolean bShortcutIntakeForm = oscarVariables.getProperty("appt_intake_form", "").equalsIgnoreCase("on") ? true : false;
 
@@ -266,7 +271,11 @@ if (org.oscarehr.common.IsPropertiesOn.isCaisiEnable() && org.oscarehr.common.Is
 	programId_oscarView="0";
 	session.setAttribute("programId_oscarView",programId_oscarView);
 }
-    int lenLimitedL=11, lenLimitedS=3; //L - long, S - short
+    int lenLimitedL=11; //L - long
+    if(OscarProperties.getInstance().getProperty("APPT_SHOW_FULL_NAME","").equalsIgnoreCase("true")) {
+    	lenLimitedL = 25;
+    }
+    int lenLimitedS=3; //S - short
     int len = lenLimitedL;
     int view = request.getParameter("view")!=null ? Integer.parseInt(request.getParameter("view")) : 0; //0-multiple views, 1-single view
     //// THIS IS THE VALUE I HAVE BEEN LOOKING FOR!!!!!
@@ -592,15 +601,16 @@ function popupWithApptNo(vheight,vwidth,varpage,name,apptNo) {
 	if (name=='master')
 		popup(vheight,vwidth,varpage,name);
 	else if (name=='encounter')
-		popupPage(vheight, vwidth, varpage);
+		popUpEncounter(vheight, vwidth, varpage);
 	else
 		popupOscarRx(vheight,vwidth,varpage);
 }
 
 function review(key) {
   if(self.location.href.lastIndexOf("?") > 0) {
-    if(self.location.href.lastIndexOf("&viewall=") > 0 ) a = self.location.href.substring(0,self.location.href.lastIndexOf("&viewall="));
-    else a = self.location.href;
+	var a = self.location.href;
+    if(a.lastIndexOf("&viewall=") > 0 ) a = a.substring(0,self.location.href.lastIndexOf("&viewall="));
+    if(a.lastIndexOf("&provider_no=") > 0 ) a = a.substring(0,self.location.href.lastIndexOf("&provider_no="));
   } else {
     a="providercontrol.jsp?year="+document.jumptodate.year.value+"&month="+document.jumptodate.month.value+"&day="+document.jumptodate.day.value+"&view=0&displaymode=day&dboperation=searchappointmentday&site=" + "<%=(selectedSite==null? "none" : selectedSite)%>";
   }
@@ -646,10 +656,10 @@ if(newGroupNo.indexOf("_grp_") != -1) {
 	var programId = 0;
 	var programId_forCME = document.getElementById("bedprogram_no").value;
 
-	popupPage(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&caisiBillingPreferenceNotDelete=<%=caisiBillingPreferenceNotDelete%>&new_tickler_warning_window=<%=newticklerwarningwindow%>&default_pmm=<%=default_pmm%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&default_servicetype=<%=defaultServiceType%>&mygroup_no="+newGroupNo+"&programId_oscarView="+programId+"&case_program_id="+programId_forCME + "<%=eformIds.toString()%><%=ectFormNames.toString()%>");
+	popupPage(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&caisiBillingPreferenceNotDelete=<%=caisiBillingPreferenceNotDelete%>&new_tickler_warning_window=<%=newticklerwarningwindow%>&default_pmm=<%=default_pmm%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&default_servicetype=<%=defaultServiceType%>&prescriptionQrCodes=<%=prescriptionQrCodes%>&erx_enable=<%=erx_enable%>&erx_training_mode=<%=erx_training_mode%>&mygroup_no="+newGroupNo+"&programId_oscarView="+programId+"&case_program_id="+programId_forCME + "<%=eformIds.toString()%><%=ectFormNames.toString()%>");
 <%}else {%>
   var programId=0;
-  popupPage(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&default_servicetype=<%=defaultServiceType%>&mygroup_no="+newGroupNo+"&programId_oscarView="+programId + "<%=eformIds.toString()%><%=ectFormNames.toString()%>");
+  popupPage(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&default_servicetype=<%=defaultServiceType%>&prescriptionQrCodes=<%=prescriptionQrCodes%>&erx_enable=<%=erx_enable%>&erx_training_mode=<%=erx_training_mode%>&mygroup_no="+newGroupNo+"&programId_oscarView="+programId + "<%=eformIds.toString()%><%=ectFormNames.toString()%>");
 <%}%>
 }
 
@@ -873,8 +883,13 @@ if(mygroupno != null && providerBean.get(mygroupno) != null) { //single appointe
        curProvider_no[iTemp] = String.valueOf(provider.get("provider_no"));
        {
       	 ProviderDao providerDao = SpringUtils.getBean(ProviderDao.class);
-      	    
-      	 curProviderName[iTemp]=providerDao.getProvider((String)provider.get("provider_no")).getFullName();
+      	 
+      	 Provider p = providerDao.getProvider((String)provider.get("provider_no"));
+      	 if (p!=null) {
+      		 curProviderName[iTemp]=p.getFullName();
+      	 } else {
+      		curProviderName[iTemp]=null;
+      	 }
        }
        
        iTemp++;
@@ -1169,6 +1184,13 @@ if (curProvider_no[provIndex].equals(provNum)) { %>
 <% } %>
 
 </select>
+
+&nbsp;|&nbsp;
+<% if(request.getParameter("viewall")!=null && request.getParameter("viewall").equals("1") ) { %>
+         <a href=# onClick = "review('0')" title="<bean:message key="provider.appointmentProviderAdminDay.viewProvAval"/>"><bean:message key="provider.appointmentProviderAdminDay.schedView"/></a>
+<% } else {  %>
+         <a href=# onClick = "review('1')" title="<bean:message key="provider.appointmentProviderAdminDay.viewAllProv"/>"><bean:message key="provider.appointmentProviderAdminDay.viewAll"/></a>
+<% } %>
 
 <% } else { %>
 

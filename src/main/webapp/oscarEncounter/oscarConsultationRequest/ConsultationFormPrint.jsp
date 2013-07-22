@@ -633,12 +633,28 @@ for(ConsultationRequestExt ext:exts) {
                                     </tr>
                                     <tr>
                                         <td class="subTitles">
+                                            <bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.msgSex"/>:
+                                        </td>
+                                        <td class="fillLine">
+                                <%=reqFrm.patientSex %>
+                                        </td>
+                                    </tr>                                    
+                                    <tr>
+                                        <td class="subTitles">
                                             <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgCard"/>
                                         </td>
                                         <td class="fillLine">
                              (<%=reqFrm.patientHealthCardType%>)&nbsp;<%=reqFrm.patientHealthNum %>&nbsp;<%=reqFrm.patientHealthCardVersionCode%>&nbsp;
                                         </td>
                                     </tr>
+                                    <tr>
+                                        <td class="subTitles">
+                                            <bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.formAppointmentNotes"/>:
+                                        </td>
+                                        <td class="fillLine">
+                                <%=reqFrm.appointmentNotes %>
+                                        </td>
+                                    </tr>                                     
                                     <tr>
                                         <td class="subTitles">
                                             <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgappDate"/>:
@@ -656,11 +672,22 @@ for(ConsultationRequestExt ext:exts) {
                                             <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgTime"/>:
                                         </td>
                                         <td class="fillLine">
-                            <%if (Integer.parseInt(reqFrm.status) > 2 ){%>
-                                <%=reqFrm.appointmentHour %>:<%=reqFrm.appointmentMinute %> <%=reqFrm.appointmentPm %>
-                            <%}else{%>
-                                &nbsp;
-		                      <%}%>
+                                        <%
+                                        	if(reqFrm.pwb.equals("1")) {
+                                        %>
+                                        	<bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.pwb"/>
+                                        <%	} else {
+                                        		if (Integer.parseInt(reqFrm.status) > 2 ) {
+                                        %>
+                                        			<%=reqFrm.appointmentHour %>:<%=reqFrm.appointmentMinute %> <%=reqFrm.appointmentPm %>
+                                        <%		} else {
+                                        	
+                                        %>
+                                        			&nbsp;
+                                        <%
+                                        		}
+                                        	}
+                                        %> 
                                         </td>
                                     </tr>
                                     <tr>
@@ -801,7 +828,7 @@ for(ConsultationRequestExt ext:exts) {
 	   <% } else { %>
                 <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgFamilyDoc"/>
        <% } %>
-                : <%=reqFrm.getFamilyDoctor() %>
+                : <%=reqFrm.getProviderName(reqFrm.providerNo) %>
                         &nbsp;<br>
                     </td>
                 </tr>
@@ -854,7 +881,7 @@ public String wrap(String in,int len) {
 		return x + "\n" + wrap(in.substring(in.indexOf("\n") + 1), len);
 	}
 	int place=Math.max(Math.max(in.lastIndexOf(" ",len),in.lastIndexOf("\t",len)),in.lastIndexOf("-",len));
-	if( place == 0 || place == -1 ) {
+	if( place <= 0 ) {
 		place = len;
 	}
 	return in.substring(0,place).trim()+"\n"+wrap(in.substring(place),len);
