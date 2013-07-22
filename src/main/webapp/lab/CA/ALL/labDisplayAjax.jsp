@@ -27,9 +27,7 @@
 <%@page errorPage="../provider/errorpage.jsp" %>
 <%@ page import="java.util.*,
 		 java.sql.*,
-		 java.text.SimpleDateFormat,
 		 oscar.oscarDB.*,
-		 oscar.util.UtilDateUtilities,
 		 oscar.oscarLab.ca.all.*,
 		 oscar.oscarLab.ca.all.util.*,org.oscarehr.util.SpringUtils,
 		 oscar.oscarLab.ca.all.parsers.*,
@@ -39,13 +37,9 @@
          oscar.OscarProperties,
 		 org.apache.commons.codec.binary.Base64,org.oscarehr.common.dao.Hl7TextInfoDao,org.oscarehr.common.model.Hl7TextInfo,
 		 org.oscarehr.common.dao.UserPropertyDAO, org.oscarehr.common.model.UserProperty" %>
-		<%@page import="org.oscarehr.util.MiscUtils"%>
-<%@ page import="org.oscarehr.common.dao.UserPropertyDAO, org.oscarehr.common.model.UserProperty" %>
-<%@ page import="org.oscarehr.common.dao.Hl7TextMessageDao, org.oscarehr.common.model.Hl7TextMessage"%>
-<%@ page import="oscar.oscarEncounter.oscarMeasurements.dao.*,oscar.oscarEncounter.oscarMeasurements.model.Measurementmap" %>
 <%@ page import="org.oscarehr.common.dao.SpireAccessionNumberMapDao" %>
 <%@ page import="org.oscarehr.common.model.SpireAccessionNumberMap" %>
-<%@ page import="org.oscarehr.common.model.SpireCommonAccessionNumber"
+<%@ page import="org.oscarehr.common.model.SpireCommonAccessionNumber" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
@@ -54,23 +48,21 @@
 <%@ taglib uri="/WEB-INF/indivo-tag.tld" prefix="indivo"%>
 <%
 oscar.OscarProperties props = oscar.OscarProperties.getInstance();
-boolean skipComment = false;
-
 String segmentID = request.getParameter("segmentID");
 String providerNo = request.getParameter("providerNo");
 String searchProviderNo = request.getParameter("searchProviderNo");
 String patientMatched = request.getParameter("patientMatched");
+String sql = "SELECT demographic_no FROM patientLabRouting WHERE lab_type='HL7' and lab_no='"+segmentID+"';";
 
 UserPropertyDAO userPropertyDAO = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
 UserProperty uProp = userPropertyDAO.getProp(providerNo, UserProperty.LAB_ACK_COMMENT);
-
-
-if (segmentID != null)
-	segmentID = segmentID.trim();
-
+boolean skipComment = false;
 if( uProp != null && uProp.getValue().equalsIgnoreCase("yes")) {
 	skipComment = true;
 }
+
+if (segmentID != null)
+	segmentID = segmentID.trim();
 
 String ackLabFunc;
 if( skipComment ) {
@@ -80,33 +72,21 @@ else {
 	ackLabFunc = "getComment('" + segmentID + "','ackLab');";
 }
 
+ArrayList<ReportStatus> ackList=null;
+String multiLabId = "";
+List<Hl7TextInfo> olderLabs = hl7TextInfoDao.getMatchingLabsByLabId( Integer.valueOf(segmentID) );
+List<MessageHandler> handlers = new ArrayList<MessageHandler>();
+Long reqIDL = LabRequestReportLink.getIdByReport("hl7TextMessage",Long.valueOf(segmentID.trim()));
+String reqID = reqIDL==null ? "" : reqIDL.toString();
+reqIDL = LabRequestReportLink.getRequestTableIdByReport("hl7TextMessage",Long.valueOf(segmentID.trim()));
+String reqTableID = reqIDL==null ? "" : reqIDL.toString();
+
 int segmentIDAsInt = 0;
 try {
 	segmentIDAsInt = Integer.parseInt(segmentID);
 } catch (Exception e) {
 	MiscUtils.getLogger().error("Unable to parse segmentID to integer: " + segmentID);
 }
-
-//Need date lab was received by OSCAR
-Hl7TextMessageDao hl7TxtMsgDao = (Hl7TextMessageDao)SpringUtils.getBean("hl7TextMessageDao");
-Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
-MeasurementMapDao measurementMapDao = (MeasurementMapDao) SpringUtils.getBean("measurementMapDao");
-Hl7TextMessage hl7TextMessage = hl7TxtMsgDao.find(Integer.parseInt(segmentID));
-java.util.Date date = hl7TextMessage.getCreated();
-String stringFormat = "yyyy-MM-dd HH:mm";
-String dateLabReceived = UtilDateUtilities.DateToString(date, stringFormat);
-
-boolean isLinkedToDemographic=false;
-ArrayList<ReportStatus> ackList=null;
-String multiLabId = "";
-List<Hl7TextInfo> olderLabs = hl7TextInfoDao.getMatchingLabsByLabId( Integer.valueOf(segmentID) );
-List<MessageHandler> handlers = new ArrayList<MessageHandler>();
-Long reqIDL = 0L;
-String hl7 = null;
-String reqID = null, reqTableID = null;
-String demographicID = "";
-String remoteFacilityIdQueryString="";
-
 
 Hl7TextInfo f = olderLabs.get(0);
 for (Hl7TextInfo info : olderLabs) {
@@ -117,22 +97,15 @@ for (Hl7TextInfo info : olderLabs) {
 	multiLabId += info.getLabNumber();
 }
 
-
-
-reqIDL = LabRequestReportLink.getIdByReport("hl7TextMessage",Long.valueOf(segmentID));
-reqID = reqIDL==null ? "" : reqIDL.toString();
-reqIDL = LabRequestReportLink.getRequestTableIdByReport("hl7TextMessage",Long.valueOf(segmentID));
-reqTableID = reqIDL==null ? "" : reqIDL.toString();
-
-String sql = "SELECT demographic_no FROM patientLabRouting WHERE lab_type='HL7' and lab_no='"+segmentID+"';";
-
 ResultSet rs = DBHandler.GetSQL(sql);
+String demographicID = "";
 
 while(rs.next()){
     demographicID = oscar.Misc.getString(rs,"demographic_no");
 }
 rs.close();
 
+boolean isLinkedToDemographic=false;
 if(demographicID != null && !demographicID.equals("")&& !demographicID.equals("0")){
     isLinkedToDemographic=true;
     LogAction.addLog((String) session.getAttribute("user"), LogConst.READ, LogConst.CON_HL7_LAB, segmentID, request.getRemoteAddr(),demographicID);
@@ -151,6 +124,10 @@ for (int j=multiLabIdAsStrings.length-1; j >=0; j--) {
 }
 
 ackList = AcknowledgementData.getAcknowledgements(multiIdList);
+//multiLabId = Hl7textResultsData.getMatchingLabs(segmentID);
+//multiLabId = hl7TextInfoDao.getMatchingLabsByLabId(segmentID);
+
+MiscUtils.getLogger().info("elements: " + ackList.size());
 
 MessageHandler h = Factory.getHandler(segmentID);
 
@@ -172,8 +149,23 @@ else if (h instanceof SpireHandler) {
 	if (map != null) {
 		List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
 		
+		MiscUtils.getLogger().info("size1: " + cAccns.size());
+		
+		for (SpireCommonAccessionNumber cAccn : cAccns) {
+			MiscUtils.getLogger().info("labId: " + cAccn.getLabNo() + " " + cAccn.getCommonAccessionNumber());
+		}
+		
 		// filter out older versions of labs
 		removeDuplicates(cAccns, hl7TextInfoDao, accn, lab_no);
+		
+		// Re-order the remaining labs based on their order number
+		//reorderLabs(cAccns);
+		
+		MiscUtils.getLogger().info("size2: " + cAccns.size());
+		
+		for (SpireCommonAccessionNumber cAccn : cAccns) {
+			MiscUtils.getLogger().info("labId: " + cAccn.getLabNo());
+		}
 		
 		for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 			handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
@@ -191,6 +183,7 @@ if (handlers.size() == 0)
 
 boolean notBeenAcked = ackList.size() == 0;
 boolean ackFlag = false;
+ArrayList ackList = AcknowledgementData.getAcknowledgements(segmentID);
 String labStatus = "";
 
 Map<String, ReportStatus> acknowledgmentInfo = new HashMap<String, ReportStatus>();
@@ -241,13 +234,12 @@ for (Map.Entry<String, ReportStatus> entry : acknowledgmentInfo.entrySet()) {
     
 }
 
+MessageHandler handler = Factory.getHandler(segmentID);
+String hl7 = Factory.getHL7Body(segmentID);
+Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao) SpringUtils.getBean("hl7TextInfoDao");
 int lab_no = Integer.parseInt(segmentID);
-Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
-String label = "";
+String label = ""; Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
 if (hl7Lab.getLabel()!=null) label = hl7Lab.getLabel();
-
-
-
 // check for errors printing
 if (request.getAttribute("printError") != null && (Boolean) request.getAttribute("printError")){
 %>
@@ -264,19 +256,50 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
             windowprops = "height="+vheight+",width="+vwidth+",location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes";
             var popup=window.open(varpage, windowname, windowprops);
         }
-         getComment=function(labid) {
-            var ret = true;
-            var commentVal = prompt('<bean:message key="oscarMDS.segmentDisplay.msgComment"/>', '');
-
-            if( commentVal == null ||commentVal.length==0)
+         
+         
+     	<%
+     		int version = 0;
+     		if( multiLabId != null ) {
+     		String[] multiID = multiLabId.split(",");
+     		    if( multiID.length > 1 ) {
+     		    	for( int k = 0; k < multiID.length; ++k ) {
+     					if( multiID[k].equals(segmentID)) {     	
+     						version = k;     	
+     					}
+     				}
+     			}
+     		}
+     	%>
+     	
+         getComment=function(labid, action) {
+            var ret = true;            
+            var text = "V" + <%=version%> + "commentText" + labid + $("providerNo").value;
+            
+            var commentVal = "";
+            
+            if( $(text) != null ) {
+            	commentVal = $(text).innerHTML;
+            	if( commentVal == null ) {
+            		commentVal = "";
+            	}
+            }
+            var commentID = "comment_" + labid;
+            
+            var comment = prompt('<bean:message key="oscarMDS.segmentDisplay.msgComment"/>', commentVal);
+			
+            if( comment == null )
                 ret = false;
-            else{
-                document.forms['acknowledgeForm_'+labid].comment.value = commentVal;
+            else if ( comment != null && comment.length > 0 ){
+                $(commentID).value = comment;
+            }
+            else {
+            	$(commentID).value = commentVal;
             }
             if(ret)
-                handleLab('acknowledgeForm_'+labid,labid,'ackLab');
+                handleLab('acknowledgeForm_'+labid,labid,action);
 
-            return ret;
+            return false;
         }
 
          printPDF=function(doclabid){
@@ -445,7 +468,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
                                     <input type="hidden" name="comment" value=""/ id="comment_<%=segmentID%>">
                                     <input type="hidden" name="labType" value="HL7"/>
                                     <input type="hidden" name="ajaxcall" value="yes"/>
-                                    <input type="hidden" id="demoName<%=segmentID%>" value="<%=java.net.URLEncoder.encode(handler.getLastName()+", "+handler.getFirstName())%>"/>
+                                    <input type="hidden" id="demoName<%=segmentID%>" value="<%=java.net.URLEncoder.encode(handlers.get(0).getLastName()+", "+handlers.get(0).getFirstName())%>"/>
                                     <% if ( !ackFlag ) { %>
                                     <input type="button" value="<bean:message key="oscarMDS.segmentDisplay.btnAcknowledge"/>" onclick="<%=ackLabFunc%>">
                                     <input type="button" value="<bean:message key="oscarMDS.segmentDisplay.btnComment"/>" onclick="return getComment('<%=segmentID%>','addComment');">
@@ -483,7 +506,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
                             if (multiLabId != null){
 								// Only print the top version information if the lab is not a spire lab or it has only 1 lab
 								if (handlers.size() == 1 || !(handlers.get(0) instanceof SpireHandler)) {
-	                                String[] multiID = multiLabId.split(",");
+                                	String[] multiID = multiLabId.split(",");
 	                                if (multiID.length > 1){
 	                                    %>
 	                                    <tr>
@@ -496,9 +519,9 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 	                                                        %>v<%= i+1 %>&#160;<%
 	                                                    }else{
 	                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
-	                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= i+1 %></a>&#160;<%
+	                                                        	%><a href="javascript:void(0);"   onclick="popup(850, 950, '../lab/CA/ALL/labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>', 'labVersion');">v<%= i+1 %></a>&#160;<%
 	                                                        }else{
-	                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>">v<%= i+1 %></a>&#160;<%
+	                                                            %><a href="javascript:void(0);"  onclick="popup(850, 950, '../lab/CA/ALL/labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>', 'labVersion');"  >v<%= i+1 %></a>&#160;<%
 	                                                        }
 	                                                    }
 	                                                }
@@ -507,7 +530,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 	                                        </td>
 	                                    </tr>
 	                                    <%
-									}
+	                                }
 								}
                             }
                             %>
@@ -794,18 +817,21 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
                                                                                 ackStatus = "Not Acknowledged";
                                                                             }
                                                                         %>
-																			<font color="red"><%= ackStatus %></font>
-	                                                                        <% if ( ackStatus.equals("Acknowledged") ) { %>
-	                                                                            <%= report.getTimestamp() %>,                                                                             
-	                                                                        <% } %>
-	                                                                        <span id="<%=report.getProviderNo()%>commentLabel"><%=report.getComment().equals("") ? "no comment" : "comment : "%></span><span id="<%=report.getProviderNo()%>commentText"><%=report.getComment()%></span>
-	                                                                        <br>
-																			
-																		<%
-																	    
-                                                                        %>
-
-                                                                    <% } 
+                                                                        <font color="red"><%= ackStatus %></font>
+                                                                        
+                                                                            <%= report.getTimestamp() %>,
+                                                                            <% String commentTitle = null;
+                                                                               if(report.getComment().equals("")) {
+                                                                        	   	commentTitle = "no comment";
+                                                                               }
+                                                                               else {
+                                                                        	   	commentTitle = "comment: ";
+                                                                               }
+                                                                            %>
+                                                                            <span id="<%="V" + j + "commentLabel" + segmentID + report.getProviderNo()%>"><%=commentTitle%></span><span id="<%="V" + j + "commentText" + segmentID + report.getProviderNo()%>"> <%=report.getComment()%></span>
+                                                                        
+                                                                        <br>
+                                                                    <% }
                                                                     if (ackList.size() == 0){
                                                                         %><font color="red">N/A</font><%
                                                                     }
@@ -816,7 +842,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
                                                     </tr>
                                                 </table>
 
-                                            <%//}
+                                            <%}
                                         }
                                     }%>
                                 </td>
@@ -891,7 +917,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 															report = (ReportStatus) ackList.get(m);
 															int segId = Integer.parseInt(report.getSegmentID().trim());
 															String ackStatus = report.getStatus(); 
-															
+															MiscUtils.getLogger().info("status: " + ackStatus + " " + segId);
 															if (segId == info.getLabNumber() && !ackStatus.equals("A") && !ackStatus.equals("F") && report.getProviderNo().equals(providerNo)) {
 																newLabText = "<span style='color:red;'> NEW </span>";
 															}
@@ -1216,9 +1242,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
                     <pre id="rawhl7_<%=segmentID%>" style="display:none;"><%=hl7%></pre></td></tr>
                 <tr><td colspan="1" ><hr width="100%" color="red"></td></tr>
             </table>
-        </form>        
-        
-    </div>
+        </form>
 
 <%!
 
