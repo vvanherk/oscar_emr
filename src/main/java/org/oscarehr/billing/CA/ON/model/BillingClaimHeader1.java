@@ -176,8 +176,6 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     }
 
     @Override
-    @Id()
-    @GeneratedValue(strategy = GenerationType.AUTO)
     public Integer getId() {
         return id;
     }
@@ -338,7 +336,6 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
         this.province = province;
     }
 
-    @Temporal(TemporalType.DATE)
     public Date getBilling_date() {
         return billing_date;
     }
@@ -347,7 +344,6 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
         this.billing_date = date;
     }
 
-    @Temporal(TemporalType.TIME)
     public Date getBilling_time() {
         return billing_time;
     }
@@ -493,8 +489,6 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     /**
      * @return the billingItems
      */
-    @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
-    @JoinColumn(name="ch1_id", referencedColumnName="id")
     public List<BillingItem> getBillingItems() {
         return billingItems;
     }
