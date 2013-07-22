@@ -43,6 +43,11 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.oscarehr.common.dao.Hl7TextMessageDao;
 import org.oscarehr.common.model.Hl7TextMessage;
+import org.oscarehr.common.dao.Hl7TextInfoDao;
+import org.oscarehr.common.model.Hl7TextInfo;
+import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
+import org.oscarehr.common.model.SpireAccessionNumberMap;
+import org.oscarehr.common.model.SpireCommonAccessionNumber;
 import org.oscarehr.util.SpringUtils;
 
 import oscar.OscarProperties;
@@ -51,15 +56,7 @@ import oscar.oscarLab.ca.all.parsers.Factory;
 import oscar.oscarLab.ca.all.parsers.MessageHandler;
 import oscar.oscarLab.ca.all.parsers.SpireHandler;
 
-import org.oscarehr.common.dao.Hl7TextMessageDao;
-import org.oscarehr.common.model.Hl7TextMessage;
-import org.oscarehr.common.dao.Hl7TextInfoDao;
-import org.oscarehr.common.model.Hl7TextInfo;
-import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
-import org.oscarehr.common.model.SpireAccessionNumberMap;
-import org.oscarehr.common.model.SpireCommonAccessionNumber;
 import oscar.util.UtilDateUtilities;
-import org.oscarehr.util.SpringUtils;
 
 import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
@@ -122,7 +119,18 @@ public class LabPDFCreator extends PdfPageEventHelper{
         java.util.Date date = hl7TextMessage.getCreated();
         String stringFormat = "yyyy-MM-dd HH:mm";
         dateLabReceived = UtilDateUtilities.DateToString(date, stringFormat);
-
+        
+        /*
+        String multiLabId = "";
+		List<Hl7TextInfo> olderLabs = hl7TextInfoDao.getMatchingLabsByLabId( Integer.valueOf(segmentID) );
+        
+		for (Hl7TextInfo info : olderLabs) {			
+			if (multiLabId.length() > 0)
+				multiLabId += ",";
+			multiLabId += info.getLabNumber();
+		}
+		*/
+        
         // create handler
         MessageHandler h = Factory.getHandler(this.id);
         
@@ -230,13 +238,12 @@ public class LabPDFCreator extends PdfPageEventHelper{
 	 * Given the name of a lab category this method will add the category
 	 * header, the test result headers and the test results for that category.
 	 */
-private void addLabCategory(String header, MessageHandler handler) throws DocumentException{
+	private void addLabCategory(String header, MessageHandler handler) throws DocumentException{
 
 		float[] mainTableWidths = { 5f, 3f, 1f, 3f, 2f, 4f, 2f };
 		PdfPTable table = new PdfPTable(mainTableWidths);
 		table.setHeaderRows(3);
 		table.setWidthPercentage(100);
-		table.setSplitLate(false);
 
 		PdfPCell cell = new PdfPCell();
 		// category name
@@ -320,7 +327,8 @@ private void addLabCategory(String header, MessageHandler handler) throws Docume
 							// add the obrname if necessary
 							if (!obrFlag
 									&& !obrName.equals("")
-									&& !(obxName.contains(obrName) && obxCount < 2)) {
+									&& !(obxName.contains(obrName) && obxCount < 2)
+									&& handler.getMsgType().equals("Spire")) {
 								// cell.setBackgroundColor(getHighlightColor(linenum));
 								linenum++;
 								cell.setPhrase(new Phrase(obrName, boldFont));
@@ -337,6 +345,7 @@ private void addLabCategory(String header, MessageHandler handler) throws Docume
 											k)));
 							// cell.setBackgroundColor(getHighlightColor(linenum));
 							linenum++;
+							cell.setBorder(15);
 							cell.setHorizontalAlignment(Element.ALIGN_LEFT);
 							cell.setPhrase(new Phrase((obrFlag ? "   " : "")
 									+ obxName, lineFont));
@@ -347,7 +356,7 @@ private void addLabCategory(String header, MessageHandler handler) throws Docume
 								cell.setColspan(4);
 			                    cell.setHorizontalAlignment(cell.ALIGN_LEFT);
 			                    table.addCell(cell);
-								cell.setColspan(1);
+			                    table.setSplitLate(false);
 			                    //table.completeRow();
 			                } else {
 								cell.setPhrase(new Phrase(handler
@@ -370,6 +379,7 @@ private void addLabCategory(String header, MessageHandler handler) throws Docume
 								table.addCell(cell);
 							}
 
+							cell.setColspan(1);
 							cell.setHorizontalAlignment(Element.ALIGN_CENTER);
 							cell.setPhrase(new Phrase(handler
 									.getTimeStamp(j, k), lineFont));
@@ -467,38 +477,38 @@ private void addLabCategory(String header, MessageHandler handler) throws Docume
 
 				}
 				
-			if (!handler.getMsgType().equals("PFHT")) {
-				// add obr comments
-				if (handler.getObservationHeader(j, 0).equals(header)) {
-					cell.setColspan(7);
-					cell.setHorizontalAlignment(Element.ALIGN_LEFT);
-					for (int k = 0; k < handler.getOBRCommentCount(j); k++) {
-						// the obrName should only be set if it has not been
-						// set already which will only have occured if the
-						// obx name is "" or if it is the same as the obr name
-						if (!obrFlag && handler.getOBXName(j, 0).equals("")) {
+				if (!handler.getMsgType().equals("PFHT")) {
+					// add obr comments
+					if (handler.getObservationHeader(j, 0).equals(header)) {
+						cell.setColspan(7);
+						cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+						for (int k = 0; k < handler.getOBRCommentCount(j); k++) {
+							// the obrName should only be set if it has not been
+							// set already which will only have occured if the
+							// obx name is "" or if it is the same as the obr name
+							if (!obrFlag && handler.getOBXName(j, 0).equals("")) {
+								// cell.setBackgroundColor(getHighlightColor(linenum));
+								linenum++;
+	
+								cell.setPhrase(new Phrase(handler.getOBRName(j),
+										boldFont));
+								table.addCell(cell);
+								obrFlag = true;
+							}
+	
 							// cell.setBackgroundColor(getHighlightColor(linenum));
 							linenum++;
-
-							cell.setPhrase(new Phrase(handler.getOBRName(j),
-									boldFont));
+							cell.setPaddingLeft(100);
+							cell.setPhrase(new Phrase(handler.getOBRComment(j, k)
+									.replaceAll("<br\\s*/*>", "\n"), font));
 							table.addCell(cell);
-							obrFlag = true;
+							cell.setPadding(3);
 						}
-
-						// cell.setBackgroundColor(getHighlightColor(linenum));
-						linenum++;
-						cell.setPaddingLeft(100);
-						cell.setPhrase(new Phrase(handler.getOBRComment(j, k)
-								.replaceAll("<br\\s*/*>", "\n"), font));
-						table.addCell(cell);
-						cell.setPadding(3);
+						cell.setColspan(1);
 					}
-					cell.setColspan(1);
 				}
-			}
 			} // for (j)
-			
+
 			// add Spire ZDS segmets
 			if (handler.getMsgType().equals("Spire")) {	
 				int numZDS = ((SpireHandler)handler).getNumZDSSegments();
@@ -558,6 +568,7 @@ private void addLabCategory(String header, MessageHandler handler) throws Docume
                     //table.completeRow();
 				}
 			}
+
 		}// if (isMEDVUE)
 
 		document.add(table);
@@ -649,7 +660,7 @@ private void addLabCategory(String header, MessageHandler handler) throws Docume
         rInfoTable.addCell(cell);
         cell.setPhrase(new Phrase("Report Status: ", boldFont));
         rInfoTable.addCell(cell);
-        cell.setPhrase(new Phrase((handler.getOrderStatus().equals("F") ? "Final" : (handler.getOrderStatus().equals("C") ? "Corrected" : "Partial")), font));
+        cell.setPhrase(new Phrase((handler.getOrderStatus().equals("F") ? "Final" : (handler.getOrderStatus().equals("C") ? "Corrected" : handler.getOrderStatus().equals("X") ? "DELETED": handler.getOrderStatus())), font));
         rInfoTable.addCell(cell);
         cell.setPhrase(new Phrase("Client Ref. #: ", boldFont));
         rInfoTable.addCell(cell);

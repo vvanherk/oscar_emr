@@ -64,8 +64,8 @@ import oscar.OscarProperties;
 import oscar.oscarLab.ca.all.Hl7textResultsData;
 import oscar.oscarLab.ca.all.parsers.Factory;
 import oscar.oscarLab.ca.all.parsers.HHSEmrDownloadHandler;
-import oscar.oscarLab.ca.all.parsers.SpireHandler;
 import oscar.oscarLab.ca.all.parsers.MessageHandler;
+import oscar.oscarLab.ca.all.parsers.SpireHandler;
 import oscar.util.UtilDateUtilities;
 
 public final class MessageUploader {
@@ -134,9 +134,9 @@ public final class MessageUploader {
 					docNums = findProvidersForSpireLab(docSpireNums);
 				}
             }
-            //logger.debug("docNums:");
+            logger.info("docNums:");
             for (int i=0; i < docNums.size(); i++) {
-				//logger.debug(i + " " + docNums.get(i));
+				logger.info(i + " " + docNums.get(i));
 			}
 
 			try {
@@ -251,17 +251,13 @@ public final class MessageUploader {
 			    	providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type);
 			    }
 			} else {
-				String matchBy = "ohip_no";
 				Integer limit = null;
 				boolean orderByLength = false;
-				
 				if (type.equals("Spire")) {
 					limit = new Integer(1);
 					orderByLength = true;
-					matchBy = "provider_no";
 				}
-				
-				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, matchBy, limit, orderByLength);
+				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, "provider_no", limit, orderByLength);
 			}
 			retVal = h.audit();
 			if(results != null) {
@@ -303,6 +299,45 @@ public final class MessageUploader {
 		
 		return (ArrayList<String>)docNums;
 	}
+	
+	/**
+	 * Method findProvidersForSpireLab
+	 * Finds the providers that are associated with a spire lab.  (need to do this using doctor names, as
+	 * spire labs don't have a valid ohip number associated with them).
+	 */ 
+	/*
+	private static ArrayList<String> findProvidersForSpireLab(List<String> docNames) {
+		List<String> docNums = new ArrayList<String>();
+		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+		
+		for (int i=0; i < docNames.size(); i++) {
+			String[] firstLastName = docNames.get(i).split("\\s");
+			if (firstLastName != null && firstLastName.length >= 2) {
+				//logger.debug("Searching for provider with first and last name: " + firstLastName[0] + " " + firstLastName[firstLastName.length-1]);
+				List<Provider> provList = providerDao.getProviderLikeFirstLastName("%"+firstLastName[0]+"%", firstLastName[firstLastName.length-1]);
+				if (provList != null) {
+					int provIndex = findProviderWithShortestFirstName(provList);
+					if (provIndex != -1 && provList.size() >= 1 && !provList.get(provIndex).getProviderNo().equals("0")) {
+						docNums.add( provList.get(provIndex).getProviderNo() );
+						//logger.debug("ADDED1: " + provList.get(provIndex).getProviderNo());
+					} else {
+						// prepend 'dr ' to first name and try again
+						provList = providerDao.getProviderLikeFirstLastName("dr " + firstLastName[0], firstLastName[1]);
+						if (provList != null) {
+							provIndex = findProviderWithShortestFirstName(provList);
+							if (provIndex != -1 && provList.size() == 1 && !provList.get(provIndex).getProviderNo().equals("0")) {
+								//logger.debug("ADDED2: " + provList.get(provIndex).getProviderNo());
+								docNums.add( provList.get(provIndex).getProviderNo() );
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return (ArrayList<String>)docNums;
+	}
+	*/
 	
 	/**
 	 * Method findProviderWithShortestFirstName
@@ -429,27 +464,16 @@ public final class MessageUploader {
 
 			if (!firstName.equals("")) firstName = firstName.substring(0, 1);
 			if (!lastName.equals("")) lastName = lastName.substring(0, 1);
-			
-			String nameCondition = "";
-			String hinCondition = "";
-		
-			if (!OscarProperties.getInstance().getBooleanProperty("LAB_NOMATCH_NAMES", "yes")) {
-				nameCondition = "and last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' ";
-			}
 
-			if (!hinMod.equals("%")) {
-				hinCondition = "and hin='"+ hinMod +"' ";
+			if (hinMod.equals("%")) {
+				if (OscarProperties.getInstance().getBooleanProperty("LAB_NOMATCH_NAMES", "yes")) {
+					sql = "select demographic_no, provider_no from demographic where hin='" + hinMod + "' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
+				} else {
+					sql = "select demographic_no, provider_no from demographic where hin='" + hinMod + "' and " + " last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
+				}
+			} else {
+				sql = "select demographic_no, provider_no from demographic where" + " last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
 			}
-			
-			sql = 	"select d.demographic_no, d.provider_no from demographic d left join demographic_merged dm on dm.demographic_no = d.demographic_no  where " +
-					"year_of_birth like '" + dobYear + "' " +
-					"and month_of_birth like '" + dobMonth + "' " +
-					"and date_of_birth like '" + dobDay + "' " +
-					"and sex like '" + sex + "%' " +
-					"and dm.merged_to is NULL " +
-					nameCondition +
-					hinCondition
-			;
 
 			logger.info(sql);
 			PreparedStatement pstmt = conn.prepareStatement(sql);

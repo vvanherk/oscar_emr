@@ -655,6 +655,7 @@ public class Hl7textResultsData {
 							+ " ORDER BY id DESC "
 							+ " ) AS X "
 							+ " WHERE X.lab_type = 'HL7' AND X.lab_no = info.lab_no "
+							+ " GROUP BY info.lab_no "
 							+ (isPaged ? "	LIMIT " + (page * pageSize) + "," + pageSize : "");
 				}
 
@@ -680,6 +681,7 @@ public class Hl7textResultsData {
 						+ " ORDER BY id DESC"
 						+ " ) AS X "
 						+ " WHERE X.lab_type = 'HL7' and X.lab_no = info.lab_no "
+						+ " GROUP BY info.lab_no "
 						+ (isPaged ? "	LIMIT " + (page * pageSize) + "," + pageSize : "");
 				}
 				else if (patientSearch) { // N
@@ -706,6 +708,7 @@ public class Hl7textResultsData {
 						+ " 			ORDER BY id DESC) AS X "
 						+ " 	  ) AS Z  "
 						+ " WHERE Z.lab_type = 'HL7' and Z.lab_no = info.lab_no "
+						+ " GROUP BY info.lab_no "
 						+ (isPaged ? "	LIMIT " + (page * pageSize) + "," + pageSize : "");
 				}
 				else { // N
@@ -720,6 +723,7 @@ public class Hl7textResultsData {
 						+ " ORDER BY id DESC "
 						+ " ) AS X "
 						+ " WHERE X.lab_type = 'HL7' and X.lab_no = info.lab_no "
+						+ " GROUP BY info.lab_no "
 						+ (isPaged ? "	LIMIT " + (page * pageSize) + "," + pageSize : "");
 				}
 			}
@@ -735,6 +739,7 @@ public class Hl7textResultsData {
 						+ " AND plr.lab_no = info.lab_no "
 						+ (isAbnormal != null && isAbnormal ? "AND info.result_status = 'A'" :
 							isAbnormal != null && !isAbnormal ? "AND (info.result_status IS NULL OR info.result_status != 'A')" : "")
+							+ " GROUP BY info.lab_no "
 							+ " ORDER BY plr.id DESC "
 							+ (isPaged ? "	LIMIT " + (page * pageSize) + "," + pageSize : "");
 				}
@@ -751,6 +756,7 @@ public class Hl7textResultsData {
 						+ " ORDER BY plr.id DESC "
 						+ " ) AS X "
 						+ " WHERE X.lab_type = 'HL7' and X.lab_no = info.lab_no "
+						+ " GROUP BY info.lab_no "
 						+ (isPaged ? "	LIMIT " + (page * pageSize) + "," + pageSize : "");
 				}
 				else if (patientSearch) { // A
@@ -767,6 +773,7 @@ public class Hl7textResultsData {
 						+ " ) AS X "
 						+ " WHERE X.lab_type = 'HL7' and X.lab_no = info.lab_no "
 						+ (isAbnormal != null ? " AND (" + (!isAbnormal ? "info.result_status IS NULL OR" : "") + " info.result_status " + (isAbnormal ? "" : "!") + "= 'A') " : " ")
+						+ " GROUP BY info.lab_no "
 						+ (isPaged ? "	LIMIT " + (page * pageSize) + "," + pageSize : "");
 				}
 				else { // A
@@ -775,6 +782,7 @@ public class Hl7textResultsData {
 						+ " WHERE plr.status like '%"+status+"%' " + (searchProvider ? " AND plr.provider_no = '"+providerNo+"' " : "")
 						+ "   AND lab_type = 'HL7' and info.lab_no = plr.lab_no "
 						+ (isAbnormal != null ? " AND (" + (!isAbnormal ? "info.result_status IS NULL OR" : "") + " info.result_status " + (isAbnormal ? "" : "!") + "= 'A') " : " ")
+						+ " GROUP BY info.lab_no "
 						+ " ORDER BY plr.id DESC "
 						+ (isPaged ? "	LIMIT " + (page * pageSize) + "," + pageSize : "");
 				}
