@@ -792,7 +792,7 @@ public class DmsInboxManageAction extends DispatchAction {
 				for (SpireAccessionNumberMap map : accnsMap) {
 					List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
 					for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
-						if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+						if (data.getAccessionNum() != null && data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
 							found = true;
 							break;
 						}
@@ -819,7 +819,7 @@ public class DmsInboxManageAction extends DispatchAction {
 				// Only add one spire lab 'LabResultData' for each unique accession number
 				for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 					for (LabResultData data : labdocs) {
-						if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+						if (data.getAccessionNum() != null && data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
 							if (addedData == null) {
 								collapsedLabdocs.add(data);
 								addedData = data;
