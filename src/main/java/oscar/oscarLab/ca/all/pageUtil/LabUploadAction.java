@@ -124,7 +124,7 @@ public class LabUploadAction extends Action {
                 		logger.info("Filtering out this message, as we don't have client ref " + filterHandler.getClientRef() + " in our database (" + file + ")");
                 		outcome="uploaded";
                 		request.setAttribute("outcome", outcome);
-                		logger.info("Lab upload outcome: " + outcome);
+                		logger.info("Lab upload outcome ("+fileName+"): " + outcome);
                 		return mapping.findForward("success");
                 	}
                 }
@@ -163,15 +163,15 @@ public class LabUploadAction extends Action {
 
 		if (request.getParameter("use_http_response_code") != null) {
 			try {
-				logger.info("Lab upload outcome: " + outcome);
+				logger.info("Lab upload outcome ("+fileName+"): " + outcome);
 	            response.sendError(httpCode, outcome);
             } catch (IOException e) {
 	            logger.error("Error", e);
             }
-            logger.info("Lab upload outcome: " + outcome);
+            logger.info("Lab upload outcome ("+fileName+"): " + outcome);
 			return (null);
 		} else {
-			logger.info("Lab upload outcome: " + outcome);
+			logger.info("Lab upload outcome ("+fileName+"): " + outcome);
 			return mapping.findForward("success");
 		}
 	}
