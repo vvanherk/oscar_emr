@@ -182,9 +182,11 @@ PharmacyInfo pharmacy = null;
 if (printPharmacyOnRx) {
 	RxPharmacyData pharmacyData = new RxPharmacyData();
 	pharmacy = pharmacyData.getPharmacyFromDemographic(Integer.toString(bean.getDemographicNo()));	
-	pharmaFax = pharmacy.fax;
-	pharmaFax2 = "Fax: " + pharmacy.fax;
-	pharmaName = pharmacy.getName();
+	if (pharmacy != null) {
+		pharmaFax = pharmacy.fax;
+		pharmaFax2 = "Fax: " + pharmacy.fax;
+		pharmaName = pharmacy.getName();
+	}
 }
 
 //doctorName = doctorName.replaceAll("\\d{6}","");
