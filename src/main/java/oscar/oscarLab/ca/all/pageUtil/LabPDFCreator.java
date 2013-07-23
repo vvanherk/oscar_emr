@@ -82,6 +82,7 @@ public class LabPDFCreator extends PdfPageEventHelper{
     private OutputStream os;
 
     private boolean ackFlag = false;
+	private boolean isUnstructuredDoc = false;
     private List<MessageHandler> handlers = new ArrayList<MessageHandler>();
     private int versionNum;
     private String[] multiID;
@@ -174,7 +175,21 @@ public class LabPDFCreator extends PdfPageEventHelper{
         this.versionNum = i+1;
 
     }
+    // Checks to see if the PATHL7 lab is an unstructured document, and sets isUnstructuredDoc to true if it is 
+    public boolean unstructuredDocCheck(MessageHandler handler){
+    	if(handler.getMsgType().equals("PATHL7")){
+    		ArrayList <String> headers = handler.getHeaders();
+    		int i=0;
 
+    		for(i=0; i<headers.size(); i++){
+    			if((headers.get(i).equals("DIAG IMAGE")) || (headers.get(i).equals("CELLPATH")) || (headers.get(i).equals("TRANSCRIP"))){
+    				//isUnstructuredDoc = true;
+    				return true;
+    			}
+    		}
+    	} return false;
+    }
+    
     public void printPdf() throws IOException, DocumentException{
 
         // check that we have data to print
@@ -240,48 +255,71 @@ public class LabPDFCreator extends PdfPageEventHelper{
 	 */
 	private void addLabCategory(String header, MessageHandler handler) throws DocumentException{
 
+		this.isUnstructuredDoc = unstructuredDocCheck( handler );
+
 		float[] mainTableWidths = { 5f, 3f, 1f, 3f, 2f, 4f, 2f };
+		if(isUnstructuredDoc){
+			mainTableWidths = new float[] { 5f, 12f, 3f};
+		}else{
+			mainTableWidths = new float[] {5f, 3f, 1f, 3f, 2f, 4f, 2f };
+		}
+
 		PdfPTable table = new PdfPTable(mainTableWidths);
 		table.setHeaderRows(3);
 		table.setWidthPercentage(100);
 
 		PdfPCell cell = new PdfPCell();
 		// category name
-		cell.setPadding(3);
-		cell.setPhrase(new Phrase("  "));
-		cell.setBorder(0);
-		cell.setColspan(7);
-		table.addCell(cell);
-		cell.setBorder(15);
-		cell.setPadding(3);
-		cell.setColspan(2);
-		cell.setPhrase(new Phrase(header.replaceAll("<br\\s*/*>", "\n"),
-				new Font(bf, 12, Font.BOLD)));
-		table.addCell(cell);
-		cell.setPhrase(new Phrase("  "));
-		cell.setBorder(0);
-		cell.setColspan(5);
-		table.addCell(cell);
+		if(!isUnstructuredDoc){
+			cell.setPadding(3);
+			cell.setPhrase(new Phrase("  "));
+			cell.setBorder(0);
+			cell.setColspan(7);
+			table.addCell(cell);
+			cell.setBorder(15);
+			cell.setPadding(3);
+			cell.setColspan(2);
+			cell.setPhrase(new Phrase(header.replaceAll("<br\\s*/*>", "\n"),
+					new Font(bf, 12, Font.BOLD)));
+			table.addCell(cell);
+			cell.setPhrase(new Phrase("  "));
+			cell.setBorder(0);
+			cell.setColspan(5);
+			table.addCell(cell);
+		}
 
 		// table headers
-		cell.setColspan(1);
-		cell.setBorder(15);
-		cell.setHorizontalAlignment(Element.ALIGN_CENTER);
-		cell.setBackgroundColor(new Color(210, 212, 255));
-		cell.setPhrase(new Phrase("Test Name(s)", boldFont));
-		table.addCell(cell);
-		cell.setPhrase(new Phrase("Result", boldFont));
-		table.addCell(cell);
-		cell.setPhrase(new Phrase("Abn", boldFont));
-		table.addCell(cell);
-		cell.setPhrase(new Phrase("Reference Range", boldFont));
-		table.addCell(cell);
-		cell.setPhrase(new Phrase("Units", boldFont));
-		table.addCell(cell);
-		cell.setPhrase(new Phrase("Date/Time Completed", boldFont));
-		table.addCell(cell);
-		cell.setPhrase(new Phrase("Status", boldFont));
-		table.addCell(cell);
+		if(isUnstructuredDoc){
+			cell.setColspan(1);
+			cell.setBorder(15);
+			cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+			cell.setBackgroundColor(new Color(210, 212, 255));
+			cell.setPhrase(new Phrase("Test Name(s)", boldFont));
+			table.addCell(cell);
+			cell.setPhrase(new Phrase("Result", boldFont));
+			table.addCell(cell);
+			cell.setPhrase(new Phrase("Date/Time Completed", boldFont));
+			table.addCell(cell);
+		} else{
+			cell.setColspan(1);
+			cell.setBorder(15);
+			cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+			cell.setBackgroundColor(new Color(210, 212, 255));
+			cell.setPhrase(new Phrase("Test Name(s)", boldFont));
+			table.addCell(cell);
+			cell.setPhrase(new Phrase("Result", boldFont));
+			table.addCell(cell);
+			cell.setPhrase(new Phrase("Abn", boldFont));
+			table.addCell(cell);
+			cell.setPhrase(new Phrase("Reference Range", boldFont));
+			table.addCell(cell);
+			cell.setPhrase(new Phrase("Units", boldFont));
+			table.addCell(cell);
+			cell.setPhrase(new Phrase("Date/Time Completed", boldFont));
+			table.addCell(cell);
+			cell.setPhrase(new Phrase("Status", boldFont));
+			table.addCell(cell);
+		}
 
 		// add test results
 		int obrCount = handler.getOBRCount();
@@ -345,6 +383,30 @@ public class LabPDFCreator extends PdfPageEventHelper{
 											k)));
 							// cell.setBackgroundColor(getHighlightColor(linenum));
 							linenum++;
+
+							if(isUnstructuredDoc){
+								cell.setHorizontalAlignment(Element.ALIGN_LEFT);
+								//if there are duplicate obxNames, display only the first 
+								if((handler.getOBXIdentifier(j, k).equals(handler.getOBXIdentifier(j, k-1)) && (obxCount>1)) || (obxName.equals(obrName))){
+									cell.setPhrase(new Phrase("", lineFont));
+									table.addCell(cell);
+								}else {
+									cell.setPhrase(new Phrase((obrFlag ? "   " : "")+ obxName, lineFont));
+									table.addCell(cell);
+								}
+								cell.setPhrase(new Phrase(handler.getOBXResult(j, k).replaceAll("<br\\s*/*>", "\n"), lineFont));				
+								table.addCell(cell);
+								cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+								//if there are duplicate Times, display only the first 
+								if(handler.getTimeStamp(j, k).equals(handler.getTimeStamp(j, k-1)) && (obxCount>1)){
+									cell.setPhrase(new Phrase("", lineFont));		
+									table.addCell(cell); 
+								}else {
+									cell.setPhrase(new Phrase(handler.getTimeStamp(j, k), lineFont));		
+									table.addCell(cell);
+								}
+							} else{
+
 							cell.setBorder(15);
 							cell.setHorizontalAlignment(Element.ALIGN_LEFT);
 							cell.setPhrase(new Phrase((obrFlag ? "   " : "")
@@ -387,6 +449,7 @@ public class LabPDFCreator extends PdfPageEventHelper{
 							cell.setPhrase(new Phrase(handler
 									.getOBXResultStatus(j, k), lineFont));
 							table.addCell(cell);
+						}
 							
 						if(!handler.getMsgType().equals("PFHT")) {
 							// add obx comments
