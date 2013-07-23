@@ -56,7 +56,7 @@
 <%@page import="oscar.oscarEncounter.oscarConsultationRequest.pageUtil.EctConsultationFormRequestUtil"%>
 <%@page import="oscar.oscarDemographic.data.DemographicData"%>
 <%@page import="oscar.oscarEncounter.oscarConsultationRequest.pageUtil.EctViewRequestAction"%>
-<%@page import="org.oscarehr.util.MiscUtils,oscar.oscarClinic.ClinicData"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.apache.commons.lang.StringEscapeUtils" %>
 <%@ page import="org.oscarehr.util.LoggedInInfo"%>
 <%@ page import="org.oscarehr.util.DigitalSignatureUtils"%>
@@ -64,7 +64,7 @@
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.util.MiscUtils, org.oscarehr.PMmodule.caisi_integrator.CaisiIntegratorManager, org.oscarehr.caisi_integrator.ws.CachedDemographicNote"%>
 <%@page import="org.oscarehr.PMmodule.dao.ProgramDao, org.oscarehr.PMmodule.model.Program" %>
-<%@page import="oscar.oscarDemographic.data.DemographicData, oscar.oscarRx.data.RxProviderData, oscar.oscarRx.data.RxProviderData.Provider, oscar.oscarClinic.ClinicData"%>
+<%@page import="oscar.oscarDemographic.data.DemographicData, oscar.oscarRx.data.RxProviderData, oscar.oscarRx.data.RxProviderData.Provider"%>
 <html:html locale="true">
 <jsp:useBean id="displayServiceUtil" scope="request" class="oscar.oscarEncounter.oscarConsultationRequest.config.pageUtil.EctConDisplayServiceUtil" />
 <%
@@ -902,9 +902,9 @@ if (OscarProperties.getInstance().getBooleanProperty("consultation_program_lette
 			String progNo = "prog_" + p.getId();
 %>
 		providerData['<%=progNo %>'] = new Object();
-		providerData['<%=progNo %>'].address = "<%=(p.getAddress() != null && p.getAddress().trim().length() > 0) ? p.getAddress().trim() : ((clinic.getClinicAddress() + "  " + clinic.getClinicCity() + "   " + clinic.getClinicProvince() + "  " + clinic.getClinicPostal()).trim()) %>";
-		providerData['<%=progNo %>'].phone = "<%=(p.getPhone() != null && p.getPhone().trim().length() > 0) ? p.getPhone().trim() : clinic.getClinicPhone().trim() %>";
-		providerData['<%=progNo %>'].fax = "<%=(p.getFax() != null && p.getFax().trim().length() > 0) ? p.getFax().trim() : clinic.getClinicFax().trim() %>";
+		providerData['<%=progNo %>'].address = "<%=(p.getAddress() != null && p.getAddress().trim().length() > 0) ? p.getAddress().trim() : "" %>";
+		providerData['<%=progNo %>'].phone = "<%=(p.getPhone() != null && p.getPhone().trim().length() > 0) ? p.getPhone().trim() : "" %>";
+		providerData['<%=progNo %>'].fax = "<%=(p.getFax() != null && p.getFax().trim().length() > 0) ? p.getFax().trim() : "" %>";
 <%
 		}
 	}
@@ -914,12 +914,12 @@ if (OscarProperties.getInstance().getBooleanProperty("consultation_program_lette
 function switchProvider(value) {
 	if (value==-1) {
 		document.getElementById("letterheadName").value = value;
-		document.getElementById("letterheadAddress").value = "<%=(clinic.getClinicAddress() + "  " + clinic.getClinicCity() + "   " + clinic.getClinicProvince() + "  " + clinic.getClinicPostal()).trim() %>";
-		document.getElementById("letterheadAddressSpan").innerHTML = "<%=(clinic.getClinicAddress() + "  " + clinic.getClinicCity() + "   " + clinic.getClinicProvince() + "  " + clinic.getClinicPostal()).trim() %>";
-		document.getElementById("letterheadPhone").value = "<%=clinic.getClinicPhone().trim() %>";
-		document.getElementById("letterheadPhoneSpan").innerHTML = "<%=clinic.getClinicPhone().trim() %>";
-		document.getElementById("letterheadFax").value = "<%=clinic.getClinicFax().trim() %>";
-		document.getElementById("letterheadFaxSpan").innerHTML = "<%=clinic.getClinicFax().trim() %>";
+		document.getElementById("letterheadAddress").value = "";
+		document.getElementById("letterheadAddressSpan").innerHTML = "";
+		document.getElementById("letterheadPhone").value = "";
+		document.getElementById("letterheadPhoneSpan").innerHTML = "";
+		document.getElementById("letterheadFax").value = "";
+		document.getElementById("letterheadFaxSpan").innerHTML = "";
 	} else {
 		if (typeof providerData["prov_" + value] != "undefined")
 			value = "prov_" + value;
@@ -1289,20 +1289,7 @@ function updateFaxButton() {
 						<input name="updateAndPrint" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnUpdateAndPrint"/>" onclick="return checkForm('Update Consultation Request And Print Preview','EctConsultationFormRequestForm');" />
 						<input name="printPreview" type="button" value="Print Preview" onclick="return checkForm('And Print Preview','EctConsultationFormRequestForm');" />
 						<input name="updateAndSendElectronicallyTop" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnUpdateAndSendElectronicReferral"/>" onclick="return checkForm('Update_esend','EctConsultationFormRequestForm');" />
-						<br>
-						<label title="Clinic">Clinic: </label>
-						<select id="clinicNo" name="clinicNo">
-						<%
-						String sessionClinicId = (String) session.getAttribute("clinic_id");
-						if (sessionClinicId == null)
-							sessionClinicId = "";
-						for ( Clinic clinic : clinics) {
-						%>
-							<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
-						<%
-						}
-						%>
-						</select>
+						
 						<br>
 						<% if (faxEnabled) { %>
 						<input id="fax_button" name="updateAndFax" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnUpdateAndFax"/>" onclick="return checkForm('Update And Fax','EctConsultationFormRequestForm');" />
@@ -1312,20 +1299,7 @@ function updateFaxButton() {
 						<input name="submitAndPrint" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnSubmitAndPrint"/>" onclick="return checkForm('Submit Consultation Request And Print Preview','EctConsultationFormRequestForm'); " />
 						<input name="submitAndSendElectronicallyTop" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnSubmitAndSendElectronicReferral"/>" onclick="return checkForm('Submit_esend','EctConsultationFormRequestForm');" />
 						<br>
-						<label title="Clinic">Clinic: </label>
-						<select id="clinicNo" name="clinicNo">
-						<%
-						String sessionClinicId = (String) session.getAttribute("clinic_id");
-						if (sessionClinicId == null)
-							sessionClinicId = "";
-						for ( Clinic clinic : clinics) {
-						%>
-							<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
-						<%
-						}
-						%>
-						</select>
-						<br>
+						
 						<% if (faxEnabled) { %>
 						<input id="fax_button" name="submitAndFax" type="button" value="<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.btnSubmitAndFax"/>" onclick="return checkForm('Submit And Fax','EctConsultationFormRequestForm');" />
 					<% 	   } 
@@ -1691,11 +1665,32 @@ function updateFaxButton() {
 					<td colspan=2>
 					<table border=0 width="100%">
 						<tr>
+							<td class="tite4">
+								<label title="Clinic">Clinic: </label>
+							</td>
+							
+							<td align="right" class="tite3">								
+								<select id="clinicNo" name="clinicNo" style="width: 275px;">
+								<%
+								String sessionClinicId = (String) session.getAttribute("clinic_id");
+								if (sessionClinicId == null)
+									sessionClinicId = "";
+								for ( Clinic clinic : clinics) {
+								%>
+									<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+								<%
+								}
+								%>
+								</select>
+							</td>
+						</tr>
+						
+						<tr>
 							<td class="tite4"><bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.letterheadName" />:
 							</td>
 							<td align="right" class="tite3">
-								<select name="letterheadName" id="letterheadName" onchange="switchProvider(this.value)">
-									<option value="-1"><%=clinic.getClinicName() %></option>
+								<select name="letterheadName" id="letterheadName" onchange="switchProvider(this.value)" style="width: 275px;">
+									<option value="-1">** Use Clinic Letterhead **</option>
 								<%
 									for (Provider p : prList) {
 										if (p.getProviderNo().compareTo("-1") != 0 && (p.getFirstName() != null || p.getSurname() != null)) {
@@ -1728,9 +1723,9 @@ function updateFaxButton() {
 										<%=consultUtil.letterheadAddress %>
 									</span>
 								<% } else { %>
-									<input type="hidden" name="letterheadAddress" id="letterheadAddress" value="<%=StringEscapeUtils.escapeHtml(clinic.getClinicAddress()) %>  <%=StringEscapeUtils.escapeHtml(clinic.getClinicCity()) %>  <%=StringEscapeUtils.escapeHtml(clinic.getClinicProvince()) %>  <%=StringEscapeUtils.escapeHtml(clinic.getClinicPostal()) %>" />
+									<input type="hidden" name="letterheadAddress" id="letterheadAddress" value="" />
 									<span id="letterheadAddressSpan">
-										<%=clinic.getClinicAddress() %>&nbsp;&nbsp;<%=clinic.getClinicCity() %>&nbsp;&nbsp;<%=clinic.getClinicProvince() %>&nbsp;&nbsp;<%=clinic.getClinicPostal() %>
+										
 									</span>
 								<% } %>
 							</td>
@@ -1746,9 +1741,8 @@ function updateFaxButton() {
 										<%=consultUtil.letterheadPhone%>
 									</span>
 								<% } else { %>
-									<input type="hidden" name="letterheadPhone" id="letterheadPhone" value="<%=StringEscapeUtils.escapeHtml(clinic.getClinicPhone()) %>" />
+									<input type="hidden" name="letterheadPhone" id="letterheadPhone" value="" />
 									<span id="letterheadPhoneSpan">
-										<%=clinic.getClinicPhone()%>
 									</span>
 								<% } %>
 							</td>
@@ -1764,9 +1758,8 @@ function updateFaxButton() {
 										<%=consultUtil.letterheadFax%>
 									</span>
 								<% } else { %>
-								<input type="hidden" name="letterheadFax" id="letterheadFax" value="<%=StringEscapeUtils.escapeHtml(clinic.getClinicFax()) %>" />
+								<input type="hidden" name="letterheadFax" id="letterheadFax" value="" />
 								<span id="letterheadFaxSpan">
-									<%=clinic.getClinicFax() %>
 								</span>
 							<% } %>
 							</td>
