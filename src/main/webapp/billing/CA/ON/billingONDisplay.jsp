@@ -69,6 +69,11 @@
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.common.model.ClinicNbr"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
+<%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
+<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
+<%
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+%>
 
 <%GregorianCalendar now = new GregorianCalendar();
 			int curYear = now.get(Calendar.YEAR);
@@ -218,7 +223,6 @@ function popupPage(vheight,vwidth,varpage) {
 				if (billNo != null && billNo.length() > 0) {
 					bFlag = true;
 				}
-
 				if (bFlag) {
 					recordObj = obj.getBillingRecordObj(billNo);
 					if (recordObj != null && recordObj.size() > 0) {
@@ -248,7 +252,18 @@ function popupPage(vheight,vwidth,varpage) {
 						HCTYPE = ch1Obj.getProvince();
 						HCSex = ch1Obj.getSex();
 						r_doctor_ohip = ch1Obj.getRef_num();
-						r_doctor = "";
+                                                r_doctor = "";
+						
+                                                //Set r_doctor value, referral doctor name
+                                                List<ProfessionalSpecialist> professionalSpecialists = null;
+						
+                                                if(r_doctor_ohip != null && !r_doctor_ohip.isEmpty()){
+                                		    professionalSpecialists = professionalSpecialistDao.findByReferralNo(r_doctor_ohip);
+						   if(professionalSpecialists != null && professionalSpecialists.size() > 0) 
+						      r_doctor = professionalSpecialists.get(0).getFirstName() 
+                                                               + " " 
+                                                               + professionalSpecialists.get(0).getLastName();
+                                                }
 						r_doctor_ohip_s = "";
 						r_doctor_s = "";
 						m_review = ch1Obj.getMan_review();
