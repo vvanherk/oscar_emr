@@ -98,10 +98,12 @@ public class LabUploadAction extends Action {
 		PublicKey clientKey = (PublicKey) clientInfo.get(0);
 		String type = (String) clientInfo.get(1);
 
+		String fileName = "";
+
 		try {
 
 			InputStream is = decryptMessage(importFile.getInputStream(), key, clientKey);
-			String fileName = importFile.getFileName();
+			fileName = importFile.getFileName();
 			String filePath = Utilities.saveFile(is, fileName);
 			importFile.getInputStream().close();
 			File file = new File(filePath);

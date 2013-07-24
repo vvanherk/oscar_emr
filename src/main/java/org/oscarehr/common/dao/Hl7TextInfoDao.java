@@ -117,9 +117,14 @@ public class Hl7TextInfoDao extends AbstractDao<Hl7TextInfo> {
     	return labs;
 
     }
-
-	public List<Hl7TextInfo> getMatchingLabsByLabId(int labId) {
-		String sql = "SELECT a FROM Hl7TextInfo a, Hl7TextInfo b WHERE a.accessionNumber !='' AND a.accessionNumber=b.accessionNumber AND b.labNumber=? ORDER BY a.obrDate, a.finalResultCount, a.labNumber";
+    
+    /**
+     * Gets the labs that share the same accession number as the lab with id 'labId'.
+     * 
+     * It will return the labs in order of most recent OBR date, followed by most recent lab id.
+     */
+    public List<Hl7TextInfo> getMatchingLabsByLabId(int labId) {
+		String sql = "SELECT a FROM Hl7TextInfo a, Hl7TextInfo b WHERE a.accessionNumber !='' AND a.accessionNumber=b.accessionNumber AND b.labNumber=? ORDER BY a.obrDate desc, a.finalResultCount, a.labNumber desc";
         
     	Query query = entityManager.createQuery(sql);
         query.setParameter(1, labId);
