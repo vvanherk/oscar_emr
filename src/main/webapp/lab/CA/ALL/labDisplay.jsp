@@ -213,9 +213,12 @@ if (remoteFacilityIdString==null) // local lab
 				handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
 			}
 		} else {
+			MiscUtils.getLogger().info("HIMOM1: ");
 			handlers.add( Factory.getHandler("" + lab_no) );
 		}
 	} else {
+		MiscUtils.getLogger().info("HIMOM2: " + h);
+		MiscUtils.getLogger().info("HIMOM2: " + h.getHealthNum());
 		handlers.add( h );
 	}
 }
@@ -1662,6 +1665,10 @@ public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInf
 	for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 		int labNo = commonAccessionNumber.getLabNo().intValue();
 		List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId(labNo);
+		MiscUtils.getLogger().info("START");
+		for (Hl7TextInfo h : vers) {
+			MiscUtils.getLogger().info("h: " + h.getLabNumber() + " " + h.getAccessionNumber());
+		}
 		
 		if (vers.size() > 1) {
 			Hl7TextInfo first = vers.get(0);

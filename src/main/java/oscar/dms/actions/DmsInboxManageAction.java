@@ -36,6 +36,8 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -759,6 +761,21 @@ public class DmsInboxManageAction extends DispatchAction {
 	}
 	
 	/**
+	 * Used to order labs in a List of LabResultData from most to least recent.
+	 * 
+	 * It achieves this by comparing the segment ids (i.e. lab ids).  The larger the segment id, the more recent the lab.
+	 */
+	public class SpireLabSorter implements Comparator<LabResultData> {
+	    @Override
+	    public int compare(LabResultData o1, LabResultData o2) {
+			int i1 = Integer.parseInt( o1.getSegmentID() );
+			int i2 = Integer.parseInt( o2.getSegmentID() );
+			
+	        return (i1 > i2 ? 1 : (i1 == i2 ? 0 : -1));
+	    }
+	} 
+	
+	/**
 	 * Method collapseSpireLabs
 	 * 
 	 * Returns a list of Lab Results that include all non-spire labs, and include only a single spire
@@ -806,11 +823,14 @@ public class DmsInboxManageAction extends DispatchAction {
 			// Add the Lab Result to the collapsed list if it isn't a spire lab
 			if (!found) {
 				collapsedLabdocs.add(data);
-			}	
+			}
 		}
 		
 		
 		if (accnsMap != null) {
+			// Order the labs from most to least recent - the algorithm below assumes this as a precondition
+			Collections.sort( labdocs, new SpireLabSorter() );
+			
 			// Add only a single Spire lab to the collapsed lab list for any given unique spire accession number
 			for (SpireAccessionNumberMap map : accnsMap) {
 				List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
