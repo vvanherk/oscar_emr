@@ -771,7 +771,7 @@ public class DmsInboxManageAction extends DispatchAction {
 			int i1 = Integer.parseInt( o1.getSegmentID() );
 			int i2 = Integer.parseInt( o2.getSegmentID() );
 			
-	        return (i1 > i2 ? 1 : (i1 == i2 ? 0 : -1));
+	        return (i1 > i2 ? -1 : (i1 == i2 ? 0 : 1));
 	    }
 	} 
 	
