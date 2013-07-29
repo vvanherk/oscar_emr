@@ -1749,7 +1749,8 @@ public class RxPrescriptionData {
 
             //if (RHS == null || RHS.length() < 6) {
               if (RHS == null || RHS.length() < 4) {
-                  logger.error("Some one is setting the drug special but it appears to be blank : " + special, new IllegalStateException());
+                  logger.warn("Some one is setting the drug special but it appears to be blank : " + special);
+                  logger.debug("IllegalStateException for blank drug special",  new IllegalStateException());
             }
 
             if (RHS != null) {
@@ -1764,7 +1765,8 @@ public class RxPrescriptionData {
 
             //if (special == null || special.length() < 6) {
               if (special == null || special.length() < 4) {
-                  logger.error("after processing the drug special but it appears to be blank : " + special, new IllegalStateException());
+                  logger.warn("after processing the drug special but it appears to be blank : " + special);
+                  logger.debug("IllegalStateException for blank drug special",  new IllegalStateException());
             }
         }
 
