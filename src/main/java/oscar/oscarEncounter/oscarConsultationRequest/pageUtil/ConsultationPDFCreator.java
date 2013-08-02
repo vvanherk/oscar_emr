@@ -21,12 +21,13 @@ import org.oscarehr.PMmodule.dao.ProviderDao;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.DigitalSignatureDao;
 import org.oscarehr.common.model.Demographic;
+import org.oscarehr.common.dao.ClinicDAO;
+import org.oscarehr.common.model.Clinic;
 import org.oscarehr.common.model.DigitalSignature;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 
 import oscar.OscarProperties;
-import oscar.oscarClinic.ClinicData;
 import oscar.oscarRx.data.RxProviderData;
 import oscar.oscarRx.data.RxProviderData.Provider;
 
@@ -58,7 +59,7 @@ public class ConsultationPDFCreator extends PdfPageEventHelper {
 
 	private EctConsultationFormRequestUtil reqFrm;
 	private OscarProperties props;
-	private ClinicData clinic;
+	private Clinic clinic;
 	private ResourceBundle oscarR;
 
 	/**
@@ -71,8 +72,39 @@ public class ConsultationPDFCreator extends PdfPageEventHelper {
 	    reqFrm = new EctConsultationFormRequestUtil ();
 	    reqFrm.estRequestFromId((String)request.getAttribute("reqId"));
 	    props = OscarProperties.getInstance();
-	    clinic = new ClinicData();
+	    clinic = parseClinic(request);
 		oscarR = ResourceBundle.getBundle("oscarResources",request.getLocale());
+	}
+	
+	/**
+	 * Will parse the clinic id from the request and attempt to find the clinic with that id in the oscar database.  If it can't find it,
+	 * it will return the 'default' clinic.  If no clinics exist in oscar, it will return null.
+	 * @param request contains the information necessary for finding the clinic
+	 * @return returns the clinic object with id 'clinicNo'.  Returns the default clinic object if a clinic with 'clinicNo' does not exist.
+	 * Returns null if no clinics exist in the oscar database.
+	 */
+	private Clinic parseClinic(HttpServletRequest request) {
+		ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+		
+		String clinicNo = request.getParameter("clinicNo");
+		Clinic clinic = null;
+		
+		try {
+			int clinicNoAsInt = Integer.parseInt(clinicNo);
+			clinic = clinicDao.find(clinicNoAsInt);
+		} catch (Exception e) {
+			logger.error("Unable to parse clinic number.", e);
+		}
+		
+		// Error check
+		if (clinic == null)
+			clinic = clinicDao.getClinic();
+		if (clinic == null) {
+			logger.error("No clinic found in OSCAR!");
+			return null;
+		}
+		
+		return clinic;
 	}
 
 	/**
