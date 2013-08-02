@@ -189,10 +189,6 @@ if (isOk && org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
 		}
 }
 
-// patch for kanawaty - adds all new providers to a default program (10020) with a default role (1)
-if (isOk) {
-	dbObj.queryExecuteUpdate("insert into program_provider (program_id, provider_no, role_id, team_id) values (10020, ?, 1, NULL);", new String[]{param[0]});
-}
 
 if (isOk) {
 	String proId = p.getPractitionerNo();
