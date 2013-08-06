@@ -21,7 +21,7 @@ public class SpireAccessionNumberMapDao extends AbstractDao<SpireAccessionNumber
 			return null;
 		
 		//Query query = entityManager.createQuery("select map from SpireCommonAccessionNumber caccn inner join SpireAccessionNumberMap caccn.accnMap where caccn.caccn in (:accns) order by accnMap.uaccn");
-		Query query = entityManager.createQuery("select c.map from SpireCommonAccessionNumber c where c.caccn in (:accns)");
+		Query query = entityManager.createQuery("select distinct c.map from SpireCommonAccessionNumber c where c.caccn in (:accns)");
 		query.setParameter("accns", accns);
 		
 		@SuppressWarnings("unchecked")
@@ -50,7 +50,7 @@ public class SpireAccessionNumberMapDao extends AbstractDao<SpireAccessionNumber
 		if (labNumbers == null || labNumbers.size() == 0)
 			return null;
 		
-		Query query = entityManager.createQuery("select c.map from SpireCommonAccessionNumber c where c.lab_no in (:labNumbers)");
+		Query query = entityManager.createQuery("select distinct c.map from SpireCommonAccessionNumber c where c.lab_no in (:labNumbers)");
 		query.setParameter("labNumbers", labNumbers);
 		
 		@SuppressWarnings("unchecked")
@@ -76,19 +76,6 @@ public class SpireAccessionNumberMapDao extends AbstractDao<SpireAccessionNumber
 		return null;
 	}
 	
-	public List<Integer> getAccessionNumberMapIds(List<String> accns) {
-		if (accns == null || accns.size() == 0)
-			return null;
-		
-		Query query = entityManager.createQuery("select distinct c.uaccn_id from SpireCommonAccessionNumber c where caccn.caccn in (:accns)");
-		query.setParameter("accns", accns);
-		
-		@SuppressWarnings("unchecked")
-		List<Integer> results = query.getResultList();
-		
-		return results;
-	}
-	
 	public SpireAccessionNumberMap getFromAccessionNumberMapId(Integer accnMapId) {
 		if (accnMapId == null)
 			return null;
@@ -110,7 +97,7 @@ public class SpireAccessionNumberMapDao extends AbstractDao<SpireAccessionNumber
 		if (accnMapIds == null || accnMapIds.size() == 0)
 			return null;
 		
-		Query query = entityManager.createQuery("select map from SpireAccessionNumberMap map where map.id in (:accns)");
+		Query query = entityManager.createQuery("select distinct map from SpireAccessionNumberMap map where map.id in (:accns)");
 		query.setParameter("accns", accnMapIds);
 		
 		@SuppressWarnings("unchecked")
@@ -119,7 +106,7 @@ public class SpireAccessionNumberMapDao extends AbstractDao<SpireAccessionNumber
 		return results;
 	}
 	
-	public SpireAccessionNumberMap getFromUniqueAccessionNumber(Integer uniqueAccn) {
+	public SpireAccessionNumberMap getFromUniqueAccessionNumber(String uniqueAccn) {
 		if (uniqueAccn == null)
 			return null;
 		
@@ -136,7 +123,7 @@ public class SpireAccessionNumberMapDao extends AbstractDao<SpireAccessionNumber
 		return null;
 	}
 	
-	public void add(Integer uniqueAccn, String accn, Integer labNo) {
+	public void add(String uniqueAccn, String accn, Integer labNo) {
 		if (uniqueAccn == null || accn == null || labNo == null)
 			return;
 		
@@ -166,7 +153,7 @@ public class SpireAccessionNumberMapDao extends AbstractDao<SpireAccessionNumber
         this.merge(map);
 	}
 	
-	private void addNewMap(Integer uniqueAccn) {
+	private void addNewMap(String uniqueAccn) {
 		if (uniqueAccn == null)
 			return;
 			

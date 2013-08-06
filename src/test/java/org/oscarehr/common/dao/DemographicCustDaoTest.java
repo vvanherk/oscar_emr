@@ -31,8 +31,8 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
 import org.oscarehr.common.model.DemographicCust;
 import org.oscarehr.util.SpringUtils;
 

@@ -53,17 +53,16 @@ if(hasPermission && startFlag) {
 		
 		if (h instanceof SpireHandler) {
 			// we need to add a mapping from the 'common' accession number to the 'unique' accession number for spire labs
-			String uniqueAccnAsString = ((SpireHandler)h).getUniqueAccessionNum();
+			String uniqueAccn = ((SpireHandler)h).getUniqueAccessionNum();
 			String accn = h.getAccessionNum();
 			
-			MiscUtils.getLogger().info("unique: " + uniqueAccnAsString + " 'normal': " + accn);
-			if (accnDao.getFromLabNumber( lab.getLabNumber() ) == null) {
+			MiscUtils.getLogger().info("unique: " + uniqueAccn + " 'normal': " + accn);
+			if (uniqueAccn != null && uniqueAccn.length() > 0 && accnDao.getFromLabNumber( lab.getLabNumber() ) == null) {
 				try {
-					Integer uniqueAccn = Integer.parseInt(uniqueAccnAsString);
 					accnDao.add( uniqueAccn, accn, lab.getLabNumber() );
 					numChanges++;
 				} catch (Exception e) {
-					MiscUtils.getLogger().error("Unable to parse Spire Unique Accession number from String to int.", e);
+					MiscUtils.getLogger().error("Unable to add lab to Accession Map Dao.", e);
 				}
 			}
 		}

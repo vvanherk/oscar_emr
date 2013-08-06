@@ -51,7 +51,7 @@ import java.util.Date;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.SchemaUtils;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.RemoteIntegratedDataCopy;
 import org.oscarehr.util.MiscUtils;

@@ -39,24 +39,29 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 import org.apache.log4j.Logger;
 
-import oscar.oscarLab.ca.all.spireHapiExt.v23.message.ORU_R01;
 import oscar.util.UtilDateUtilities;
 import ca.uhn.hl7v2.HL7Exception;
 import ca.uhn.hl7v2.model.Segment;
-import ca.uhn.hl7v2.model.v23.datatype.CN;
 import ca.uhn.hl7v2.model.v23.datatype.XCN;
+import ca.uhn.hl7v2.model.v23.datatype.CN;
+import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.parser.CustomModelClassFactory;
 import ca.uhn.hl7v2.parser.ModelClassFactory;
-import ca.uhn.hl7v2.parser.PipeParser;
 import ca.uhn.hl7v2.util.Terser;
 import ca.uhn.hl7v2.validation.impl.NoValidation;
-//import ca.uhn.hl7v2.model.v23.message.ORU_R01;
-//import ca.uhn.hl7v2.parser.Parser;
-//import oscar.oscarLab.ca.all.spireHapiExt.v23.segment.ZDS;
 
+import oscar.oscarLab.ca.all.spireHapiExt.v23.message.ORU_R01;
+
+/**
+ * Helper class to allow me to manipulate the lines in a String.
+ * 
+ * A line is defined by a sequence of characters, which ends with a delimiter.  The delimiter
+ * is specified by default as the "|" character, but can be specified in the Constructor.
+ */
 class Lines {
 	private String message = "";
 	private String delimiter = "|";
@@ -854,12 +859,27 @@ public class SpireHandler implements MessageHandler {
                 accessionNum = accessionNum+", "+getString(msg.getRESPONSE().getORDER_OBSERVATION(0).getORC().getFillerOrderNumber().getEntityIdentifier().getValue());
             }
             */
-            return(accessionNum);
+            if ( accessionNum == null ) {
+				logger.error("Spire Accession Number is null!");
+				logger.error("Message: " + msg);
+			}
+            
+            return(accessionNum == null? "" : accessionNum);
         }catch(Exception e){
             logger.error("Could not return accession number", e);
             return("");
         }
     }
+    
+    /**
+     * Helper method to get the index of a Regex pattern in a String.
+     * 
+	 * @return index of pattern in s or -1, if not found 
+	 */
+	private int indexOf(Pattern pattern, String s) {
+		Matcher matcher = pattern.matcher(s);
+		return matcher.find() ? matcher.start() : -1;
+	}
     
     /**
      * Method getUniqueAccessionNum
@@ -869,37 +889,58 @@ public class SpireHandler implements MessageHandler {
      * back together based on the 'unique' Accession number (the 'regular' accession number for each lab piece
      * is different, so we need one that is common to all of them, which is located in OBR field 20).
      * 
-     * @return The unique Accession number if available, otherwise returns the 'regular' accession number (or an empty string
-     * if the regular accession number isn't available)
+     * @return The unique Accession number if available, otherwise returns an empty string
      */ 
     public String getUniqueAccessionNum(){
 		String uniqueAccn = "";
 		
 		try {
 			Terser terser = new Terser(msg);
-			String obrAccessionString = terser.get("/.OBR-20-2");
 			
-			// try parsing using the terser
-			if (obrAccessionString != null && obrAccessionString.equals("HNA_CEACCN")) {
-				uniqueAccn = terser.get("/.OBR-20-1");
-			} 
-			// otherwise, parse by extracting the accession number using the message string
+			String name = terser.get("/.OBR-20-2");
+			String id = terser.get("/.OBR-20-1");
+			String errorMsg = "";
+			
+			// See if there is an HNA_ACCN identifier
+			if (name != null && id != null && name.equals("HNA_ACCN")) {
+				uniqueAccn = name + id;
+			}
 			else {
-				String messageAsString = originalMessage.toString();
-				int accnIndex1 = messageAsString.indexOf("^HNA_ACCN~");
-				int accnIndex2 = messageAsString.indexOf("^HNA_", Math.max(accnIndex1+1, 0));
+				String messageAsString = originalMessage;
+				int accnIndex2 = indexOf(Pattern.compile("\\^HNA_ACCN(\\||~)"), messageAsString);
 				
-				logger.info("parsing1: " + accnIndex1 + " " + accnIndex2);
-				
-				if (accnIndex1 < 0 || accnIndex2 <= 0) {
-					logger.info("parsing2 (NUTS): " + messageAsString);
-					// if we can't pull out the unique accession number, just use the regular one
-					uniqueAccn = getAccessionNum();
+				// The HNA_ACCN id is always 18 characters in length
+				if ( accnIndex2 > 18 && messageAsString.charAt(accnIndex2-19) != '~' && messageAsString.charAt(accnIndex2-19) != '|' ) {
+					errorMsg += "Spire HNA_ACCN id is not in the expected format (accnIndex2: " + accnIndex2 + "):\n";
+					errorMsg += messageAsString + "\n";
 				}
-				else {				
-					uniqueAccn = messageAsString.substring(accnIndex1+10, accnIndex2);
+				else if (accnIndex2 > 18) {
+					uniqueAccn = "HNA_ACCN" + messageAsString.substring(accnIndex2-18, accnIndex2);
 				}
 			}
+			
+			// If there is no HNA_ACCN, check for HNA_CEACCN
+			if (uniqueAccn.length() == 0) {
+				if (name != null && id != null && name.equals("HNA_CEACCN")) {
+					uniqueAccn = name + id;
+				}
+				else {
+					String messageAsString = originalMessage;
+					int accnIndex2 = indexOf(Pattern.compile("\\^HNA_CEACCN(\\||~)"), messageAsString);
+					
+					// The HNA_CEACCN id is always 7 characters in length
+					if ( accnIndex2 > 7 && messageAsString.charAt(accnIndex2-8) != '~' && messageAsString.charAt(accnIndex2-8) != '|' ) {
+						errorMsg += "Spire HNA_CEACCN id is not in the expected format (accnIndex2: " + accnIndex2 + "):\n";
+						errorMsg += messageAsString + "\n";
+					}
+					else if (accnIndex2 > 7) {
+						uniqueAccn = "HNA_CEACCN" + messageAsString.substring(accnIndex2-7, accnIndex2);
+					}
+				}
+			}
+			
+			if (errorMsg.length() != 0)
+				throw new Exception(errorMsg);
 		} catch (Exception e) {
 			logger.error("Something went wrong parsing the unique accession number!", e);
 		}

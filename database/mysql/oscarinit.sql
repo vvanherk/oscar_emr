@@ -161,6 +161,16 @@ CREATE TABLE billing (
   KEY status (status)
 ) ;
 
+create table billing_defaults (
+        id  int(10) NOT NULL auto_increment primary key,
+        provider_no int(6) NOT NULL,
+        visit_type_no varchar(10),
+        location_id int(10),
+        sli_code varchar(4),
+        billing_form varchar(10),
+        priority int(5)
+);
+
 --
 -- Table structure for table `billingdetail`
 --
@@ -6671,6 +6681,13 @@ create table ProviderPreference
 	appointmentScreenLinkNameDisplayLength int not null,
 	defaultDoNotDeleteBilling  tinyint(1) not null,
 	defaultDxCode varchar(4),
+	billingVisitTypeDefault VARCHAR(60) NOT NULL,
+	billingVisitLocationDefault VARCHAR(15) NOT NULL,
+	billingProviderDefault VARCHAR(60) NOT NULL,
+	printDateOnRx Boolean DEFAULT 0,
+	printPharmacyOnRx Boolean DEFAULT 0,
+	billingRefBoxDefaultChecked Boolean DEFAULT 0,
+	useBillingProviderFromPreviousBill Boolean
 	eRxEnabled tinyint(1) not null,
     eRx_SSO_URL varchar(128),
     eRxUsername varchar(32),
@@ -6837,6 +6854,7 @@ CREATE TABLE radetail (
   raheader_no int(6) NOT NULL default '0',
   providerohip_no varchar(12) NOT NULL default '',
   billing_no int(6) NOT NULL default '0',
+  provider_group_billing_no varchar(4),
   service_code varchar(5) NOT NULL default '',
   service_count char(2) NOT NULL default '',
   hin varchar(12) NOT NULL default '',
@@ -7571,6 +7589,26 @@ create table hl7TextMessage(
 	type varchar(100) not null,
 	serviceName varchar(100) not null,
 	created datetime not null
+);
+
+CREATE TABLE providerSpireIdMap (
+  spire_id int(10) primary key,
+  ohip_no varchar(20)
+);
+
+CREATE TABLE spireAccessionNumberMap (
+	id int(10) NOT NULL auto_increment,
+	uaccn varchar(40) NOT NULL,
+	PRIMARY KEY (id)
+);
+
+CREATE TABLE spireCommonAccessionNumber (
+	id int(10) NOT NULL auto_increment,
+	caccn varchar(20) NOT NULL,
+	lab_no int(10),
+	map_id int(10),
+	order_index int(4),
+	PRIMARY KEY (id)
 );
 
 create table oscarKeys(

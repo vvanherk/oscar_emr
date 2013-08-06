@@ -26,7 +26,7 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
 	private Integer id;
 	
 	@Column(name="uaccn")
-	private Integer uaccn;
+	private String uaccn;
 	
 	@OrderBy("orderIndex ASC")
 	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
@@ -36,7 +36,7 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
 	public SpireAccessionNumberMap() {
 	}
 	
-	public SpireAccessionNumberMap(Integer uniqueAccn) {
+	public SpireAccessionNumberMap(String uniqueAccn) {
 		this.uaccn = uniqueAccn;
 	}
 
@@ -49,11 +49,11 @@ public class SpireAccessionNumberMap extends AbstractModel<Integer> {
     	this.id = id;
     }	
 	
-	public Integer getUniqueAccessionNumber() {
+	public String getUniqueAccessionNumber() {
 	    return uaccn;
     }
 
-	public void setUniqueAccessionNumber(Integer uaccn) {
+	public void setUniqueAccessionNumber(String uaccn) {
 		this.uaccn = uaccn;
 	}
 	

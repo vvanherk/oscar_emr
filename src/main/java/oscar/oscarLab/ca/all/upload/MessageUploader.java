@@ -127,17 +127,10 @@ public final class MessageUploader {
             if(isSpire) {
 				List<String> docSpireNums = ((SpireHandler)h).getAllDocNums();
 				
-	            for (int i=0; i < docSpireNums.size(); i++) {
-					logger.info(i + " " + docSpireNums.get(i));
-				}
             	if (docSpireNums != null) {
 					docNums = findProvidersForSpireLab(docSpireNums);
 				}
             }
-            logger.info("docNums:");
-            for (int i=0; i < docNums.size(); i++) {
-				logger.info(i + " " + docNums.get(i));
-			}
 
 			try {
 				// reformat date
@@ -220,22 +213,16 @@ public final class MessageUploader {
 				hl7TextInfoDao.persist(hl7TextInfo);
 				
 				if (isSpire) {
-					// we need to add a mapping from the 'common' accession number to the 'unique' accession number for spire labs
-					String uniqueAccnAsString = ((SpireHandler)h).getUniqueAccessionNum();
-					String accn = h.getAccessionNum();
-					
-					logger.info("unique: " + uniqueAccnAsString + " 'normal': " + accn);
-					
 					try {
-						Integer uniqueAccn = Integer.parseInt(uniqueAccnAsString);
-						
-						if (uniqueAccn.intValue() == 0)
-							throw new Exception("Unique accession number cannot be 0.");
+						// we need to add a mapping from the 'common' accession number to the 'unique' accession number for spire labs
+						String uniqueAccn = ((SpireHandler)h).getUniqueAccessionNum();
+						String accn = h.getAccessionNum();
 						
 						SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
 						accnDao.add( uniqueAccn, accn, hl7TextInfo.getLabNumber() );
 					} catch (Exception e) {
-						logger.error("Unable to parse Spire Unique Accession number from String to int.", e);
+						logger.warn("Unable to parse Spire Unique Accession number.");
+						logger.debug("Spire Unique Accession number parsing exception:", e);
 					}
 				}
 			}
@@ -251,13 +238,17 @@ public final class MessageUploader {
 			    	providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type);
 			    }
 			} else {
+				String matchBy = "ohip_no";
 				Integer limit = null;
 				boolean orderByLength = false;
+				
 				if (type.equals("Spire")) {
 					limit = new Integer(1);
 					orderByLength = true;
+					matchBy = "provider_no";
 				}
-				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, "provider_no", limit, orderByLength);
+				
+				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, matchBy, limit, orderByLength);
 			}
 			retVal = h.audit();
 			if(results != null) {
@@ -385,9 +376,9 @@ public final class MessageUploader {
 		
 		if (docNums != null) {
 			for (int i = 0; i < docNums.size(); i++) {
-
 				if (docNums.get(i) != null && !((String) docNums.get(i)).trim().equals("")) {
 					sql = "select provider_no from provider where "+ sqlSearchOn +" = '" + ((String) docNums.get(i)) + "'" + sqlOrderByLength + sqlLimit;
+					
 					pstmt = conn.prepareStatement(sql);
 					ResultSet rs = pstmt.executeQuery();
 					while (rs.next()) {

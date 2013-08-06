@@ -55,7 +55,7 @@ public class SpireCommonAccessionNumber extends AbstractModel<Integer> {
 		this.lab_no = lab_no;
 	}
 	
-	public Integer getUniqueAccessionId() {
+	public String getUniqueAccessionId() {
 	    return map.getUniqueAccessionNumber();
     }
     
