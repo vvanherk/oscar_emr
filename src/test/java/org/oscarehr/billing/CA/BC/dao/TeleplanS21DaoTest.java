@@ -28,7 +28,7 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.oscarehr.billing.CA.BC.model.TeleplanS21;
-import org.oscarehr.common.dao.TestFixtures;
+
 import utils.EntityDataGenerator;
 import utils.SchemaUtils;
 import utils.TestFixtures;

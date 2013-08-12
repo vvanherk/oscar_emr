@@ -30,7 +30,7 @@ import java.math.BigDecimal;
 import org.junit.Before;
 import org.junit.Test;
 import org.oscarehr.billing.CA.model.GstControl;
-import org.oscarehr.common.dao.TestFixtures;
+
 import utils.EntityDataGenerator;
 import utils.SchemaUtils;
 import utils.TestFixtures;
