@@ -889,6 +889,18 @@ public class SpireHandler implements MessageHandler {
      * back together based on the 'unique' Accession number (the 'regular' accession number for each lab piece
      * is different, so we need one that is common to all of them, which is located in OBR field 20).
      * 
+     * To get the unique accession number, we will first try to parse the id for HNA_ACCN (which is usually the
+     * unique id for a Spire lab).  This id is always 18 characters in length.  If we find this id but it is not 18 characters,
+     * an error will be thrown (but not before it tries to parse the secondary id for reports).
+     * 
+     * If we are unable to find the HNA_ACCN key, we search for the id for HNA_CEACCN (which is the unique id for Spire lab reports).
+     * This id is thought to be 7 characters in length (waiting on confirmation from Chrystelle at Cerner).  If this id is found but is
+     * not 7 characters in length, an error will be thrown.
+     * 
+     * Note that all errors are caught locally in this method, and an error is printed to the log.
+     * 
+     * TODO: We will need to parse the new report type coming out of Cerner/Spire, which puts the unique id in OBR-3 instead of OBR-20.
+     * 
      * @return The unique Accession number if available, otherwise returns an empty string
      */ 
     public String getUniqueAccessionNum(){
