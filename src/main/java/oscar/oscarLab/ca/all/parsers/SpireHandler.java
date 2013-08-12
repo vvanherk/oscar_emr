@@ -57,6 +57,13 @@ import ca.uhn.hl7v2.validation.impl.NoValidation;
 //import ca.uhn.hl7v2.parser.Parser;
 //import oscar.oscarLab.ca.all.spireHapiExt.v23.segment.ZDS;
 
+
+/**
+ * Helper class to allow me to manipulate the lines in a String.
+ * 
+ * A line is defined by a sequence of characters, which ends with a delimiter.  The delimiter
+ * is specified by default as the "|" character, but can be specified in the Constructor.
+ */
 class Lines {
 	private String message = "";
 	private String delimiter = "|";
@@ -260,6 +267,7 @@ class Lines {
 public class SpireHandler implements MessageHandler {
     
     ORU_R01 msg = null;
+    String originalMessage = null;
     Logger logger = Logger.getLogger(SpireHandler.class);
     
     /** Creates a new instance of SpireHandler */
@@ -272,6 +280,8 @@ public class SpireHandler implements MessageHandler {
         ModelClassFactory cmf = new CustomModelClassFactory("oscar.oscarLab.ca.all.spireHapiExt");
 		PipeParser p = new PipeParser(cmf);
         p.setValidationContext(new NoValidation());
+        
+        originalMessage = hl7Body;
         
         msg = (ORU_R01) p.parse(hl7Body.replaceAll( "\n", "\r\n" ));
     }
@@ -842,11 +852,105 @@ public class SpireHandler implements MessageHandler {
                 accessionNum = accessionNum+", "+getString(msg.getRESPONSE().getORDER_OBSERVATION(0).getORC().getFillerOrderNumber().getEntityIdentifier().getValue());
             }
             */
-            return(accessionNum);
+            if ( accessionNum == null ) {
+				logger.error("Spire Accession Number is null!");
+				logger.error("Message: " + msg);
+			}
+            
+            return(accessionNum == null? "" : accessionNum);
         }catch(Exception e){
             logger.error("Could not return accession number", e);
             return("");
         }
+    }
+    
+    /**
+     * Helper method to get the index of a Regex pattern in a String.
+     * 
+	 * @return index of pattern in s or -1, if not found 
+	 */
+	private int indexOf(Pattern pattern, String s) {
+		Matcher matcher = pattern.matcher(s);
+		return matcher.find() ? matcher.start() : -1;
+	}
+    
+    /**
+     * Method getUniqueAccessionNum
+     * 
+     * Attempts to parse the Spire 'unique' Accession number from the HL7 lab.  Spire labs can come in
+     * seperate 'pieces' (i.e. one lab comes as seperate HL7 files), and we need to string these lab pieces
+     * back together based on the 'unique' Accession number (the 'regular' accession number for each lab piece
+     * is different, so we need one that is common to all of them, which is located in OBR field 20).
+     * 
+     * To get the unique accession number, we will first try to parse the id for HNA_ACCN (which is usually the
+     * unique id for a Spire lab).  This id is always 18 characters in length.  If we find this id but it is not 18 characters,
+     * an error will be thrown (but not before it tries to parse the secondary id for reports).
+     * 
+     * If we are unable to find the HNA_ACCN key, we search for the id for HNA_CEACCN (which is the unique id for Spire lab reports).
+     * This id is thought to be 7 characters in length (waiting on confirmation from Chrystelle at Cerner).  If this id is found but is
+     * not 7 characters in length, an error will be thrown.
+     * 
+     * Note that all errors are caught locally in this method, and an error is printed to the log.
+     * 
+     * TODO: We will need to parse the new report type coming out of Cerner/Spire, which puts the unique id in OBR-3 instead of OBR-20.
+     * 
+     * @return The unique Accession number if available, otherwise returns an empty string
+     */ 
+    public String getUniqueAccessionNum(){
+		String uniqueAccn = "";
+		
+		try {
+			Terser terser = new Terser(msg);
+			
+			String name = terser.get("/.OBR-20-2");
+			String id = terser.get("/.OBR-20-1");
+			String errorMsg = "";
+			
+			// See if there is an HNA_ACCN identifier
+			if (name != null && id != null && name.equals("HNA_ACCN")) {
+				uniqueAccn = name + id;
+			}
+			else {
+				String messageAsString = originalMessage;
+				int accnIndex2 = indexOf(Pattern.compile("\\^HNA_ACCN(\\||~)"), messageAsString);
+				
+				// The HNA_ACCN id is always 18 characters in length
+				if ( accnIndex2 > 18 && messageAsString.charAt(accnIndex2-19) != '~' && messageAsString.charAt(accnIndex2-19) != '|' ) {
+					errorMsg += "Spire HNA_ACCN id is not in the expected format (accnIndex2: " + accnIndex2 + "):\n";
+					errorMsg += messageAsString + "\n";
+				}
+				else if (accnIndex2 > 18) {
+					uniqueAccn = "HNA_ACCN" + messageAsString.substring(accnIndex2-18, accnIndex2);
+				}
+			}
+			
+			// If there is no HNA_ACCN, check for HNA_CEACCN
+			if (uniqueAccn.length() == 0) {
+				if (name != null && id != null && name.equals("HNA_CEACCN")) {
+					uniqueAccn = name + id;
+				}
+				else {
+					String messageAsString = originalMessage;
+					int accnIndex2 = indexOf(Pattern.compile("\\^HNA_CEACCN(\\||~)"), messageAsString);
+					
+					// The HNA_CEACCN id is always 7 characters in length
+					if ( accnIndex2 > 7 && messageAsString.charAt(accnIndex2-8) != '~' && messageAsString.charAt(accnIndex2-8) != '|' ) {
+						errorMsg += "Spire HNA_CEACCN id is not in the expected format (accnIndex2: " + accnIndex2 + "):\n";
+						errorMsg += messageAsString + "\n";
+					}
+					else if (accnIndex2 > 7) {
+						uniqueAccn = "HNA_CEACCN" + messageAsString.substring(accnIndex2-7, accnIndex2);
+					}
+				}
+			}
+			
+			if (errorMsg.length() != 0)
+				throw new Exception(errorMsg);
+		} catch (Exception e) {
+			logger.error("Something went wrong parsing the unique accession number!", e);
+		}
+		
+        return uniqueAccn;
     }
     
     public List<String> getDocNames() {
@@ -923,7 +1027,13 @@ public class SpireHandler implements MessageHandler {
         
         try{
             String providerId = msg.getRESPONSE().getORDER_OBSERVATION(0).getOBR().getOrderingProvider(0).getIDNumber().getValue();
-            docNums.add(providerId);
+			if (providerId == null) {
+				XCN orderingDoc = msg.getRESPONSE().getORDER_OBSERVATION(0).getOBR().getOrderingProvider(0);
+				String docName = orderingDoc.getGivenName() + " " + orderingDoc.getFamilyName();
+				logger.warn("Doctor '"+ docName +"' in Spire lab does not have spire id number!");
+			} else {
+				docNums.add(providerId);
+			}
             
             i=0;
             while((id = msg.getRESPONSE().getORDER_OBSERVATION(0).getOBR().getResultCopiesTo(i).getIDNumber().getValue()) != null){
