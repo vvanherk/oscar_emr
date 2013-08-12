@@ -48,6 +48,7 @@
 
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/jquery.js"></script>
 <title><bean:message key="ViewScript.title" /></title>
 
 <html:base />
@@ -418,11 +419,20 @@ function signatureHandler(e) {
 }
 var requestIdKey = "<%=signatureRequestId %>";
 
+/**
+ * We want to disable the fax button if the pharmacy doesn't have a fax number set.
+ */
+function enableDisableFaxButton() {
+	var hasFaxNumber = <%= pharmacy != null && pharmacy.fax.trim().length() > 0 ? "true" : "false" %>;
+	if ( !hasFaxNumber )
+		jQuery("#faxButton").attr("disabled", "disabled");
+}
+
 </script>
 </head>
 
 <body topmargin="0" leftmargin="0" vlink="#0000FF"
-	onload="addressSelect();">
+	onload="addressSelect();  enableDisableFaxButton();">
 
 <!-- added by vic, hsfo -->
 <%
@@ -616,7 +626,7 @@ function toggleView(form) {
 					<tr>                            
                             <td><span><input type=button value="Fax & Paste into EMR"
                                     class="ControlPushButton" id="faxButton" style="width: 150px"
-                                    onClick="printPaste2Parent(false);sendFax();" disabled/></span></td>
+                                    onClick="printPaste2Parent(false);sendFax();"/></span></td>
                     </tr>
                     <% } %>
 					<tr>

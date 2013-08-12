@@ -23,10 +23,8 @@ String user_no = (String) session.getAttribute("user");
 
 
 int nItems=0;
-String strLimit1="0";
-String strLimit2="25";
-if(request.getParameter("limit1")!=null) strLimit1 = request.getParameter("limit1");
-if(request.getParameter("limit2")!=null) strLimit2 = request.getParameter("limit2");
+String strLimit1=request.getParameter("limit1")!=null?"0":request.getParameter("limit1");
+String strLimit2=request.getParameter("limit2")!=null?"25":request.getParameter("limit2");
 String providerview = request.getParameter("providerview")==null?"all":request.getParameter("providerview") ;
 OscarProperties props = OscarProperties.getInstance();
 if(props.getProperty("isNewONbilling", "").equals("true")) {

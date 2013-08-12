@@ -36,9 +36,11 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.oscarehr.common.model.AbstractModel;
+
 @Entity
 @Table(name="billing_on_favourite")
-public class BillingONFavourite {
+public class BillingONFavourite extends AbstractModel<Integer>{
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
