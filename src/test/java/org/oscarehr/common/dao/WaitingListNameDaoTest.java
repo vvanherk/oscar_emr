@@ -28,6 +28,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Before;
 import org.junit.Test;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.SpringUtils;
 
 public class WaitingListNameDaoTest extends TestFixtures {

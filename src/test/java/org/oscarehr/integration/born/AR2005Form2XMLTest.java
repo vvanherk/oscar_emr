@@ -28,6 +28,7 @@ import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.oscarehr.common.dao.TestFixtures;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 
 public class AR2005Form2XMLTest extends TestFixtures {
 

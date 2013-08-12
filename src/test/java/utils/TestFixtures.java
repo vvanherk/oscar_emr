@@ -55,6 +55,7 @@ import org.apache.log4j.Logger;
 import org.junit.BeforeClass;
 import utils.ConfigUtils;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 import org.springframework.context.support.ClassPathXmlApplicationContext;

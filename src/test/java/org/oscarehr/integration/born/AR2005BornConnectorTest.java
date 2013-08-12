@@ -53,6 +53,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.oscarehr.common.dao.TestFixtures;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 
 public class AR2005BornConnectorTest extends TestFixtures {
 

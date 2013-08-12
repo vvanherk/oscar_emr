@@ -31,6 +31,7 @@ import org.oscarehr.billing.CA.BC.model.TeleplanS22;
 import org.oscarehr.common.dao.TestFixtures;
 import utils.EntityDataGenerator;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.SpringUtils;
 
 public class TeleplanS22DaoTest extends TestFixtures {

@@ -33,6 +33,7 @@ import org.junit.Test;
 import org.oscarehr.PMmodule.dao.ProviderDao;
 import utils.EntityDataGenerator;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.ProviderSite;
 import org.oscarehr.common.model.ProviderSitePK;

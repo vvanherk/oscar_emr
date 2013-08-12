@@ -29,6 +29,7 @@ import org.junit.Before;
 import org.junit.Test;
 import utils.EntityDataGenerator;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.Desaprisk;
 import org.oscarehr.util.SpringUtils;
 

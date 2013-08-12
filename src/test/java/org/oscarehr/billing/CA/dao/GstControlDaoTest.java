@@ -33,6 +33,7 @@ import org.oscarehr.billing.CA.model.GstControl;
 import org.oscarehr.common.dao.TestFixtures;
 import utils.EntityDataGenerator;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.SpringUtils;
 
 public class GstControlDaoTest extends TestFixtures {

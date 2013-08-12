@@ -52,6 +52,7 @@ import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.RemoteIntegratedDataCopy;
 import org.oscarehr.util.MiscUtils;

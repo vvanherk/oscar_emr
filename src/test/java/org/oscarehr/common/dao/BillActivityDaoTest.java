@@ -31,6 +31,7 @@ import org.oscarehr.billing.CA.dao.BillActivityDao;
 import org.oscarehr.billing.CA.model.BillActivity;
 import utils.EntityDataGenerator;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.SpringUtils;
 
 public class BillActivityDaoTest {

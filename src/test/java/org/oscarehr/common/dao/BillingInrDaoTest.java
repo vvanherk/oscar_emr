@@ -30,6 +30,7 @@ import org.oscarehr.billing.CA.dao.BillingInrDao;
 import org.oscarehr.billing.CA.model.BillingInr;
 import utils.EntityDataGenerator;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.SpringUtils;
 
 public class BillingInrDaoTest {

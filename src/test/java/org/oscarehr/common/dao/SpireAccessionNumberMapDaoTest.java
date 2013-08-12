@@ -10,6 +10,7 @@ import org.junit.Before;
 import org.junit.Test;
 import utils.EntityDataGenerator;
 import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
 import org.oscarehr.common.model.SpireAccessionNumberMap;
 import org.oscarehr.common.model.SpireCommonAccessionNumber;
