@@ -34,7 +34,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.CtlDocType;
 import org.oscarehr.util.SpringUtils;
 
-public class CtlDocTypeDaoTest extends DaoTestFixtures {
+public class CtlDocTypeDaoTest extends TestFixtures {
 
 	private CtlDocTypeDao dao = (CtlDocTypeDao)SpringUtils.getBean("ctlDocTypeDao");
 

@@ -27,12 +27,12 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
 import org.oscarehr.common.model.Clinic;
 import org.oscarehr.util.SpringUtils;
 
-public class ClinicDAOTest extends DaoTestFixtures {
+public class ClinicDAOTest extends TestFixtures {
 
 	private ClinicDAO dao = (ClinicDAO)SpringUtils.getBean(ClinicDAO.class);
 

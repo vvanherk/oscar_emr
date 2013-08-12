@@ -29,11 +29,11 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.SchemaUtils;
 import org.oscarehr.common.model.StudyLogin;
 import org.oscarehr.util.SpringUtils;
 
-public class StudyLoginDaoTest extends DaoTestFixtures {
+public class StudyLoginDaoTest extends TestFixtures {
 
 	@Before
 	public void before() throws Exception {

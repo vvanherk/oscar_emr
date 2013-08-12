@@ -15,7 +15,7 @@ import org.oscarehr.common.model.SpireAccessionNumberMap;
 import org.oscarehr.common.model.SpireCommonAccessionNumber;
 import org.oscarehr.util.SpringUtils;
 
-public class SpireAccessionNumberMapDaoTest extends DaoTestFixtures {
+public class SpireAccessionNumberMapDaoTest extends TestFixtures {
 
 	private SpireAccessionNumberMapDao dao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
 	

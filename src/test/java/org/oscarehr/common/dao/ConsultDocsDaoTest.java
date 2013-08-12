@@ -36,7 +36,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.ConsultDocs;
 import org.oscarehr.util.SpringUtils;
 
-public class ConsultDocsDaoTest extends DaoTestFixtures {
+public class ConsultDocsDaoTest extends TestFixtures {
 
 	private ConsultDocsDao dao = (ConsultDocsDao)SpringUtils.getBean("consultDocsDao");
 

@@ -30,12 +30,12 @@ import java.util.Date;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
 import org.oscarehr.common.model.RSchedule;
 import org.oscarehr.util.SpringUtils;
 
-public class RScheduleDaoTest extends DaoTestFixtures {
+public class RScheduleDaoTest extends TestFixtures {
 
 	private RScheduleDao dao = (RScheduleDao) SpringUtils.getBean("rScheduleDao");
 

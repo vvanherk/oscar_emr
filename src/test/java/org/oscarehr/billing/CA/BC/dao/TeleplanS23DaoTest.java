@@ -28,12 +28,12 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.oscarehr.billing.CA.BC.model.TeleplanS23;
-import org.oscarehr.common.dao.DaoTestFixtures;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import org.oscarehr.common.dao.TestFixtures;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
 import org.oscarehr.util.SpringUtils;
 
-public class TeleplanS23DaoTest extends DaoTestFixtures {
+public class TeleplanS23DaoTest extends TestFixtures {
 
 	private TeleplanS23Dao dao = SpringUtils.getBean(TeleplanS23Dao.class);
 

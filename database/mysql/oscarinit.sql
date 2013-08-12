@@ -6687,7 +6687,7 @@ create table ProviderPreference
 	printDateOnRx Boolean DEFAULT 0,
 	printPharmacyOnRx Boolean DEFAULT 0,
 	billingRefBoxDefaultChecked Boolean DEFAULT 0,
-	useBillingProviderFromPreviousBill Boolean
+	useBillingProviderFromPreviousBill Boolean,
 	eRxEnabled tinyint(1) not null,
     eRx_SSO_URL varchar(128),
     eRxUsername varchar(32),

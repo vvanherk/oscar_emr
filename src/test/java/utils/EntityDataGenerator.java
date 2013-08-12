@@ -21,7 +21,7 @@
  * Hamilton
  * Ontario, Canada
  */
-package org.oscarehr.common.dao.utils;
+package utils;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.AccessibleObject;

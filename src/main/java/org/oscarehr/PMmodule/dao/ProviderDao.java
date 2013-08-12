@@ -46,8 +46,6 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 import oscar.OscarProperties;
 import oscar.util.SqlUtils;
 
-import org.oscarehr.util.SpringUtils;
-
 import org.oscarehr.common.model.ProviderSpireIdMap;
 import org.oscarehr.common.dao.ProviderSpireIdMapDao;
 

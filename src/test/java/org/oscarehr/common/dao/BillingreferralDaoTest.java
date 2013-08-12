@@ -33,7 +33,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.Billingreferral;
 import org.oscarehr.util.SpringUtils;
 
-public class BillingreferralDaoTest extends DaoTestFixtures {
+public class BillingreferralDaoTest extends TestFixtures {
 
 	private BillingreferralDao dao = (BillingreferralDao)SpringUtils.getBean("BillingreferralDAO");
 

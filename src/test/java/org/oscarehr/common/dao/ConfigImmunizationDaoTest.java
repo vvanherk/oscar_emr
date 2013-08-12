@@ -33,7 +33,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.ConfigImmunization;
 import org.oscarehr.util.SpringUtils;
 
-public class ConfigImmunizationDaoTest extends DaoTestFixtures {
+public class ConfigImmunizationDaoTest extends TestFixtures {
 
 	private ConfigImmunizationDao dao = (ConfigImmunizationDao)SpringUtils.getBean("configImmunizationDao");
 

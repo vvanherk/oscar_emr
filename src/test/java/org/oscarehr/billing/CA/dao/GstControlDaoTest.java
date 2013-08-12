@@ -30,12 +30,12 @@ import java.math.BigDecimal;
 import org.junit.Before;
 import org.junit.Test;
 import org.oscarehr.billing.CA.model.GstControl;
-import org.oscarehr.common.dao.DaoTestFixtures;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import org.oscarehr.common.dao.TestFixtures;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
 import org.oscarehr.util.SpringUtils;
 
-public class GstControlDaoTest extends DaoTestFixtures {
+public class GstControlDaoTest extends TestFixtures {
 
 	private GstControlDao dao = SpringUtils.getBean(GstControlDao.class);
 

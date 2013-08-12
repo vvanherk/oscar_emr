@@ -34,7 +34,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.Allergy;
 import org.oscarehr.util.SpringUtils;
 
-public class AllergyDaoTest extends DaoTestFixtures {
+public class AllergyDaoTest extends TestFixtures {
 
 	private AllergyDao dao = (AllergyDao)SpringUtils.getBean("AllergyDao");
 

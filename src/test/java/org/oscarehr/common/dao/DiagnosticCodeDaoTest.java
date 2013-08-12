@@ -28,12 +28,12 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
 import org.oscarehr.common.model.DiagnosticCode;
 import org.oscarehr.util.SpringUtils;
 
-public class DiagnosticCodeDaoTest extends DaoTestFixtures {
+public class DiagnosticCodeDaoTest extends TestFixtures {
 
 	private DiagnosticCodeDao dao = SpringUtils.getBean(DiagnosticCodeDao.class);
 

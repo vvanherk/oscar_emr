@@ -33,7 +33,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.DemographicAccessory;
 import org.oscarehr.util.SpringUtils;
 
-public class DemographicAccessoryDaoTest extends DaoTestFixtures {
+public class DemographicAccessoryDaoTest extends TestFixtures {
 
 	private DemographicAccessoryDao dao = (DemographicAccessoryDao)SpringUtils.getBean("demographicAccessoryDao");
 

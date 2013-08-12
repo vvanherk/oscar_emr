@@ -59,7 +59,7 @@ import org.oscarehr.util.ObjectMarshalUtil;
 import org.oscarehr.util.SpringUtils;
 
 
-public class RemoteIntegratedDataCopyDaoTest extends DaoTestFixtures {
+public class RemoteIntegratedDataCopyDaoTest extends TestFixtures {
 	
 	RemoteIntegratedDataCopyDao  remoteIntegratedDataCopyDao = SpringUtils.getBean(RemoteIntegratedDataCopyDao.class);  
 

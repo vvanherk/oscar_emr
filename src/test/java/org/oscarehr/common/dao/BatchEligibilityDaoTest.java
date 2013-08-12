@@ -32,7 +32,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.BatchEligibility;
 import org.oscarehr.util.SpringUtils;
 
-public class BatchEligibilityDaoTest extends DaoTestFixtures {
+public class BatchEligibilityDaoTest extends TestFixtures {
 
 	private BatchEligibilityDao dao = (BatchEligibilityDao)SpringUtils.getBean("batchEligibilityDao");
 

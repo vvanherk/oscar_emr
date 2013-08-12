@@ -35,7 +35,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.CtlSpecialInstructions;
 import org.oscarehr.util.SpringUtils;
 
-public class CtlSpecialInstructionsDaoTest extends DaoTestFixtures {
+public class CtlSpecialInstructionsDaoTest extends TestFixtures {
 
 	private CtlSpecialInstructionsDao dao = (CtlSpecialInstructionsDao)SpringUtils.getBean("ctlSpecialInstructionsDao");
 

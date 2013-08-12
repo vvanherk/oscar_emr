@@ -33,7 +33,7 @@ import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.AppointmentArchive;
 import org.oscarehr.util.SpringUtils;
 
-public class AppointmentArchiveDaoTest extends DaoTestFixtures{
+public class AppointmentArchiveDaoTest extends TestFixtures{
 
 	private AppointmentArchiveDao dao = (AppointmentArchiveDao)SpringUtils.getBean("appointmentArchiveDao");
 

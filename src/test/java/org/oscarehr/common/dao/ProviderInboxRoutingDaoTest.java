@@ -31,14 +31,14 @@ import javax.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
 import org.oscarehr.common.model.ProviderInboxItem;
 import org.oscarehr.util.SpringUtils;
 
 import oscar.oscarLab.ca.on.LabResultData;
 
-public class ProviderInboxRoutingDaoTest extends DaoTestFixtures {
+public class ProviderInboxRoutingDaoTest extends TestFixtures {
 
 	private ProviderInboxRoutingDao dao = SpringUtils.getBean(ProviderInboxRoutingDao.class);
 

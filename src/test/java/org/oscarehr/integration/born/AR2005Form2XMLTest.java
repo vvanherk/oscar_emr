@@ -26,10 +26,10 @@ package org.oscarehr.integration.born;
 import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
-import org.oscarehr.common.dao.DaoTestFixtures;
+import org.oscarehr.common.dao.TestFixtures;
 import utils.SchemaUtils;
 
-public class AR2005Form2XMLTest extends DaoTestFixtures {
+public class AR2005Form2XMLTest extends TestFixtures {
 
 	@Before
 	public void before() throws Exception {

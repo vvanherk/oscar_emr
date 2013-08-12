@@ -28,12 +28,12 @@ import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
 import org.junit.Test;
 import org.oscarehr.billing.CA.ON.model.BillingClaimHeader1;
-import org.oscarehr.common.dao.DaoTestFixtures;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import org.oscarehr.common.dao.TestFixtures;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
 import org.oscarehr.util.SpringUtils;
 
-public class BillingClaimDAOTest extends DaoTestFixtures {
+public class BillingClaimDAOTest extends TestFixtures {
 
 	private BillingClaimDAO dao = SpringUtils.getBean(BillingClaimDAO.class);
 

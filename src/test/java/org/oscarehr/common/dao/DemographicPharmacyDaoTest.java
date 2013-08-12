@@ -33,7 +33,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.DemographicPharmacy;
 import org.oscarehr.util.SpringUtils;
 
-public class DemographicPharmacyDaoTest extends DaoTestFixtures {
+public class DemographicPharmacyDaoTest extends TestFixtures {
 
 	private DemographicPharmacyDao dao = (DemographicPharmacyDao)SpringUtils.getBean(DemographicPharmacyDao.class);
 

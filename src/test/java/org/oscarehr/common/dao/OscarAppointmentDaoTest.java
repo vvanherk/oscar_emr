@@ -41,7 +41,7 @@ import org.oscarehr.common.model.Appointment;
 import org.oscarehr.util.SpringUtils;
 
 
-public class OscarAppointmentDaoTest extends DaoTestFixtures {
+public class OscarAppointmentDaoTest extends TestFixtures {
 
 	OscarAppointmentDao dao=(OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
 

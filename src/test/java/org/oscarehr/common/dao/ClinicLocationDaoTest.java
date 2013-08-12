@@ -36,7 +36,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.ClinicLocation;
 import org.oscarehr.util.SpringUtils;
 
-public class ClinicLocationDaoTest extends DaoTestFixtures {
+public class ClinicLocationDaoTest extends TestFixtures {
 
 	private ClinicLocationDao dao = (ClinicLocationDao)SpringUtils.getBean("clinicLocationDao");
 

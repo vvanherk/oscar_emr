@@ -35,7 +35,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.CtlFrequency;
 import org.oscarehr.util.SpringUtils;
 
-public class CtlFrequencyDaoTest extends DaoTestFixtures {
+public class CtlFrequencyDaoTest extends TestFixtures {
 
 	private CtlFrequencyDao dao = (CtlFrequencyDao)SpringUtils.getBean("ctlFrequencyDao");
 

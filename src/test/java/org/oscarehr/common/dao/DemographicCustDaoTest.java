@@ -36,7 +36,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.DemographicCust;
 import org.oscarehr.util.SpringUtils;
 
-public class DemographicCustDaoTest extends DaoTestFixtures {
+public class DemographicCustDaoTest extends TestFixtures {
 
 	private DemographicCustDao dao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
 

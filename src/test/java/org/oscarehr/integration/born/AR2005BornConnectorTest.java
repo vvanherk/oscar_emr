@@ -51,10 +51,10 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.DaoTestFixtures;
+import org.oscarehr.common.dao.TestFixtures;
 import utils.SchemaUtils;
 
-public class AR2005BornConnectorTest extends DaoTestFixtures {
+public class AR2005BornConnectorTest extends TestFixtures {
 
 	@Before
 	public void before() throws Exception {

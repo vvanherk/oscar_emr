@@ -33,7 +33,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.PharmacyInfo;
 import org.oscarehr.util.SpringUtils;
 
-public class PharmacyInfoDaoTest extends DaoTestFixtures {
+public class PharmacyInfoDaoTest extends TestFixtures {
 
 	private PharmacyInfoDao dao = (PharmacyInfoDao)SpringUtils.getBean("pharmacyInfoDao");
 

@@ -106,7 +106,7 @@ import oscar.oscarEncounter.oscarMeasurements.model.Measurements;
 import com.quatro.dao.security.SecurityDao;
 import com.quatro.model.security.Security;
 
-public class OntarioMDSpec4DataTest extends DaoTestFixtures {
+public class OntarioMDSpec4DataTest extends TestFixtures {
 
 
 	@Before

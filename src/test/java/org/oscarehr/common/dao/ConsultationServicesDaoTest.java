@@ -32,7 +32,7 @@ import utils.SchemaUtils;
 import org.oscarehr.common.model.ConsultationServices;
 import org.oscarehr.util.SpringUtils;
 
-public class ConsultationServicesDaoTest extends DaoTestFixtures {
+public class ConsultationServicesDaoTest extends TestFixtures {
 
 	private ConsultationServiceDao dao = (ConsultationServiceDao)SpringUtils.getBean("consultationServiceDao");
 

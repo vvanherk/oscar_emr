@@ -69,8 +69,6 @@ import oscar.MyDateFormat;
 import oscar.OscarProperties;
 import oscar.util.SqlUtils;
 
-import org.oscarehr.integration.hl7.generators.HL7A04Generator;
-
 /**
  */
 public class DemographicDao extends HibernateDaoSupport {
