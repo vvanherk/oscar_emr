@@ -247,19 +247,19 @@ public final class MiscUtils {
 		return ((Serializable) (new ObjectInputStream(new ByteArrayInputStream(b))).readObject());
 	}
 	
-	public static String encodeToBase64String(String s) throws UnsupportedEncodingException {
+	public static synchronized String encodeToBase64String(String s) throws UnsupportedEncodingException {
 		return (new String(base64.encode(s.getBytes(ENCODING)), ENCODING));
 	}
 
-	public static String decodeBase64StoString(String s) throws UnsupportedEncodingException {
+	public static synchronized String decodeBase64StoString(String s) throws UnsupportedEncodingException {
 		return (new String(base64.decode(s.getBytes(ENCODING)), ENCODING));
 	}
 	
-	public static String encodeToBase64String(byte[] b) throws UnsupportedEncodingException {
+	public static synchronized String encodeToBase64String(byte[] b) throws UnsupportedEncodingException {
 		return (new String(base64.encode(b), ENCODING));
 	}
 
-	public static byte[] decodeBase64(String s) throws UnsupportedEncodingException {
+	public static synchronized byte[] decodeBase64(String s) throws UnsupportedEncodingException {
 		return (base64.decode(s.getBytes(ENCODING)));
 	}
 	
