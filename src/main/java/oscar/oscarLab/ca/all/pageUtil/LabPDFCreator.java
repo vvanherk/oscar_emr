@@ -69,6 +69,7 @@ import com.lowagie.text.Font;
 import com.lowagie.text.PageSize;
 import com.lowagie.text.Phrase;
 import com.lowagie.text.Rectangle;
+import com.lowagie.text.Paragraph;
 import com.lowagie.text.pdf.BaseFont;
 import com.lowagie.text.pdf.PdfContentByte;
 import com.lowagie.text.pdf.PdfPCell;
@@ -180,6 +181,9 @@ public class LabPDFCreator extends PdfPageEventHelper{
     } 
     //Creates an rtf file for viha rtf labs
     public void printRtf()throws IOException, DocumentException{
+		// If we are printing to RTF, we are not printing a Spire lab, so there should only be one handler
+		MessageHandler handler = this.handlers.get(0);
+		
     	//create an input stream from the rtf string bytes
     	byte[] rtfBytes = handler.getOBXResult(0, 0).getBytes();
     	ByteArrayInputStream rtfStream = new ByteArrayInputStream(rtfBytes);
@@ -841,6 +845,9 @@ public class LabPDFCreator extends PdfPageEventHelper{
      * add the patient information to the RTF document using chunks and paragraphs
      */
     private void addRtfPatientInfo() throws DocumentException{
+		// If we are printing to RTF, we are not printing a Spire lab, so there should only be one handler
+		MessageHandler handler = this.handlers.get(0);
+		
     	Paragraph patientInfo = new Paragraph();
     	
     	Phrase clientPhrase = new Phrase();
