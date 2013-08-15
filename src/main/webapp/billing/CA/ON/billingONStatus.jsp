@@ -180,6 +180,9 @@ BigDecimal adjTotal = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP);
         function fillEndDate(d){
            document.serviceform.xml_appointment_date.value= d;  
         }
+        function fillStartDate(d){
+           document.serviceform.xml_vdate.value= d;  
+        }
         function setDemographic(demoNo){
            //alert(demoNo);
            document.serviceform.demographicNo.value = demoNo;
@@ -490,9 +493,9 @@ function changeSite(sel) {
         
           <font size="1" ><a href="javascript: function myFunction() {return false; }" id="hlADate" >To:</a></font> 
           <input type="text" name="xml_appointment_date" id="xml_appointment_date" value="<%=endDate%>" size=10 style="width:70px" /> 
-          <br><a href="javascript: function myFunction() {return false; }" onClick="fillEndDate('<%=DateUtils.sumDate("yyyy-MM-dd","-30")%>')" >30</a>
-          <a href="javascript: function myFunction() {return false; }" onClick="fillEndDate('<%=DateUtils.sumDate("yyyy-MM-dd","-60")%>')" >60</a>
-          <a href="javascript: function myFunction() {return false; }" onClick="fillEndDate('<%=DateUtils.sumDate("yyyy-MM-dd","-90")%>')" >90</a>                         
+          <br><a href="javascript: function myFunction() {return false; }" onClick="fillStartDate('<%=DateUtils.sumDate("yyyy-MM-dd","-30")%>')" >30</a>
+          <a href="javascript: function myFunction() {return false; }" onClick="fillStartDate('<%=DateUtils.sumDate("yyyy-MM-dd","-60")%>')" >60</a>
+          <a href="javascript: function myFunction() {return false; }" onClick="fillStartDate('<%=DateUtils.sumDate("yyyy-MM-dd","-90")%>')" >90</a>                         
 		<input type="submit" name="Submit" value="Create Report">
         <div>         
           <font size="-1">Dx:</font><input type="text" name="dx" size="3" value="<%=dx%>"/>

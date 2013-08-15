@@ -91,6 +91,9 @@ BigDecimal paidTotal = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP);
         function fillEndDate(d){
            document.serviceform.xml_appointment_date.value= d;  
         }
+        function fillStartDate(d){
+           document.serviceform.xml_vdate.value= d;  
+        }
         function setDemographic(demoNo){
            //alert(demoNo);
            document.serviceform.demographicNo.value = demoNo;
@@ -144,11 +147,11 @@ BigDecimal paidTotal = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP);
 <input type="text" name="xml_appointment_date" id="xml_appointment_date"
 	value="<%=endDate%>"> <a
 	href="javascript: function myFunction() {return false; }"
-	onClick="fillEndDate('<%=DateUtils.sumDate("yyyy-M-d","-30")%>')">30</a>&nbsp;
+	onClick="fillStartDate('<%=DateUtils.sumDate("yyyy-M-d","-30")%>')">30</a>&nbsp;
 <a href="javascript: function myFunction() {return false; }"
-	onClick="fillEndDate('<%=DateUtils.sumDate("yyyy-M-d","-60")%>')">60</a>&nbsp;
+	onClick="fillStartDate('<%=DateUtils.sumDate("yyyy-M-d","-60")%>')">60</a>&nbsp;
 <a href="javascript: function myFunction() {return false; }"
-	onClick="fillEndDate('<%=DateUtils.sumDate("yyyy-M-d","-90")%>')">90</a>&nbsp;
+	onClick="fillStartDate('<%=DateUtils.sumDate("yyyy-M-d","-90")%>')">90</a>&nbsp;
 
 Demographic:<input type="text" name="demographicNo" size="5"
 	value="<%=demoNo%>" /> <input type='button' name='print' value='Print'
