@@ -156,11 +156,26 @@ BigDecimal adjTotal = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP);
         <title>Bill Status</title>
         <script type="text/javascript" src="../../../share/javascript/Oscar.js"></script>
 		<link rel="stylesheet" type="text/css" href="billingON.css" />
+		<!-- <link rel="stylesheet" type="text/css" href="../../../js/tablesorter_css/themes/blue/style.css" /> -->
+		<link rel="stylesheet" type="text/css" href="../../../js/tablesorter_css/themes/blue/style_custom.css" />
         <link rel="stylesheet" type="text/css" media="all" href="../../../share/calendar/calendar.css" title="win2k-cold-1" /> 
         <script type="text/javascript" src="../../../share/calendar/calendar.js"></script>
         <script type="text/javascript" src="../../../share/calendar/lang/<bean:message key="global.javascript.calendar"/>"></script>                                                            
         <script type="text/javascript" src="../../../share/calendar/calendar-setup.js"></script>
-       
+        <script type="text/javascript" src="../../../js/jquery-1.7.1.min.js"></script>
+		<script type="text/javascript" src="../../../js/jquery.tablesorter.min.js"></script>
+		
+		<script>
+			$(document).ready(function() {
+			    // call the tablesorter plugin 
+			    $("table").tablesorter({
+			        // sort on the first column, order asc 
+					sortList: [[0,0]],
+					widgets: ['zebra']
+			    }); 
+			}); 
+		</script>
+		
         <script type="text/javascript">
         function fillEndDate(d){
            document.serviceform.xml_appointment_date.value= d;  
@@ -538,7 +553,8 @@ function changeSite(sel) {
 <% //
 if(statusType.equals("_")) { %>
     <!--  div class="rejected list"-->
-       <table width="100%" border="1" cellspacing="0" cellpadding="1">
+       <table width="100%" border="1" cellspacing="0" cellpadding="1" class="tablesorter">
+		<thead>
           <tr class="myYellow"> 
              <th>Health#</th>
              <th>D.O.B</th>
@@ -559,6 +575,7 @@ if(statusType.equals("_")) { %>
              <th>Filename</th>
              <th>OHIP Claim Id</th>
           </tr>
+        </thead>
 	<% //
         ArrayList<String> aLProviders;
         if( providerNo == null || providerNo.equals(""))  {
@@ -581,7 +598,6 @@ if(statusType.equals("_")) { %>
             BillingProviderData providerObj = (new JdbcBillingPageUtil()).getProviderObj(providerNo);
             lPat = (new JdbcBillingErrorRepImpl()).getErrorRecords(providerObj, startDate, endDate, filename);
             }
-    boolean nC = false;
 	String invoiceNo = "";
 	
 	JdbcBillingRAImpl raObj = new JdbcBillingRAImpl();
@@ -591,14 +607,11 @@ if(statusType.equals("_")) { %>
 		// get ohip claim number
 		String claimNo = raObj.getRAClaimNo4BillingNo( bObj.getBilling_no() );
 		
-		String color = "";
 		if(!invoiceNo.equals(bObj.getBilling_no())) {
 			invoiceNo = bObj.getBilling_no(); 
-			nC = nC ? false : true;
 		} 
-	    color = nC ? "class='myGreen'" : "";
 	%>
-    		<tr <%=color %>>
+    		<tr>
     			<td><span class="smallFont"><%=bObj.getHin() %> <%=bObj.getVer() %></span></td>
     			<td><font size="-1"><%=bObj.getDob() %></font></td>
     			<td align="right">
@@ -626,7 +639,8 @@ if(statusType.equals("_")) { %>
     		</tr>
 <% }}} else { %>
     <!--  div class="tableListing"-->
-       <table width="100%" border="1" cellspacing="0" cellpadding="1">
+       <table width="100%" border="1" cellspacing="0" cellpadding="1" class="tablesorter">
+       <thead>
           <tr class="myYellow"> 
              <th>SERVICE DATE</th>
              <th>PATIENT</th>
@@ -647,11 +661,11 @@ if(statusType.equals("_")) { %>
 			 <th>SITE</th>             
         <% }%>     
           </tr>
+       </thead>
        
           
        <% //
        String invoiceNo = ""; 
-       boolean nC = false;
 
 		JdbcBillingRAImpl raObj = new JdbcBillingRAImpl();
 
@@ -704,12 +718,10 @@ if(statusType.equals("_")) { %>
 	       BigDecimal adj = (new BigDecimal(ch1Obj.getTotal())).setScale(2,BigDecimal.ROUND_HALF_UP);               
                adj = adj.subtract(bTemp);
                adjTotal = adjTotal.add(adj);
-	       String color = "";
+
 	       if(!invoiceNo.equals(ch1Obj.getId())) {
 	    	   invoiceNo = ch1Obj.getId(); 
-	    	   nC = nC ? false : true;
 	       } 
-	       color = nC ? "class='myGreen'" : "";
                String settleDate = ch1Obj.getSettle_date();
                if( settleDate == null || !ch1Obj.getStatus().equals("S")) {
                    settleDate = "N/A";
@@ -722,7 +734,7 @@ if(statusType.equals("_")) { %>
 			String claimNo = raObj.getRAClaimNo4BillingNo( ch1Obj.getId() );
 	      
        %>       
-          <tr <%=color %>> 
+          <tr> 
              <td align="center"><%= ch1Obj.getService_date()%>  <%--=ch1Obj.getBilling_time()--%></td>  <!--SERVICE DATE-->
              <td align="center"><a href="javascript: setDemographic('<%=ch1Obj.getDemographic_no()%>');"><%=ch1Obj.getDemographic_no()%></a></td> <!--PATIENT-->
              <td align="center"><a href=# onclick="popupPage(800,740,'../../../demographic/demographiccontrol.jsp?demographic_no=<%=ch1Obj.getDemographic_no()%>&displaymode=edit&dboperation=search_detail');return false;"><%= ch1Obj.getDemographic_name()%></a></td> 
@@ -757,7 +769,7 @@ if(statusType.equals("_")) { %>
         	<% }%>     
           </tr>
        <% } %>  
-       
+       <tfoot>
           <tr class="myYellow"> 
              <td>Count:</td>  
              <td align="center"><%=patientCount%></td> 
@@ -773,12 +785,13 @@ if(statusType.equals("_")) { %>
              <td>&nbsp;</td><!--DX3-->
              <td>&nbsp;</td><!--ACCOUNT-->
              <td>&nbsp;</td><!--MESSAGES-->
-             <td>$nbsp;</td>
+             
              <% if (bMultisites) {%>
 				 <td>&nbsp;</td><!--SITE-->          
         	<% }%>    
           </tr>
-       <table>
+       </tfoot>
+       </table>
     </div>
 <% } %>
     
