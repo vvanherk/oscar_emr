@@ -233,23 +233,10 @@ function popupPage(vheight,vwidth,varpage) {
 					recordObj = obj.getBillingRecordObj(billNo);
 					if (recordObj != null && recordObj.size() > 0) {
 						ch1Obj = (BillingClaimHeader1Data) recordObj.get(0);
-
-						String apptNo = ch1Obj.getAppointment_no();
-						Integer apptNoAsInteger = new Integer(apptNo);
 						
-						OscarAppointmentDao appointmentDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
-						Appointment appt = appointmentDao.getAppointment( apptNoAsInteger );
-						
-						if (appt != null) {
-							java.util.Date d = appt.getAppointmentDate();
-							if (d != null)
-								AppointmentDate = new SimpleDateFormat("yyyy-MM-dd").format(d);
-						} else {
-							if (recordObj.size() > 1) {
-								BillingItemData billingItemData = (BillingItemData) recordObj.get(1);
-								AppointmentDate = billingItemData.getService_date();
-							}
-								
+						if (recordObj.size() > 1) {
+							BillingItemData billingItemData = (BillingItemData) recordObj.get(1);
+							AppointmentDate = billingItemData.getService_date();
 						}
 
 						UpdateDate = ch1Obj.getUpdate_datetime(); //.substring(0,10);
@@ -433,10 +420,8 @@ if(bFlag) {
 		<td><b><bean:message
 			key="billing.billingCorrection.msgBillingInf" /></b></td>
 		<td width="46%"><bean:message
-			key="billing.billingCorrection.btnBillingDate" /><img
-			src="../../../images/cal.gif" id="xml_appointment_date_cal" />: <input
-			type="text" id="xml_appointment_date" name="xml_appointment_date"
-			value="<%=BillDate%>" size=10 /></td>
+			key="billing.billingCorrection.btnBillingDate" />: <input
+			type="text" readonly value="<%=BillDate%>" size=10 /></td>
 	</tr>
 	<tr>
 		<td width="54%"><b><bean:message
@@ -660,7 +645,6 @@ if(bFlag) {
 <form>
 </body>
 <script type="text/javascript">
-Calendar.setup( { inputField : "xml_appointment_date", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_appointment_date_cal", singleClick : true, step : 1 } );
 Calendar.setup( { inputField : "xml_vdate", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_vdate_cal", singleClick : true, step : 1 } );
 </script>
 <%!String nullToEmpty(String str) {
