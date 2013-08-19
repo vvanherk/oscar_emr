@@ -1495,65 +1495,71 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 	                                       <%}  
 	                                      			
 	                                      
-	                                    } else if ((!handler.getOBXResultStatus(j, k).equals("TDIS") && !handler.getMsgType().equals("EPSILON")) )  { %>
-												if(isUnstructuredDoc){%>
-                                   			<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%="NarrativeRes"%>"><% 
-                                   			if(handler.getOBXIdentifier(j, k).equals(handler.getOBXIdentifier(j, k-1)) && (obxCount>1)){%>
-                                   				<td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"></a><%
-                                   				}
-                                   			else{%> <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a><%}%>
-											<%if(isVIHARtf){
-											    //create bytes from the rtf string
-										    	byte[] rtfBytes = handler.getOBXResult(j, k).getBytes();
-										    	ByteArrayInputStream rtfStream = new ByteArrayInputStream(rtfBytes);
-										    	
-										    	//Use RTFEditor Kit to get plaintext from RTF
-										    	RTFEditorKit rtfParser = new RTFEditorKit();
-										    	javax.swing.text.Document doc = rtfParser.createDefaultDocument();
-										    	rtfParser.read(rtfStream, doc, 0);
-										    	String rtfText = doc.getText(0, doc.getLength()).replaceAll("\n", "<br>");
-										    	String disclaimer = "IMPORTANT DISCLAIMER: You are viewing a PREVIEW of the original report. The rich text formatting contained in the original report may convey critical information that must be considered for clinical decision making. Please refer to the ORIGINAL report, by clicking 'Print', prior to making any decision on diagnosis or treatment.";%>
-										    	<td align="left"><%= rtfText + disclaimer %></td><%} %><%
-											else{%>
-                                           		<td align="left"><%= handler.getOBXResult( j, k) %></td><%} %>
-                                           	<%if(handler.getTimeStamp(j, k).equals(handler.getTimeStamp(j, k-1)) && (obxCount>1)){
-                                        			%><td align="center"></td><%}
-                                        		else{%> <td align="center"><%= handler.getTimeStamp(j, k) %></td><%}
-                                   			}//end of isUnstructuredDoc
-                                   			
-                                   			else{//if it isn't a PATHL7 doc%>
+	                                    } else if ((!handler.getOBXResultStatus(j, k).equals("TDIS") && !handler.getMsgType().equals("EPSILON")) )  {
+												if(isUnstructuredDoc) { %>
+													<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%="NarrativeRes"%>">
+													<% if(handler.getOBXIdentifier(j, k).equals(handler.getOBXIdentifier(j, k-1)) && (obxCount>1)) { %>
+														<td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"></a>
+													<% 
+													} else { %> 
+														<td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>
+													<% } %>
+													<% if(isVIHARtf) {
+													    //create bytes from the rtf string
+												    	byte[] rtfBytes = handler.getOBXResult(j, k).getBytes();
+												    	ByteArrayInputStream rtfStream = new ByteArrayInputStream(rtfBytes);
+												    	
+												    	//Use RTFEditor Kit to get plaintext from RTF
+												    	RTFEditorKit rtfParser = new RTFEditorKit();
+												    	javax.swing.text.Document doc = rtfParser.createDefaultDocument();
+												    	rtfParser.read(rtfStream, doc, 0);
+												    	String rtfText = doc.getText(0, doc.getLength()).replaceAll("\n", "<br>");
+												    	String disclaimer = "IMPORTANT DISCLAIMER: You are viewing a PREVIEW of the original report. The rich text formatting contained in the original report may convey critical information that must be considered for clinical decision making. Please refer to the ORIGINAL report, by clicking 'Print', prior to making any decision on diagnosis or treatment.";
+														%>
+														<td align="left"><%= rtfText + disclaimer %></td>
+													<% } else { %>
+														<td align="left"><%= handler.getOBXResult( j, k) %></td>
+													<% } %>
+													<% if(handler.getTimeStamp(j, k).equals(handler.getTimeStamp(j, k-1)) && (obxCount>1)) { %>
+														<td align="center"></td>
+													<% } else { %>
+														<td align="center"><%= handler.getTimeStamp(j, k) %></td>
+													<% }
+												} //end of isUnstructuredDoc
+	                                   			else { //if it isn't a PATHL7 doc
+													%>
+	
+													<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+		                                           <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>                                         
+		                                           &nbsp;
+													<% if(loincCode != null) { %>
+		                                                <a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
+													<% } %> </td>
+		                                           <td align="right"><%= handler.getOBXResult( j, k) %></td>
+		                                          
+		                                           <td align="center">
+		                                                   <%= handler.getOBXAbnormalFlag(j, k)%>
+		                                           </td>
+		                                           <td align="left"><%=handler.getOBXReferenceRange( j, k)%></td>
+		                                           <td align="left"><%=handler.getOBXUnits( j, k) %></td>
+		                                           <td align="center"><%= handler.getTimeStamp(j, k) %></td>
+		                                           <td align="center"><%= handler.getOBXResultStatus( j, k) %></td>
+		                                      		<td align="center" valign="top">
+			                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
+			                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
+			                                                </a>
+		                                                </td>
+		                                       </tr> 
+			                                     <% } %>
 
-	                                      		<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
-	                                           <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>                                         
-	                                           &nbsp;<%if(loincCode != null){ %>
-	                                                	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
-	                                                	<%} %> </td>
-	                                           <td align="right"><%= handler.getOBXResult( j, k) %></td>
-	                                          
-	                                           <td align="center">
-	                                                   <%= handler.getOBXAbnormalFlag(j, k)%>
-	                                           </td>
-	                                           <td align="left"><%=handler.getOBXReferenceRange( j, k)%></td>
-	                                           <td align="left"><%=handler.getOBXUnits( j, k) %></td>
-	                                           <td align="center"><%= handler.getTimeStamp(j, k) %></td>
-	                                           <td align="center"><%= handler.getOBXResultStatus( j, k) %></td>
-	                                      		<td align="center" valign="top">
-		                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
-		                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
-		                                                </a>
-	                                                </td>
-	                                       </tr> 
-		                                     <%}
-
-	                                       <%for (l=0; l < handler.getOBXCommentCount(j, k); l++){%>
+	                                       <% for (l=0; l < handler.getOBXCommentCount(j, k); l++) { %>
 	                                            <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
 	                                               <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
-	                                            </tr>  
-	                                       <%}  
-	                                      			
-	                                      
+	                                            </tr>
+	                                       <% }
+
 	                                    } else { %>
-	                                       	<%for (l=0; l < handler.getOBXCommentCount(j, k); l++){
+	                                       	<% for (l=0; l < handler.getOBXCommentCount(j, k); l++) {
 	                                       			if (!handler.getOBXComment(j, k, l).equals("")) {
 	                                       		%>
 	                                            <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="TDISRes">
@@ -1565,13 +1571,10 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 	                                             </td>
 	                                            </tr>  
 	                                       			<%}
-	                                       	} %>
-	                                       
-	                                       
-	                                 <%  } 
+	                                       	} 
+										} 
 	                                      
 	                                    } 
-	                                   
 	                               }                                                             
 	                           //}   
 	                           	
