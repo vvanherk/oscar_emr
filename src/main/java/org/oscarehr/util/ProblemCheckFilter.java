@@ -59,62 +59,86 @@ public final class ProblemCheckFilter implements Filter
 		}
 
 		public Object getAttribute(String arg0)
-		{
+		{	
+			if (session == null)
+				return null;
 			return session.getAttribute(arg0);
 		}
 
 		public Enumeration getAttributeNames()
 		{
+			if (session == null)
+				return null;
 			return session.getAttributeNames();
 		}
 
 		public long getCreationTime()
 		{
+			if (session == null)
+				return 0;
 			return session.getCreationTime();
 		}
 
 		public String getId()
 		{
+			if (session == null)
+				return null;
 			return session.getId();
 		}
 
 		public long getLastAccessedTime()
 		{
+			if (session == null)
+				return 0;
 			return session.getLastAccessedTime();
 		}
 
 		public int getMaxInactiveInterval()
 		{
+			if (session == null)
+				return 0;
 			return session.getMaxInactiveInterval();
 		}
 
 		public ServletContext getServletContext()
 		{
+			if (session == null)
+				return null;
 			return session.getServletContext();
 		}
 
 		public HttpSessionContext getSessionContext()
 		{
+			if (session == null)
+				return null;
 			return session.getSessionContext();
 		}
 
 		public Object getValue(String arg0)
 		{
+			if (session == null)
+				return null;
 			return session.getValue(arg0);
 		}
 
 		public String[] getValueNames()
 		{
+			if (session == null)
+				return null;
 			return session.getValueNames();
 		}
 
 		public void invalidate()
 		{
+			if (session == null)
+				return;
 			session.invalidate();
 		}
 
 		public boolean isNew()
 		{
+			if (session == null)
+				return false;
 			return session.isNew();
 		}
 
@@ -122,16 +146,22 @@ public final class ProblemCheckFilter implements Filter
 		{
 			if (!(arg1 instanceof Serializable)) logger.debug("Some one putting non serialisable item into session. key="+arg0, new Exception("Non serialisable item in session"));
 			
+			if (session == null)
+				return;
 			session.putValue(arg0, arg1);
 		}
 
 		public void removeAttribute(String arg0)
 		{
+			if (session == null)
+				return;
 			session.removeAttribute(arg0);
 		}
 
 		public void removeValue(String arg0)
 		{
+			if (session == null)
+				return;
 			session.removeValue(arg0);
 		}
 
@@ -139,11 +169,15 @@ public final class ProblemCheckFilter implements Filter
 		{
 			if (!(arg1 instanceof Serializable)) logger.debug("Some one putting non serialisable item into session. key="+arg0, new Exception("Non serialisable item in session"));
 
+			if (session == null)
+				return;
 			session.setAttribute(arg0, arg1);
 		}
 
 		public void setMaxInactiveInterval(int arg0)
 		{
+			if (session == null)
+				return;
 			session.setMaxInactiveInterval(arg0);
 		}
 	}
@@ -183,12 +217,22 @@ public final class ProblemCheckFilter implements Filter
 	{
 		long usedBefore=Runtime.getRuntime().maxMemory()-Runtime.getRuntime().freeMemory();
 		HttpServletRequest request=(HttpServletRequest)originalRequest;
+		
 		try
 		{
 			chain.doFilter(new ServletRequestProxy(request), originalResponse);
+		} 
+		catch (Exception e)
+		{
+			logger.error("Exception occured during ProblemCheckFilter doFilter: " + e.toString());
 		}
 		finally
 		{
+			boolean isLabUpload = request.getServletPath().equals("/lab/newLabUpload.do");
+			
+			if ( isLabUpload )
+				request.getSession(false).invalidate();
+			
 			long usedAfter=Runtime.getRuntime().maxMemory()-Runtime.getRuntime().freeMemory();
 			
 			long usedForRequest=usedAfter-usedBefore;
