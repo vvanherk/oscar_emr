@@ -74,6 +74,12 @@
 <%@page import="org.oscarehr.common.dao.OscarAppointmentDao"%>
 <%@page import="org.oscarehr.common.model.Appointment"%>
 
+<%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
+<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
+<%
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+%>
+
 <%GregorianCalendar now = new GregorianCalendar();
 			int curYear = now.get(Calendar.YEAR);
 			int curMonth = (now.get(Calendar.MONTH) + 1);
@@ -270,7 +276,18 @@ function popupPage(vheight,vwidth,varpage) {
 						HCTYPE = ch1Obj.getProvince();
 						HCSex = ch1Obj.getSex();
 						r_doctor_ohip = ch1Obj.getRef_num();
-						r_doctor = "";
+                                                r_doctor = "";
+						
+                                                //Set r_doctor value, referral doctor name
+                                                List<ProfessionalSpecialist> professionalSpecialists = null;
+						
+                                                if(r_doctor_ohip != null && !r_doctor_ohip.isEmpty()){
+                                		    professionalSpecialists = professionalSpecialistDao.findByReferralNo(r_doctor_ohip);
+						   if(professionalSpecialists != null && professionalSpecialists.size() > 0) 
+						      r_doctor = professionalSpecialists.get(0).getFirstName() 
+                                                               + " " 
+                                                               + professionalSpecialists.get(0).getLastName();
+                                                }
 						r_doctor_ohip_s = "";
 						r_doctor_s = "";
 						m_review = ch1Obj.getMan_review();
@@ -416,8 +433,10 @@ if(bFlag) {
 		<td><b><bean:message
 			key="billing.billingCorrection.msgBillingInf" /></b></td>
 		<td width="46%"><bean:message
-			key="billing.billingCorrection.btnBillingDate" />: <input
-			type="text" readonly value="<%=BillDate%>" size=10 /></td>
+			key="billing.billingCorrection.btnBillingDate" /><img
+			src="../../../images/cal.gif" id="xml_appointment_date_cal" />: <input
+			type="text" id="xml_appointment_date" name="xml_appointment_date"
+			value="<%=BillDate%>" size=10 /></td>
 	</tr>
 	<tr>
 		<td width="54%"><b><bean:message
@@ -640,7 +659,10 @@ if(bFlag) {
 </table>
 <form>
 </body>
-
+<script type="text/javascript">
+Calendar.setup( { inputField : "xml_appointment_date", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_appointment_date_cal", singleClick : true, step : 1 } );
+Calendar.setup( { inputField : "xml_vdate", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_vdate_cal", singleClick : true, step : 1 } );
+</script>
 <%!String nullToEmpty(String str) {
 		return (str == null ? "" : str);
 	}

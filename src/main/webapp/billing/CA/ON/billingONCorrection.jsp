@@ -155,6 +155,13 @@ if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
 <%@page import="org.oscarehr.common.dao.OscarAppointmentDao"%>
 <%@page import="org.oscarehr.common.model.Appointment"%>
 
+<%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
+<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
+<%
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+%>
+
+
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
@@ -423,6 +430,18 @@ function checkSettle(status) {
 						HCSex = ch1Obj.getSex();
 						r_doctor_ohip = ch1Obj.getRef_num();
 						r_doctor = "";
+
+                                                //Set r_doctor value, referral doctor name
+                                                List<ProfessionalSpecialist> professionalSpecialists = null;
+						
+                                                if(r_doctor_ohip != null && !r_doctor_ohip.isEmpty()){
+                                		    professionalSpecialists = professionalSpecialistDao.findByReferralNo(r_doctor_ohip);
+						   if(professionalSpecialists != null && professionalSpecialists.size() > 0) 
+						      r_doctor = professionalSpecialists.get(0).getFirstName() 
+                                                               + " " 
+                                                               + professionalSpecialists.get(0).getLastName();
+                                                }
+
 						r_doctor_ohip_s = "";
 						r_doctor_s = "";
 						m_review = ch1Obj.getMan_review();
