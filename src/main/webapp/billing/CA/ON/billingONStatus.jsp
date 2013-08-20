@@ -150,6 +150,7 @@ BigDecimal adjTotal = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP);
 
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
+<%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@page import="org.oscarehr.common.model.Site"%>
 <%@page import="org.oscarehr.common.model.Provider"%><html>
     <head>
@@ -221,9 +222,9 @@ BigDecimal adjTotal = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP);
 				String temp[] = ((String) pList.get(i)).split("\\|");				
 			%>
 			
-			var temp_provider_no = <%=temp[0]%> ;			
+			var temp_provider_no = "<%=StringEscapeUtils.escapeJavaScript(temp[0])%>" ;			
 			if(provider_no==temp_provider_no) {				
-				var provider_ohipNo="<%=temp[3]%>";
+				var provider_ohipNo="<%=StringEscapeUtils.escapeJavaScript(temp[3])%>";
 				document.serviceform.provider_ohipNo.value=provider_ohipNo;	
 				if (shouldSubmit) {
 					if(document.getElementById("xml_vdate").value.length>0 && document.getElementById("xml_appointment_date").value.length>0)
