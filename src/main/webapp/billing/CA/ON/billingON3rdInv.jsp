@@ -23,6 +23,10 @@
 <%@page import="org.oscarehr.common.dao.DemographicDao"%>
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
 <%@page import="org.oscarehr.common.model.Provider"%>
+<%@page import="org.oscarehr.common.dao.SiteDao"%>
+<%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
+<%@page import="org.oscarehr.common.model.Site"%>
+<%@page errorPage="errorpage.jsp" import="java.util.*,java.math.*,java.net.*,java.sql.*,oscar.util.*,oscar.*,oscar.appt.*"%>
 <%
 String invNo = request.getParameter("billingNo");
 Billing3rdPartPrep privateObj = new Billing3rdPartPrep();
@@ -40,6 +44,7 @@ List aL = billObj.getBillingRecordObj(invNo);
 BillingClaimHeader1Data ch1Obj = (BillingClaimHeader1Data) aL.get(0);
 
 String serviceDate = ch1Obj.getBilling_date();
+String clinicname = (String)ch1Obj.getClinic();
 
 // Find the first billing item
 for (Object item : aL) {
@@ -48,6 +53,14 @@ for (Object item : aL) {
 		break;
 	}
 }
+
+// If clinic name is set in billing_on_cheader1 table, use it.
+String clinicInfo = null;
+SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
+Site s = ApptUtil.getSiteFromName(sites, clinicname);
+if ( s!=null)
+	clinicInfo = "<b>" + s.getName()+"</b><br />"+s.getAddress()+"<br />"+s.getCity()+", "+s.getProvince()+" "+s.getPostal()+"<br />Tel: "+s.getPhone()+"<br />Fax: "+s.getFax();
 	
 
 DemographicDao demoDAO = (DemographicDao)SpringUtils.getBean("demographicDao");
@@ -82,12 +95,16 @@ String percent = gstProp.getProperty("gstPercent", "");
 
 <table width="100%" border="0">
 	<tr>
-		<td><b><%=propClinic.getProperty("clinic_name", "") %></b><br />
+		<td>
+<% if(clinicInfo != null) {%>
+		<%=clinicInfo%>
+<%;} else{ %>
+		<b><%=propClinic.getProperty("clinic_name", "") %></b><br />
 		<%=propClinic.getProperty("clinic_address", "") %><br />
 		<%=propClinic.getProperty("clinic_city", "") %>, <%=propClinic.getProperty("clinic_province", "") %><br />
 		<%=propClinic.getProperty("clinic_postal", "") %><br />
 		Tel.: <%=propClinic.getProperty("clinic_phone", "") %><br />
-
+<%; } %>
 		</td>
 		<td align="right" valign="top"><font size="+2"><b>Invoice
 		- <%=invNo %></b></font><br />
