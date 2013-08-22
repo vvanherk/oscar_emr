@@ -39,34 +39,50 @@
 <%@ page import="org.oscarehr.common.dao.ScheduleTemplateCodeDao" %>
 <%
 	ScheduleTemplateCodeDao scheduleTemplateCodeDao = SpringUtils.getBean(ScheduleTemplateCodeDao.class);
+	String dbOperationResultText = "";
+	boolean dbOperationResult = false;
 %>
 <%
   int rowsAffected = 0;
   if (request.getParameter("dboperation") != null)
   {
-	  if (request.getParameter("dboperation").compareTo(" Save ")==0 )
+	  String param = request.getParameter("code");
+	  if (param != null && param.length() > 0)
 	  {
-	    ScheduleTemplateCode code = scheduleTemplateCodeDao.getByCode(request.getParameter("code").toCharArray()[0]);
-	    if(code != null) {
-	    	scheduleTemplateCodeDao.remove(code.getId());
-	    }
-
-	    code = new ScheduleTemplateCode();
-	    code.setCode(request.getParameter("code").toCharArray()[0]);
-	    code.setDescription(request.getParameter("description"));
-	    code.setDuration(request.getParameter("duration"));
-	    code.setColor(request.getParameter("color"));
-		code.setConfirm(request.getParameter("confirm"));
-		code.setBookinglimit(Integer.parseInt(request.getParameter("bookinglimit")));
-		scheduleTemplateCodeDao.persist(code);
-
-	  }
-	  if (request.getParameter("dboperation").equals("Delete") )
-	  {
-		  ScheduleTemplateCode code = scheduleTemplateCodeDao.getByCode(request.getParameter("code").toCharArray()[0]);
+		  if (request.getParameter("dboperation").compareTo(" Save ")==0 )
+		  {
+		    ScheduleTemplateCode code = scheduleTemplateCodeDao.getByCode(param.toCharArray()[0]);
 		    if(code != null) {
 		    	scheduleTemplateCodeDao.remove(code.getId());
 		    }
+	
+		    code = new ScheduleTemplateCode();
+		    code.setCode(param.toCharArray()[0]);
+		    code.setDescription(request.getParameter("description"));
+		    code.setDuration(request.getParameter("duration"));
+		    code.setColor(request.getParameter("color"));
+			code.setConfirm(request.getParameter("confirm"));
+			code.setBookinglimit(Integer.parseInt(request.getParameter("bookinglimit")));
+			scheduleTemplateCodeDao.persist(code);
+			
+			dbOperationResultText = "Added code successfully!";
+			dbOperationResult = true;
+		  }
+		  if (request.getParameter("dboperation").equals("Delete") )
+		  {
+			  ScheduleTemplateCode code = scheduleTemplateCodeDao.getByCode(param.toCharArray()[0]);
+			    if(code != null) {
+			    	scheduleTemplateCodeDao.remove(code.getId());
+			    	dbOperationResultText = "Deleted code successfully!";
+			    	dbOperationResult = true;
+			    } else {
+					dbOperationResultText = "Failed to delete code - no code with specified code '" + param + "' exists.";
+					dbOperationResult = false;
+				}
+		  }
+	  } else {
+		  dbOperationResultText = "Failed to add/delete code - code must be 1 character in length!";
+		  dbOperationResult = false;
 	  }
   }
 %>
@@ -145,6 +161,15 @@ function checkInput() {
 				<td width="50%" align="center">&nbsp;</td>
 			</TR>
 		</table>
+		
+		<%
+			if (dbOperationResultText.length() > 0) {
+				%>
+				<b style="color: <%=dbOperationResult? "green":"red"%>"><%=dbOperationResultText%></b>
+				<%
+			}
+		%>
+		
 		<table width="95%" border="1" cellspacing="0" cellpadding="2"
 			bgcolor="silver">
 			<form name="addtemplatecode" method="post"
