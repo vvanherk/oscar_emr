@@ -27,11 +27,15 @@
 <%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
 <%@page import="org.oscarehr.common.model.Site"%>
 <%@page errorPage="errorpage.jsp" import="java.util.*,java.math.*,java.net.*,java.sql.*,oscar.util.*,oscar.*,oscar.appt.*"%>
+<%@ page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@ page import="org.oscarehr.common.model.Clinic" %>
+
 <%
 String invNo = request.getParameter("billingNo");
 Billing3rdPartPrep privateObj = new Billing3rdPartPrep();
 Properties propClinic = privateObj.getLocalClinicAddr();
 Properties prop3rdPart = privateObj.get3rdPartBillProp(invNo);
+String clinicNO = (String) prop3rdPart.getProperty("clinicNo","");
 Properties prop3rdPayMethod = privateObj.get3rdPayMethod();
 Properties propGst = privateObj.getGst(invNo);
 //int gstFlag = 0;
@@ -54,14 +58,26 @@ for (Object item : aL) {
 	}
 }
 
-// If clinic name is set in billing_on_cheader1 table, use it.
+// If clinic name is set in billing_on_cheader1 table, use it. CLinic name will be set when multisite turn on.
 String clinicInfo = null;
 SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
 List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
 Site s = ApptUtil.getSiteFromName(sites, clinicname);
 if ( s!=null)
 	clinicInfo = "<b>" + s.getName()+"</b><br />"+s.getAddress()+"<br />"+s.getCity()+", "+s.getProvince()+" "+s.getPostal()+"<br />Tel: "+s.getPhone()+"<br />Fax: "+s.getFax();
-	
+//If no clinic name in billing_on_cheader1 table, check clinic_no in billing_on_ext
+if ( clinicNO != null)
+{	
+	//For clinic letter, nothing for provider and "Remit to" part.
+	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+	Clinic clinic = clinicDao.find(Integer.parseInt(clinicNO));
+	if( clinic != null )
+		clinicInfo = "<b>" + clinic.getClinicName() + "</b><br />" 
+		+ clinic.getClinicAddress() + "<br />"
+		+ clinic.getClinicCity()+", " + clinic.getClinicProvince()+" " 
+		+ clinic.getClinicPostal()+"<br />Tel: "
+		+ clinic.getClinicPhone()+"<br />Fax: "+ clinic.getClinicFax();
+}
 
 DemographicDao demoDAO = (DemographicDao)SpringUtils.getBean("demographicDao");
 Demographic demo = demoDAO.getDemographic(ch1Obj.getDemographic_no());
@@ -224,3 +240,4 @@ bdBal = bdBal.subtract(bdRef);
 
 </body>
 </html>
+
