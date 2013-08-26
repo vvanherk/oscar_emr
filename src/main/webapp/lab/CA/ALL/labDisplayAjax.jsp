@@ -27,6 +27,7 @@
 <%@page errorPage="../provider/errorpage.jsp" %>
 <%@ page import="java.util.*,
 		 java.sql.*,
+		 java.text.SimpleDateFormat,
 		 oscar.oscarDB.*,
 		 oscar.oscarLab.ca.all.*,
 		 oscar.oscarLab.ca.all.util.*,org.oscarehr.util.SpringUtils,
@@ -37,9 +38,12 @@
          oscar.OscarProperties,
 		 org.apache.commons.codec.binary.Base64,org.oscarehr.common.dao.Hl7TextInfoDao,org.oscarehr.common.model.Hl7TextInfo,
 		 org.oscarehr.common.dao.UserPropertyDAO, org.oscarehr.common.model.UserProperty" %>
+<%@ page import="oscar.oscarEncounter.oscarMeasurements.dao.*,oscar.oscarEncounter.oscarMeasurements.model.Measurementmap" %>
 <%@ page import="org.oscarehr.common.dao.SpireAccessionNumberMapDao" %>
 <%@ page import="org.oscarehr.common.model.SpireAccessionNumberMap" %>
 <%@ page import="org.oscarehr.common.model.SpireCommonAccessionNumber" %>
+<%@ page import="org.oscarehr.casemgmt.service.CaseManagementManager, org.oscarehr.common.dao.Hl7TextMessageDao, org.oscarehr.common.model.Hl7TextMessage,org.oscarehr.common.dao.Hl7TextInfoDao,org.oscarehr.common.model.Hl7TextInfo"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
@@ -71,6 +75,12 @@ if( skipComment ) {
 else {
 	ackLabFunc = "getComment('" + segmentID + "','ackLab');";
 }
+
+//Need date lab was received by OSCAR
+Hl7TextMessageDao hl7TxtMsgDao = (Hl7TextMessageDao)SpringUtils.getBean("hl7TextMessageDao");
+Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
+MeasurementMapDao measurementMapDao = (MeasurementMapDao) SpringUtils.getBean("measurementMapDao");
+Hl7TextMessage hl7TextMessage = hl7TxtMsgDao.find(Integer.parseInt(segmentID));
 
 ArrayList<ReportStatus> ackList=null;
 String multiLabId = "";
@@ -131,6 +141,8 @@ MiscUtils.getLogger().info("elements: " + ackList.size());
 
 MessageHandler h = Factory.getHandler(segmentID);
 
+
+String hl7 = null;
 hl7 = Factory.getHL7Body(segmentID);
 if (h instanceof OLISHL7Handler) { 
 	// What should we do in this instance?
@@ -183,7 +195,7 @@ if (handlers.size() == 0)
 
 boolean notBeenAcked = ackList.size() == 0;
 boolean ackFlag = false;
-ArrayList ackList = AcknowledgementData.getAcknowledgements(segmentID);
+ackList = AcknowledgementData.getAcknowledgements(segmentID);
 String labStatus = "";
 
 Map<String, ReportStatus> acknowledgmentInfo = new HashMap<String, ReportStatus>();
@@ -234,9 +246,8 @@ for (Map.Entry<String, ReportStatus> entry : acknowledgmentInfo.entrySet()) {
     
 }
 
-MessageHandler handler = Factory.getHandler(segmentID);
-String hl7 = Factory.getHL7Body(segmentID);
-Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao) SpringUtils.getBean("hl7TextInfoDao");
+
+
 int lab_no = Integer.parseInt(segmentID);
 String label = ""; Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
 if (hl7Lab.getLabel()!=null) label = hl7Lab.getLabel();
@@ -844,7 +855,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 
                                             <%}
                                         }
-                                    }%>
+                                    %>
                                 </td>
                             </tr>
                         </table>
@@ -908,7 +919,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 	                                            <div class="Cell Field2" style="text-align:center">
 	                                                Version:&#160;&#160;
 	                                                <%
-	                                                int version = 1;
+	                                                version = 1;
 	                                                String newLabText = "";
 													for (Hl7TextInfo info : textInfoList) {
 														newLabText = "";
