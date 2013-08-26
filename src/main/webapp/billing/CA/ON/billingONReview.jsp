@@ -34,6 +34,8 @@
 <%@ page import="org.oscarehr.util.SpringUtils" %>
 <%@ page import="org.oscarehr.common.model.DiagnosticCode" %>
 <%@ page import="org.oscarehr.common.dao.DiagnosticCodeDao" %>
+<%@ page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@ page import="org.oscarehr.common.model.Clinic" %>
 <%
 	DiagnosticCodeDao diagnosticCodeDao = SpringUtils.getBean(DiagnosticCodeDao.class);
 %>
@@ -789,6 +791,10 @@ if(request.getParameter("xml_billtype")!=null && !request.getParameter("xml_bill
 	List al = pObj.getPaymentType();
 
 	Billing3rdPartPrep privateObj = new Billing3rdPartPrep();
+	//For clinic letter, nothing for provider and "Remit to" part.
+	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+	List<Clinic> clinics = clinicDao.findAll();
+	
 	oscar.oscarRx.data.RxProviderData.Provider provider = new oscar.oscarRx.data.RxProviderData().getProvider((String) session.getAttribute("user"));
 
                 /*
@@ -857,10 +863,25 @@ if (bMultisites) {
 			<tr><td width="80%">
 
 			<table border="0" width="100%" >
-			<tr><td>Bill To [<a href=# onclick="scriptAttach('billto'); return false;">Search</a>]<br>
+			<tr><td width="40%">Bill To [<a href=# onclick="scriptAttach('billto'); return false;">Search</a>]<br>
 			<textarea name="billto" value="" cols=30 rows=6><%=strPatientAddr %></textarea></td>
-			<td>Remit To [<a href=# onclick="scriptAttach('remitto'); return false;">Search</a>]<br>
+			<td width="40%">Remit To [<a href=# onclick="scriptAttach('remitto'); return false;">Search</a>]<br>
 			<textarea name="remitto" value="" cols=30 rows=6><%=clinicAddress%></textarea></td>
+			<td>Clinic Letterhead:<br />
+			 <!--Code Clinic Letterhead copy from ConsultationFormRequest.jsp. -->   
+				<select id="clinicNo" name="clinicNo" style="width: 100%">
+					<%
+					String sessionClinicId = (String) session.getAttribute("clinic_id");
+					if (sessionClinicId == null)
+						sessionClinicId = "";
+					for ( Clinic clinic : clinics) {
+					%>
+						<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+					<%
+					}
+					%>
+				</select>
+			</td>
 			</tr>
 			</table>
 			<table border="0" width="100%" >

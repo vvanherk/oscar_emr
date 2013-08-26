@@ -307,16 +307,17 @@ public class BillingSavePrep {
 		valsMap.put("demographic_no",val.getParameter("demographic_no"));
 		valsMap.put("billTo",val.getParameter("billto"));
 		valsMap.put("remitTo",val.getParameter("remitto"));
-                valsMap.put("total",val.getParameter("gstBilledTotal"));
-                if (val.getParameter("submit").equalsIgnoreCase("Settle & Print Invoice")) {
-                    valsMap.put("payment", valsMap.get("total"));
-                }
-                else {
-                    valsMap.put("payment", (val.getParameter("payment") != null? val.getParameter("payment") : "0.00"));
-                }
+        valsMap.put("clinicNo",val.getParameter("clinicNo"));
+        valsMap.put("total",val.getParameter("gstBilledTotal"));
+        if (val.getParameter("submit").equalsIgnoreCase("Settle & Print Invoice")) {
+          valsMap.put("payment", valsMap.get("total"));
+        }
+        else {
+           valsMap.put("payment", (val.getParameter("payment") != null? val.getParameter("payment") : "0.00"));
+        }
 		valsMap.put("refund", (val.getParameter("refund") != null? val.getParameter("refund") : "0.00"));
-                valsMap.put("provider_no",val.getParameter("provider_no"));
-                valsMap.put("gst",val.getParameter("gst"));
+        valsMap.put("provider_no",val.getParameter("provider_no"));
+        valsMap.put("gst",val.getParameter("gst"));
 
 		if (val.getParameter("payMethod") != null) {
 			valsMap.put("payMethod",val.getParameter("payMethod"));
