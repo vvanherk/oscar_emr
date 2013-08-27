@@ -84,9 +84,6 @@ public class LabUploadAction extends Action {
 		LabUploadForm frm = (LabUploadForm) form;
 		FormFile importFile = frm.getImportFile();
 		
-		// We don't want a session...
-		request.getSession(false).invalidate();
-		
 		String signature = request.getParameter("signature");
 		String key = request.getParameter("key");
 		String service = request.getParameter("service");
