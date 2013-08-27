@@ -936,11 +936,11 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 														
 	                                                    if (info.getLabNumber() == segmentIDAsInt) {
 	                                                        %>v<%= version %><%=newLabText%>&#160;<%
-	                                                    } else {
+	                                                    } else {	                                                        
 	                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
-	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= version %></a><%=newLabText%>&#160;<%
+	                                                            %><a href="javascript:void(0);"   onclick="popup(850, 950, '../lab/CA/ALL/labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>', 'labVersion');">v<%= version %></a><%=newLabText%>&#160;<%
 	                                                        }else{
-	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>">v<%= version %></a><%=newLabText%>&#160;<%
+	                                                            %><a href="javascript:void(0);"   onclick="popup(850, 950, '../lab/CA/ALL/labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>', 'labVersion');">v<%= version %></a><%=newLabText%>&#160;<%
 	                                                        }
 	                                                    }
 	                                                    
