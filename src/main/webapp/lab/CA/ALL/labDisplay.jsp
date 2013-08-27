@@ -1732,24 +1732,38 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
  
 <%!
 
+/**
+ * Used to order labs in a List of LabResultData from most to least recent.
+ * 
+ * It achieves this by comparing the segment ids (i.e. lab ids).  The larger the segment id, the more recent the lab.
+ */
+public class LabSorter implements Comparator<Hl7TextInfo> {
+    public int compare(Hl7TextInfo o1, Hl7TextInfo o2) {
+		int i1 = o1.getLabNumber();
+		int i2 = o2.getLabNumber();
+		
+        return (i1 > i2 ? -1 : (i1 == i2 ? 0 : 1));
+    }
+} 
+
+/**
+ * Removes duplicate labs from the cAccns list.  Note that this method will keep the latest labs from the duplicate list, except in the case
+ * where the user has requested an older version of a lab.
+ */
 public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInfoDao hl7TextInfoDao, String currentAccn, int currentLabNo) {
 	List<SpireCommonAccessionNumber> removeList = new ArrayList<SpireCommonAccessionNumber>();
 	
 	for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 		int labNo = commonAccessionNumber.getLabNo().intValue();
+		
 		List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId(labNo);
-		MiscUtils.getLogger().info("START");
-		for (Hl7TextInfo h : vers) {
-			MiscUtils.getLogger().info("h: " + h.getLabNumber() + " " + h.getAccessionNumber());
-		}
+		
+		// The below algorithm depends on the Hl7TextInfo objects being sorted by lab id from highest to lowest
+		Collections.sort( vers, new LabSorter() );
 		
 		if (vers.size() > 1) {
 			Hl7TextInfo first = vers.get(0);
 			for (Hl7TextInfo ver : vers) {
-				
-				MiscUtils.getLogger().info("accn: " + currentAccn + " " + ver.getAccessionNumber());
-				MiscUtils.getLogger().info("labid: " + currentLabNo + " " + ver.getLabNumber());
-				
 				// Generally, we want to keep the first (i.e. newest) version of a lab
 				if (first == ver) {
 					// Unless newest lab is NOT the version the user wants to see
@@ -1769,6 +1783,9 @@ public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInf
 	cAccns.removeAll(removeList);
 }
 
+/**
+ * Helper method - adds Hl7TextInfo object ver to the list of Hl7TextInfo objects to remove.
+ */
 public void addToSCANRemoveList(Hl7TextInfo ver, List<SpireCommonAccessionNumber> cAccns, List<SpireCommonAccessionNumber> removeList) {
 	for (int i=0; i < cAccns.size(); i++) {
 		if (ver.getLabNumber() == cAccns.get(i).getLabNo().intValue()) {
