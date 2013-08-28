@@ -43,6 +43,8 @@ import org.oscarehr.common.model.ProfessionalSpecialist;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
+import org.oscarehr.common.model.ConsultDocs;
+import org.oscarehr.common.dao.ConsultDocsDao;
 
 public class EctViewConsultationRequestsUtil {         
    
@@ -172,6 +174,7 @@ public class EctViewConsultationRequestsUtil {
       apptDate = new Vector<String>();
       reason = new Vector<String>();
       consultant = new Vector<String>();
+      documentNo = new Vector<String>();
       boolean verdict = true;      
       try {                           
 
@@ -181,7 +184,9 @@ public class EctViewConsultationRequestsUtil {
           DemographicDao demoDao = (DemographicDao) SpringUtils.getBean("demographicDao");
           ProfessionalSpecialistDao specialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
           ConsultationServiceDao serviceDao = (ConsultationServiceDao) SpringUtils.getBean("consultationServiceDao");
-          ConsultationRequest consult;
+          ConsultDocsDao cdocumentDao = (ConsultDocsDao) SpringUtils.getBean("ConsultDocsDao");
+	  
+	  ConsultationRequest consult;
           Provider prov;
           Demographic demo;
           ConsultationServices services;
@@ -212,6 +217,7 @@ public class EctViewConsultationRequestsUtil {
               date.add(DateFormatUtils.ISO_DATE_FORMAT.format(consult.getReferralDate()));
               reason.add(consult.getReasonForReferral());
               consultant.add((specialistDao.getById(consult.getSpecialistId())).getFormattedName());
+	      documentNo.add(((cdocumentDao.findByRequestId(consult.getId())).get(0)).getDocumentNo());
           }
       } catch(Exception e) {         
          MiscUtils.getLogger().error("Error", e);         
@@ -238,5 +244,5 @@ public class EctViewConsultationRequestsUtil {
    public Vector<String> siteName;
    public Vector<String> reason;
    public Vector<String> consultant;
-   
+   public Vector<String> documentNo;
 }

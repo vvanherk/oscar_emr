@@ -174,7 +174,7 @@ function popupOscarConS(vheight,vwidth,varpage) { //open a new popup window
                                     String date    = (String) theRequests.date.elementAt(i);
 				    String consultant = (String) theRequests.date.elementAt(i);
 				    String reason = (String) theRequests.reason.elementAt(i);
-				    String document ="";
+				    String document =(String) theRequests.documentNo.elementAt(i);
                                 %>
 					<tr>
 						<td class="stat<%=status%>" width="75">

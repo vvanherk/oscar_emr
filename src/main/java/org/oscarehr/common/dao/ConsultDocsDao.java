@@ -50,4 +50,16 @@ public class ConsultDocsDao extends AbstractDao<ConsultDocs>{
         List<ConsultDocs> results = query.getResultList();
         return results;
 	}
+
+
+	public List<ConsultDocs> findByRequestId(Integer requestId) {
+                String sql = "select x from ConsultDocs x where x.requestId=?";
+        Query query = entityManager.createQuery(sql);
+        query.setParameter(1,requestId);
+
+        @SuppressWarnings("unchecked")
+        List<ConsultDocs> results = query.getResultList();
+        return results;
+        }
+
 }
