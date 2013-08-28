@@ -221,7 +221,27 @@ import cdsDt.PersonNameStandard.OtherNames;
         ArrayList<String[]> logs = new ArrayList<String[]>();
         File importLog = null;
 
-	try {
+        if("true".equalsIgnoreCase(oscarProperties.getProperty("IMPORT_ALL_DEMOGRAPHIC_XML_FILES_IN_ONE_FOLDER"))) {
+        	try {
+	        	File directory = new File(tmpDir);	        	
+	        	for(File file : directory.listFiles()) {
+	        		String fileName = tmpDir + file.getName();   
+                    if (matchFileExt(fileName, "xml")) {                     	
+                    	logs.add(importXML(fileName, warnings, request,frm.getTimeshiftInDays(),students,courseId));
+    	                demographicNo=null;    	                  
+                        importNo++;                        
+                    }                    
+	        	}
+	        	importLog = makeImportLog(logs, tmpDir);
+        	} catch (Exception e) {
+                warnings.add("Error processing file: " + imp.getFileName());
+                logger.error("Error", e);
+        	}
+        } else {
+        
+        
+	try { 
+			
             InputStream is = imp.getInputStream();
             OutputStream os = new FileOutputStream(ifile);
             byte[] buf = new byte[1024];
@@ -274,7 +294,7 @@ import cdsDt.PersonNameStandard.OtherNames;
             warnings.add("Error processing file: " + imp.getFileName());
             logger.error("Error", e);
 	}
-
+        }
         //channel warnings and importlog to browser
         request.setAttribute("warnings",warnings);
         if (importLog!=null) request.setAttribute("importlog",importLog.getPath());
@@ -288,7 +308,7 @@ import cdsDt.PersonNameStandard.OtherNames;
         }
 
         List<String> logs = new ArrayList<String>();
-
+        
         for(Provider student:students) {
             logger.info("importing patient for student " +  student.getFormattedName());
             //need that student's personal program
@@ -319,7 +339,7 @@ import cdsDt.PersonNameStandard.OtherNames;
         ArrayList<String> err_summ = new ArrayList<String>(); //errors: summary
         ArrayList<String> err_othe = new ArrayList<String>(); //errors: other categories
         ArrayList<String> err_note = new ArrayList<String>(); //non-errors: notes
-
+        err_data.add(xmlFile);
         String docDir = oscarProperties.getProperty("DOCUMENT_DIR");
         docDir = Util.fixDirName(docDir);
         if (!Util.checkDir(docDir)) {
@@ -1439,14 +1459,18 @@ import cdsDt.PersonNameStandard.OtherNames;
                     	if (NumberUtils.isDigits(duration)) drug.setRefillDuration(Integer.valueOf(duration));
                     	else err_data.add("Error! Invalid Refill Duration ["+medArray[i].getRefillDuration()+"] for Medications");
                     }
-
+                    if(drug.getRefillDuration()==null) 
+                    	drug.setRefillDuration(0);
+                    
                     quantity = medArray[i].getRefillQuantity();
                     if (StringUtils.filled(quantity)) {
                     	quantity = Util.leadingNum(quantity.trim());
                     	if (NumberUtils.isNumber(quantity)) drug.setRefillQuantity(Integer.valueOf(quantity));
                     	else err_data.add("Error! Invalid Refill Quantity ["+medArray[i].getRefillQuantity()+"] for Medications");
                     }
-
+                    if(drug.getRefillQuantity()==null) 
+                    	drug.setRefillQuantity(0);
+                    
                     drug.setETreatmentType(medArray[i].getTreatmentType());
                     //no need: DrugReason drugReason = new DrugReason();
                     //no need: drug.setRxStatus(medArray[i].getPrescriptionStatus());
@@ -1458,8 +1482,11 @@ import cdsDt.PersonNameStandard.OtherNames;
                     //no need: if (non_auth!=null) drug.setNonAuthoritative(non_auth.equalsIgnoreCase("Y"));
                     //no need: else  err_data.add("Error! No non-authoritative indicator for Medications & Treatments ("+(i+1)+")");
 
-                    //no need: if (NumberUtils.isDigits(medArray[i].getDispenseInterval())) drug.setDispenseInterval(Integer.parseInt(medArray[i].getDispenseInterval()));
-                    //no need: else err_data.add("Error! Invalid Dispense Interval for Medications & Treatments ("+(i+1)+")");
+                    if (NumberUtils.isDigits(medArray[i].getDispenseInterval())) drug.setDispenseInterval(Integer.parseInt(medArray[i].getDispenseInterval()));
+                    else {
+                    	err_data.add("Error! Invalid Dispense Interval for Medications & Treatments ("+(i+1)+")");
+                    	drug.setDispenseInterval(0);
+                    }
 
                     String take = StringUtils.noNull(medArray[i].getDosage()).trim();
                     drug.setTakeMin(Util.leadingNumF(take));
@@ -2317,6 +2344,8 @@ import cdsDt.PersonNameStandard.OtherNames;
 
 		File importLog = new File(dir, "ImportEvent-"+UtilDateUtilities.getToday("yyyy-MM-dd.HH.mm.ss")+".log");
 		BufferedWriter out = new BufferedWriter(new FileWriter(importLog));
+		
+		out.newLine();
                 int tableWidth = 0;
                 for (int i=0; i<keyword.length; i++) {
                     for (int j=0; j<keyword[i].length; j++) {
@@ -2356,6 +2385,7 @@ import cdsDt.PersonNameStandard.OtherNames;
                 for (int i=0; i<importNo; i++) {
                     Integer id = entries.get(PATIENTID+i);
                     if (id==null) id = 0;
+                    
                     out.write(fillUp(id.toString(), ' ', column1.length()));
                     out.write(" |");
                     String[] info = demo.get(i);

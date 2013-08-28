@@ -160,12 +160,18 @@
             for(j=0; j<numItems; j++) {
                 NavBarDisplayDAO.Item item = dao.getItem(j);
                 Date d = item.getDate();
-                if( d == null )
-                    noDates.add(item);
-                else if( d.compareTo(threeMths) < 0 )
-                    pastDates.add(item);
-                else
-                    current.add(item);
+                
+                if(dao.isInternalDateSort())
+                {
+                	if( d == null )
+	                    noDates.add(item);
+	                else if( d.compareTo(threeMths) < 0 )
+	                    pastDates.add(item);
+	                else
+	                    current.add(item);	
+                }
+                else                
+                	noDates.add(item);
             }
 
             StringBuffer jscode = new StringBuffer();

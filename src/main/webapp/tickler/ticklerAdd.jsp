@@ -34,7 +34,7 @@ String strLimit1="0";
 String strLimit2="5";
 if(request.getParameter("limit1")!=null) strLimit1 = request.getParameter("limit1");
 if(request.getParameter("limit2")!=null) strLimit2 = request.getParameter("limit2");
-String providerview = request.getParameter("providerview")==null?"all":request.getParameter("providerview") ;
+String providerview = curUser_no;//request.getParameter("providerview")==null?"all":request.getParameter("providerview") ;
 boolean bFirstDisp=true; //this is the first time to display the window
 if (request.getParameter("bFirstDisp")!=null) bFirstDisp= (request.getParameter("bFirstDisp")).equals("true");
 String ChartNo;

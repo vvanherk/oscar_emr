@@ -289,7 +289,7 @@ public class ProviderDao extends HibernateDaoSupport {
 	public List<Provider> getActiveProvidersByType(String type) {
 		@SuppressWarnings("unchecked")
 		List<Provider> results = this.getHibernateTemplate().find(
-				"from Provider p where p.Status='1' and p.ProviderType = ?",
+				"from Provider p where p.Status='1' and p.ProviderType = ? order by p.LastName",
 				type);
 
 		return results;

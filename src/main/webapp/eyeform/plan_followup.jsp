@@ -30,7 +30,7 @@
 <%
 	String id = request.getParameter("id");
 	ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
-	request.setAttribute("providers",providerDao.getActiveProviders());
+	request.setAttribute("providers",providerDao.getActiveProvidersByType("doctor"));
 %>
 
 <div id="followup_<%=id%>">

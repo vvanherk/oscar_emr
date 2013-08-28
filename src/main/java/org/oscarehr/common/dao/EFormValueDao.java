@@ -50,7 +50,7 @@ public class EFormValueDao extends AbstractDao<EFormValue> {
 
     public List<EFormValue> findByApptNo(int apptNo)
 	{
-		Query query = entityManager.createQuery("select x from " + modelClass.getSimpleName() + " x where x.varName='appt_no' and x.varValue=?1");
+		Query query = entityManager.createQuery("select x from " + modelClass.getSimpleName() + " x where (x.varName='appt_no' or x.varName='appointment') and x.varValue=?1");
 		query.setParameter(1, String.valueOf(apptNo));
 
 		@SuppressWarnings("unchecked")

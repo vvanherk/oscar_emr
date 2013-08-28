@@ -48,6 +48,7 @@ import org.oscarehr.common.model.ProfessionalContact;
 import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
+import org.springframework.beans.BeanUtils;
 
 public class ContactAction extends DispatchAction {
 
@@ -302,14 +303,17 @@ public class ContactAction extends DispatchAction {
 	public ActionForward saveProContact(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		DynaValidatorForm dform = (DynaValidatorForm)form;
 		ProfessionalContact contact = (ProfessionalContact)dform.get("pcontact");
-		String id = request.getParameter("pcontact.id");
+		String id = request.getParameter("pcontact.id");	
+		
 		if(id != null && id.length()>0) {
 			contact.setId(Integer.valueOf(id));
 		}
 		if(contact.getId() != null && contact.getId()>0) {
 			proContactDao.merge(contact);
 		} else {
-			proContactDao.persist(contact);
+			ProfessionalContact contactNew = new ProfessionalContact();
+			BeanUtils.copyProperties(contact, contactNew, new String[]{"id"});
+			proContactDao.persist(contactNew);
 		}
 	   return mapping.findForward("pForm");
 	}

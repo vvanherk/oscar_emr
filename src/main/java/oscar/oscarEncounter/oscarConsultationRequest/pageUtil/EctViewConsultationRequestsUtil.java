@@ -170,6 +170,8 @@ public class EctViewConsultationRequestsUtil {
       this.patientWillBook = new Vector<String>();
       urgency = new Vector<String>();
       apptDate = new Vector<String>();
+      reason = new Vector<String>();
+      consultant = new Vector<String>();
       boolean verdict = true;      
       try {                           
 
@@ -208,6 +210,8 @@ public class EctViewConsultationRequestsUtil {
               urgency.add(consult.getUrgency());
               patientWillBook.add(""+consult.isPatientWillBook());
               date.add(DateFormatUtils.ISO_DATE_FORMAT.format(consult.getReferralDate()));
+              reason.add(consult.getReasonForReferral());
+              consultant.add((specialistDao.getById(consult.getSpecialistId())).getFormattedName());
           }
       } catch(Exception e) {         
          MiscUtils.getLogger().error("Error", e);         
@@ -232,5 +236,7 @@ public class EctViewConsultationRequestsUtil {
    public Vector<String> followUpDate;
    public Vector<String> providerNo;   
    public Vector<String> siteName;
+   public Vector<String> reason;
+   public Vector<String> consultant;
    
 }

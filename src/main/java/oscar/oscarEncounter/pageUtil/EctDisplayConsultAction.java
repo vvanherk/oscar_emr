@@ -131,7 +131,11 @@ public class EctDisplayConsultAction extends EctDisplayAction {
                 item.setURL(url);
                 item.setDate(date);
                 Dao.addItem(item);
-            } 
+            }
+            
+            //modified by rohit : displaying consultation requests by date
+			Dao.setInternalDateSort(false);
+			Dao.sortItems(NavBarDisplayDAO.DATESORT_ASC);
             
             return true;
          }

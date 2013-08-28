@@ -163,7 +163,9 @@ public class AppointmentDao extends OscarSuperDao {
             {"search_detail", "select * from demographic where demographic_no=?"},
 
             {"delete", "delete from appointment where appointment_no=?"},
-
+            //added by rohit.. to update status='D' when appt is deleted.. not deleting the record from appointment table
+            {"delete_2", "update appointment set status=?, lastupdateuser=?, updatedatetime=now() where appointment_no=?"},
+            
             {"search_otherappt", "select * from appointment where appointment_date=? and ((start_time <= ? and end_time >= ?) or (start_time > ? and start_time < ?) ) order by provider_no, start_time" },
             {"search_groupprovider", "select p.last_name, p.first_name, p.provider_no from mygroup m, provider p where m.mygroup_no=? and m.provider_no=p.provider_no order by p.last_name"},
             {"search_scheduledate_single", "select * from scheduledate where sdate=? and provider_no=?" },

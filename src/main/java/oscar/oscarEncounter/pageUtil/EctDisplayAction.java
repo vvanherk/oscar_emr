@@ -137,6 +137,11 @@ public class EctDisplayAction extends Action {
             request.setAttribute("EctSessionBean", bean);
         }
 
+        //last attempt to recover (probably) lost critical param
+        if(bean.appointmentNo == null) bean.appointmentNo=request.getParameter("appointment_no");
+        if(bean.appointmentNo == null) bean.appointmentNo=request.getParameter("appt_no");
+        if(bean.appointmentNo == null) bean.appointmentNo=request.getParameter("appointment");
+
         //Can we handle request?
         //Check attrib first so we know if we are in a chain call before a direct request
         String params = (String)request.getAttribute("cmd");

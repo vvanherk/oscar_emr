@@ -94,7 +94,10 @@ public class EctDisplaySpecsHistoryAction extends EctDisplayAction {
     	String itemHeader = StringUtils.maxLenString(title, MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES);
     	item.setTitle(itemHeader);
 
-    	item.setValue(sh.getId().toString());
+    	//Don't need to display specs id.
+    	//item.setValue(sh.getId().toString());
+    	item.setValue("");
+    	
     	item.setLinkTitle(sh.toString3());
 
         int hash = Math.abs(winName.hashCode());

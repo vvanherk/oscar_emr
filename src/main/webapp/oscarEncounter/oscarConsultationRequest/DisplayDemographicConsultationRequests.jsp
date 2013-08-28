@@ -33,6 +33,7 @@
 <%
 if(session.getAttribute("user") == null) response.sendRedirect("../../logout.jsp");
 String demo = request.getParameter("de");
+String appNo = request.getParameter("appNo");
 String proNo = (String) session.getAttribute("user");
 oscar.oscarDemographic.data.DemographicData demoData=null;
 org.oscarehr.common.model.Demographic demographic=null;
@@ -119,7 +120,7 @@ function popupOscarConS(vheight,vwidth,varpage) { //open a new popup window
 		<table>
 			<tr>
 				<td NOWRAP><a
-					href="javascript:popupOscarRx(700,960,'ConsultationFormRequest.jsp?de=<%=demo%>&teamVar=<%=team%>')">
+					href="javascript:popupOscarRx(700,960,'ConsultationFormRequest.jsp?de=<%=demo%>&teamVar=<%=team%>&appNo=<%=appNo%>')">
 				<bean:message
 					key="oscarEncounter.oscarConsultationRequest.ConsultChoice.btnNewCon" /></a>
 				</td>
@@ -153,6 +154,15 @@ function popupOscarConS(vheight,vwidth,varpage) { //open a new popup window
 						<th align="left" class="VCRheads"><bean:message
 							key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgRefDate" />
 						</th>
+						<th align="left" class="VCRheads"><bean:message
+                                                        key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgConsultant" />
+                                                </th>
+						<th align="left" class="VCRheads"><bean:message
+                                                        key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgReason" />
+                                                </th>
+						<th align="left" class="VCRheads"><bean:message
+                                                        key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgDocument" />
+                                                </th>
 					</tr>
 					<%  
                                     for (int i = 0; i < theRequests.ids.size(); i++){
@@ -162,6 +172,9 @@ function popupOscarConS(vheight,vwidth,varpage) { //open a new popup window
                                     String provide = (String) theRequests.provider.elementAt(i);
                                     String service = (String) theRequests.service.elementAt(i);
                                     String date    = (String) theRequests.date.elementAt(i);
+				    String consultant = (String) theRequests.date.elementAt(i);
+				    String reason = (String) theRequests.reason.elementAt(i);
+				    String document ="";
                                 %>
 					<tr>
 						<td class="stat<%=status%>" width="75">
@@ -183,6 +196,9 @@ function popupOscarConS(vheight,vwidth,varpage) { //open a new popup window
 							href="javascript:popupOscarRx(700,960,'../../oscarEncounter/ViewRequest.do?de=<%=demo%>&requestId=<%=id%>')">
 						<%=service%> </a></td>
 						<td class="stat<%=status%>"><%=date%></td>
+						<td class="stat<%=status%>"><%=consultant%></td>
+						<td class="stat<%=status%>"><%=reason%></td>
+						<td class="stat<%=status%>"><%=document%></td>
 					</tr>
 					<%}%>
 				</table>

@@ -487,7 +487,11 @@ jQuery(document).ready(function() {
 				<tr>
 					<td class="Header"
 						style="padding-left: 1px; padding-right: 1px; border-right: 1px solid #003399; text-align: left; font-size: 80%; font-weight: bold; width: 100%;"
-						NOWRAP><c:out value="${demographicName}"/> </td>
+						NOWRAP><c:out value="${demographicName}"/><nested:equal
+						property="isRefOnline" value="true">
+						<img align="absmiddle" src="${pageContext.request.contextPath}/images/onlineicon.gif" height="20"
+							width="20" border="0">
+					</nested:equal> </td>
 				</tr>
 			</table>
 			</td>
@@ -539,7 +543,14 @@ jQuery(document).ready(function() {
 					<td class="tite4" colspan="2">
 					<table>
 						<tr>
-							<td class="stat"><html:radio property="cp.status" value="Completed,and sent" /></td>
+							<td class="stat">
+							<nested:equal property="isRefOnline"
+								value="true">
+								<html:radio property="cp.status" value="Completed,and sent"
+									onclick="return confirmCompleted(this)" />
+							</nested:equal> <nested:notEqual property="isRefOnline" value="true">
+								<html:radio property="cp.status" value="Completed,and sent" />
+							</nested:notEqual></td>
 							<td class="stat">Completed,and sent</td>
 						</tr>
 					</table>
@@ -796,8 +807,14 @@ jQuery(document).ready(function() {
 				</c:if>
 				<tr>
 					<td colspan="2" align="right">
-					<input type="button" value="print review"
+					<nested:equal property="isRefOnline" value="true">
+						<input type="button" value="print review"
+							onclick="if (confirmPrint()) if (checkform())printsubmit();else return false;">
+					</nested:equal> 
+					<nested:notEqual property="isRefOnline" value="true">
+						<input type="button" value="print review"
 							onclick="if (checkform())printsubmit();else return false;">
+					</nested:notEqual>
 					<input type="button" value="save and close"
 						onclick="if (checkform())savesubmit();else return false;">
 					</td>

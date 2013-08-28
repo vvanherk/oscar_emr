@@ -138,7 +138,7 @@ function checkForm() {
       } else {
           out.println("<tr bgcolor='"+ (bodd?weakcolor:"white") +"'><td>"+contents[i].getName()+"</td>") ;
       }
-      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+      SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm");
       Date d = new Date(contents[i].lastModified());
       out.println("<td align='right'>"+sdf.format(d)+"</td></tr>"); //+System.getProperty("file.separator")
     }

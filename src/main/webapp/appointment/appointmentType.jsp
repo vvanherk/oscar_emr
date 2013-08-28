@@ -34,19 +34,19 @@ var notes = '';
 var resources = '';
 var names = '';
 <%   for(int j = 0;j < types.size(); j++) { %>
-		dur = dur + '<%= types.get(j).getDuration() %>'+',';
-		reason = reason + '<%= types.get(j).getReason() %>'+',';
-		loc = loc + '<%= types.get(j).getLocation() %>'+',';
-		notes = notes + '<%= types.get(j).getNotes() %>'+',';
-		resources = resources + '<%= types.get(j).getResources() %>'+',';
-		names = names + '<%= types.get(j).getName() %>'+',';
+		dur = dur + '<%= types.get(j).getDuration() %>'+'^';
+		reason = reason + '<%= types.get(j).getReason() %>'+'^';
+		loc = loc + '<%= types.get(j).getLocation() %>'+'^';
+		notes = notes + '<%= types.get(j).getNotes() %>'+'^';
+		resources = resources + '<%= types.get(j).getResources() %>'+'^';
+		names = names + '<%= types.get(j).getName() %>'+'^';
 <%   } %>
-	var durArray = dur.split(",");
-	var reasonArray = reason.split(",");
-	var locArray = loc.split(",");
-	var notesArray = notes.split(",");
-	var resArray = resources.split(",");
-	var nameArray = names.split(",");
+	var durArray = dur.split("^");
+	var reasonArray = reason.split("^");
+	var locArray = loc.split("^");
+	var notesArray = notes.split("^");
+	var resArray = resources.split("^");
+	var nameArray = names.split("^");
 	
 	var typeSel = '';
 	var reasonSel = '';

@@ -437,11 +437,13 @@ public class DmsInboxManageAction extends DispatchAction {
 		String roleName = "";
 		List<SecUserRole> roles = secUserRoleDao.getUserRoles(searchProviderNo);
 		for (SecUserRole r : roles) {
-			if (roleName.length() == 0) {
-				roleName = r.getRoleName();
-
-			} else {
-				roleName += "," + r.getRoleName();
+			if(r !=null) {
+				if (roleName.length() == 0) {
+					roleName = r.getRoleName();
+	
+				} else {
+					roleName += "," + r.getRoleName();
+				}
 			}
 		}
 		roleName += "," + searchProviderNo;

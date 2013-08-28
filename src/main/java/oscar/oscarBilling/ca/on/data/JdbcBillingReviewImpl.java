@@ -168,8 +168,10 @@ public class JdbcBillingReviewImpl {
 			String demoNo, String serviceCodes, String dx, String visitType) {
 		List retval = new Vector();
 		BillingClaimHeader1Data ch1Obj = null;
+		
+		//modify by rohit : for filtering invoice report based on dx code
 		String temp = demoNo + " " + providerNo + " " + statusType + " " + startDate + " " + endDate + " "
-			+ billType + " " + visitType + " " + serviceCodes;
+			+ billType + " " + dx + " " + visitType + " " + serviceCodes;
 		temp = temp.trim().startsWith("and") ? temp.trim().substring(3) : temp;
 
 		String sql = "SELECT ch1.id,pay_program,demographic_no,demographic_name,billing_date,billing_time," +

@@ -165,10 +165,12 @@ public final class LoginCheckLoginBean {
 		SecUserRoleDao secUserRoleDao = (SecUserRoleDao) SpringUtils.getBean("secUserRoleDao");
 		List<SecUserRole> roles = secUserRoleDao.getUserRoles(security.getProviderNo());
 		for (SecUserRole role : roles) {
-			if (rolename == null) {
-				rolename = role.getRoleName();
-			} else {
-				rolename += "," + role.getRoleName();
+			if(role !=null) {
+				if (rolename == null) {
+					rolename = role.getRoleName();
+				} else {
+					rolename += "," + role.getRoleName();
+				}
 			}
 		}
 

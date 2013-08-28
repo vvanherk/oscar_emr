@@ -26,6 +26,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
+
+<%
+response.setHeader("Pragma","cache");
+response.setHeader("Cache-Control","cache");
+response.setDateHeader("Expires",10);
+%>
+
 <%@page %> <%
   if(session.getAttribute("user") == null)    response.sendRedirect("../logout.jsp");
 
@@ -702,7 +709,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
 		<% } else {
 			// multisites end ==================
 		%>
-		                <input type="TEXT" name="location" tabindex="4" value="<%=loc%>" width="25" height="20" border="0" hspace="2">
+		                <input type="TEXT" name="location" tabindex="4" value="<%=loc==null?"":loc%>" width="25" height="20" border="0" hspace="2">
 		<% } %>
             </div>
             <div class="space">&nbsp;</div>

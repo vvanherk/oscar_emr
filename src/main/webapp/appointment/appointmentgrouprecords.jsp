@@ -29,6 +29,13 @@
 <%@page import="org.oscarehr.common.dao.OscarAppointmentDao" %>
 <%@page import="org.oscarehr.common.model.Appointment" %>
 <%@page import="org.oscarehr.util.SpringUtils" %>
+
+<%
+response.setHeader("Pragma","cache");
+response.setHeader("Cache-Control","cache");
+response.setDateHeader("Expires",10);
+%>
+
 <%
 	AppointmentArchiveDao appointmentArchiveDao = (AppointmentArchiveDao)SpringUtils.getBean("appointmentArchiveDao");
 	OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
@@ -53,7 +60,7 @@
   if (request.getParameter("groupappt") != null) {
     boolean bSucc = false;
     if (request.getParameter("groupappt").equals("Add Group Appointment")) {
-        String[] param = new String[19];
+        String[] param = new String[20];
         int rowsAffected = 0, datano = 0;
         StringBuffer strbuf = null;
 		String createdDateTime = UtilDateUtilities.DateToString(UtilDateUtilities.now(),"yyyy-MM-dd HH:mm:ss");
@@ -76,7 +83,7 @@
         param[15]=request.getParameter("remarks");
         param[17]=(String)request.getSession().getAttribute("programId_oscarView");
         param[18]=request.getParameter("urgency");
-
+        param[19]=request.getParameter("provider_no");
 		String[] param2 = new String[7];
         for (Enumeration e = request.getParameterNames() ; e.hasMoreElements() ;) {
 	        strbuf = new StringBuffer(e.nextElement().toString());

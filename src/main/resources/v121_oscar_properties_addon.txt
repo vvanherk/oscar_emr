@@ -1,0 +1,83 @@
+When you upgrade oscar to v12.1, you may need to add these lines in oscar.properties file if they are not there:
+
+# Display build tag on the login page
+buildtag=OSCAR 12.1 OSCARSERVICE build no.1
+
+# For clinic with multiple satellites, so that each provider can be assigned to multiple sites and have different location when set schedule, book appt., billing etc.
+## off : turn off multisites support, oscar will behave as before
+## on : turn on multisites support, use Admin-Misc-Satellite-sites Admin to manage sites and assign them to the provider in provider profile
+multisites=off
+
+# multisites function. When add a new provide, should system validate the provider id range.
+# false : turn off provider id validation (default value for backward compatible)
+# true : turn on provider id validation. Range will be defined by sites admin
+multioffice.formalize.provider.id=false
+
+# the id range for doctors. other staff's id ranges are defined in the site admin page.
+multioffice.formalize.doctor.minimum.provider.id=1
+multioffice.formalize.doctor.maximum.provider.id=100
+
+# multisites function: so as to identify the role name of the real admin role (the super root in oscar)
+multioffice.admin.role.name=admin
+
+#System values for OMD CIHI Data Export
+vendorId=vendorId not set
+vendorBusinessName=McMaster University
+vendorCommonName=McMaster University
+
+softwareName=Open Source Clinical Application Resource
+softwareCommonName=OSCAR
+
+#version=version not set
+#versionDate=versionDate not set
+
+# Ontario MD HRM properties
+OMD_HRM_USER=mcmu
+OMD_HRM_IP=207.219.74.198
+OMD_HRM_PORT=22
+OMD_HRM_AUTH_KEY_FILENAME=mcmu_sk.ppk
+
+#limit one appointment per demographic per day per group (schedule group).
+#Prevents rejected claims for OHIP Fee for Service where multiple appts of the same
+#type are booked on the same day for the same demographic causes the claim to be rejected
+allowMultipleSameDayGroupAppt=yes
+
+#Indivica contributed diabetes flowsheet with sparklines
+#new_flowsheet_enabled=true
+
+#MA Billing
+rma_enabled=false
+
+#size of quick chart in eChart. default is 20 if not specified
+quick_chart_size=2
+
+#Turn this to enable the ability to store a local copy of what is returned from the integrator
+#INTEGRATOR_LOCAL_STORE=yes
+
+# SmartBilling Settings
+ONEDT_=/var/lib/tomcat6/webapps/OscarDocument/oscar_mcmaster/onEDTDocs
+ONEDT_INBOX=/var/lib/tomcat6/webapps/OscarDocument/oscar_mcmaster/onEDTDocs/inbox
+ONEDT_OUTBOX=/var/lib/tomcat6/webapps/OscarDocument/oscar_mcmaster/onEDTDocs/outbox
+ONEDT_SENT=/var/lib/tomcat6/webapps/OscarDocument/oscar_mcmaster/onEDTDocs/sent
+ONEDT_ARCHIVE=/var/lib/tomcat6/webapps/OscarDocument/oscar_mcmaster/onEDTDocs/archive
+
+# Enable intake form on appt screen
+appt_intake_form=on
+
+# True if signatures should be enabled in the rx module and false otherwise.
+rx_signature_enabled=true
+
+# True if fax should be enabled in the rx module and false otherwise.
+rx_fax_enabled=false
+
+# True if signatures should be enabled in the consultation module and false otherwise.
+# Requires faxEnable=yes
+consultation_fax_enabled=true
+
+# True if signatures should be enabled in the consultation module and false otherwise.
+consultation_signature_enabled=true
+
+# View MOH in billing
+moh_file_management_enabled=yes
+
+

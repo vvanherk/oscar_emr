@@ -2965,7 +2965,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			if (macro.getTicklerRecipient() != null && macro.getTicklerRecipient().length() > 0) {
 				TicklerDAO ticklerDao = (TicklerDAO) SpringUtils.getBean("ticklerDAOT");
 				Tickler t = new Tickler();
-				t.setCreator(LoggedInInfo.loggedInInfo.get().loggedInProvider.getPractitionerNo());
+				t.setCreator(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
 				t.setDemographic_no(cform.getDemographicNo());
 				t.setMessage(getMacroTicklerText(Integer.parseInt(cform.getAppointmentNo())));
 				t.setPriority("Normal");

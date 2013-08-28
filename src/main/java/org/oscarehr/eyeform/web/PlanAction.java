@@ -178,8 +178,10 @@ public class PlanAction extends DispatchAction {
     	String[] ids = request.getParameterValues("followup.delete");
     	if(ids != null) {
     		for(String id:ids) {
-    			int followUpId = Integer.parseInt(id);
-    			followUpDao.remove(followUpId);
+    			if(id.length()>0) {
+        			int followUpId = Integer.parseInt(id);
+        			followUpDao.remove(followUpId);    				
+    			}
     		}
     	}
 
@@ -215,8 +217,10 @@ public class PlanAction extends DispatchAction {
     	ids = request.getParameterValues("procedure.delete");
     	if(ids != null) {
     		for(String id:ids) {
-    			int procedureId = Integer.parseInt(id);
-    			procBookDao.remove(procedureId);
+    			if(id.length()>0) {
+        			int procedureId = Integer.parseInt(id);
+        			procBookDao.remove(procedureId);    				
+    			}
     		}
     	}
 
