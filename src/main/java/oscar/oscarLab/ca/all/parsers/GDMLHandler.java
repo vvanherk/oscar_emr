@@ -531,18 +531,25 @@ public class GDMLHandler implements MessageHandler {
     public String getHealthNum(){
         String hin = getString(msg.getRESPONSE().getPATIENT().getPID().getPatientIDExternalID().getID().getValue());        
         String ifh = "";
-        try {
+        try {               	
     		String ifh_comment = getString(msg.getRESPONSE().getPATIENT().getNTE().getComment()[0].getValue());
-    		//NTE segment: NTE|1|P|IFH12345678 30NOV2012
-    		if( ifh_comment.substring(0,3)!=null && ifh_comment.substring(0,3).equalsIgnoreCase("IFH") ) {
-    			String ifh_num = ifh_comment.substring(3, 11);
+    		//NTE segment option 1: NTE|1|P|IFH1234-5678 30NOV2012
+    		//NTE segment option 2: NTE|1|P|IFH# / EXP DATE 1234-5678
+    		if( ifh_comment.substring(0,4)!=null && ifh_comment.substring(0,4).equalsIgnoreCase("IFH#") ) {
+    			String ifh_num = ifh_comment.substring(16, 25);
+    			ifh_num = ifh_num.replaceAll("-","");
+    			if(ifh_num.matches("[0-9]*"))
+    				ifh = ifh_num;
+    		} else if( ifh_comment.substring(0,3)!=null && ifh_comment.substring(0,3).equalsIgnoreCase("IFH") ) {
+    			String ifh_num = ifh_comment.substring(3, 12);
+    			ifh_num = ifh_num.replaceAll("-","");
     			if(ifh_num.matches("[0-9]*"))
     				ifh = ifh_num;
     		}
     		
     	} catch (Exception e) {
     	}
-		if(StringUtils.isBlank(hin)) {
+		if(StringUtils.isBlank(hin) || "0000000001".equals(hin)) {
 			if(!StringUtils.isBlank(ifh))
 				hin = ifh;
 		}
