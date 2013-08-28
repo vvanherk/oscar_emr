@@ -1610,12 +1610,10 @@ jQuery(document).ready(function() {
       <script>
 var _providers = [];
 <%	for (int i=0; i<sites.size(); i++) { %>
-	<%
-	List<Provider> providers = ((ProviderDao) SpringUtils.getBean("providerDao")).getProvidersBySiteLocation(sites.get(i).getName());
-	%>
-
-	_providers["<%= sites.get(i).getName() %>"]="<% 
-	for ( Provider p : providers) {
+	_providers["<%= sites.get(i).getName() %>"]="<% Iterator<Provider> iter = sites.get(i).getProviders().iterator();
+	while (iter.hasNext()) {
+		Provider p=iter.next();
+	
 		if ("1".equals(p.getStatus()) && StringUtils.isNotBlank(p.getOhipNo())) {
 	%><option value='<%= p.getProviderNo() %>|<%= p.getOhipNo() %>' ><%= p.getLastName() %>, <%= p.getFirstName() %></option><% }} %>";
 <% } %>

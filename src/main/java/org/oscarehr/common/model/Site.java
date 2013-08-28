@@ -17,14 +17,14 @@
  */
 
 package org.oscarehr.common.model;
-/*
+
 import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
-*/
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -89,9 +89,7 @@ public class Site extends AbstractModel<Integer> implements java.io.Serializable
         </set>
 
 	 */
-/* Don't need here. 
- * JPA does support cascade=MERGE and cascade=ALL, which will remove the underlying entity relationships on EntityManager.merge, but not the related entities themselves.
- * When merge site, it will also delete providersite data which is not correct. And we never delete site. 
+
 	@ManyToMany(cascade=CascadeType.ALL,fetch=FetchType.EAGER)
 	@JoinTable(name = "providersite",
 	joinColumns = {
@@ -103,7 +101,7 @@ public class Site extends AbstractModel<Integer> implements java.io.Serializable
 	)
 		
 	private Set<Provider> providers;
-*/
+
 	public Site() {
 	}
 
@@ -238,12 +236,12 @@ public class Site extends AbstractModel<Integer> implements java.io.Serializable
 	public void setProviderIdTo(Integer providerIdTo) {
 		this.providerIdTo = providerIdTo;
 	}
-/*
+
 	public Set<Provider> getProviders() {
 		return providers;
 	}
 
 	public void setProviders(Set<Provider> providers) {
 		this.providers = providers;
-	} */
+	}
 }
