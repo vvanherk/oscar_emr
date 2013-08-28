@@ -290,6 +290,21 @@ function popupPageNew(vheight,vwidth,varpage) {
       if(iRow>iPageSize) break;
       bodd=bodd?false:true; //for the color of rows
       nItems++; //to calculate if it is the end of records
+      
+      String comments = "";
+      String status = apptMainBean.getString(rs,"status");
+      if (status != null) {
+		if(status.contains("N")) {
+		   comments = "No Show";
+		}
+		else if (status.equals("C")) {
+		   comments = "Cancelled";
+		}
+		// Skip printing appointment if it has deleted status
+		else if (status.equals("D")) {
+			continue;
+		}
+	}
        
 %> 
 <tr bgcolor="<%=bodd?weakColor:"white"%>" appt_no="<%=rs.getString("appointment_no")%>" demographic_no="<%=request.getParameter("demographic_no")%>">	  
@@ -305,20 +320,10 @@ function popupPageNew(vheight,vwidth,varpage) {
       </plugin:hideWhenCompExists>
 
       <% String remarks = apptMainBean.getString(rs,"remarks");
-         String comments = "";
          boolean newline = false;
          if (apptMainBean.getString(rs,"remarks") == null){
             remarks = "";
          }
-
-         if (apptMainBean.getString(rs,"status")!=null) {
-            if(apptMainBean.getString(rs,"status").contains("N")) {
-               comments = "No Show";
-            }
-            else if (apptMainBean.getString(rs,"status").equals("C")) {
-               comments = "Cancelled";
-            }
-        }
 
         if (!remarks.isEmpty() && !comments.isEmpty()) {
               newline=true;

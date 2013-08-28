@@ -118,7 +118,8 @@ public class FollowUpAction extends DispatchAction {
     
     public ActionForward getTicklerText(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
     	String appointmentNo = request.getParameter("appointmentNo");    	
-    	String text = getTicklerText(Integer.parseInt(appointmentNo));
+    	String demographicNo = request.getParameter("demographicNo");
+    	String text = getTicklerText(Integer.parseInt(appointmentNo), Integer.parseInt(demographicNo));
     	    	    
     	try {
     		response.getWriter().print(text);
@@ -126,11 +127,11 @@ public class FollowUpAction extends DispatchAction {
     	return null;
     }
     
-    public static String getTicklerText(int appointmentNo) {
+    public static String getTicklerText(int appointmentNo, int demographicNo) {
     	FollowUpDao dao = (FollowUpDao)SpringUtils.getBean("FollowUpDAO");
     	ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
     	
-    	List<EyeformFollowUp> followUps = dao.getByAppointmentNo(appointmentNo);
+    	List<EyeformFollowUp> followUps = dao.get(demographicNo, appointmentNo);
     	StringBuilder sb = new StringBuilder();
     	
     	for(EyeformFollowUp f:followUps) {

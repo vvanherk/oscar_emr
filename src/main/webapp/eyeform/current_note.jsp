@@ -114,15 +114,15 @@ function saveNoteAndSendTickler() {
 
 	var notetext = '';
 	//get consults/procedures/tests/checkboxes to generate text
-	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getTicklerText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
         notetext += data;
         if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getTicklerText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
         notetext += data;
         if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getTicklerText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
         notetext += data;
         if(data.length>0) {notetext+='\n';}
     }});

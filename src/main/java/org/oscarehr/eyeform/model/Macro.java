@@ -73,6 +73,7 @@ public class Macro extends AbstractModel<Integer>{
 	private String ticklerRecipient;
 
 	private String sliCode;
+	private boolean includeAdmissionDate;
 
 	public String getTicklerRecipient() {
 		return ticklerRecipient;
@@ -244,7 +245,12 @@ public class Macro extends AbstractModel<Integer>{
 	public void setSliCode(String sliCode) {
     	this.sliCode = sliCode;
     }
-
+	public boolean getIncludeAdmissionDate() {
+    	return includeAdmissionDate;
+    }
+	public void setIncludeAdmissionDate(boolean includeAdmissionDate) {
+    	this.includeAdmissionDate = includeAdmissionDate;
+    }
 
 
 }

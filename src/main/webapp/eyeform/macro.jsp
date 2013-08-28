@@ -205,6 +205,9 @@ function fixCheckboxes(form) {
 				<html:options collection="sliCodes" property="value" labelProperty="label"/>
 			</html:select>
 		</td>
+		<td>
+			<html:checkbox property="macro.includeAdmissionDate" value="includeAdmissionDate" /> Include Admission Date
+		</td>
 	</tr>
 	<tr>
 	<td>Billing Codes<br>(won't bill if empty)<br></td>

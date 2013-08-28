@@ -251,9 +251,9 @@ function setupNotes(){
 
     //need to set focus after rounded is called
     adjustCaseNote();
-    setCaretPosition($(caseNote), $(caseNote).value.length);
+    //setCaretPosition($(caseNote), $(caseNote).value.length);
 
-    $(caseNote).focus();
+    //$(caseNote).focus();
 }
 
 function setupOneNote(note) {
@@ -407,7 +407,7 @@ function notesLoader(offset, numToReturn, demoNo) {
 				},
 				onComplete: function() {
 					$("notesLoading").style.display = "none";
-					if (notesCurrentTop != null) $(notesCurrentTop).scrollIntoView();
+					//if (notesCurrentTop != null) $(notesCurrentTop).scrollIntoView();
 				}
 			});
 }

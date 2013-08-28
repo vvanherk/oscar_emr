@@ -396,6 +396,66 @@
         <ap-sql>SELECT ${appt_no} as appt_no</ap-sql>
         <ap-output>${appt_no}</ap-output>
     </databaseap>
+    
+<!-- Family Doctor information for eform -->
+	<databaseap>
+	<ap-name>family_doc_Last_name</ap-name>
+        <ap-sql>SELECT billingreferral.last_name FROM billingreferral, demographicExt de
+				inner join
+				(
+					select de.id, de.date_time
+					from demographicExt de
+					where de.demographic_no=${demographic}
+					and de.key_val = 'Family_Doctor_No'
+					order by date_time desc
+					limit 1
+				) idmap
+				on idmap.id = de.id and idmap.date_time = de.date_time
+				WHERE de.demographic_no=${demographic} AND LENGTH(billingreferral.referral_no) &gt; 0
+				and de.key_val = 'Family_Doctor_No'
+				AND de.value=billingreferral.referral_no;
+		</ap-sql>
+        <ap-output>${last_name}</ap-output>
+    </databaseap>
+    <databaseap>
+    <ap-name>family_doc_first_name</ap-name>
+        <ap-sql>SELECT billingreferral.first_name FROM billingreferral, demographicExt de
+				inner join
+				(
+					select de.id, de.date_time
+					from demographicExt de
+					where de.demographic_no=${demographic}
+					and de.key_val = 'Family_Doctor_No'
+					order by date_time desc
+					limit 1
+				) idmap
+				on idmap.id = de.id and idmap.date_time = de.date_time
+				WHERE de.demographic_no=${demographic} AND LENGTH(billingreferral.referral_no) &gt; 0
+				and de.key_val = 'Family_Doctor_No'
+				AND de.value=billingreferral.referral_no;
+		</ap-sql>
+        <ap-output>${first_name}</ap-output>
+    </databaseap>
+    <databaseap>
+        <ap-name>family_doc_address</ap-name>
+        <ap-sql>SELECT CONCAT(billingreferral.address1,', ',billingreferral.address2,', ',billingreferral.city,', ',billingreferral.province,', ',billingreferral.country,', ',billingreferral.postal) AS raddress
+				FROM billingreferral, demographicExt de
+				inner join
+				(
+					select de.id, de.date_time
+					from demographicExt de
+					where de.demographic_no=${demographic}
+					and de.key_val = 'Family_Doctor_No'
+					order by date_time desc
+					limit 1
+				) idmap
+				on idmap.id = de.id and idmap.date_time = de.date_time
+				WHERE de.demographic_no=${demographic} AND LENGTH(billingreferral.referral_no) &gt; 0 
+				and de.key_val = 'Family_Doctor_No'
+				AND de.value=billingreferral.referral_no;
+        </ap-sql>
+        <ap-output>${raddress}</ap-output>
+    </databaseap>
 
 <!-- Clinic information -->
     <databaseap>

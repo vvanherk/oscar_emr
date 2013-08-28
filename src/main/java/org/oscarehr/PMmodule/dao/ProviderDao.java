@@ -30,8 +30,10 @@ import org.apache.log4j.Logger;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
+import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.SQLQuery;
+import org.hibernate.Session;
 import org.hibernate.criterion.Expression;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Restrictions;
@@ -435,6 +437,36 @@ public class ProviderDao extends HibernateDaoSupport {
 		List<Provider> providerList = getHibernateTemplate().find("From Provider p where OhipNo=?",new Object[]{ohipNumber});
 		
 		return providerList;
+	}
+	
+	public List<Provider> getProvidersBySiteLocation(String location) {
+		List<Provider> pList = new ArrayList<Provider>();
+		Session sess = getSession();
+		try {
+			SQLQuery  q = sess.createSQLQuery(
+					"select distinct p.provider_no	" +
+					" from provider p " +
+					" inner join providersite ps on ps.provider_no = p.provider_no " +
+					" inner join site s on s.site_id = ps.site_id " +
+					" where  s.name = :sitename ") ;
+			q.setParameter("sitename", location);
+//			q.addScalar("provider_no", Hibernate.STRING);			
+			List providerNos = q.list();
+			for(Object no : providerNos) {
+				String provNo = (String)no;
+				Provider provider = getProvider(provNo);
+				pList.add(provider);				
+			}
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Error", e);
+		} finally {
+			try {
+				sess.close();
+			} catch (HibernateException e) {
+				MiscUtils.getLogger().error("Error", e);
+			}
+		}		
+		return pList;
 	}
 	
 	public List<String> getUniqueTeams() {

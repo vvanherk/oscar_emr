@@ -34,8 +34,11 @@
     UserPropertyDAO userPropertyDAO = (UserPropertyDAO) ctx.getBean("UserPropertyDAO");
 
     UserProperty prop = userPropertyDAO.getProp((String) session.getAttribute("user"),  UserProperty.MYDRUGREF_ID);
-    String mydrugrefid = prop.getValue();
-    if (mydrugrefid == null){mydrugrefid = "";}
+    String mydrugrefid = "";
+    if (prop != null) {
+        String mydrugrefid = prop.getValue();
+        if (mydrugrefid == null){mydrugrefid = "";}
+	}
 %>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
    "http://www.w3.org/TR/html4/loose.dtd">

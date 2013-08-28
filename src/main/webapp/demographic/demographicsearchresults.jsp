@@ -356,7 +356,7 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
 		</security:oscarSec> <!-- Rights --> <security:oscarSec roleName="<%=roleName$%>"
 			objectName="_rx" rights="r">
 			<a class="rxBtn" title="Prescriptions" href="#" onclick="popup(700,1027,'../oscarRx/choosePatient.do?providerNo=<%=rs.getString("provider_no")%>&demographicNo=<%=dem_no%>')">Rx</a>
-		</security:oscarSec></div>
+		</security:oscarSec>
 		<%}%>
 		<% if (OscarProperties.getInstance().isPropertyActive("new_eyeform_enabled")) { %>
 		<security:oscarSec roleName="<%=roleName$%>"
@@ -364,6 +364,7 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
 			<a title="Eyeform" href="#" onclick="popup(800, 1280, '../eyeform/eyeform.jsp?demographic_no=<%=dem_no %>&reason=')">EF</a>
 		</security:oscarSec>
 		<% } %>
+		</div>
 		<div class="name"><%=Misc.toUpperLowerCase(rs.getString("last_name"))%>, <%=Misc.toUpperLowerCase(rs.getString("first_name"))%></div>
 		<div class="chartNo"><%=apptMainBean.getString(rs,"chart_no")==null||apptMainBean.getString(rs,"chart_no").equals("")?"&nbsp;":apptMainBean.getString(rs,"chart_no")%></div>
 		<div class="sex"><%=apptMainBean.getString(rs,"sex")%></div>

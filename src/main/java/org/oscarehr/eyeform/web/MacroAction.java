@@ -108,7 +108,11 @@ public class MacroAction extends DispatchAction {
     		macro.setId(Integer.parseInt(request.getParameter("macro.id")));
     	}
 
-    	StringBuilder errors = new StringBuilder();
+		// For some reason, this checkbox value wasn't getting set automatically
+		boolean includeAdmissionDate = (request.getParameter("macro.includeAdmissionDate") == null? false : true);
+		macro.setIncludeAdmissionDate( includeAdmissionDate );
+
+		StringBuilder errors = new StringBuilder();
 
     	//validate billing
     	String bcodes = macro.getBillingCodes();

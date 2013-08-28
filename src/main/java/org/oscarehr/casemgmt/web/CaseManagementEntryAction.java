@@ -547,6 +547,9 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 			if (archived != null && archived.equalsIgnoreCase("true"))
 				note.setArchived(true);
+			
+			if (demographicNo == null)
+				demographicNo = note.getDemographic_no();
 
 		} else {
 			note.setDemographic_no(demographicNo);
@@ -2967,7 +2970,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				Tickler t = new Tickler();
 				t.setCreator(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
 				t.setDemographic_no(cform.getDemographicNo());
-				t.setMessage(getMacroTicklerText(Integer.parseInt(cform.getAppointmentNo())));
+				t.setMessage(getMacroTicklerText(Integer.parseInt(cform.getAppointmentNo()), Integer.parseInt(cform.getDemographicNo())));
 				t.setPriority("Normal");
 				t.setService_date(new Date());
 				t.setStatus('A');
@@ -3070,7 +3073,10 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				mockReq.addParameter("submit", "Save");
 				mockReq.addParameter("comment", macro.getBillingComment());
 				mockReq.addParameter("xml_visittype", macro.getBillingVisitType());
-				mockReq.addParameter("xml_vdate", cform.getAppointmentDate());
+				if (macro.getIncludeAdmissionDate())
+					mockReq.addParameter("xml_vdate", cform.getAppointmentDate());
+				else
+					mockReq.addParameter("xml_vdate", "");
 				mockReq.addParameter("apptProvider_no", appt == null ? "" : appt.getProviderNo());
 				mockReq.addParameter("xml_provider", provider.getProviderNo() + "|" + provider.getOhipNo());
 				mockReq.getSession().setAttribute("user", LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
@@ -3117,11 +3123,11 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		return ref;
 	}
 
-	public String getMacroTicklerText(int appointmentNo) {
+	public String getMacroTicklerText(int appointmentNo, int demographicNo) {
 		StringBuilder sb = new StringBuilder();
-		sb.append(FollowUpAction.getTicklerText(appointmentNo));
-		sb.append(ProcedureBookAction.getTicklerText(appointmentNo));
-		sb.append(TestBookAction.getTicklerText(appointmentNo));
+		sb.append(FollowUpAction.getTicklerText(appointmentNo, demographicNo));
+		sb.append(ProcedureBookAction.getTicklerText(appointmentNo, demographicNo));
+		sb.append(TestBookAction.getTicklerText(appointmentNo, demographicNo));
 		return sb.toString();
 	}
 

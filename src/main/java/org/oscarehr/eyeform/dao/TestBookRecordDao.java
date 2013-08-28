@@ -56,4 +56,14 @@ public class TestBookRecordDao extends AbstractDao<EyeformTestBook> {
 	    List<EyeformTestBook> results=query.getResultList();
 	    return(results);
 	}
+	
+	public List<EyeformTestBook> get(int demographicNo, int appointmentNo) {
+		Query query = entityManager.createQuery("select x from "+modelClass.getSimpleName()+" x where x.demographicNo=?1 and x.appointmentNo=?2");
+		query.setParameter(1, demographicNo);
+		query.setParameter(2, appointmentNo);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformTestBook> results=query.getResultList();
+	    return(results);
+	}
 }
