@@ -182,6 +182,20 @@ public class ProviderDao extends HibernateDaoSupport {
 		return rs;
 	}
 
+	public List<Provider> getActiveProvidersByProviderNoList(List<String> providerNoList) {
+		String sSQL;
+		List<Provider> rs;
+		
+		if(providerNoList == null || providerNoList.size() == 0) return null;
+		
+		String filter = SqlUtils.constructInClauseForStatements(providerNoList.toArray(), true);
+
+		sSQL = "FROM  Provider p where p.Status='1' and p.ProviderNo in "+filter;
+		rs = getHibernateTemplate().find(sSQL);
+
+		return rs;
+	}
+
 	public List<Provider> getActiveProviders() {
 		@SuppressWarnings("unchecked")
 		List<Provider> rs = getHibernateTemplate().find(
@@ -439,6 +453,114 @@ public class ProviderDao extends HibernateDaoSupport {
 		return providerList;
 	}
 	
+	public List<String> getUniqueTeams() {
+		@SuppressWarnings("unchecked")
+		List<String> providerList = getHibernateTemplate().find("select distinct p.Team From Provider p");
+
+		return providerList;
+	}
+
+	public String getProviderTeam(String providerNo) {
+		Provider provider = getProvider(providerNo);
+		if(provider == null) return null;
+		else return provider.getTeam();
+	}
+	
+	public List<String> getProvidersNoByTeam(String team) {
+		@SuppressWarnings("unchecked")
+		List<String> providerNoList = getHibernateTemplate().find("select distinct p.ProviderNo From Provider p where p.Team=?", new Object[]{team});
+
+		return providerNoList;
+		
+	}
+
+	public List<Provider> getProvidersByTeam(String team) {
+		@SuppressWarnings("unchecked")
+		List<Provider> providerList = getHibernateTemplate().find("select distinct p From Provider p where p.Team=?", new Object[]{team});
+
+		return providerList;
+		
+	}
+
+	public List<Provider> getProvidersForAllSites() {
+		List<Provider> pList = new ArrayList<Provider>();
+		Session sess = getSession();
+		try {
+			SQLQuery  q = sess.createSQLQuery(
+					"select distinct p.provider_no	" +
+					" from provider p " +
+					" inner join providersite ps on ps.provider_no = p.provider_no" +
+					" where p.status=1");
+			List providerNos = q.list();
+			for(Object no : providerNos) {
+				String providerNo = (String)no;
+				Provider provider = getProvider(providerNo);
+				pList.add(provider);
+			}
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Error", e);
+		} finally {
+			try {
+				sess.close();
+			} catch (HibernateException e) {
+				MiscUtils.getLogger().error("Error", e);
+			}
+		}		
+		return pList;
+	}	
+	
+	public List<String> getProvidersNoForAllSites() {
+		List<String> pList = new ArrayList<String>();
+		Session sess = getSession();
+		try {
+			SQLQuery  q = sess.createSQLQuery(
+					"select distinct p.provider_no	" +
+					" from provider p " +
+					" inner join providersite ps on ps.provider_no = p.provider_no" +
+					" where p.status=1");
+			pList = q.list();
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Error", e);
+		} finally {
+			try {
+				sess.close();
+			} catch (HibernateException e) {
+				MiscUtils.getLogger().error("Error", e);
+			}
+		}		
+		return pList;
+	}	
+
+	public List<Provider> getSiteProvidersByProviderNo(String providerNo) {
+		List<Provider> pList = new ArrayList<Provider>();
+		Session sess = getSession();
+		try {
+			SQLQuery  q = sess.createSQLQuery(
+					"select distinct p.provider_no	" +
+					" from provider p " +
+					" inner join providersite ps on ps.provider_no = p.provider_no " +
+					" where ps.site_id in (select site_id from providersite where provider_no = :providerno)");
+			q.setParameter("providerno", providerNo);
+			q.addScalar("provider_no", Hibernate.STRING);			
+			List providerNos = q.list();
+			ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+			for(Object no : providerNos) {
+				String provNo = (String)no;
+				Provider provider = providerDao.getProvider(provNo);
+				pList.add(provider);				
+			}
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Error", e);
+		} finally {
+			try {
+				sess.close();
+			} catch (HibernateException e) {
+				MiscUtils.getLogger().error("Error", e);
+			}
+		}		
+		return pList;
+	}		
+	
 	public List<Provider> getProvidersBySiteLocation(String location) {
 		List<Provider> pList = new ArrayList<Provider>();
 		Session sess = getSession();
@@ -469,10 +591,46 @@ public class ProviderDao extends HibernateDaoSupport {
 		return pList;
 	}
 	
-	public List<String> getUniqueTeams() {
-		@SuppressWarnings("unchecked")
-		List<String> providerList = getHibernateTemplate().find("select distinct p.Team From Provider p");
+	public List<Provider> getActiveTeamProviders(String providerNo) {
+		List<Provider> ret = new ArrayList<Provider>();
+		String sql = "from Provider "
+				+ "where Status= '1' and OhipNo!='' and (ProviderNo= ? or " +
+				"Team=(select p1.Team from Provider p1 where ProviderNo= ?)) order by LastName, FirstName";
+		ArrayList<String> paramList = new ArrayList<String>();
+    	paramList.add(providerNo);
+    	paramList.add(providerNo);
+    	Object params[] = paramList.toArray(new Object[paramList.size()]);
+	    	
+    	List<Object> rs = getHibernateTemplate().find(sql,params);
+	    for(Object p : rs) {
+	    	ret.add((Provider)p);
+	    }	
+		return ret;
+	}
 
-		return providerList;
+	public List<Provider> getActiveSiteProviders(String providerNo) {
+		List<Provider> ret = new ArrayList<Provider>();
+		Session sess = getSession();
+		String sql = "select p.provider_no from provider p "
+				+ "where status='1' and ohip_no!='' " +
+				"and exists(select * from providersite s where p.provider_no = s.provider_no and s.site_id IN (SELECT site_id from providersite where provider_no= :providerParam))" +
+				" order by last_name, first_name";
+		SQLQuery  q = sess.createSQLQuery(sql);
+/*
+		SQLQuery  q = sess.createSQLQuery(
+				"select distinct p.provider_no	" +
+				" from provider p " +
+				" inner join providersite ps on ps.provider_no = p.provider_no " +
+				" inner join site s on s.site_id = ps.site_id " +
+				" where  s.name = :sitename ") ;
+*/				
+		q.setParameter("providerParam", providerNo);
+//		q.addScalar("provider_no", Hibernate.STRING);			
+		List providerNos = q.list();
+		for(Object no : providerNos) {
+			Provider provider = getProvider((String)no);
+			ret.add(provider);				
+		}
+		return ret;
 	}
 }

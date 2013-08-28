@@ -145,7 +145,7 @@ public class SiteDao extends AbstractDao<Site> {
 						" inner join provider p on p.provider_no = g.provider_no and p.status = 1 " +
 						" inner join providersite ps on ps.provider_no = g.provider_no " +
 						" inner join site s on s.site_id = ps.site_id " +
-						" where  s.name = :sitename ");
+						" where  s.name like :sitename ");
 		query.setParameter("sitename",location);
 
 		@SuppressWarnings("unchecked")
@@ -162,7 +162,7 @@ public class SiteDao extends AbstractDao<Site> {
 					" from provider p " +
 					" inner join providersite ps on ps.provider_no = p.provider_no " +
 					" inner join site s on s.site_id = ps.site_id " +
-					" where  s.name = :sitename ") ;
+					" where  s.name like :sitename ") ;
 
 		query.setParameter("sitename", location);
 
@@ -217,4 +217,29 @@ public class SiteDao extends AbstractDao<Site> {
 
 		return "";
 	}
+	
+	public List<String> getGroupsBySiteProviderNo(String groupNo) {
+		List<String> groupList = new ArrayList<String>();
+		Query  query = entityManager.createNativeQuery(
+				"select distinct g.mygroup_no from mygroup g	" +
+				" inner join provider p on p.provider_no = g.provider_no and p.status = 1 " +
+				" inner join providersite ps on ps.provider_no = g.provider_no " +
+				" where ps.site_id in (select site_id from providersite where provider_no = :providerno)");
+		query.setParameter("providerno", groupNo);
+
+		groupList = query.getResultList();
+		return groupList;
+	}	
+	
+	public List<String> getGroupsForAllSites() {
+		List<String> groupList = new ArrayList<String>();
+		Query  query = entityManager.createNativeQuery(
+				"select distinct g.mygroup_no from mygroup g	" +
+				" inner join provider p on p.provider_no = g.provider_no and p.status = 1 " +
+				" inner join providersite ps on ps.provider_no = g.provider_no");
+
+		groupList = query.getResultList();
+		return groupList;
+	}
+	
 }

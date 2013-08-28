@@ -217,7 +217,7 @@ public class EctViewConsultationRequestsUtil {
               date.add(DateFormatUtils.ISO_DATE_FORMAT.format(consult.getReferralDate()));
               reason.add(consult.getReasonForReferral());
               consultant.add((specialistDao.getById(consult.getSpecialistId())).getFormattedName());
-	      documentNo.add(((cdocumentDao.findByRequestId(consult.getId())).get(0)).getDocumentNo());
+	      documentNo.add( "" + ((cdocumentDao.findByRequestId(consult.getId())).get(0)).getDocumentNo() );
           }
       } catch(Exception e) {         
          MiscUtils.getLogger().error("Error", e);         
