@@ -1482,6 +1482,7 @@ if (iviewTag!=null && !"".equalsIgnoreCase(iviewTag.trim())){
 							DemographicContactDao dContactDao = (DemographicContactDao)SpringUtils.getBean("demographicContactDao");
 							List<DemographicContact> dContacts = dContactDao.findByDemographicNo(demographic.getDemographicNo());
 							dContacts = ContactAction.fillContactNames(dContacts);
+							ContactAction.removeDuplicates(dContacts);
 							for(DemographicContact dContact:dContacts) {
 								String sdm = (dContact.getSdm()!=null && dContact.getSdm().equals("true"))?"<span title=\"SDM\" >/SDM</span>":"";
 								String ec = (dContact.getEc()!=null && dContact.getEc().equals("true"))?"<span title=\"Emergency Contact\" >/EC</span>":"";

@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
@@ -807,7 +808,17 @@ public class EyeformAction extends DispatchAction {
 			DemographicContactDao demographicContactDao = (DemographicContactDao)SpringUtils.getBean("demographicContactDao");
 			List<DemographicContact> contacts = demographicContactDao.findByDemographicNoAndCategory(demographicNo, "professional");
 			contacts = ContactAction.fillContactNames(contacts);
+			
+			ContactAction.removeDuplicates(contacts);
+			
 			request.setAttribute("contacts", contacts);
+			
+			DemographicContact dc = demographicContactDao.getFamilyDoctor( demographicNo );
+			List<DemographicContact> dcList = new ArrayList<DemographicContact>();
+			if (dc != null)
+				dcList.add( dc );
+			dcList = ContactAction.fillContactNames(dcList);
+			request.setAttribute("family_doc_contact", dcList);
 
 
 			if (!"saved".equalsIgnoreCase((String) request.getAttribute("savedflag"))

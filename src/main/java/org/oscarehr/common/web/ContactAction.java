@@ -41,10 +41,12 @@ import org.oscarehr.common.dao.ContactDao;
 import org.oscarehr.common.dao.DemographicContactDao;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.ProfessionalContactDao;
+import org.oscarehr.common.dao.ProfessionalSpecialistDao;
 import org.oscarehr.common.model.Contact;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DemographicContact;
 import org.oscarehr.common.model.ProfessionalContact;
+import org.oscarehr.common.model.ProfessionalSpecialist;
 import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
@@ -58,6 +60,7 @@ public class ContactAction extends DispatchAction {
 	static DemographicContactDao demographicContactDao = (DemographicContactDao)SpringUtils.getBean("demographicContactDao");
 	static DemographicDao demographicDao= (DemographicDao)SpringUtils.getBean("demographicDao");
 	static ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+	static ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao)SpringUtils.getBean("professionalSpecialistDao");
 
 	@Override
 	protected ActionForward unspecified(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -340,8 +343,33 @@ public class ContactAction extends DispatchAction {
 			if(c.getType() == DemographicContact.TYPE_CONTACT) {
 				c.setContactName(contactDao.find(Integer.parseInt(c.getContactId())).getFormattedName());
 			}
+			if(c.getType() == DemographicContact.TYPE_PROFESSIONAL_SPECIALIST) {
+				ProfessionalSpecialist ps = professionalSpecialistDao.getByReferralNo(c.getContactId());
+				if (ps != null)
+					c.setContactName(ps.getFormattedName());
+			}
 		}
 
 		return contacts;
+	}
+	
+	/**
+	 * Removes duplicates from the list of DemographicContact objects.
+	 * 
+	 */
+	public static void removeDuplicates(List<DemographicContact> dContacts) {
+		if (dContacts == null)
+			return;
+		
+		// We would normally convert to a Set, which removes duplicates for us.  However, since the duplicate(s) would be from a custom created DemographicContact, this won't work for us.
+		for ( int i=0; i < dContacts.size(); i++) {
+			for ( int j=0; j < dContacts.size(); j++) {
+				if ( i != j && dContacts.get(i).getDemographicNo() == dContacts.get(j).getDemographicNo() && dContacts.get(i).getContactName().equals(dContacts.get(j).getContactName()) ) {
+					dContacts.remove( j );
+					j--;
+					//break;
+				}
+			}
+		}
 	}
 }

@@ -30,21 +30,30 @@ import java.util.List;
 import javax.persistence.Query;
 
 import org.oscarehr.common.model.DemographicContact;
+import org.oscarehr.common.dao.DemographicExtDao;
+import org.oscarehr.common.model.DemographicExt;
 import org.springframework.stereotype.Repository;
+
+import org.oscarehr.util.SpringUtils;
 
 @Repository
 public class DemographicContactDao extends AbstractDao<DemographicContact>{
-
+	
 	public DemographicContactDao() {
 		super(DemographicContact.class);
 	}
-
+	
 	public List<DemographicContact> findByDemographicNo(int demographicNo) {
 		String sql = "select x from " + this.modelClass.getName() + " x where x.demographicNo=? and x.deleted=false";
 		Query query = entityManager.createQuery(sql);
 		query.setParameter(1, demographicNo);
 		@SuppressWarnings("unchecked")
 		List<DemographicContact> dContacts = query.getResultList();
+		
+		DemographicContact dc = getFamilyDoctor( demographicNo );
+		if (dc != null)
+			dContacts.add( dc );
+		
 		return dContacts;
 	}
 
@@ -55,6 +64,11 @@ public class DemographicContactDao extends AbstractDao<DemographicContact>{
 		query.setParameter(2, category);
 		@SuppressWarnings("unchecked")
 		List<DemographicContact> dContacts = query.getResultList();
+		
+		DemographicContact dc = getFamilyDoctor( demographicNo );
+		if (dc != null)
+			dContacts.add( dc );
+		
 		return dContacts;
 	}
 
@@ -65,6 +79,39 @@ public class DemographicContactDao extends AbstractDao<DemographicContact>{
 		query.setParameter(2, new Integer(contactId).toString());
 		@SuppressWarnings("unchecked")
 		List<DemographicContact> dContacts = query.getResultList();
+		
+		DemographicContact dc = getFamilyDoctor( demographicNo, ""+contactId );
+		if (dc != null)
+			dContacts.add( dc );
+		
 		return dContacts;
+	}
+	
+	/**
+	 * Hacky method to get the family doctor for this demographic.  Internally, the
+	 * DemographicContactDao class will use this method to append the family doctor
+	 * to the list of DemographicContact objects.
+	 */
+	public DemographicContact getFamilyDoctor(int demographicNo) {
+		return getFamilyDoctor( demographicNo, null );
+	}
+	
+	private DemographicContact getFamilyDoctor(int demographicNo, String referralNo) {
+		DemographicExtDao demographicExtDao= (DemographicExtDao)SpringUtils.getBean("demographicExtDao");
+		
+		DemographicExt dex = demographicExtDao.getLatestDemographicExt(new Integer(demographicNo), "Family_Doctor_No");
+		
+		if (dex == null)
+			return null;
+		if (dex.getValue() == null || (referralNo != null && !dex.getValue().equals(referralNo)))
+			return null;
+		
+		DemographicContact dContact = new DemographicContact();
+		dContact.setDemographicNo( demographicNo );
+		dContact.setContactId( dex.getValue() );
+		dContact.setRole( "Family Doctor" );
+		dContact.setType( DemographicContact.TYPE_PROFESSIONAL_SPECIALIST );
+		
+		return dContact;
 	}
 }

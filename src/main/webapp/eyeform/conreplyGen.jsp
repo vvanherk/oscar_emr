@@ -232,6 +232,22 @@ function confirmPrint(btn) {
 			document.eyeForm.elements["cp.cc"].value=fd;
 		else document.eyeForm.elements["cp.cc"].value=document.eyeForm.elements["cp.cc"].value+"; "+ fd;
 	}
+	function setCC() {
+		var fd = $("#hidden_cc").val();
+		
+		if (fd == "")
+			return;
+		
+		if (document.eyeForm.elements["cp.cc"].value.length<=0)
+			document.eyeForm.elements["cp.cc"].value=fd;
+		else document.eyeForm.elements["cp.cc"].value=document.eyeForm.elements["cp.cc"].value+"; "+ fd;
+	}
+	function addCCDocs(){
+		var fd = $("#fam_doc").val();
+		if (document.eyeForm.elements["cp.cc"].value.length<=0)
+			document.eyeForm.elements["cp.cc"].value=fd;
+		else document.eyeForm.elements["cp.cc"].value=document.eyeForm.elements["cp.cc"].value+"; "+ fd;
+	}
 	function clinicalInfoAdd(str,name){
 		if (document.eyeForm.elements["cp.clinicalInfo"].value.length>0 && name!=null && trim(name)!='')
 			document.eyeForm.elements["cp.clinicalInfo"].value+='\n\n';
@@ -460,6 +476,17 @@ jQuery(document).ready(function() {
 	ctx = '<%=request.getContextPath()%>';
 	demoNo = '<%=demographicNo%>';
 	appointmentNo = document.eyeForm.elements['cp.appointmentNo'].value;
+	
+	// Only set the CC if this is a new consult report
+	<%
+		boolean isNew = false;
+		String flag = request.getParameter("flag");
+		if (flag != null && flag.equals("new"))
+			isNew = true;
+	%>
+	var isNew = <%=isNew?"true":"false"%>;
+	if (isNew)
+		setCC();
 });
 </script>
 
@@ -638,8 +665,16 @@ jQuery(document).ready(function() {
 					<table style="width: 100%">
 						<tr>
 							<td width="10%" class="tite4">cc:</td>
-							<td width="90%" class="tite4"><html:text style="width:100%"
-								property="cp.cc" /></td>
+							<td width="90%" class="tite4">
+								<%
+									List<DemographicContact> ccContacts = (List<DemographicContact>)request.getAttribute("family_doc_contact");
+									String cc = null;
+									if (ccContacts != null && ccContacts.size() > 0)
+										cc = ccContacts.get(0).getContactName();
+								%>
+								<input type="hidden" name="hidden_cc" id="hidden_cc" value="<%=(cc==null? "" : cc)%>" />
+								<html:text style="width:100%" property="cp.cc" />
+							</td>
 						</tr>
 					</table>
 					</td>
