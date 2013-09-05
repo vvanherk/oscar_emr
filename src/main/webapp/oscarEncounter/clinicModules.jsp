@@ -62,7 +62,7 @@
                         <%
                            winName = "Consultations" + bean.demographicNo;
                         %>
-                        <a class="links" onmouseover="this.className='linkhover'"  onmouseout="this.className='links'" href=# onClick="popupPage(700,960,'<%=winName%>','<rewrite:reWrite jspPage="oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp"/>?de=<%=bean.demographicNo%>');return false;"><bean:message key="global.consultations"/></a>
+                        <a class="links" onmouseover="this.className='linkhover'"  onmouseout="this.className='links'" href=# onClick="popupPage(700,960,'<%=winName%>','<rewrite:reWrite jspPage="oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp"/>?de=<%=bean.demographicNo%>&appNo=<%=bean.appointmentNo%>');return false;"><bean:message key="global.consultations"/></a>
                     </li>
                     --%>
 	<li><oscar:oscarPropertiesCheck property="PREVENTION" value="yes">

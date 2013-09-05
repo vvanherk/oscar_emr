@@ -883,7 +883,7 @@ function removeSaveFeedback()  {
 					onClick="popupOscarRx(700,1027,'../oscarRx/choosePatient.do?providerNo=<%=bean.providerNo%>&demographicNo=<%=bean.demographicNo%>');return false;"><bean:message
 					key="global.prescriptions" /></a><br>
 				<% } %> <a href=#
-					onClick="popupOscarCon(700,960,'<rewrite:reWrite jspPage="oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp"/>?de=<%=bean.demographicNo%>');return false;"><bean:message
+					onClick="popupOscarCon(700,960,'<rewrite:reWrite jspPage="oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp"/>?de=<%=bean.demographicNo%>&appNo=<%=bean.appointmentNo%>');return false;"><bean:message
 					key="global.consultations" /></a><br>
 
 				<oscar:oscarPropertiesCheck property="IMMUNIZATION" value="yes"

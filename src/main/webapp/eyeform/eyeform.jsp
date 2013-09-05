@@ -48,7 +48,6 @@ try {
 	MiscUtils.getLogger().error("[eyeform] Couldn't get appointment data from database", e);
 }
 
-
 DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
 Demographic d = demographicDao.getDemographicById(Integer.parseInt(request.getParameter("demographic_no")));
 

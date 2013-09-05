@@ -115,7 +115,7 @@ var appointmentDate = [];
 var BoxIssueUrls = {
 		"specsHistory": ctx + "/oscarEncounter/displaySpecsHistory.do",
 		"procedures": ctx + "/oscarEncounter/displayOcularProcedure.do",
-		"consultations": ctx + "/oscarEncounter/displayConsultation.do",
+		"consultations": ctx + "/oscarEncounter/displayConsultation.do?appointment_no=" + appointmentNo,
 		"labResults": ctx + "/oscarEncounter/displayLabs.do",
 		"documents": ctx + "/oscarEncounter/displayDocuments.do",
 		"diagrams": ctx + "/oscarEncounter/displayDiagrams.do?appointment_no=" + appointmentNo,
