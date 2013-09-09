@@ -69,15 +69,16 @@ jQuery("document").ready(function() {
 });
 
 function togglediv(el) {
-	jQuery('#s_' + el.id.substring(el.id.indexOf('_')+1)).toggle();
+	jQuery('div[name="s_' + el.id.substring(el.id.indexOf('_')+1) + '"]').toggle();
 }
 
 function expanddiv(el) {
-	jQuery('#s_' + el.id.substring(el.id.indexOf('_')+1)).show();
+	jQuery('div[name="s_' + el.id.substring(el.id.indexOf('_')+1) + '"]').show();
+	
 }
 
 function collapsediv(el) {
-	jQuery('#s_' + el.id.substring(el.id.indexOf('_')+1)).hide();
+	jQuery('div[name="s_' + el.id.substring(el.id.indexOf('_')+1) + '"]').hide();
 }
 
 function whiteField(el){
@@ -333,7 +334,7 @@ span.ge{
         <div class="title">
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" href="javascript:void(0)" tabindex="31" id="a_21" onclick="togglediv(this);">Vision Pretest:</a>
         </div>
-        <div id="s_21" class="slideblock">
+        <div name="s_21" id="s_21" class="slideblock">
             <table class="exam" width="100%">
             <tr>
             <td colspan="3">OD</td>
@@ -435,7 +436,7 @@ span.ge{
             <a href="javascript:void(0)" tabindex="62" onclick="copySpecs();"> [copy Specs] </a>
 
         </div>
-        <div id="s_22" class="slideblock">
+        <div name="s_22" id="s_22" class="slideblock">
             <table class="exam" width="100%">
             <tr>
             <td colspan="6">OD</td>
@@ -512,7 +513,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" href="javascript:void(0)" tabindex="90" id="a_23" onclick="togglediv(this);">IOP:</a>
 
         </div>
-        <div id="s_23" class="slideblock">
+        <div name="s_23" id="s_23" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td width="17%"></td>
@@ -565,7 +566,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" tabindex="100" href="javascript:void(0)" id="a_24" onclick="togglediv(this);">Special Exam:</a>
 
         </div>
-        <div id="s_24" class="slideblock">
+        <div name="s_24" id="s_24" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td width="33%">OD</td>
@@ -616,7 +617,7 @@ span.ge{
             </a>
 
         </div>
-        <div id="s_25" class="slideblock">
+        <div name="s_25" id="s_25" class="slideblock">
         <textarea measurement="EOM" name="EOM" tabindex="121" onchange="syncFields(this)" cols="100" rows="4" class="examfieldgrey" onfocus="whiteField(this);"></textarea>
 
         </div>
@@ -637,7 +638,7 @@ span.ge{
             <a href="javascript:void(0)" tabindex="127" onclick="clearAnterior();return false;">[clear]</a>
 
         </div>
-        <div id="s_26" class="slideblock">
+        <div name="s_26" id="s_26" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
@@ -731,7 +732,7 @@ span.ge{
             <a href="javascript:void(0)" tabindex="162" onclick="clearPosterior();return false;">[clear]</a>
 
         </div>
-        <div id="s_27" class="slideblock">
+        <div name="s_27" id="s_27" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td width="40%" colspan="2">OD</td>
@@ -779,7 +780,7 @@ span.ge{
             <a href="javascript:void(0)" tabindex="177" onclick="clearExternal();return false;">[clear]</a>
 
         </div>
-        <div id="s_28" class="slideblock">
+        <div name="s_28" id="s_28" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
@@ -824,7 +825,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" tabindex="190" href="javascript:void(0)" id="a_29" onclick="togglediv(this);">NLD:</a>
 
         </div>
-        <div id="s_29" class="slideblock">
+        <div name="s_29" id="s_29" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
@@ -863,7 +864,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" tabindex="200" href="javascript:void(0)" id="a_30" onclick="togglediv(this);">Eyelid Measurements:</a>
 
         </div>
-        <div id="s_30" class="slideblock">
+        <div name="s_30" id="s_30" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
@@ -917,7 +918,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" tabindex="220" href="javascript:void(0)" id="a_31" onclick="togglediv(this);">Orbit:</a>
 
         </div>
-        <div id="s_31" class="slideblock">
+        <div name="s_31" id="s_31" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
