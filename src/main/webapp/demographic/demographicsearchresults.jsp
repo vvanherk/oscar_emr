@@ -340,30 +340,35 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
             	//skip non head records
             	continue;
             }
-           if (vLocale.getCountry().equals("BR")) { %> <a
-			href="demographiccontrol.jsp?demographic_no=<%= head %>&displaymode=edit&dboperation=search_detail_ptbr"><%=dem_no%></a>
-		<!-- Link to Oscar Message with display mode = linkMsg2Demo --> </div> <%}else if ( fromMessenger ) {%>
-		<a
-			href="demographiccontrol.jsp?keyword=<%=Misc.toUpperLowerCase(apptMainBean.getString(rs,"last_name")+", "+apptMainBean.getString(rs,"first_name"))%>&demographic_no=<%= dem_no %>&displaymode=linkMsg2Demo&dboperation=search_detail"><%=apptMainBean.getString(rs,"demographic_no")%></a>
-		<!-- Link to Oscar Message with display mode = edit ( default) --> </div><%}else{%>
-		<a title="Master Demo File" href="#"
-			onclick="popup(600,900,'demographiccontrol.jsp?demographic_no=<%= head %>&displaymode=edit&dboperation=search_detail')"><%=dem_no%></a></div>
-		<!-- Rights -->
-		<div class="links"><security:oscarSec roleName="<%=roleName$%>"
-			objectName="_eChart" rights="r">
-			<a class="encounterBtn" title="Encounter" href="#"
-				onclick="popupEChart(710,1024,'<c:out value="${ctx}"/>/oscarEncounter/IncomingEncounter.do?providerNo=<%=curProvider_no%>&appointmentNo=&demographicNo=<%=dem_no%>&curProviderNo=&reason=<%=URLEncoder.encode("Tel-Progress Notes")%>&encType=&curDate=<%=""+curYear%>-<%=""+curMonth%>-<%=""+curDay%>&appointmentDate=&startTime=&status=');return false;">E</a>
-		</security:oscarSec> <!-- Rights --> <security:oscarSec roleName="<%=roleName$%>"
-			objectName="_rx" rights="r">
-			<a class="rxBtn" title="Prescriptions" href="#" onclick="popup(700,1027,'../oscarRx/choosePatient.do?providerNo=<%=rs.getString("provider_no")%>&demographicNo=<%=dem_no%>')">Rx</a>
-		</security:oscarSec>
-		<%}%>
-		<% if (OscarProperties.getInstance().isPropertyActive("new_eyeform_enabled")) { %>
-		<security:oscarSec roleName="<%=roleName$%>"
-			objectName="_eChart" rights="r">
-			<a title="Eyeform" href="#" onclick="popup(800, 1280, '../eyeform/eyeform.jsp?demographic_no=<%=dem_no %>&reason=')">EF</a>
-		</security:oscarSec>
+           if (vLocale.getCountry().equals("BR")) { %> 
+				<a href="demographiccontrol.jsp?demographic_no=<%= head %>&displaymode=edit&dboperation=search_detail_ptbr"><%=dem_no%></a>
+				<!-- Link to Oscar Message with display mode = linkMsg2Demo --> </div> 
+		<% } else if ( fromMessenger ) { %>
+				<a href="demographiccontrol.jsp?keyword=<%=Misc.toUpperLowerCase(apptMainBean.getString(rs,"last_name")+", "+apptMainBean.getString(rs,"first_name"))%>&demographic_no=<%= dem_no %>&displaymode=linkMsg2Demo&dboperation=search_detail"><%=apptMainBean.getString(rs,"demographic_no")%></a>
+				<!-- Link to Oscar Message with display mode = edit ( default) -->
+		<% } else { %>
+				<a title="Master Demo File" href="#" onclick="popup(600,900,'demographiccontrol.jsp?demographic_no=<%= head %>&displaymode=edit&dboperation=search_detail')">
+					<%=dem_no%>
+				</a>
+				</div>
+				
+				<!-- Rights -->
+				<div class="links">
+					<security:oscarSec roleName="<%=roleName$%>" objectName="_eChart" rights="r">
+						<a class="encounterBtn" title="Encounter" href="#" onclick="popupEChart(710,1024,'<c:out value="${ctx}"/>/oscarEncounter/IncomingEncounter.do?providerNo=<%=curProvider_no%>&appointmentNo=&demographicNo=<%=dem_no%>&curProviderNo=&reason=<%=URLEncoder.encode("Tel-Progress Notes")%>&encType=&curDate=<%=""+curYear%>-<%=""+curMonth%>-<%=""+curDay%>&appointmentDate=&startTime=&status=');return false;">E</a>
+					</security:oscarSec> 
+					<!-- Rights --> 
+					<security:oscarSec roleName="<%=roleName$%>" objectName="_rx" rights="r">
+						<a class="rxBtn" title="Prescriptions" href="#" onclick="popup(700,1027,'../oscarRx/choosePatient.do?providerNo=<%=rs.getString("provider_no")%>&demographicNo=<%=dem_no%>')">Rx</a>
+					</security:oscarSec>
 		<% } %>
+		
+		<% if (OscarProperties.getInstance().isPropertyActive("new_eyeform_enabled") && !fromMessenger) { %>
+			<security:oscarSec roleName="<%=roleName$%>" objectName="_eChart" rights="r">
+				<a title="Eyeform" href="#" onclick="popup(800, 1280, '../eyeform/eyeform.jsp?demographic_no=<%=dem_no %>&reason=')">EF</a>
+			</security:oscarSec>
+		<% } %>
+		
 		</div>
 		<div class="name"><%=Misc.toUpperLowerCase(rs.getString("last_name"))%>, <%=Misc.toUpperLowerCase(rs.getString("first_name"))%></div>
 		<div class="chartNo"><%=apptMainBean.getString(rs,"chart_no")==null||apptMainBean.getString(rs,"chart_no").equals("")?"&nbsp;":apptMainBean.getString(rs,"chart_no")%></div>
