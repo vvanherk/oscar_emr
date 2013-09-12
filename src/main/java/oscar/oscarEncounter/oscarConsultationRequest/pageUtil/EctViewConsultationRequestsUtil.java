@@ -45,6 +45,8 @@ import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 import org.oscarehr.common.model.ConsultDocs;
 import org.oscarehr.common.dao.ConsultDocsDao;
+import org.oscarehr.document.dao.DocumentDAO;
+import org.oscarehr.document.model.Document;
 
 public class EctViewConsultationRequestsUtil {         
    
@@ -80,6 +82,7 @@ public class EctViewConsultationRequestsUtil {
       demographicNo = new Vector<String>();
       siteName = new Vector<String>();
       this.patientWillBook = new Vector<String>();
+      apptNo = new Vector<String>();
       apptDate = new Vector<String>();
       followUpDate = new Vector<String>();
       boolean verdict = true;
@@ -184,8 +187,9 @@ public class EctViewConsultationRequestsUtil {
           DemographicDao demoDao = (DemographicDao) SpringUtils.getBean("demographicDao");
           ProfessionalSpecialistDao specialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
           ConsultationServiceDao serviceDao = (ConsultationServiceDao) SpringUtils.getBean("consultationServiceDao");
-          ConsultDocsDao cdocumentDao = (ConsultDocsDao) SpringUtils.getBean("ConsultDocsDao");
-	  
+          ConsultDocsDao cdocumentDao = (ConsultDocsDao) SpringUtils.getBean("consultDocsDao");
+          DocumentDAO documentDAO = (DocumentDAO) SpringUtils.getBean("documentDAO");
+          
 	  ConsultationRequest consult;
           Provider prov;
           Demographic demo;
@@ -216,8 +220,33 @@ public class EctViewConsultationRequestsUtil {
               patientWillBook.add(""+consult.isPatientWillBook());
               date.add(DateFormatUtils.ISO_DATE_FORMAT.format(consult.getReferralDate()));
               reason.add(consult.getReasonForReferral());
-              consultant.add((specialistDao.getById(consult.getSpecialistId())).getFormattedName());
-	      documentNo.add( "" + ((cdocumentDao.findByRequestId(consult.getId())).get(0)).getDocumentNo() );
+              if(consult.getSpecialistId()!=null)
+            	  consultant.add((specialistDao.getById(consult.getSpecialistId())).getFormattedName());
+              else
+            	  consultant.add("");
+              List<ConsultDocs> docList = cdocumentDao.findByRequestId(consult.getId());
+              if(docList.size()>0)
+              {
+            	  //modified by rohit to display doc descr in consultation list.. and opening the doc on click of it
+            	  String docStr = "";
+            	for (ConsultDocs consultDoc : docList)
+				{
+					if(consultDoc!=null)
+					{
+						int docNo = consultDoc.getDocumentNo();
+						Document document = documentDAO.getDocument(docNo+"");
+						if(docStr.length()==0)
+							docStr = consultDoc.getDocumentNo()+"#"+document.getDocdesc();
+						else
+							docStr = docStr+"~"+consultDoc.getDocumentNo()+"#"+document.getDocdesc();
+						
+					}
+				}
+            	documentNo.add(docStr);
+            	  //documentNo.add(String.valueOf(((cdocumentDao.findByRequestId(consult.getId())).get(0)).getDocumentNo()));
+              }
+              else
+            	  documentNo.add("");
           }
       } catch(Exception e) {         
          MiscUtils.getLogger().error("Error", e);         
@@ -236,6 +265,7 @@ public class EctViewConsultationRequestsUtil {
    public Vector<String> vSpecialist;
    public Vector<String> date;
    public Vector<String> demographicNo;
+   public Vector<String> apptNo;
    public Vector<String> apptDate;
    public Vector<String> patientWillBook;
    public Vector<String> urgency;

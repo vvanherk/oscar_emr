@@ -165,41 +165,93 @@ function popupOscarConS(vheight,vwidth,varpage) { //open a new popup window
                                                 </th>
 					</tr>
 					<%  
-                                    for (int i = 0; i < theRequests.ids.size(); i++){
-                                    String id      = (String) theRequests.ids.elementAt(i);
-                                    String status  = (String) theRequests.status.elementAt(i);
-                                    String patient = (String) theRequests.patient.elementAt(i);
-                                    String provide = (String) theRequests.provider.elementAt(i);
-                                    String service = (String) theRequests.service.elementAt(i);
-                                    String date    = (String) theRequests.date.elementAt(i);
-				    String consultant = (String) theRequests.date.elementAt(i);
-				    String reason = (String) theRequests.reason.elementAt(i);
-				    String document =(String) theRequests.documentNo.elementAt(i);
-                                %>
-					<tr>
-						<td class="stat<%=status%>" width="75">
-						<% if (status.equals("1")){ %> <bean:message
-							key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgNothingDone" />
-						<% }else if(status.equals("2")) { %> <bean:message
-							key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgSpecialistCall" />
-						<% }else if(status.equals("3")) { %> <bean:message
-							key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgPatCall" />
-						<% }else if(status.equals("4")) { %> <bean:message
-							key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgAppMade" />
-						<% } %>
-						</td>
-						<td class="stat<%=status%>"><a
-							href="javascript:popupOscarRx(700,960,'../../oscarEncounter/ViewRequest.do?de=<%=demo%>&requestId=<%=id%>')">
-						<%=patient%> </a></td>
-						<td class="stat<%=status%>"><%=provide%></td>
-						<td class="stat<%=status%>"><a
-							href="javascript:popupOscarRx(700,960,'../../oscarEncounter/ViewRequest.do?de=<%=demo%>&requestId=<%=id%>')">
-						<%=service%> </a></td>
-						<td class="stat<%=status%>"><%=date%></td>
-						<td class="stat<%=status%>"><%=consultant%></td>
-						<td class="stat<%=status%>"><%=reason%></td>
-						<td class="stat<%=status%>"><%=document%></td>
-					</tr>
+					// Hacky fix: Make sure all of the lists are of the same size, and if they are not, pad them
+					int delta = 0;
+					delta = theRequests.ids.size() - theRequests.status.size();
+					for (int i=0; i < delta; i++)
+						theRequests.status.add("");
+					delta = theRequests.ids.size() - theRequests.patient.size();
+					for (int i=0; i < delta; i++)
+						theRequests.patient.add("");
+					delta = theRequests.ids.size() - theRequests.provider.size();
+					for (int i=0; i < delta; i++)
+						theRequests.provider.add("");
+					delta = theRequests.ids.size() - theRequests.service.size();
+					for (int i=0; i < delta; i++)
+						theRequests.service.add("");
+					delta = theRequests.ids.size() - theRequests.date.size();
+					for (int i=0; i < delta; i++)
+						theRequests.date.add("");
+					delta = theRequests.ids.size() - theRequests.consultant.size();
+					for (int i=0; i < delta; i++)
+						theRequests.consultant.add("");
+					delta = theRequests.ids.size() - theRequests.reason.size();
+					for (int i=0; i < delta; i++)
+						theRequests.reason.add("");
+					delta = theRequests.ids.size() - theRequests.documentNo.size();
+					for (int i=0; i < delta; i++)
+						theRequests.documentNo.add("");
+					
+					for (int i = 0; i < theRequests.ids.size(); i++){
+						String id      = (String) theRequests.ids.elementAt(i);
+						String status  = (String) theRequests.status.elementAt(i);
+						String patient = (String) theRequests.patient.elementAt(i);
+						String provide = (String) theRequests.provider.elementAt(i);
+						String service = (String) theRequests.service.elementAt(i);
+						String date    = (String) theRequests.date.elementAt(i);
+					    String consultant = (String) theRequests.consultant.elementAt(i);
+					    String reason = (String) theRequests.reason.elementAt(i);
+					    String document =(String) theRequests.documentNo.elementAt(i);
+	                                %>
+						<tr>
+							<td class="stat<%=status%>" width="75">
+							<% if (status.equals("1")){ %> <bean:message
+								key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgNothingDone" />
+							<% }else if(status.equals("2")) { %> <bean:message
+								key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgSpecialistCall" />
+							<% }else if(status.equals("3")) { %> <bean:message
+								key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgPatCall" />
+							<% }else if(status.equals("4")) { %> <bean:message
+								key="oscarEncounter.oscarConsultationRequest.DisplayDemographicConsultationRequests.msgAppMade" />
+							<% } %>
+							</td>
+							<td class="stat<%=status%>"><a
+								href="javascript:popupOscarRx(700,960,'../../oscarEncounter/ViewRequest.do?de=<%=demo%>&requestId=<%=id%>')">
+							<%=patient%> </a></td>
+							<td class="stat<%=status%>"><%=provide%></td>
+							<td class="stat<%=status%>"><a
+								href="javascript:popupOscarRx(700,960,'../../oscarEncounter/ViewRequest.do?de=<%=demo%>&requestId=<%=id%>')">
+							<%=service%> </a></td>
+							<td class="stat<%=status%>"><%=date%></td>
+							<td class="stat<%=status%>"><%=consultant%></td>
+							<td class="stat<%=status%>"><%=(reason!=null?reason:"")%></td>
+							
+							<%--modified by rohit to display doc descr in consultation list.. and opening the doc on click of it --%>
+							<%
+							if(document!=null && document.length()>0)
+							{
+								String[] docs = document.split("~");
+								if(docs!=null && docs.length>0)
+								{
+									%><td><%
+									for(int k=0;k<docs.length;k++)
+									{
+										String[] docDtlArr = docs[k].split("#");
+										%>
+										<a href="#" onclick="window.open('../../dms/ManageDocument.do?method=display&doc_no=<%=docDtlArr[0] %>&providerNo=<%=proNo%>'); return false;">
+										<%=docDtlArr[1] %></a>&nbsp;
+										<%
+									}
+									%></td><%
+								}
+							}
+							else
+							{
+								%>&nbsp;<%
+							}
+							%>
+							<%-- <td class="stat<%=status%>"><%=document%></td> --%>
+						</tr>
 					<%}%>
 				</table>
 				</td>
