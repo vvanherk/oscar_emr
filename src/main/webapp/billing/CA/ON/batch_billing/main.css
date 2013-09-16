@@ -1,0 +1,159 @@
+/*
+
+	Any stylistic items on this page should apply to ALL batch billing submission forms. 
+	Each submission form should use similar notation to access the same layout.
+	
+*/
+.nav{
+	font-size: 1.5em;
+}
+
+.tab-content{
+	overflow-y: hidden;
+}
+
+.billing-form-layout{ /* for span divs used to format forms on billing pages */
+	padding: 10px;
+	padding-top:0px;
+}
+
+label{
+	margin-left: 5px;
+	margin-bottom: 0px;
+	font-size:0.9em;
+}
+
+.batch-info div, #invoice-status div, #manual-and-notes div{
+	float: left;
+	margin-right: 5px;
+}
+
+.batch-info div button{
+	position: relative;
+	top: 20px;
+}
+
+.combobox-container{
+	position:relative;
+	top: 1px;
+}
+
+.formrow{ /* if form has many rows, some adjustments are required for vertical real estate */
+	margin-left: 0px;
+	margin-bottom: 0px;
+	padding-top: 0px;
+	height:70px;
+}
+
+.tablerow{/* if form has many rows without labels, some adjustments are required for vertical real estate */
+	height: 35px;
+}
+
+.batch-total {
+	text-align: right;
+	margin-top: 20px;
+	padding-right: 10px;
+}
+
+.batch-total label{
+	margin-top: 10px;
+}
+
+.batch-total input{
+	text-align: right;
+}
+
+#items-header div{
+	padding-left: 10px;
+}
+
+#invoice-detail{
+	margin-bottom: 150px;
+	margin-top: 20px;
+}
+
+
+#dx-space{
+	margin-bottom: 20px;
+}
+/* additional things - by rohan */
+/* change height of manual text box/ bill note text box + add dx button to align properly*/
+.no-label{
+	position: relative;
+	top:20px;
+}
+
+
+.checkbox input[type="checkbox"] {
+    margin-left:0px;
+}
+
+
+/*scale button size down to accomodate smaller windows
+span.dropdown-toggle.btn.add-on{
+	min-width:0.5%;
+}
+*/
+/* extend manual and bill notes all the way*/
+.input-80{
+	width:80%;
+}
+.input-100{
+	width:97%;	
+}
+
+*/
+/* float right style 
+.right{
+	float:right;
+}
+*/
+/* billing code label in tables
+label.b_code{
+	text-align: right;
+}
+
+*/
+
+/* changing margin for datable table */
+
+
+div.dataTables_length label {
+    width: 460px;
+    float: left;
+    text-align: left;
+}
+ 
+div.dataTables_length select {
+    width: 75px;
+}
+ 
+div.dataTables_filter label {
+    float: right;
+    width: 460px;
+}
+ 
+div.dataTables_info {
+    padding-top: 8px;
+}
+ 
+div.dataTables_paginate {
+    float: right;
+    margin: 0;
+}
+
+tr.row_selected td{
+    font-weight: bold;
+}
+ 
+table {
+    margin: 1em 0;
+    clear: both;
+}
+
+#register .tabbable{
+	height:500px;
+	overflow-y:scroll;
+}
+
+
