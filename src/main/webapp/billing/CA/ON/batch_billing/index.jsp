@@ -118,7 +118,12 @@ String user_no = (String) session.getAttribute("user");
 		List<Provider> prList = providerDao.getProviders(true);
 		for(int i=0; i < prList.size(); i++){	
 			Provider curr = prList.get(i);
-			int provNo = Integer.parseInt(curr.getProviderNo());
+			int provNo;
+			try{
+				provNo = Integer.parseInt(curr.getProviderNo());
+			} catch ( Exception e){
+				continue;
+			}
 			if(provNo > 0 && provNo != 999998){			//do not include sysadmin or oscardoc
 				providerSelectionList += "<option value='"+ provNo +"'>";
 				providerSelectionList += curr.getFormattedName();
@@ -129,7 +134,7 @@ String user_no = (String) session.getAttribute("user");
 				String xml_parse = "<xml_p_billinggroup_no>";
 
 				ProviderBillCenter pbc =  providerBillCenterDao.find(provNo+"");
-				String bc_code = pbc.getBillCenterCode().length()==1? pbc.getBillCenterCode(): "Z";
+				String bc_code = (pbc != null && pbc.getBillCenterCode().length()==1)? pbc.getBillCenterCode(): "Z";
 
 				if(comment != null && comment.indexOf(xml_parse) >= 0){ //if it exists
 					groupNo = comment.substring(comment.indexOf(xml_parse) + xml_parse.length(),
