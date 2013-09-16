@@ -35,6 +35,7 @@
 	<!-- hibernated DAO -->
         <bean id="gstControlDao" class="org.oscarehr.billing.CA.dao.GstControlDao" autowire="byName" />
         <bean id="billingClaimDAO" class="org.oscarehr.billing.CA.ON.dao.BillingClaimDAO" autowire="byName" />
+	<bean id="billingDefaultDao" class="org.oscarehr.billing.dao.BillingDefaultDao" autowire="byName" />
 	<bean id="measurementsDao" class="oscar.oscarEncounter.oscarMeasurements.dao.MeasurementsDao" autowire="byName"/>
 	<bean id="measurementsExtDao" class="oscar.oscarEncounter.oscarMeasurements.dao.MeasurementsExtDao" autowire="byName"/>
 	<bean id="measurementMapDao" class="oscar.oscarEncounter.oscarMeasurements.dao.MeasurementMapDao" autowire="byName"/>
@@ -311,6 +312,10 @@
 	<bean id="extPrintMeasurements" class="org.oscarehr.casemgmt.service.MeasurementPrint" autowire="byName"/>
 	<bean id="extPrintOcularProcedures" class="org.oscarehr.eyeform.web.OcularProcPrint" autowire="byName"/>
 	<bean id="extPrintSpecsHistory" class="org.oscarehr.eyeform.web.SpecsHistoryPrint" autowire="byName"/>
+	
+	<bean id="populationReportManager" class="org.oscarehr.common.service.PopulationReportManager" autowire="byName" />
+	<bean id="oscarSecurityManager" class="org.oscarehr.PMmodule.service.impl.OscarSecurityManagerImpl" autowire="byName" />
+	<bean id="populationReportDao" class="org.oscarehr.common.dao.PopulationReportDao" autowire="byName" />
 
 	<!-- Encounter Form DAO -->
 	<bean id="Rourke2009DAO" class="oscar.form.dao.Rourke2009DAO" autowire="byName"/>

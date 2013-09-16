@@ -45,7 +45,7 @@
 // * Ontario, Canada
 // *
 // -----------------------------------------------------------------------------------------------------------------------
-package org.oscarehr.common.dao;
+package utils;
 
 import java.io.IOException;
 import java.sql.SQLException;
@@ -53,13 +53,14 @@ import java.sql.SQLException;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.junit.BeforeClass;
-import org.oscarehr.common.dao.utils.ConfigUtils;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.ConfigUtils;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-public abstract class DaoTestFixtures
+public abstract class TestFixtures
 {
 	@BeforeClass
 	public static void classSetUp() throws SQLException, InstantiationException, IllegalAccessException, ClassNotFoundException, IOException

@@ -34,7 +34,10 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
-<%@ page errorPage="errorpage.jsp" import="java.util.*,java.math.*,java.net.*,java.sql.*, oscar.util.*, oscar.*"%>
+<%@ page errorPage="errorpage.jsp"
+	import="java.util.*,java.math.*,java.net.*,
+                                            java.sql.*, oscar.util.*, oscar.*"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.BillingONDataHelp"%>
 <%@ page import="oscar.oscarBilling.ca.on.pageUtil.*"%>
 <%@ page import="org.apache.commons.lang.StringEscapeUtils"%>
@@ -128,16 +131,16 @@
 
 	if (rs.getString("hin") == null ) {
 		errorFlag = "1";
-		errorMsg = errorMsg + "<br><font color='red'>Error: The patient does not have a valid HIN. </font><br>";
+		errorMsg = errorMsg + "<br><b><div class='myError'>Warning: The patient does not have a valid HIN. </div></b><br>";
 	} else if (rs.getString("hin").equals("")) {
-		warningMsg += "<br><font color='orange'>Warning: The patient does not have a valid HIN. </font><br>";
+		warningMsg += "<br><b><div class='myError'>Warning: The patient does not have a valid HIN. </div></b><br>";
 	}
 	if (r_doctor_ohip != null && r_doctor_ohip.length()>0 && r_doctor_ohip.length() != 6) {
-		warningMsg += "<br><font color='orange'>Warning: the referral doctor's no is wrong. </font><br>";
+		warningMsg += "<br><div class='myError'>Warning: the referral doctor's no is wrong. </div><br>";
 	}
 	if (demoDOB.length() != 8) {
 		errorFlag = "1";
-		errorMsg = errorMsg + "<br><font color='red'>Error: The patient does not have a valid DOB. </font><br>";
+		errorMsg = errorMsg + "<br><b><div class='myError'>Error: The patient does not have a valid DOB. </div></b><br>";
 	}
   }
 
@@ -175,6 +178,8 @@
 
     String billingDate = request.getParameter("billDate");
 	String [] tempDate = billingDate.split("\\s");
+	
+	session.setAttribute( "hospital_billing_previous_billing_dates", billingDate );
 
     for( int idx = 0; idx < tempDate.length; ++idx ) {
     }
@@ -425,6 +430,11 @@
 
 			}
 		} // end of for loop
+		
+		// Save provider used for this bill in the session
+		String providerNo = request.getParameter("xml_provider");
+		session.setAttribute("previous_billing_provider", providerNo);
+		
 		msg = "<br>Billing records were added.<br>";
 		if("Save".equals(request.getParameter("submit"))) {
 			msg += "<script language=\"JavaScript\"> self.close();</script>";
@@ -519,6 +529,25 @@
 
 				</td>
 				<td valign="top">
+
+<%
+				String xml_location = request.getParameter("xml_location");
+				if (xml_location.indexOf("|") >= 0) {
+					int fromIndex = xml_location.indexOf("|");
+					if (fromIndex < 0)
+						fromIndex = 0;
+					else
+						fromIndex++;
+					
+					fromIndex += xml_location.substring(fromIndex).indexOf("|");
+					if (fromIndex < 0)
+						fromIndex = 0;
+					else
+						fromIndex++;
+					
+					xml_location = xml_location.substring(fromIndex);
+				}
+%>
 
 				<table border="1" cellspacing="2" cellpadding="0" width="100%"
 					bordercolorlight="#99A005" bordercolordark="#FFFFFF"

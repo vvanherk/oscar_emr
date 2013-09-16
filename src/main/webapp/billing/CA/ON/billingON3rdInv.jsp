@@ -21,11 +21,21 @@
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.common.model.Demographic"%>
 <%@page import="org.oscarehr.common.dao.DemographicDao"%>
+<%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+<%@page import="org.oscarehr.common.model.Provider"%>
+<%@page import="org.oscarehr.common.dao.SiteDao"%>
+<%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
+<%@page import="org.oscarehr.common.model.Site"%>
+<%@page errorPage="errorpage.jsp" import="java.util.*,java.math.*,java.net.*,java.sql.*,oscar.util.*,oscar.*,oscar.appt.*"%>
+<%@ page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@ page import="org.oscarehr.common.model.Clinic" %>
+
 <%
 String invNo = request.getParameter("billingNo");
 Billing3rdPartPrep privateObj = new Billing3rdPartPrep();
 Properties propClinic = privateObj.getLocalClinicAddr();
 Properties prop3rdPart = privateObj.get3rdPartBillProp(invNo);
+String clinicNO = (String) prop3rdPart.getProperty("clinicNo","");
 Properties prop3rdPayMethod = privateObj.get3rdPayMethod();
 Properties propGst = privateObj.getGst(invNo);
 //int gstFlag = 0;
@@ -36,8 +46,44 @@ Properties propGst = privateObj.getGst(invNo);
 BillingCorrectionPrep billObj = new BillingCorrectionPrep();
 List aL = billObj.getBillingRecordObj(invNo);
 BillingClaimHeader1Data ch1Obj = (BillingClaimHeader1Data) aL.get(0);
+
+String serviceDate = ch1Obj.getBilling_date();
+String clinicname = (String)ch1Obj.getClinic();
+
+// Find the first billing item
+for (Object item : aL) {
+	if (item instanceof BillingItemData) {
+		serviceDate = ((BillingItemData) item).getService_date();
+		break;
+	}
+}
+
+// If clinic name is set in billing_on_cheader1 table, use it. CLinic name will be set when multisite turn on.
+String clinicInfo = null;
+SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
+Site s = ApptUtil.getSiteFromName(sites, clinicname);
+if ( s!=null)
+	clinicInfo = "<b>" + s.getName()+"</b><br />"+s.getAddress()+"<br />"+s.getCity()+", "+s.getProvince()+" "+s.getPostal()+"<br />Tel: "+s.getPhone()+"<br />Fax: "+s.getFax();
+//If no clinic name in billing_on_cheader1 table, check clinic_no in billing_on_ext
+if ( clinicNO != null)
+{	
+	//For clinic letter, nothing for provider and "Remit to" part.
+	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+	Clinic clinic = clinicDao.find(Integer.parseInt(clinicNO));
+	if( clinic != null )
+		clinicInfo = "<b>" + clinic.getClinicName() + "</b><br />" 
+		+ clinic.getClinicAddress() + "<br />"
+		+ clinic.getClinicCity()+", " + clinic.getClinicProvince()+" " 
+		+ clinic.getClinicPostal()+"<br />Tel: "
+		+ clinic.getClinicPhone()+"<br />Fax: "+ clinic.getClinicFax();
+}
+
 DemographicDao demoDAO = (DemographicDao)SpringUtils.getBean("demographicDao");
 Demographic demo = demoDAO.getDemographic(ch1Obj.getDemographic_no());
+
+ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+Provider provider = providerDao.getProvider( ch1Obj.getProviderNo() );
 
 Properties gstProp = new Properties();
 GstControlAction db = new GstControlAction();
@@ -65,12 +111,16 @@ String percent = gstProp.getProperty("gstPercent", "");
 
 <table width="100%" border="0">
 	<tr>
-		<td><b><%=propClinic.getProperty("clinic_name", "") %></b><br />
+		<td>
+<% if(clinicInfo != null) {%>
+		<%=clinicInfo%>
+<%;} else{ %>
+		<b><%=propClinic.getProperty("clinic_name", "") %></b><br />
 		<%=propClinic.getProperty("clinic_address", "") %><br />
 		<%=propClinic.getProperty("clinic_city", "") %>, <%=propClinic.getProperty("clinic_province", "") %><br />
 		<%=propClinic.getProperty("clinic_postal", "") %><br />
 		Tel.: <%=propClinic.getProperty("clinic_phone", "") %><br />
-
+<%; } %>
 		</td>
 		<td align="right" valign="top"><font size="+2"><b>Invoice
 		- <%=invNo %></b></font><br />
@@ -114,8 +164,8 @@ String percent = gstProp.getProperty("gstPercent", "");
 		<th>Ref. Doctor</th>
 	</tr>
 	<tr align="center">
-		<td><%=ch1Obj.getBilling_date() %></td>
-		<td><%=(new ProviderData()).getProviderName(ch1Obj.getProviderNo()) %></td>
+		<td><%=serviceDate %></td>
+		<td><%=(new ProviderData()).getProviderName(ch1Obj.getProviderNo()) %> <br> OHIP # <%=provider.getOhipNo()%></td>
 <% Properties prop = oscar.OscarProperties.getInstance();
    String payee = prop.getProperty("PAYEE", "");
    payee = payee.trim();
@@ -123,7 +173,7 @@ String percent = gstProp.getProperty("gstPercent", "");
 %>
     <td><%=payee%></td>
 <% } else { %>
-    <td><%=(new ProviderData()).getProviderName(ch1Obj.getProviderNo()) %></td>
+    <td><%=(new ProviderData()).getProviderName(ch1Obj.getProviderNo()) %> <br> OHIP # <%=provider.getOhipNo()%></td>
 <% } %>
 		<td><%=ch1Obj.getRef_num() %></td>
 	</tr>
@@ -190,3 +240,4 @@ bdBal = bdBal.subtract(bdRef);
 
 </body>
 </html>
+

@@ -214,6 +214,12 @@ function setfocus() {
   document.titlesearch.keyword.focus();
   document.titlesearch.keyword.select();
 }
+
+// Converts a string to title case (i.e. 'john smith' becomes 'John Smith')
+String.prototype.toTitleCase = function () {
+    return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+};
+
 function upCaseCtrl(ctrl) {
 	ctrl.value = ctrl.value.toUpperCase();
 }
@@ -519,6 +525,8 @@ function referralScriptAttach2(elementName, name2) {
 
 function newStatus() {
     newOpt = prompt("<bean:message key="demographic.demographiceditdemographic.msgPromptStatus"/>:", "");
+    if(newOpt == null)
+    	return;
     if (newOpt != "") {
         document.updatedelete.patient_status.options[document.updatedelete.patient_status.length] = new Option(newOpt, newOpt);
         document.updatedelete.patient_status.options[document.updatedelete.patient_status.length-1].selected = true;
@@ -529,6 +537,8 @@ function newStatus() {
 
 function newStatus1() {
     newOpt = prompt("<bean:message key="demographic.demographiceditdemographic.msgPromptStatus"/>:", "");
+    if(newOpt == null)
+    	return;
     if (newOpt != "") {
         document.updatedelete.roster_status.options[document.updatedelete.roster_status.length] = new Option(newOpt, newOpt);
         document.updatedelete.roster_status.options[document.updatedelete.roster_status.length-1].selected = true;
@@ -540,16 +550,16 @@ function newStatus1() {
 function removeAccents(s){
         var r=s.toLowerCase();
         r = r.replace(new RegExp("\\s", 'g'),"");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½]", 'g'),"a");
-        r = r.replace(new RegExp("ï¿½", 'g'),"ae");
-        r = r.replace(new RegExp("ï¿½", 'g'),"c");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½]", 'g'),"e");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½]", 'g'),"i");
-        r = r.replace(new RegExp("ï¿½", 'g'),"n");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½ï¿½]", 'g'),"o");
+        r = r.replace(new RegExp("[àáâãäå]", 'g'),"a");
+        r = r.replace(new RegExp("æ", 'g'),"ae");
+        r = r.replace(new RegExp("ç", 'g'),"c");
+        r = r.replace(new RegExp("[èéêë]", 'g'),"e");
+        r = r.replace(new RegExp("[ìíîï]", 'g'),"i");
+        r = r.replace(new RegExp("ñ", 'g'),"n");
+        r = r.replace(new RegExp("[òóôõö]", 'g'),"o");
         r = r.replace(new RegExp("?", 'g'),"oe");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½]", 'g'),"u");
-        r = r.replace(new RegExp("[ï¿½ï¿½]", 'g'),"y");
+        r = r.replace(new RegExp("[ùúûü]", 'g'),"u");
+        r = r.replace(new RegExp("[ýÿ]", 'g'),"y");
         r = r.replace(new RegExp("\\W", 'g'),"");
         return r;
 }
@@ -1638,6 +1648,10 @@ if ( PatStat.equals(Dead) ) {%>
                                                             key="demographic.demographiceditdemographic.formEFFDate" />:</span>
                                                         <span class="info"><%=MyDateFormat.getMyStandardDate(demographic.getEffDate())%></span>
                                                     </li>
+                                                    <li><span class="label"><bean:message
+                                                            key="demographic.demographiceditdemographic.formHCRenewDate" />:</span>
+                                                        <span class="info"><%=MyDateFormat.getMyStandardDate(demographic.getHcRenewDate())%></span>
+                                                    </li>
 						</ul>
 						</div>
 
@@ -2013,13 +2027,13 @@ if ( PatStat.equals(Dead) ) {%>
 									key="demographic.demographiceditdemographic.formLastName" />: </b></td>
 								<td align="left"><input type="text" name="last_name" <%=getDisabled("last_name")%>
 									size="30" value="<%=demographic.getLastName()%>"
-									onBlur="upCaseCtrl(this)"></td>
+									onBlur="this.value = this.value.toTitleCase();"></td>
 								<td align="right"><b><bean:message
 									key="demographic.demographiceditdemographic.formFirstName" />:
 								</b></td>
 								<td align="left"><input type="text" name="first_name" <%=getDisabled("first_name")%>
 									size="30" value="<%=demographic.getFirstName()%>"
-									onBlur="upCaseCtrl(this)"></td>
+									onBlur="this.value = this.value.toTitleCase();"></td>
 							</tr>
 							<tr>
 							  <td align="right"> <b><bean:message key="demographic.demographiceditdemographic.msgDemoTitle"/>: </b></td>
@@ -2044,6 +2058,7 @@ if ( PatStat.equals(Dead) ) {%>
 								    <option value="SEN" <%=title.equalsIgnoreCase("SEN")?"selected":""%> ><bean:message key="demographic.demographiceditdemographic.msgSen"/></option>
 								    <option value="SGT" <%=title.equalsIgnoreCase("SGT")?"selected":""%> ><bean:message key="demographic.demographiceditdemographic.msgSgt"/></option>
 								    <option value="SR" <%=title.equalsIgnoreCase("SR")?"selected":""%> ><bean:message key="demographic.demographiceditdemographic.msgSr"/></option>
+								    <option value="DR" <%=title.equalsIgnoreCase("DR")?"selected":""%> ><bean:message key="demographic.demographiceditdemographic.msgDr"/></option>
 								</select>
 							    </td>
 							  <td align="right"><b><bean:message key="demographic.demographiceditdemographic.msgDemoLanguage"/>: </b> </td>
@@ -2285,13 +2300,28 @@ if ( PatStat.equals(Dead) ) {%>
 								<td align="left" nowrap><input type="text"
 									name="year_of_birth" <%=getDisabled("year_of_birth")%>
 									value="<%=birthYear%>"
-									size="3" maxlength="4"> <input type="text"
-									name="month_of_birth" <%=getDisabled("month_of_birth")%>
-									value="<%=birthMonth%>"
-									size="2" maxlength="2"> <input type="text"
-									name="date_of_birth" <%=getDisabled("date_of_birth")%>
-									value="<%=birthDate%>"
-									size="2" maxlength="2"> <b>Age: <input type="text"
+									size="3" maxlength="4"> 
+
+									<% 
+									String sbMonth;
+									String sbDay;
+									DecimalFormat dFormat = new DecimalFormat("00");
+									%>
+			                        <select name="month_of_birth" id="month_of_birth">
+									<% for(int i=1; i<=12; i++) {
+										sbMonth = dFormat.format(i); %>
+										<option value="<%=sbMonth%>"<%=birthMonth.equals(sbMonth)?" selected":""%>><%=sbMonth%></option>
+									<%} %>
+									</select>
+									
+			                         <select name="date_of_birth" id="date_of_birth">
+									<% for(int i=1; i<=31; i++) {
+										sbDay = dFormat.format(i); %>
+										<option value="<%=sbDay%>"<%=birthDate.equals(sbDay)?" selected":""%>><%=sbDay%></option>
+									<%} %>
+									</select>			
+									
+									<b>Age: <input type="text"
 									name="age" readonly value="<%=age%>" size="3"> </b></td>
 								<td align="right" nowrap><b><bean:message
 									key="demographic.demographiceditdemographic.formSex" />:</b></td>
@@ -3079,8 +3109,14 @@ function callEligibilityWebService(url,id){
 
        var ran_number=Math.round(Math.random()*1000000);
        var params = "demographic=<%=demographic_no%>&method=checkElig&rand="+ran_number;  //hack to get around ie caching the page
-       new Ajax.Updater(id,url, {method:'get',parameters:params,asynchronous:true,onComplete:function(request){Element.hide('search_spinner')},onLoading:function(request){Element.show('search_spinner')}});
- }
+       var response;
+        new Ajax.Request(url+'?'+params, {
+           onSuccess: function(response) {
+                document.getElementById(id).innerHTML=response.responseText ;
+                document.getElementById('search_spinner').innerHTML="";
+           }
+        });
+        }
 
 </script>
 </body>

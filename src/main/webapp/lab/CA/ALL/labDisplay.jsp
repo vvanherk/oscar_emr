@@ -35,6 +35,7 @@
 <%@page errorPage="../../../provider/errorpage.jsp" %>
 <%@ page import="java.util.*,
 		 java.sql.*,
+		 java.text.SimpleDateFormat,
 		 oscar.oscarDB.*, oscar.oscarLab.FileUploadCheck, oscar.util.UtilDateUtilities,
 		 oscar.oscarLab.ca.all.*,
 		 oscar.oscarLab.ca.all.util.*,
@@ -48,8 +49,13 @@
 <%@ page import="org.oscarehr.util.SpringUtils"%>
 <%@ page import="org.oscarehr.common.dao.UserPropertyDAO, org.oscarehr.common.model.UserProperty" %>
 <%@ page import="oscar.oscarEncounter.oscarMeasurements.dao.*,oscar.oscarEncounter.oscarMeasurements.model.Measurementmap" %>
+<%@ page import="org.oscarehr.common.dao.SpireAccessionNumberMapDao" %>
+<%@ page import="org.oscarehr.common.model.SpireAccessionNumberMap" %>
+<%@ page import="org.oscarehr.common.model.SpireCommonAccessionNumber" %>
 <%@ page import="org.oscarehr.casemgmt.service.CaseManagementManager, org.oscarehr.common.dao.Hl7TextMessageDao, org.oscarehr.common.model.Hl7TextMessage,org.oscarehr.common.dao.Hl7TextInfoDao,org.oscarehr.common.model.Hl7TextInfo"%>
 <jsp:useBean id="oscarVariables" class="java.util.Properties" scope="session" />
+<%@	page import="javax.swing.text.rtf.RTFEditorKit"%>
+<%@	page import="java.io.ByteArrayInputStream"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
@@ -68,6 +74,10 @@ String demographicID = request.getParameter("demographicId");
 UserPropertyDAO userPropertyDAO = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
 UserProperty uProp = userPropertyDAO.getProp(providerNo, UserProperty.LAB_ACK_COMMENT);
 boolean skipComment = false;
+
+if (segmentID != null)
+	segmentID = segmentID.trim();
+
 if( uProp != null && uProp.getValue().equalsIgnoreCase("yes")) {
 	skipComment = true;
 }
@@ -80,8 +90,16 @@ else {
 	ackLabFunc = "getComment('ackLab');";
 }
 
+int segmentIDAsInt = 0;
+try {
+	segmentIDAsInt = Integer.parseInt(segmentID);
+} catch (Exception e) {
+	MiscUtils.getLogger().error("Unable to parse segmentID to integer: " + segmentID);
+}
+
 //Need date lab was received by OSCAR
 Hl7TextMessageDao hl7TxtMsgDao = (Hl7TextMessageDao)SpringUtils.getBean("hl7TextMessageDao");
+Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
 MeasurementMapDao measurementMapDao = (MeasurementMapDao) SpringUtils.getBean("measurementMapDao");
 Hl7TextMessage hl7TextMessage = hl7TxtMsgDao.find(Integer.parseInt(segmentID));
 
@@ -94,8 +112,9 @@ if(hl7TextMessage != null){
 
 boolean isLinkedToDemographic=false;
 ArrayList<ReportStatus> ackList=null;
-String multiLabId = null;
-MessageHandler handler=null;
+String multiLabId = "";
+List<Hl7TextInfo> olderLabs = hl7TextInfoDao.getMatchingLabsByLabId( Integer.valueOf(segmentID) );
+List<MessageHandler> handlers = new ArrayList<MessageHandler>();
 String hl7 = null;
 String reqID = null, reqTableID = null;
 String remoteFacilityIdQueryString="";
@@ -107,6 +126,14 @@ String formName2 = bShortcutForm ? OscarProperties.getInstance().getProperty("ap
 String formName2Short = formName2.length() > 3 ? (formName2.substring(0,2)+".") : formName2;
 boolean bShortcutForm2 = bShortcutForm && !formName2.equals("");
 
+Hl7TextInfo f = olderLabs.get(0);
+for (Hl7TextInfo info : olderLabs) {
+	//if (f == info) continue;
+	
+	if (multiLabId.length() > 0)
+		multiLabId += ",";
+	multiLabId += info.getLabNumber();
+}
 
 if (remoteFacilityIdString==null) // local lab
 {
@@ -130,15 +157,71 @@ if (remoteFacilityIdString==null) // local lab
 	}else{
 	    LogAction.addLog((String) session.getAttribute("user"), LogConst.READ, LogConst.CON_HL7_LAB, segmentID, request.getRemoteAddr());
 	}
-
-	ackList = AcknowledgementData.getAcknowledgements(segmentID);
-	multiLabId = Hl7textResultsData.getMatchingLabs(segmentID);
-	handler = Factory.getHandler(segmentID);
+	
+	
+	
+	List<String> multiIdList = new ArrayList<String>();
+	multiIdList.add(segmentID);
+	
+	String[] multiID = multiLabId.split(",");
+	for (int j=multiID.length-1; j >=0; j--) {
+		multiIdList.add( multiID[j].trim() );
+	}
+	
+	ackList = AcknowledgementData.getAcknowledgements(multiIdList);
+	//multiLabId = Hl7textResultsData.getMatchingLabs(segmentID);
+	//multiLabId = hl7TextInfoDao.getMatchingLabsByLabId(segmentID);
+	
+	MessageHandler h = Factory.getHandler(segmentID);
+	
 	hl7 = Factory.getHL7Body(segmentID);
-	if (handler instanceof OLISHL7Handler) {
+	if (h instanceof OLISHL7Handler) { 
 		%>
 		<jsp:forward page="labDisplayOLIS.jsp" />
 		<%
+	}
+	// get info for spire lab
+	else if (h instanceof SpireHandler) {
+		int lab_no = Integer.parseInt(segmentID);
+		Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
+	
+		String accn = hl7Lab.getAccessionNumber();
+		// get accession number mappings for spire labs
+		SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
+		SpireAccessionNumberMap map = accnDao.getFromCommonAccessionNumber(accn);
+		
+		if (map != null) {
+			List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+			
+			MiscUtils.getLogger().info("size1: " + cAccns.size());
+			
+			for (SpireCommonAccessionNumber cAccn : cAccns) {
+				MiscUtils.getLogger().info("labId: " + cAccn.getLabNo() + " " + cAccn.getCommonAccessionNumber());
+			}
+			
+			// filter out older versions of labs
+			removeDuplicates(cAccns, hl7TextInfoDao, accn, lab_no);
+			
+			// Re-order the remaining labs based on their order number
+			//reorderLabs(cAccns);
+			
+			MiscUtils.getLogger().info("size2: " + cAccns.size());
+			
+			for (SpireCommonAccessionNumber cAccn : cAccns) {
+				MiscUtils.getLogger().info("labId: " + cAccn.getLabNo());
+			}
+			
+			for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+				handlers.add( Factory.getHandler(commonAccessionNumber.getLabNo().toString()) );
+			}
+		} else {
+			MiscUtils.getLogger().info("HIMOM1: ");
+			handlers.add( Factory.getHandler("" + lab_no) );
+		}
+	} else {
+		MiscUtils.getLogger().info("HIMOM2: " + h);
+		MiscUtils.getLogger().info("HIMOM2: " + h.getHealthNum());
+		handlers.add( h );
 	}
 }
 else // remote lab
@@ -152,8 +235,8 @@ else // remote lab
 	Document cachedDemographicLabResultXmlData=LabDisplayHelper.getXmlDocument(remoteLabResult);
 
 	ackList=LabDisplayHelper.getReportStatus(cachedDemographicLabResultXmlData);
-	multiLabId=LabDisplayHelper.getMultiLabId(cachedDemographicLabResultXmlData);
-	handler=LabDisplayHelper.getMessageHandler(cachedDemographicLabResultXmlData);
+	//multiLabId=LabDisplayHelper.getMultiLabId(cachedDemographicLabResultXmlData);
+	handlers.add( LabDisplayHelper.getMessageHandler(cachedDemographicLabResultXmlData) );
 	hl7=LabDisplayHelper.getHl7Body(cachedDemographicLabResultXmlData);
 
 	try {
@@ -167,20 +250,57 @@ else // remote lab
 boolean notBeenAcked = ackList.size() == 0;
 boolean ackFlag = false;
 String labStatus = "";
-if (ackList != null){
-    for (int i=0; i < ackList.size(); i++){
-        ReportStatus reportStatus = ackList.get(i);
-        if (reportStatus.getProviderNo().equals(providerNo) ) {
-        	labStatus = reportStatus.getStatus();
-        	if( labStatus.equals("A") ){
-            	ackFlag = true;//lab has been ack by this provider.
-            	break;
-        	}
-        }
-    }
+
+Map<String, ReportStatus> acknowledgmentInfo = new HashMap<String, ReportStatus>();
+
+// Compile list of report status' that have a single entry per provider and that use
+// reports that are unacknowledged/unfiled over ones that have been acknowledged/filed
+// Note: This algorithm will capture the most recent ReportStatus object for an Acknowledged/Filed report
+if (ackList != null) {
+	for (int i=0; i < ackList.size(); i++) {
+		ReportStatus report = (ReportStatus) ackList.get(i);
+		ReportStatus r = acknowledgmentInfo.get( report.getProviderName() );
+		
+		if (r == null) {
+			acknowledgmentInfo.put(report.getProviderName(), report);
+		} else {
+			// Reports that are unacknowledged/unfiled should be used over ones that have been acknowledged/filed
+			MiscUtils.getLogger().info("ack: " + report.getProviderName() + " " + r.getStatus() + " " + report.getStatus());
+			if (!report.getStatus().equals("A") && !report.getStatus().equals("F") && (r.getStatus().equals("A") || r.getStatus().equals("F"))) {
+				acknowledgmentInfo.put(report.getProviderName(), report);
+			} else if (r.getStatus().equals("A") || r.getStatus().equals("F")) {
+				// Use the most recent date for an Acknowledged/Filed report
+				String t1 = report.getTimestamp();
+				String t2 = r.getTimestamp();
+				
+				SimpleDateFormat df = new SimpleDateFormat("yyyy-MMM-dd HH:mm", Locale.ENGLISH);
+				java.util.Date date1 = df.parse(t1);
+				java.util.Date date2 = df.parse(t2);
+				
+				if (date1.getTime() > date2.getTime())
+					acknowledgmentInfo.put(report.getProviderName(), report);
+			}
+			
+			
+		}
+	}
 }
 
-Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao) SpringUtils.getBean("hl7TextInfoDao");
+// Determine whether this lab (and all its parts) has been acknowledged
+for (Map.Entry<String, ReportStatus> entry : acknowledgmentInfo.entrySet()) {
+	ReportStatus report = entry.getValue();
+	if (report.getProviderNo().equals(providerNo) ) {
+		String ackStatus = report.getStatus();
+		
+		if( ackStatus.equals("A") ){        
+			ackFlag = true; //lab has been ack by this provider.
+			break;
+		}
+	}
+    
+}
+
+
 int lab_no = Integer.parseInt(segmentID);
 Hl7TextInfo hl7Lab = hl7TextInfoDao.findLabId(lab_no);
 String label = "";
@@ -209,7 +329,7 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 <html>
     <head>
         <html:base/>
-        <title><%=handler.getPatientName()+" Lab Results"%></title>
+        <title><%=handlers.get(0).getPatientName()+" Lab Results"%></title>
         <script language="javascript" type="text/javascript" src="../../../share/javascript/Oscar.js" ></script>
         <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
         <script type="text/javascript" src="<%= request.getContextPath() %>/share/javascript/prototype.js"></script>
@@ -426,7 +546,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
 
         function matchMe() {
             <% if ( !isLinkedToDemographic) { %>
-               	popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handler.getLastName()+", "+handler.getFirstName())%>', 'searchPatientWindow');
+               	popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handlers.get(0).getLastName()+", "+handlers.get(0).getFirstName())%>', 'searchPatientWindow');
             <% } %>
 	}
 
@@ -596,7 +716,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                     <input type="button" value="Tickler" onclick="handleLab('','<%=segmentID%>','ticklerLab');"/>
 
                                     <% if ( searchProviderNo != null ) { // null if we were called from e-chart%>
-                                    <input type="button" value=" <bean:message key="oscarMDS.segmentDisplay.btnEChart"/> " onClick="popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handler.getLastName()+", "+handler.getFirstName())%>', 'searchPatientWindow')">
+                                    <input type="button" value=" <bean:message key="oscarMDS.segmentDisplay.btnEChart"/> " onClick="popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handlers.get(0).getLastName()+", "+handlers.get(0).getFirstName())%>', 'searchPatientWindow')">
                                     <% } %>
 				    <input type="button" value="Req# <%=reqTableID%>" title="Link to Requisition" onclick="linkreq('<%=segmentID%>','<%=reqID%>');" />
 
@@ -633,31 +753,34 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                         <table width="100%" border="1" cellspacing="0" cellpadding="3" bgcolor="#9999CC" bordercolordark="#bfcbe3">
                             <%
                             if (multiLabId != null){
-                                String[] multiID = multiLabId.split(",");
-                                if (multiID.length > 1){
-                                    %>
-                                    <tr>
-                                        <td class="Cell" colspan="2" align="middle">
-                                            <div class="Field2">
-                                                Version:&#160;&#160;
-                                                <%
-                                                for (int i=0; i < multiID.length; i++){
-                                                    if (multiID[i].equals(segmentID)){
-                                                        %>v<%= i+1 %>&#160;<%
-                                                    }else{
-                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
-                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= i+1 %></a>&#160;<%
-                                                        }else{
-                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>">v<%= i+1 %></a>&#160;<%
-                                                        }
-                                                    }
-                                                }
-                                                %>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <%
-                                }
+								// Only print the top version information if the lab is not a spire lab or it has only 1 lab
+								if (handlers.size() == 1 || !(handlers.get(0) instanceof SpireHandler)) {
+	                                String[] multiID = multiLabId.split(",");
+	                                if (multiID.length > 1){
+	                                    %>
+	                                    <tr>
+	                                        <td class="Cell" colspan="2" align="middle">
+	                                            <div class="Field2">
+	                                                Version:&#160;&#160;
+	                                                <%
+	                                                for (int i=0; i < multiID.length; i++){
+	                                                    if (multiID[i].equals(segmentID)){
+	                                                        %>v<%= i+1 %>&#160;<%
+	                                                    }else{
+	                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= i+1 %></a>&#160;<%
+	                                                        }else{
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=multiID[i]%>&multiID=<%=multiLabId%>&providerNo=<%= providerNo %>">v<%= i+1 %></a>&#160;<%
+	                                                        }
+	                                                    }
+	                                                }
+	                                                %>
+	                                            </div>
+	                                        </td>
+	                                    </tr>
+	                                    <%
+									}
+								}
                             }
                             %>
                             <tr>
@@ -691,9 +814,9 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                                             <% if ( searchProviderNo == null ) { // we were called from e-chart%>
                                                                             <a href="javascript:window.close()">
                                                                             <% } else { // we were called from lab module%>
-                                                                            <a href="javascript:popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handler.getLastName()+", "+handler.getFirstName())%>', 'searchPatientWindow')">
+                                                                            <a href="javascript:popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handlers.get(0).getLastName()+", "+handlers.get(0).getFirstName())%>', 'searchPatientWindow')">
                                                                                 <% } %>
-                                                                                <%=handler.getPatientName()%>
+                                                                                <%=handlers.get(0).getPatientName()%>
                                                                             </a>
                                                                         </div>
                                                                     </td>
@@ -707,7 +830,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                                     </td>
                                                                     <td nowrap>
                                                                         <div class="FieldData" nowrap="nowrap">
-                                                                            <%=handler.getDOB()%>
+                                                                            <%=handlers.get(0).getDOB()%>                                                  
                                                                         </div>
                                                                     </td>
                                                                     <td colspan="2"></td>
@@ -720,7 +843,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                                     </td>
                                                                     <td nowrap>
                                                                         <div class="FieldData">
-                                                                            <%=handler.getAge()%>
+                                                                            <%=handlers.get(0).getAge()%>
                                                                         </div>
                                                                     </td>
                                                                     <td nowrap>
@@ -730,7 +853,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                                     </td>
                                                                     <td align="left" nowrap>
                                                                         <div class="FieldData">
-                                                                            <%=handler.getSex()%>
+                                                                            <%=handlers.get(0).getSex()%>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -744,7 +867,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                                     </td>
                                                                     <td nowrap>
                                                                         <div class="FieldData" nowrap="nowrap">
-                                                                            <%=handler.getHealthNum()%>
+                                                                            <%=handlers.get(0).getHealthNum()%>
                                                                         </div>
                                                                     </td>
                                                                     <td colspan="2"></td>
@@ -761,7 +884,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                                     </td>
                                                                     <td nowrap>
                                                                         <div align="left" class="FieldData" nowrap="nowrap">
-                                                                            <%=handler.getHomePhone()%>
+                                                                            <%=handlers.get(0).getHomePhone()%>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -773,7 +896,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                                     </td>
                                                                     <td nowrap>
                                                                         <div align="left" class="FieldData" nowrap="nowrap">
-                                                                            <%=handler.getWorkPhone()%>
+                                                                            <%=handlers.get(0).getWorkPhone()%>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -795,7 +918,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                                     </td>
                                                                     <td nowrap>
                                                                         <div align="left" class="FieldData" nowrap="nowrap">
-                                                                            <%=handler.getPatientLocation()%>
+                                                                            <%=handlers.get(0).getPatientLocation()%>
                                                                         </div>
                                                                     </td>
                                                                 </tr>
@@ -817,7 +940,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                             </td>
                                             <td>
                                                 <div class="FieldData" nowrap="nowrap">
-                                                    <%= handler.getServiceDate() %>
+                                                    <%= handlers.get(0).getServiceDate() %>
                                                 </div>
                                             </td>
                                         </tr>
@@ -841,7 +964,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                             </td>
                                             <td>
                                                 <div class="FieldData" nowrap="nowrap">
-                                                    <%= ( handler.getOrderStatus().equals("F") ? "Final" : handler.getOrderStatus().equals("C") ? "Corrected" : handler.getOrderStatus().equals("X") ? "DELETED": handler.getOrderStatus()) %>
+                                                    <%= ( (String) ( handlers.get(0).getOrderStatus().equals("F") ? "Final" : handlers.get(0).getOrderStatus().equals("C") ? "Corrected" : handlers.get(0).getOrderStatus().equals("P") ? "Preliminary" : handlers.get(0).getOrderStatus().equals("X") ? "DELETED": handlers.get(0).getOrderStatus()) )%>                                        
                                                 </div>
                                             </td>
                                         </tr>
@@ -856,7 +979,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                             </td>
                                             <td nowrap>
                                                 <div class="FieldData" nowrap="nowrap">
-                                                    <%= handler.getClientRef()%>
+                                                    <%= handlers.get(0).getClientRef()%>
                                                 </div>
                                             </td>
                                         </tr>
@@ -868,11 +991,18 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                             </td>
                                             <td>
                                                 <div class="FieldData" nowrap="nowrap">
-                                                    <%= handler.getAccessionNum()%>
+													<%
+													String listedAccessionNumber = "";
+													if (handlers.get(0) instanceof SpireHandler)
+														listedAccessionNumber = ((SpireHandler)handlers.get(0)).getUniqueAccessionNum();
+													else
+														listedAccessionNumber = handlers.get(0).getAccessionNum();
+													%>
+                                                    <%= listedAccessionNumber %>                                        
                                                 </div>
                                             </td>
                                         </tr>
-                                        <% if (handler.getMsgType().equals("MEDVUE")) {  %>
+                                        <% if (handlers.get(0).getMsgType().equals("MEDVUE")) {  %>
                                         <tr>
                                         	<td>
                                                 <div class="FieldData">
@@ -881,7 +1011,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                             </td>
                                             <td>
                                                 <div class="FieldData" nowrap="nowrap">
-                                                   <%= handler.getEncounterId() %>
+                                                   <%= handlers.get(0).getEncounterId() %>                                        
                                                 </div>
                                             </td>
                                         </tr>
@@ -896,7 +1026,7 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                             <td bgcolor="white">
                                                 <div class="FieldData">
                                                     <strong><bean:message key="oscarMDS.segmentDisplay.formRequestingClient"/>: </strong>
-                                                    <%= handler.getDocName()%>
+                                                    <%= handlers.get(0).getDocName()%>
                                                 </div>
                                             </td>
                                             <%-- <td bgcolor="white">
@@ -908,8 +1038,8 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                             <td bgcolor="white" align="right">
                                                 <div class="FieldData">
                                                     <strong><bean:message key="oscarMDS.segmentDisplay.formCCClient"/>: </strong>
-                                                    <%= handler.getCCDocs()%>
-
+                                                    <%= handlers.get(0).getCCDocs()%>
+                                                    
                                                 </div>
                                             </td>
                                         </tr>
@@ -922,9 +1052,9 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                     ReportStatus report;
                                     boolean startFlag = false;
                                     for (int j=multiID.length-1; j >=0; j--){
-                                        ackList = AcknowledgementData.getAcknowledgements(multiID[j]);
-                                        if (multiID[j].equals(segmentID))
-                                            startFlag = true;
+                                        ackList = AcknowledgementData.getAcknowledgements(multiID[j].trim());
+                                        if (multiID[j].trim().equals(segmentID))
+                                            startFlag = true;                                                              
                                         if (startFlag) {
                                             //if (ackList.size() > 0){{%>
                                                 <table width="100%" height="20" cellpadding="2" cellspacing="2">
@@ -940,27 +1070,36 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                                             <td align="center" bgcolor="white">
                                                         <% } %>
                                                             <div class="FieldData">
-                                                                <!--center-->
-                                                                    <% for (int i=0; i < ackList.size(); i++) {
-                                                                        report = ackList.get(i); %>
-                                                                        <%= report.getProviderName() %> :
-
-                                                                        <% String ackStatus = report.getStatus();
-                                                                            if(ackStatus.equals("A")){
-                                                                                ackStatus = "Acknowledged";
-                                                                            }else if(ackStatus.equals("F")){
+                                                                <!--center-->          
+                                                                    <%	                                                                        
+                                                                        for (Map.Entry<String, ReportStatus> entry : acknowledgmentInfo.entrySet()) {
+																	        String providerName = entry.getKey();
+																		    report = entry.getValue();
+																		    String ackStatus = report.getStatus();
+																		%>
+																			<%= providerName %> :
+																			
+																		<%	
+                                                                            if (ackStatus.equals("A")) {
+                                                                                ackStatus = "Acknowledged"; 
+                                                                            } else if (ackStatus.equals("F")) {
                                                                                 ackStatus = "Filed but not Acknowledged";
-                                                                            }else{
+                                                                            } else {
                                                                                 ackStatus = "Not Acknowledged";
                                                                             }
                                                                         %>
-                                                                        <font color="red"><%= ackStatus %></font>
-                                                                        <% if ( ackStatus.equals("Acknowledged") ) { %>
-                                                                            <%= report.getTimestamp() %>,
-                                                                        <% } %>
-                                                                        <span id="<%=report.getProviderNo()%>commentLabel"><%=report.getComment().equals("") ? "no comment" : "comment : "%></span><span id="<%=report.getProviderNo()%>commentText"><%=report.getComment()%></span>
-                                                                        <br>
-                                                                    <% }
+																			<font color="red"><%= ackStatus %></font>
+	                                                                        <% if ( ackStatus.equals("Acknowledged") ) { %>
+	                                                                            <%= report.getTimestamp() %>,                                                                             
+	                                                                        <% } %>
+	                                                                        <span id="<%=report.getProviderNo()%>commentLabel"><%=report.getComment().equals("") ? "no comment" : "comment : "%></span><span id="<%=report.getProviderNo()%>commentText"><%=report.getComment()%></span>
+	                                                                        <br>
+																			
+																		<%
+																	    
+                                                                        %>
+
+                                                                    <% } 
                                                                     if (ackList.size() == 0){
                                                                         %><font color="red">N/A</font><%
                                                                     }
@@ -985,447 +1124,533 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                         int l=0;
                         int linenum=0;
                         String highlight = "#E0E0FF";
+                        
+                        // Render all labs in the handlers list
+                        for (MessageHandler handler : handlers) {
+                        
+	                        ArrayList headers = handler.getHeaders();
+	                        int OBRCount = handler.getOBRCount();
+	                        boolean isUnstructuredDoc = false;
+	                       	boolean	isVIHARtf = false;
 
-                        ArrayList headers = handler.getHeaders();
-                        int OBRCount = handler.getOBRCount();
+							//Checks to see if the PATHL7 lab is an unstructured document, and sets isUnstructuredDoc to true if it is
+                    		if(handler.getMsgType().equals("PATHL7")){
+	                    		for(i=0; i<headers.size(); i++){
+	                    			if((headers.get(i).equals("DIAG IMAGE")) || (headers.get(i).equals("CELLPATH")) || (headers.get(i).equals("TRANSCRIP"))|| (headers.get(i).equals("CELLPATHR"))){
+	                    				isUnstructuredDoc = true;
+	                    			}
+	                    			if(headers.get(i).equals("CELLPATHR")){
+	                    				isVIHARtf = true;
+	                    			}
+	                    		}
+	                    	}//end of PATHL7 Doc check
 
-                        if (handler.getMsgType().equals("MEDVUE")) { %>
-                        <table style="page-break-inside:avoid;" bgcolor="#003399" border="0" cellpadding="0" cellspacing="0" width="100%">
-                           <tr>
-                               <td colspan="4" height="7">&nbsp;</td>
-                           </tr>
-                           <tr>
-                               <td bgcolor="#FFCC00" width="300" valign="bottom">
-                                   <div class="Title2">
-                                      <%=headers.get(0)%>
-                                   </div>
-                               </td>
-                               <%--<td align="right" bgcolor="#FFCC00" width="100">&nbsp;</td>--%>
-                               <td width="9">&nbsp;</td>
-                               <td width="9">&nbsp;</td>
-                               <td width="*">&nbsp;</td>
-                           </tr>
-                       </table>
-                       <table width="100%" border="0" cellspacing="0" cellpadding="2" bgcolor="#CCCCFF" bordercolor="#9966FF" bordercolordark="#bfcbe3" name="tblDiscs" id="tblDiscs">
-                           <tr class="Field2">
-                               <td width="25%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formTestName"/></td>
-                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formResult"/></td>
-                               <td width="5%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formAbn"/></td>
-                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formReferenceRange"/></td>
-                               <td width="10%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formUnits"/></td>
-                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formDateTimeCompleted"/></td>
-                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formNew"/></td>
-                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formAnnotate"/></td>
-                           </tr>
-	                        <tr class="TDISRes">
-		                      	<td valign="top" align="left" colspan="8" ><pre  style="margin:0px 0px 0px 100px;"><b>Radiologist: </b><b><%=handler.getRadiologistInfo()%></b></pre></td>
-		                      	</td>
-	                     	 </tr>
-	                        <tr class="TDISRes">
-		                       	<td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><b><%=handler.getOBXComment(1, 1, 1)%></b></pre></td>
-		                       	</td>
-		                       	<td align="center" valign="top">
-                                    <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(1) + "-" + String.valueOf(1) %>','anwin','width=400,height=500');">
-                                    	<img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/>
-                                    </a>
-                                </td>
-	                      	 </tr>
-                     	 </table>
-                     <% } else {
+	                        if (handler.getMsgType().equals("MEDVUE")) { %>
+	                        <table style="page-break-inside:avoid;" bgcolor="#003399" border="0" cellpadding="0" cellspacing="0" width="100%">
+	                           <tr>
+	                               <td colspan="4" height="7">&nbsp;</td>
+	                           </tr>
+	                           <tr>
+	                               <td bgcolor="#FFCC00" width="300" valign="bottom">
+	                                   <div class="Title2">
+	                                      <%=headers.get(0)%>
+	                                   </div>
+	                               </td>
+	                               <%--<td align="right" bgcolor="#FFCC00" width="100">&nbsp;</td>--%>
+	                               <td width="9">&nbsp;</td>
+	                               <td width="9">&nbsp;</td>
+	                               <td width="*">&nbsp;</td>
+	                           </tr>
+	                       </table>
+	                       <table width="100%" border="0" cellspacing="0" cellpadding="2" bgcolor="#CCCCFF" bordercolor="#9966FF" bordercolordark="#bfcbe3" name="tblDiscs" id="tblDiscs">
+	                           <tr class="Field2">
+	                               <td width="25%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formTestName"/></td>
+	                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formResult"/></td>
+	                               <td width="5%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formAbn"/></td>
+	                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formReferenceRange"/></td>
+	                               <td width="10%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formUnits"/></td>
+	                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formDateTimeCompleted"/></td>
+	                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formNew"/></td>
+	                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formAnnotate"/></td>
+	                           </tr>
+		                        <tr class="TDISRes">
+			                      	<td valign="top" align="left" colspan="8" ><pre  style="margin:0px 0px 0px 100px;"><b>Radiologist: </b><b><%=handler.getRadiologistInfo()%></b></pre></td>
+			                      	</td>
+		                     	 </tr>
+		                        <tr class="TDISRes">
+			                       	<td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><b><%=handler.getOBXComment(1, 1, 1)%></b></pre></td>
+			                       	</td>
+			                       	<td align="center" valign="top">
+	                                    <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(1) + "-" + String.valueOf(1) %>','anwin','width=400,height=500');">
+	                                    	<img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/>
+	                                    </a>
+	                                </td>
+		                      	 </tr>
+	                     	 </table>
+	                     <% } else {
+							
+								// show spire lab version number
+								if (handler.getMsgType().equals("Spire")) {
+									List<Hl7TextInfo> textInfoList = hl7TextInfoDao.getMatchingLabsByAccessionNumber( handler.getAccessionNum() );
+		                            if (textInfoList != null && textInfoList.size() > 1) {
+	                                    %>
+	                                    
+	                                            <div class="Cell Field2" style="text-align:center">
+	                                                Version:&#160;&#160;
+	                                                <%
+	                                                int version = 1;
+	                                                String newLabText = "";
+													for (Hl7TextInfo info : textInfoList) {
+														newLabText = "";
+														
+														for (int m=0; m < ackList.size(); m++) {
+															report = (ReportStatus) ackList.get(m);
+															int segId = Integer.parseInt(report.getSegmentID().trim());
+															String ackStatus = report.getStatus(); 
+															MiscUtils.getLogger().info("status: " + ackStatus + " " + segId);
+															if (segId == info.getLabNumber() && !ackStatus.equals("A") && !ackStatus.equals("F") && report.getProviderNo().equals(providerNo)) {
+																newLabText = "<span style='color:red;'> NEW </span>";
+															}
+														}
+														
+	                                                    if (info.getLabNumber() == segmentIDAsInt) {
+	                                                        %>v<%= version %><%=newLabText%>&#160;<%
+	                                                    } else {
+	                                                        if ( searchProviderNo != null ) { // null if we were called from e-chart
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>&searchProviderNo=<%= searchProviderNo %>">v<%= version %></a><%=newLabText%>&#160;<%
+	                                                        }else{
+	                                                            %><a href="labDisplay.jsp?segmentID=<%=info.getLabNumber()%>&providerNo=<%= providerNo %>">v<%= version %></a><%=newLabText%>&#160;<%
+	                                                        }
+	                                                    }
+	                                                    
+	                                                    version++;
+	                                                }
+	                                                %>
+	                                            </div>
+	                                    
+	                                    <%
+	                                }
+	                            %>
+							 
+	                     
+	                     
+	                     <% }
+							
+	                      for(i=0;i<headers.size();i++){
+	                           linenum=0;
+								if (isUnstructuredDoc) {
+	                       %>
+							<table style="page-break-inside:avoid;" bgcolor="#003399" border="0" cellpadding="0" cellspacing="0" width="100%">
+	                           <tr>
+	                               <td colspan="4" height="7">&nbsp;</td>
+	                           </tr>
+	                           <tr>
+	                               <td bgcolor="#FFCC00" width="300" valign="bottom">
+	                                   <div class="Title2">
+	                                       <%=headers.get(i)%>
+	                                   </div>
+	                               </td>
+	                               <%--<td align="right" bgcolor="#FFCC00" width="100">&nbsp;</td>--%>
+	                               <td width="9">&nbsp;</td>
+	                               <td width="9">&nbsp;</td>
+	                               <td width="*">&nbsp;</td>
+	                           </tr>
+	                       </table>
+						
+	                       <table width="100%" border="0" cellspacing="0" cellpadding="2" bgcolor="#CCCCFF" bordercolor="#9966FF" bordercolordark="#bfcbe3" name="tblDiscs" id="tblDiscs">
+	                           <tr class="Field2">
+	                               <td width="20%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formTestName"/></td>
+	                               <td width="60%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formResult"/></td>
+	                               <td width="20%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formDateTimeCompleted"/></td>
+	                           </tr>
+	                       <% } else {%>
+	                       <table style="page-break-inside:avoid;" bgcolor="#003399" border="0" cellpadding="0" cellspacing="0" width="100%">
+	                           <tr>
+	                               <td colspan="4" height="7">&nbsp;</td>
+	                           </tr>
+	                           <tr>
+	                               <td bgcolor="#FFCC00" width="300" valign="bottom">
+	                                   <div class="Title2">
+	                                       <%=headers.get(i)%>
+	                                   </div>
+	                               </td>
+	                               <%--<td align="right" bgcolor="#FFCC00" width="100">&nbsp;</td>--%>
+	                               <td width="9">&nbsp;</td>
+	                               <td width="9">&nbsp;</td>
+	                               <td width="*">&nbsp;</td>
+	                           </tr>
+	                       </table>
 
-                      for(i=0;i<headers.size();i++){
-                           linenum=0;
-                       %>
-                       <table style="page-break-inside:avoid;" bgcolor="#003399" border="0" cellpadding="0" cellspacing="0" width="100%">
-                           <tr>
-                               <td colspan="4" height="7">&nbsp;</td>
-                           </tr>
-                           <tr>
-                               <td bgcolor="#FFCC00" width="300" valign="bottom">
-                                   <div class="Title2">
-                                       <%=headers.get(i)%>
-                                   </div>
-                               </td>
-                               <%--<td align="right" bgcolor="#FFCC00" width="100">&nbsp;</td>--%>
-                               <td width="9">&nbsp;</td>
-                               <td width="9">&nbsp;</td>
-                               <td width="*">&nbsp;</td>
-                           </tr>
-                       </table>
-
-                       <table width="100%" border="0" cellspacing="0" cellpadding="2" bgcolor="#CCCCFF" bordercolor="#9966FF" bordercolordark="#bfcbe3" name="tblDiscs" id="tblDiscs">
-                           <tr class="Field2">
-                               <td width="25%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formTestName"/></td>
-                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formResult"/></td>
-                               <td width="5%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formAbn"/></td>
-                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formReferenceRange"/></td>
-                               <td width="10%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formUnits"/></td>
-                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formDateTimeCompleted"/></td>
-                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formNew"/></td>
-                          	   <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formAnnotate"/></td>
-                           </tr>
-                           <%
-                           for ( j=0; j < OBRCount; j++){
-
-                               boolean obrFlag = false;
-                               int obxCount = handler.getOBXCount(j);
-                               for (k=0; k < obxCount; k++){
-
-                               	String obxName = handler.getOBXName(j, k);
-
-
-                                   boolean b1=false, b2=false, b3=false;
-
-                                   boolean fail = true;
-                                   try {
-                                   b1 = !handler.getOBXResultStatus(j, k).equals("DNS");
-                                 	b2 = !obxName.equals("");
-                                   String currheader = (String) headers.get(i);
-                                   String obsHeader = handler.getObservationHeader(j,k);
-                                   b3 = handler.getObservationHeader(j, k).equals(headers.get(i));
-                                   fail = false;
-                                 } catch (Exception e){
-                                   	//logger.info("ERROR :"+e);
-                                   }
-
-                                   if (handler.getMsgType().equals("EPSILON")) {
-                                   	b2=true;
-                                   	b3=true; //Because Observation header can never be the same as the header. Observation header = OBX-4.2 and header= OBX-4.1
-                                   } else if(handler.getMsgType().equals("PFHT") || handler.getMsgType().equals("CML")) {
-                                   	b2=true;
-                                   }
-
-                                    if (!fail && b1 && b2 && b3){ // <<--  DNS only needed for MDS messages
-
-                                   	String obrName = handler.getOBRName(j);
-                                   	b1 = !obrFlag && !obrName.equals("");
-                                   	b2 = !(obxName.contains(obrName));
-                                   	b3 = obxCount < 2;
-                                       if( b1 && b2 && b3){
-                                       %>
-                                           <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" >
-                                               <td valign="top" align="left"><%=obrName%></td>
-                                               <td colspan="6">&nbsp;</td>
-                                           </tr>
-                                           <%obrFlag = true;
-                                       }
-
-                                       String lineClass = "NormalRes";
-                                       String abnormal = handler.getOBXAbnormalFlag(j, k);
-                                       if ( abnormal != null && abnormal.startsWith("L")){
-                                           lineClass = "HiLoRes";
-                                       } else if ( abnormal != null && ( abnormal.equals("A") || abnormal.startsWith("H") || handler.isOBXAbnormal( j, k) ) ){
-                                           lineClass = "AbnormalRes";
-                                       }
-
-                                       boolean isPrevAnnotation = false;
-                                       CaseManagementNoteLink cml = caseManagementManager.getLatestLinkByTableId(CaseManagementNoteLink.LABTEST,Long.valueOf(segmentID),j+"-"+k);
-                                       CaseManagementNote p_cmn = null;
-                                       if (cml!=null) {p_cmn = caseManagementManager.getNote(cml.getNoteId().toString());}
-                                       if (p_cmn!=null){isPrevAnnotation=true;}
-
-                                       String loincCode = null;
-                                       try{
-                                       	List<Measurementmap> mmapList =  measurementMapDao.getMapsByIdent(handler.getOBXIdentifier(j, k));
-                                       	if (mmapList.size()>0) {
-	                                    	Measurementmap mmap =mmapList.get(0);
-	                                       	loincCode = mmap.getLoincCode();
-                                       	}
-                                       }catch(Exception e){
-                                        	MiscUtils.getLogger().error("loincProb",e);
-                                       }
-
-
-
-                                       if (handler.getMsgType().equals("EPSILON")) {
-	                                    	   if (handler.getOBXIdentifier(j,k).equals(headers.get(i)) && !obxName.equals("")) { %>
-
-	                                        	<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
-		                                            <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>
-		                                            &nbsp;<%if(loincCode != null){ %>
-                                                	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
-                                                	<%} %>
-                                                	</td>
-		                                            <td align="right"><%= handler.getOBXResult( j, k) %></td>
-
-		                                            <td align="center">
-		                                                    <%= handler.getOBXAbnormalFlag(j, k)%>
-		                                            </td>
-		                                            <td align="left"><%=handler.getOBXReferenceRange( j, k)%></td>
-		                                            <td align="left"><%=handler.getOBXUnits( j, k) %></td>
-		                                            <td align="center"><%= handler.getTimeStamp(j, k) %></td>
-		                                            <td align="center"><%= handler.getOBXResultStatus( j, k) %></td>
-		                                            <td align="center" valign="top">
-	                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
-	                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
-	                                                </a>
-                                                </td>
-	                                       		</tr>
-	                                       <% } else if (handler.getOBXIdentifier(j,k).equals(headers.get(i)) && obxName.equals("")) { %>
-	                                       			<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
-	                                                    <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXResult( j, k)%></pre></td>
-
-	                                                </tr>
-	                                       	<% }
-                                       } else if (handler.getMsgType().equals("IHA")) {
-                                           if(handler.getOBXValueType(j,k) != null &&  handler.getOBXValueType(j,k).equalsIgnoreCase("NAR")) {
-                                               %>                                         
-                                               <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%="NarrativeRes"%>" >
-                                                   <td align="left" colspan="7"style="padding-left:10px;"><%= handler.getOBXResult( j, k) %></td>
-                                               </tr>
-                                           <%}else{%>
-                                               <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
-                                                   <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %><%=remoteFacilityIdQueryString%>')"><%=obxName %></a>
-                                                   &nbsp;
-                                                   	<%if(loincCode != null){ %>
-                                                   	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
-                                                   	<%} %>
-                                                   </td>
-                                                   <td align="right"><%= handler.getOBXResult( j, k) %></td>
-                                                   <td align="center" valign="top"><%= handler.getOBXAbnormalFlag(j, k)%></td>
-                                                   <td align="left" valign="top"><%=handler.getOBXReferenceRange( j, k)%></td>
-                                                   <td align="left" valign="top"><%=handler.getOBXUnits( j, k) %></td>
-                                                   <td align="center" valign="top"><%= handler.getTimeStamp(j, k) %></td>
-                                                   <td align="center" valign="top"><%= handler.getOBXResultStatus( j, k) %></td>
-                                                   <td align="center" valign="top">
-   	                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
-   	                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
-   	                                                </a>
-                                                   </td>
-                                               </tr>
-                                           <%}%>
-                                           <%for (l=0; l < handler.getOBXCommentCount(j, k); l++){%>
-                                               <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes" >
-                                                   <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
-                                               </tr>
-                                           <%}
-                                   
-                                      } else if (handler.getMsgType().equals("PFHT") || handler.getMsgType().equals("HHSEMR") || handler.getMsgType().equals("CML")) {
-                                   	   if (!obxName.equals("")) { %>
-	                                    		<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
-		                                            <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>
-		                                            &nbsp;
-		                                            <%if(loincCode != null){ %>
-                                                	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
-                                                	<%} %> </td>
-		                                            <td align="right"><%= handler.getOBXResult( j, k) %></td>
-
-		                                            <td align="center">
-		                                                    <%= handler.getOBXAbnormalFlag(j, k)%>
-		                                            </td>
-		                                            <td align="left"><%=handler.getOBXReferenceRange( j, k)%></td>
-		                                            <td align="left"><%=handler.getOBXUnits( j, k) %></td>
-		                                            <td align="center"><%= handler.getTimeStamp(j, k) %></td>
-		                                            <td align="center"><%= handler.getOBXResultStatus( j, k) %></td>
-		                                            <td align="center" valign="top">
-	                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
-	                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
-	                                                </a>
-                                                </td>
-	                                       		 </tr>
-
-                                   	 	<%} else { %>
-                                   		   <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
-	      	                                     <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXResult( j, k)%></pre></td>
-
-	      	                                   </tr>
-                                   	 	<%}
-	                                    	if (!handler.getNteForOBX(j,k).equals("") && handler.getNteForOBX(j,k)!=null) { %>
-		                                       <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
-		                                       		<td valign="top" align="left"colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getNteForOBX(j,k)%></pre></td>
-		                                       </tr>
-		                                    <% }
-			                                for (l=0; l < handler.getOBXCommentCount(j, k); l++){%>
-			                                     <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
-			                                        <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
-			                                     </tr>
-			                                <%}
-
-                                   } else if ((!handler.getOBXResultStatus(j, k).equals("TDIS") && handler.getMsgType().equals("Spire")) )  { %>
-											<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
-                                           <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>
-                                           &nbsp;<%if(loincCode != null){ %>
-                                                	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
-                                                	<%} %> </td>
-                                           <% 	if (handler.getOBXResult( j, k).length() > 20) {
+	                       <table width="100%" border="0" cellspacing="0" cellpadding="2" bgcolor="#CCCCFF" bordercolor="#9966FF" bordercolordark="#bfcbe3" name="tblDiscs" id="tblDiscs">
+	                           <tr class="Field2">
+	                               <td width="25%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formTestName"/></td>
+	                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formResult"/></td>
+	                               <td width="5%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formAbn"/></td>
+	                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formReferenceRange"/></td>
+	                               <td width="10%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formUnits"/></td>
+	                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formDateTimeCompleted"/></td>
+	                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formNew"/></td>
+	                          	   <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formAnnotate"/></td>
+	                           </tr>
+		                       <% } %>
+	                           <% 
+	                           for ( j=0; j < OBRCount; j++){
+	                               
+	                               boolean obrFlag = false;
+	                               int obxCount = handler.getOBXCount(j);
+	                               for (k=0; k < obxCount; k++){ 
+	                               	
+	                               	String obxName = handler.getOBXName(j, k);
+	                               	
+	                               	
+	                                   boolean b1=false, b2=false, b3=false;
+	                                   
+	                                   boolean fail = true;
+	                                   try {
+	                                   b1 = !handler.getOBXResultStatus(j, k).equals("DNS");
+	                                 	b2 = !obxName.equals("");
+	                                   String currheader = (String) headers.get(i);
+	                                   String obsHeader = handler.getObservationHeader(j,k);
+	                                   b3 = handler.getObservationHeader(j, k).equals(headers.get(i));
+	                                   fail = false;
+	                                 } catch (Exception e){
+	                                   	//logger.info("ERROR :"+e);
+	                                   }
+	                                   
+	                                   if (handler.getMsgType().equals("EPSILON")) {
+	                                   	b2=true;
+	                                   	b3=true; //Because Observation header can never be the same as the header. Observation header = OBX-4.2 and header= OBX-4.1
+	                                   } else if(handler.getMsgType().equals("PFHT") || handler.getMsgType().equals("CML")) {
+	                                   	b2=true;
+	                                   }
+	                                   
+	                                    if (!fail && b1 && b2 && b3){ // <<--  DNS only needed for MDS messages
+	                                   	
+	                                   	String obrName = handler.getOBRName(j);
+	                                   	b1 = !obrFlag && !obrName.equals(""); 
+	                                   	b2 = !(obxName.contains(obrName)); 
+	                                   	b3 = obxCount < 2;
+	                                       if( b1 && b2 && b3){
+	                                       %>
+	                                           <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" >
+	                                               <td valign="top" align="left"><%=obrName%></td>
+	                                               <td colspan="6">&nbsp;</td>
+	                                           </tr>
+	                                           <%obrFlag = true;
+	                                       }
+	                                       
+	                                       String lineClass = "NormalRes";
+	                                       String abnormal = handler.getOBXAbnormalFlag(j, k);
+	                                       if ( abnormal != null && abnormal.startsWith("L")){
+	                                           lineClass = "HiLoRes";
+	                                       } else if ( abnormal != null && ( abnormal.equals("A") || abnormal.startsWith("H") || handler.isOBXAbnormal( j, k) ) ){
+	                                           lineClass = "AbnormalRes";
+	                                       }
+	                                       
+	                                       boolean isPrevAnnotation = false;
+	                                       CaseManagementNoteLink cml = caseManagementManager.getLatestLinkByTableId(CaseManagementNoteLink.LABTEST,Long.valueOf(segmentID),j+"-"+k);
+	                                       CaseManagementNote p_cmn = null;                                        
+	                                       if (cml!=null) {p_cmn = caseManagementManager.getNote(cml.getNoteId().toString());}
+	                                       if (p_cmn!=null){isPrevAnnotation=true;}
+	                                       
+	                                       String loincCode = null;
+	                                       try{
+	                                       	List<Measurementmap> mmapList =  measurementMapDao.getMapsByIdent(handler.getOBXIdentifier(j, k));
+	                                       	if (mmapList.size()>0) {
+		                                    	Measurementmap mmap =mmapList.get(0);
+		                                       	loincCode = mmap.getLoincCode();
+	                                       	}
+	                                       }catch(Exception e){
+	                                        	MiscUtils.getLogger().error("loincProb",e);
+	                                       }
+	                                       
+	                                       
+	                                       
+	                                       if (handler.getMsgType().equals("EPSILON")) {
+		                                    	   if (handler.getOBXIdentifier(j,k).equals(headers.get(i)) && !obxName.equals("")) { %>
+		                                    	
+		                                        	<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+			                                            <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>                                         
+			                                            &nbsp;<%if(loincCode != null){ %>
+	                                                	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
+	                                                	<%} %>
+	                                                	</td>
+			                                            <td align="right"><%= handler.getOBXResult( j, k) %></td>
+			                                           
+			                                            <td align="center">
+			                                                    <%= handler.getOBXAbnormalFlag(j, k)%>
+			                                            </td>
+			                                            <td align="left"><%=handler.getOBXReferenceRange( j, k)%></td>
+			                                            <td align="left"><%=handler.getOBXUnits( j, k) %></td>
+			                                            <td align="center"><%= handler.getTimeStamp(j, k) %></td>
+			                                            <td align="center"><%= handler.getOBXResultStatus( j, k) %></td>
+			                                            <td align="center" valign="top">
+		                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
+		                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
+		                                                </a>
+	                                                </td>
+		                                       		</tr> 
+		                                       <% } else if (handler.getOBXIdentifier(j,k).equals(headers.get(i)) && obxName.equals("")) { %>
+		                                       			<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
+		                                                    <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXResult( j, k)%></pre></td>
+		                                                    
+		                                                </tr>
+		                                       	<% }
+	                                      } else if (handler.getMsgType().equals("PFHT") || handler.getMsgType().equals("HHSEMR") || handler.getMsgType().equals("CML")) {
+	                                   	   if (!obxName.equals("")) { %>
+		                                    		<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+			                                            <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>                                         
+			                                            &nbsp;
+			                                            <%if(loincCode != null){ %>
+	                                                	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
+	                                                	<%} %> </td>
+			                                            <td align="right"><%= handler.getOBXResult( j, k) %></td>
+			                                           
+			                                            <td align="center">
+			                                                    <%= handler.getOBXAbnormalFlag(j, k)%>
+			                                            </td>
+			                                            <td align="left"><%=handler.getOBXReferenceRange( j, k)%></td>
+			                                            <td align="left"><%=handler.getOBXUnits( j, k) %></td>
+			                                            <td align="center"><%= handler.getTimeStamp(j, k) %></td>
+			                                            <td align="center"><%= handler.getOBXResultStatus( j, k) %></td>
+			                                            <td align="center" valign="top">
+		                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
+		                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
+		                                                </a>
+	                                                </td>
+		                                       		 </tr> 
+			                                       
+	                                   	 	<%} else { %>
+	                                   		   <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
+		      	                                     <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXResult( j, k)%></pre></td>
+		      	                                   
+		      	                                   </tr>
+	                                   	 	<%}
+		                                    	if (!handler.getNteForOBX(j,k).equals("") && handler.getNteForOBX(j,k)!=null) { %> 
+			                                       <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
+			                                       		<td valign="top" align="left"colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getNteForOBX(j,k)%></pre></td>
+			                                       </tr>
+			                                    <% } 
+				                                for (l=0; l < handler.getOBXCommentCount(j, k); l++){%>
+				                                     <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
+				                                        <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
+				                                     </tr>  
+				                                <%} 
+	                                      
+	                                   } else if ((!handler.getOBXResultStatus(j, k).equals("TDIS") && handler.getMsgType().equals("Spire")) )  { %>
+												<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+	                                           <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>                                         
+	                                           &nbsp;<%if(loincCode != null){ %>
+	                                                	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
+	                                                	<%} %> </td>
+	                                           <% 	if (handler.getOBXResult( j, k).length() > 20) {
+														%>
+														
+														<td align="left" colspan="4"><%= handler.getOBXResult( j, k) %></td>
+	                                          
+														<% 	String abnormalFlag = handler.getOBXAbnormalFlag(j, k);
+															if (abnormalFlag != null && abnormalFlag.length() > 0) {
+														 %>
+			                                           <td align="center">
+			                                                   <%= abnormalFlag%>
+			                                           </td>
+			                                           <% } %>
+			                                           
+			                                           <% 	String refRange = handler.getOBXReferenceRange(j, k);
+															if (refRange != null && refRange.length() > 0) {
+														 %>
+			                                           <td align="left"><%=refRange%></td>
+			                                           <% } %>
+			                                           
+			                                           <% 	String units = handler.getOBXUnits(j, k);
+															if (units != null && units.length() > 0) {
+														 %>
+			                                           <td align="left"><%=units %></td>
+			                                           <% } %>
+													<%
+													} else {
 													%>
-
-													<td align="left" colspan="4"><%= handler.getOBXResult( j, k) %></td>
-
-													<% 	String abnormalFlag = handler.getOBXAbnormalFlag(j, k);
-														if (abnormalFlag != null && abnormalFlag.length() > 0) {
-													 %>
+													   <td align="right" colspan="1"><%= handler.getOBXResult( j, k) %></td>                                          
+			                                           <td align="center"> <%= handler.getOBXAbnormalFlag(j, k)%> </td>
+			                                           <td align="left"> <%=handler.getOBXReferenceRange(j, k)%> </td>
+			                                           <td align="left"> <%=handler.getOBXUnits(j, k) %> </td>													
+													<% 
+													} 
+													%>
+	                                           
+	                                           <td align="center"><%= handler.getTimeStamp(j, k) %></td>
+	                                           <td align="center"><%= handler.getOBXResultStatus(j, k) %></td>
+	                                                                                     
+	                                      		<td align="center" valign="top">
+		                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
+		                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
+		                                                </a>
+	                                                </td>
+	                                       </tr> 
+	                                     
+	                                       <%for (l=0; l < handler.getOBXCommentCount(j, k); l++){%>
+	                                            <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
+	                                               <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
+	                                            </tr>  
+	                                       <%}  
+	                                      			
+	                                      
+	                                    } else if ((!handler.getOBXResultStatus(j, k).equals("TDIS") && !handler.getMsgType().equals("EPSILON")) )  {
+												if(isUnstructuredDoc) { %>
+													<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%="NarrativeRes"%>">
+													<% if(handler.getOBXIdentifier(j, k).equals(handler.getOBXIdentifier(j, k-1)) && (obxCount>1)) { %>
+														<td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"></a>
+													<% 
+													} else { %> 
+														<td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>
+													<% } %>
+													<% if(isVIHARtf) {
+													    //create bytes from the rtf string
+												    	byte[] rtfBytes = handler.getOBXResult(j, k).getBytes();
+												    	ByteArrayInputStream rtfStream = new ByteArrayInputStream(rtfBytes);
+												    	
+												    	//Use RTFEditor Kit to get plaintext from RTF
+												    	RTFEditorKit rtfParser = new RTFEditorKit();
+												    	javax.swing.text.Document doc = rtfParser.createDefaultDocument();
+												    	rtfParser.read(rtfStream, doc, 0);
+												    	String rtfText = doc.getText(0, doc.getLength()).replaceAll("\n", "<br>");
+												    	String disclaimer = "IMPORTANT DISCLAIMER: You are viewing a PREVIEW of the original report. The rich text formatting contained in the original report may convey critical information that must be considered for clinical decision making. Please refer to the ORIGINAL report, by clicking 'Print', prior to making any decision on diagnosis or treatment.";
+														%>
+														<td align="left"><%= rtfText + disclaimer %></td>
+													<% } else { %>
+														<td align="left"><%= handler.getOBXResult( j, k) %></td>
+													<% } %>
+													<% if(handler.getTimeStamp(j, k).equals(handler.getTimeStamp(j, k-1)) && (obxCount>1)) { %>
+														<td align="center"></td>
+													<% } else { %>
+														<td align="center"><%= handler.getTimeStamp(j, k) %></td>
+													<% }
+												} //end of isUnstructuredDoc
+	                                   			else { //if it isn't a PATHL7 doc
+													%>
+	
+													<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+		                                           <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>                                         
+		                                           &nbsp;
+													<% if(loincCode != null) { %>
+		                                                <a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
+													<% } %> </td>
+		                                           <td align="right"><%= handler.getOBXResult( j, k) %></td>
+		                                          
 		                                           <td align="center">
-		                                                   <%= abnormalFlag%>
+		                                                   <%= handler.getOBXAbnormalFlag(j, k)%>
 		                                           </td>
-		                                           <% } %>
+		                                           <td align="left"><%=handler.getOBXReferenceRange( j, k)%></td>
+		                                           <td align="left"><%=handler.getOBXUnits( j, k) %></td>
+		                                           <td align="center"><%= handler.getTimeStamp(j, k) %></td>
+		                                           <td align="center"><%= handler.getOBXResultStatus( j, k) %></td>
+		                                      		<td align="center" valign="top">
+			                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
+			                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
+			                                                </a>
+		                                                </td>
+		                                       </tr> 
+			                                     <% } %>
 
-		                                           <% 	String refRange = handler.getOBXReferenceRange(j, k);
-														if (refRange != null && refRange.length() > 0) {
-													 %>
-		                                           <td align="left"><%=refRange%></td>
-		                                           <% } %>
+	                                       <% for (l=0; l < handler.getOBXCommentCount(j, k); l++) { %>
+	                                            <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
+	                                               <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
+	                                            </tr>
+	                                       <% }
 
-		                                           <% 	String units = handler.getOBXUnits(j, k);
-														if (units != null && units.length() > 0) {
-													 %>
-		                                           <td align="left"><%=units %></td>
-		                                           <% } %>
-												<%
-												} else {
-												%>
-												   <td align="right" colspan="1"><%= handler.getOBXResult( j, k) %></td>
-		                                           <td align="center"> <%= handler.getOBXAbnormalFlag(j, k)%> </td>
-		                                           <td align="left"> <%=handler.getOBXReferenceRange(j, k)%> </td>
-		                                           <td align="left"> <%=handler.getOBXUnits(j, k) %> </td>
-												<%
-												}
-												%>
-
-                                           <td align="center"><%= handler.getTimeStamp(j, k) %></td>
-                                           <td align="center"><%= handler.getOBXResultStatus(j, k) %></td>
-
-                                      		<td align="center" valign="top">
-	                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
-	                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
-	                                                </a>
-                                                </td>
-                                       </tr>
-
-                                       <%for (l=0; l < handler.getOBXCommentCount(j, k); l++){%>
-                                            <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
-                                               <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
-                                            </tr>
-                                       <%}
-
-
-                                    } else if ((!handler.getOBXResultStatus(j, k).equals("TDIS") && !handler.getMsgType().equals("EPSILON")) )  { %>
-
-                                      		<tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
-                                           <td valign="top" align="left"><%= obrFlag ? "&nbsp; &nbsp; &nbsp;" : "&nbsp;" %><a href="javascript:popupStart('660','900','../ON/labValues.jsp?testName=<%=obxName%>&demo=<%=demographicID%>&labType=HL7&identifier=<%= handler.getOBXIdentifier(j, k) %>')"><%=obxName %></a>
-                                           &nbsp;<%if(loincCode != null){ %>
-                                                	<a href="javascript:popupStart('660','1000','http://apps.nlm.nih.gov/medlineplus/services/mpconnect.cfm?mainSearchCriteria.v.cs=2.16.840.1.113883.6.1&mainSearchCriteria.v.c=<%=loincCode%>&informationRecipient.languageCode.c=en')"> info</a>
-                                                	<%} %> </td>
-                                           <td align="right"><%= handler.getOBXResult( j, k) %></td>
-
-                                           <td align="center">
-                                                   <%= handler.getOBXAbnormalFlag(j, k)%>
-                                           </td>
-                                           <td align="left"><%=handler.getOBXReferenceRange( j, k)%></td>
-                                           <td align="left"><%=handler.getOBXUnits( j, k) %></td>
-                                           <td align="center"><%= handler.getTimeStamp(j, k) %></td>
-                                           <td align="center"><%= handler.getOBXResultStatus( j, k) %></td>
-                                      		<td align="center" valign="top">
-	                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(j) + "-" + String.valueOf(k) %>','anwin','width=400,height=500');">
-	                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
-	                                                </a>
-                                                </td>
-                                       </tr>
-
-                                       <%for (l=0; l < handler.getOBXCommentCount(j, k); l++){%>
-                                            <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
-                                               <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
-                                            </tr>
-                                       <%}
-
-
-                                    } else { %>
-                                       	<%for (l=0; l < handler.getOBXCommentCount(j, k); l++){
-                                       			if (!handler.getOBXComment(j, k, l).equals("")) {
-                                       		%>
-                                            <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="TDISRes">
-                                               <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
-                                            	<td align="center" valign="top">
-	                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(1) + "-" + String.valueOf(1) %>','anwin','width=400,height=500');">
-	                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
-	                                                </a>
-                                             </td>
-                                            </tr>
-                                       			<%}
-                                       	} %>
-
-
-                                 <%  }
-
-                                    }
-
-                               }
-                           //}
-
-
-                           //for ( j=0; j< OBRCount; j++){
-                           if (!handler.getMsgType().equals("PFHT")) {
-                               if (headers.get(i).equals(handler.getObservationHeader(j, 0))) {
-                               	 %>
-                               <%for (k=0; k < handler.getOBRCommentCount(j); k++){
-                                   // the obrName should only be set if it has not been
-                                   // set already which will only have occured if the
-                                   // obx name is "" or if it is the same as the obr name
-                                   if(!obrFlag && handler.getOBXName(j, 0).equals("")){  %>
-                                       <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" >
-                                           <td valign="top" align="left"><%=handler.getOBRName(j)%> </td>
-                                           <td colspan="6">&nbsp;</td>
-                                       </tr>
-                                       <%obrFlag = true;
-                                   }%>
-                               <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
-                                   <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBRComment(j, k)%></pre></td>
-                               </tr>
-                               <% if  (!handler.getMsgType().equals("HHSEMR")) {
-                               		if(handler.getOBXName(j,k).equals("")){
-	                                        String result = handler.getOBXResult(j, k);%>
-	                                         <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" >
-	                                                 <td colspan="7" valign="top"  align="left"><%=result%></td>
-	                                         </tr>
-	                              		<%}
-                               	}
-                                }//end for k=0
-
-
-                             }//end if handler.getObservation..
-                          } // end for if (PFHT)
-
-                              } //end for j=0; j<obrCount;
-                          } // // end for headersfor i=0... (headers) line 625
-
-							if (handler.getMsgType().equals("Spire")) {
-
-								int numZDS = ((SpireHandler)handler).getNumZDSSegments();
-								String lineClass = "NormalRes";
-								int lineNumber = 0;
-								MiscUtils.getLogger().info("HERE: " + numZDS);
-
-								if (numZDS > 0) { %>
-									<tr class="Field2">
-		                               <td width="25%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formTestName"/></td>
-		                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formResult"/></td>
-		                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formProvider"/></td>
-		                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formDateTimeCompleted"/></td>
-		                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formNew"/></td>
-		                            </tr>
-								<%
+	                                    } else { %>
+	                                       	<% for (l=0; l < handler.getOBXCommentCount(j, k); l++) {
+	                                       			if (!handler.getOBXComment(j, k, l).equals("")) {
+	                                       		%>
+	                                            <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="TDISRes">
+	                                               <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBXComment(j, k, l)%></pre></td>
+	                                            	<td align="center" valign="top">
+		                                                <a href="javascript:void(0);" title="Annotation" onclick="window.open('<%=request.getContextPath()%>/annotation/annotation.jsp?display=<%=annotation_display%>&amp;table_id=<%=segmentID%>&amp;demo=<%=demographicID%>&amp;other_id=<%=String.valueOf(1) + "-" + String.valueOf(1) %>','anwin','width=400,height=500');">
+		                                                	<%if(!isPrevAnnotation){ %><img src="../../../images/notes.gif" alt="rxAnnotation" height="16" width="13" border="0"/><%}else{ %><img src="../../../images/filledNotes.gif" alt="rxAnnotation" height="16" width="13" border="0"/> <%} %>
+		                                                </a>
+	                                             </td>
+	                                            </tr>  
+	                                       			<%}
+	                                       	} 
+										} 
+	                                      
+	                                    } 
+	                               }                                                             
+	                           //}   
+	                           	
+	                                                   
+	                           //for ( j=0; j< OBRCount; j++){ 
+	                           if (!handler.getMsgType().equals("PFHT")) {
+	                               if (headers.get(i).equals(handler.getObservationHeader(j, 0))) {
+	                               	 %>
+	                               <%for (k=0; k < handler.getOBRCommentCount(j); k++){
+	                                   // the obrName should only be set if it has not been
+	                                   // set already which will only have occured if the
+	                                   // obx name is "" or if it is the same as the obr name
+	                                   if(!obrFlag && handler.getOBXName(j, 0).equals("")){  %>
+	                                       <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" > 
+	                                           <td valign="top" align="left"><%=handler.getOBRName(j)%> </td>
+	                                           <td colspan="6">&nbsp;</td>
+	                                       </tr>
+	                                       <%obrFlag = true;
+	                                   }%>
+	                               <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" class="NormalRes">
+	                                   <td valign="top" align="left" colspan="8"><pre  style="margin:0px 0px 0px 100px;"><%=handler.getOBRComment(j, k)%></pre></td>
+	                               </tr>
+	                               <% if  (!handler.getMsgType().equals("HHSEMR")) {
+	                               		if(handler.getOBXName(j,k).equals("")){
+		                                        String result = handler.getOBXResult(j, k);%>
+		                                         <tr bgcolor="<%=(linenum % 2 == 1 ? highlight : "")%>" >
+		                                                 <td colspan="7" valign="top"  align="left"><%=result%></td>        
+		                                         </tr>
+		                              		<%}	
+	                               	}
+	                                }//end for k=0
+	                               
+	                                 
+	                             }//end if handler.getObservation..
+	                          } // end for if (PFHT)
+	                          
+	                              } //end for j=0; j<obrCount;
+	                          } // // end for headersfor i=0... (headers) line 625
+	                          
+								if (handler.getMsgType().equals("Spire")) {
+									
+									int numZDS = ((SpireHandler)handler).getNumZDSSegments();
+									String lineClass = "NormalRes";
+									int lineNumber = 0;
+									
+									if (numZDS > 0) { %>
+										<tr class="Field2">
+			                               <td width="25%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formTestName"/></td>
+			                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formResult"/></td>
+			                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formProvider"/></td>
+			                               <td width="15%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formDateTimeCompleted"/></td>
+			                               <td width="6%" align="middle" valign="bottom" class="Cell"><bean:message key="oscarMDS.segmentDisplay.formNew"/></td>
+			                            </tr>
+									<% 
+									}
+									
+									for (int m=0; m < numZDS; m++) { 
+										%>
+										<tr bgcolor="<%=(lineNumber % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
+											<td valign="top" align="left"> <%=((SpireHandler)handler).getZDSName(m)%> </td>
+											<td align="right"><%= ((SpireHandler)handler).getZDSResult(m) %></td>
+											<td align="center"><%= ((SpireHandler)handler).getZDSProvider(m) %></td>
+											<td align="center"><%= ((SpireHandler)handler).getZDSTimeStamp(m) %></td>
+											<td align="center"><%= ((SpireHandler)handler).getZDSResultStatus(m) %></td>
+										</tr> 
+										<%
+										lineNumber++;
+									}
 								}
-
-								for (int m=0; m < numZDS; m++) {
-									%>
-									<tr bgcolor="<%=(lineNumber % 2 == 1 ? highlight : "")%>" class="<%=lineClass%>">
-										<td valign="top" align="left"> <%=((SpireHandler)handler).getZDSName(m)%> </td>
-										<td align="right"><%= ((SpireHandler)handler).getZDSResult(m) %></td>
-										<td align="center"><%= ((SpireHandler)handler).getZDSProvider(m) %></td>
-										<td align="center"><%= ((SpireHandler)handler).getZDSTimeStamp(m) %></td>
-										<td align="center"><%= ((SpireHandler)handler).getZDSResultStatus(m) %></td>
-									</tr>
-									<%
-									lineNumber++;
-								}
-							}
-
-                           %>
-                       </table>
-                       <%
-
-                       } // end for handler.getMsgType().equals("MEDVUE")
-
+	                          
+	                           %>
+	                       </table>
+	                       <%
+	                  
+	                       } // end for handler.getMsgType().equals("MEDVUE")  
+						} 
                        %>
 
                         <table width="100%" border="0" cellspacing="0" cellpadding="3" class="MainTableBottomRowRightColumn" bgcolor="#003399">
@@ -1444,8 +1669,8 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
                                         </indivo:indivoRegistered>
                                     </oscarProperties:oscarPropertiesCheck>
                                     <% if ( searchProviderNo != null ) { // we were called from e-chart %>
-                                    <input type="button" value=" <bean:message key="oscarMDS.segmentDisplay.btnEChart"/> " onClick="popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handler.getLastName()+", "+handler.getFirstName())%>', 'searchPatientWindow')">
-
+                                    <input type="button" value=" <bean:message key="oscarMDS.segmentDisplay.btnEChart"/> " onClick="popupStart(360, 680, '../../../oscarMDS/SearchPatient.do?labType=HL7&segmentID=<%= segmentID %>&name=<%=java.net.URLEncoder.encode(handlers.get(0).getLastName()+", "+handlers.get(0).getFirstName())%>', 'searchPatientWindow')">
+                                    
                                     <% } %>
                                 </td>
                                 <td width="50%" valign="center" align="left">
@@ -1504,3 +1729,70 @@ div.Title4   { font-weight: 600; font-size: 8pt; color: white; font-family:
     XPN Extended Person Number
     XTN Extended Telecommunications Number
  --%>
+ 
+<%!
+
+/**
+ * Used to order labs in a List of LabResultData from most to least recent.
+ * 
+ * It achieves this by comparing the segment ids (i.e. lab ids).  The larger the segment id, the more recent the lab.
+ */
+public class LabSorter implements Comparator<Hl7TextInfo> {
+    public int compare(Hl7TextInfo o1, Hl7TextInfo o2) {
+		int i1 = o1.getLabNumber();
+		int i2 = o2.getLabNumber();
+		
+        return (i1 > i2 ? -1 : (i1 == i2 ? 0 : 1));
+    }
+} 
+
+/**
+ * Removes duplicate labs from the cAccns list.  Note that this method will keep the latest labs from the duplicate list, except in the case
+ * where the user has requested an older version of a lab.
+ */
+public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInfoDao hl7TextInfoDao, String currentAccn, int currentLabNo) {
+	List<SpireCommonAccessionNumber> removeList = new ArrayList<SpireCommonAccessionNumber>();
+	
+	for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+		int labNo = commonAccessionNumber.getLabNo().intValue();
+		
+		List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId(labNo);
+		
+		// The below algorithm depends on the Hl7TextInfo objects being sorted by lab id from highest to lowest
+		Collections.sort( vers, new LabSorter() );
+		
+		if (vers.size() > 1) {
+			Hl7TextInfo first = vers.get(0);
+			for (Hl7TextInfo ver : vers) {
+				// Generally, we want to keep the first (i.e. newest) version of a lab
+				if (first == ver) {
+					// Unless newest lab is NOT the version the user wants to see
+					if (!currentAccn.equals(ver.getAccessionNumber())) {
+						continue;
+					}
+				}
+				
+				// Don't remove the version of the current lab
+				if (currentLabNo == ver.getLabNumber()) continue;
+				
+				addToSCANRemoveList(ver, cAccns, removeList);
+			}
+		}
+	}
+	
+	cAccns.removeAll(removeList);
+}
+
+/**
+ * Helper method - adds Hl7TextInfo object ver to the list of Hl7TextInfo objects to remove.
+ */
+public void addToSCANRemoveList(Hl7TextInfo ver, List<SpireCommonAccessionNumber> cAccns, List<SpireCommonAccessionNumber> removeList) {
+	for (int i=0; i < cAccns.size(); i++) {
+		if (ver.getLabNumber() == cAccns.get(i).getLabNo().intValue()) {
+			removeList.add(cAccns.get(i));
+			return;
+		}
+	}
+}
+ 
+%>

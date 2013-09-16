@@ -34,6 +34,7 @@
 <%@ page import="org.oscarehr.util.SpringUtils" %>
 <%@ page import="org.oscarehr.common.model.Provider" %>
 <%@ page import="org.oscarehr.PMmodule.dao.ProviderDao" %>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%//
 			ProviderDao providerDao = SpringUtils.getBean(ProviderDao.class);
 			String provider = request.getParameter("provider");
@@ -82,6 +83,7 @@
 						diskId = obj.createNewSoloDiskName(dataProvider.getProviderNo(), (String) session.getAttribute("user"));
 						String ohipFilename = obj.getOhipfilename(diskId);
 						String htmlFilename = obj.getHtmlfilename(diskId, dataProvider.getProviderNo());
+						MiscUtils.getLogger().info("OUT1: " + htmlFilename);
 	                    boolean existBillCenter = oriBillCenter.hasBillCenter(dataProvider.getProviderNo());
 	                    // create the billing file with provider's own bill center
 	                    if (existBillCenter && oriBillCenter.getBillCenter(dataProvider.getProviderNo()).compareTo(mohOffice)!=0)
@@ -112,6 +114,7 @@
 					BillingProviderData dataProvider = (BillingProviderData) lProvider2.get(i);
 					if(groupReport && !provider.equals(dataProvider.getProviderNo()))
 						continue;
+
 					groupNo.add(dataProvider.getBillingGroupNo());
 					providerNo.add(dataProvider.getProviderNo());
 					ohipNo.add(dataProvider.getOhipNo());
@@ -122,12 +125,29 @@
 	                   Object StrGroupNo = igroup.next();
 	                   List providerNoCopy = new Vector();
 	                   List ohipNoCopy = new Vector();
-	                   for (int copyi=0; copyi<providerNo.size();copyi++){
-	                       if (((BillingProviderData)lProvider2.get(copyi)).getBillingGroupNo().compareTo(StrGroupNo.toString())==0){
-	                           providerNoCopy.add(providerNo.get(copyi));
-	                           ohipNoCopy.add(((BillingProviderData)lProvider2.get(copyi)).getOhipNo());
-	                       }
-	                   }
+	                   
+	                   // This algorithm is rediculously convoluted...
+	                   if(!provider.equals("all")) {
+						   // Generate the list of providers within the providerNo list that have the specified group number
+		                   for (int provi=0; provi<providerNo.size();provi++){
+							   // We need to iterate over ALL providers in the lProvider2 list in order to make sure we check all available group numbers
+			                   for (int copyi=0; copyi<lProvider2.size();copyi++){
+			                       if (((BillingProviderData)lProvider2.get(copyi)).getBillingGroupNo().compareTo(StrGroupNo.toString())==0){
+										providerNoCopy.add(providerNo.get(provi));
+										// Not sure why we need to have the ohip number from a provider from the lProvider2 list
+										ohipNoCopy.add(((BillingProviderData)lProvider2.get(copyi)).getOhipNo());
+			                       }
+			                   }
+						   }
+					   } else {
+						   // Generate the list of providers within the providerNo list that have the specified group number
+						   for (int copyi=0; copyi<providerNo.size();copyi++){
+		                       if (((BillingProviderData)lProvider2.get(copyi)).getBillingGroupNo().compareTo(StrGroupNo.toString())==0){
+		                           providerNoCopy.add(providerNo.get(copyi));
+		                           ohipNoCopy.add(((BillingProviderData)lProvider2.get(copyi)).getOhipNo());
+		                       }
+		                   }
+					   }
 	                   
 	                   diskId = obj.createNewGrpDiskName(providerNoCopy, ohipNoCopy, StrGroupNo.toString(), (String) session.getAttribute("user"));
 						JdbcBillingCreateBillingFile objFile = null;
@@ -140,6 +160,7 @@
 							BillingProviderData dataProvider = (BillingProviderData) lProvider2.get(i);
                             String ohipFilename = obj.getOhipfilename(diskId);
 							String htmlFilename = obj.getHtmlfilename(diskId, dataProvider.getProviderNo());
+							MiscUtils.getLogger().info("OUT2: " + htmlFilename + " " + dataProvider.getProviderNo() + " " + diskId);
                             boolean existBillCenter = oriBillCenter.hasBillCenter(dataProvider.getProviderNo());
                             // create the billing file with provider's own bill center
                             if (existBillCenter && oriBillCenter.getBillCenter(dataProvider.getProviderNo()).compareTo(mohOffice)!=0)
@@ -177,7 +198,7 @@
 							.getAttribute("user"));
 					String ohipFilename = obj.getOhipfilename(diskId);
 					String htmlFilename = obj.getHtmlfilename(diskId, dataProvider.getProviderNo());
-
+					MiscUtils.getLogger().info("OUT3: " + htmlFilename);
 					// create the billing file 
 					headerId = obj.createBatchHeader(dataProvider, "" + diskId, mohOffice, "1", (String) session
 							.getAttribute("user"));

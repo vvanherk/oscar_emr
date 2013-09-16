@@ -266,6 +266,30 @@ public class DemographicDao extends HibernateDaoSupport {
         return list;
     }
 
+    public List<Demographic> searchDemographicActive(String searchStr) {
+        String fieldname = "", regularexp = "like";
+        if (searchStr.indexOf(",") == -1) {
+            fieldname = "last_name";
+         } else if (searchStr.trim().indexOf(",") == (searchStr.trim().length() - 1)) {
+            fieldname = "last_name";
+         } else {
+            fieldname = "last_name " + regularexp + " ?" + " and first_name ";
+        }
+        
+        String hql = "From Demographic d where " + fieldname + " " + regularexp + " ?  and patient_status = 'AC'";
+        
+        String[] lastfirst = searchStr.split(",");
+        Object[] object = null;
+        if (lastfirst.length > 1) {
+            object = new Object[] { lastfirst[0].trim() + "%", lastfirst[1].trim() + "%" };
+        } else {
+            object = new Object[] { lastfirst[0].trim() + "%" };
+        }
+        List list = getHibernateTemplate().find(hql, object);
+        return list;
+     }
+
+
 
      public List<Demographic> getDemographicsByExtKey(String key, String value) {
     	 List<DemographicExt> extras = this.getHibernateTemplate().find("from DemographicExt d where d.key=? and d.value=?", new Object[] {key,value});
@@ -323,6 +347,15 @@ public static List<Integer> getDemographicIdsAlteredSinceTime(Date value) {
     	 }
      }
 	 
+	 /**
+	  * Helper method.
+	  * 
+	  * Checker whether this demographic already exists and if it is new (i.e. new and not imported, etc).
+	  */ 
+	 private boolean isDemographicNew(boolean exists, Demographic demo) {
+		 return !exists && 
+			((demo.getDemoType() & demo.DEMO_TYPE_NEW) != 0 || (demo.getDemoType() & demo.DEMO_TYPE_UNKNOWN) != 0);
+	 }
 
      public static List<Integer> getDemographicIdsOpenedChartSinceTime(String value) {
     	 Connection c = null;
@@ -727,7 +760,7 @@ public static List<Integer> getDemographicIdsAlteredSinceTime(Date value) {
 
  		this.getHibernateTemplate().saveOrUpdate(client);
  		
- 		if (OscarProperties.getInstance().isHL7A04GenerationEnabled() && !objExists)
+ 		if (OscarProperties.getInstance().isHL7A04GenerationEnabled() && isDemographicNew(objExists, client))
 			(new HL7A04Generator()).generateHL7A04(client);
 
  		if (log.isDebugEnabled()) {

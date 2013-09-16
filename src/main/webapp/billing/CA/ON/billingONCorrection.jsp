@@ -78,6 +78,8 @@ if (bMultisites)
 			int rowReCount = 0;
 			ResultSet rslocation = null;
 			ResultSet rsPatient = null;
+			
+			String AppointmentDate = "";
 
 			%>
 
@@ -127,10 +129,12 @@ if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
 
 <%@ page import="java.math.*,java.util.*,java.sql.*,oscar.*,java.net.*"
 	errorPage="errorpage.jsp"%>
+<%@ page import="java.text.SimpleDateFormat"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.pageUtil.*"%>
 <%@ page import="oscar.oscarDemographic.data.*"%>
 <%@ page import="oscar.util.UtilDateUtilities"  %>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 
 <%GregorianCalendar now = new GregorianCalendar();
 			int curYear = now.get(Calendar.YEAR);
@@ -148,6 +152,15 @@ if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.common.model.ClinicNbr"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
+<%@page import="org.oscarehr.common.dao.OscarAppointmentDao"%>
+<%@page import="org.oscarehr.common.model.Appointment"%>
+
+<%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
+<%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
+<%
+	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+%>
+
 
 <html:html locale="true">
 <head>
@@ -349,7 +362,10 @@ function checkSettle(status) {
 
 				// bFlag - fill in data?
 				boolean bFlag = false;
-				String billNo = request.getParameter("billing_no").trim();
+				String billNo = request.getParameter("billing_no");
+				if (billNo != null)
+					billNo.trim();
+					
                                 String claimNo = request.getParameter("claim_no");
 
                                 if( billNo == null || billNo.length() == 0 ) {
@@ -359,6 +375,7 @@ function checkSettle(status) {
                                     }
 
                                 }
+				
 				if (billNo != null && billNo.length() > 0) {
 					bFlag = true;
 				}
@@ -368,6 +385,13 @@ function checkSettle(status) {
 					if (recordObj != null && recordObj.size() > 0) {
 
 						ch1Obj = (BillingClaimHeader1Data) recordObj.get(0);
+						
+						
+						if (recordObj.size() > 1) {
+							BillingItemData billingItemData = (BillingItemData) recordObj.get(1);
+							AppointmentDate = billingItemData.getService_date();
+						}
+						
 
 						//multisite. check provider no
 					    if ((isSiteAccessPrivacy || isTeamAccessPrivacy) && (providerMap.get(ch1Obj.getProviderNo())== null || !mgrSites.contains(ch1Obj.getClinic())))
@@ -406,6 +430,18 @@ function checkSettle(status) {
 						HCSex = ch1Obj.getSex();
 						r_doctor_ohip = ch1Obj.getRef_num();
 						r_doctor = "";
+
+                                                //Set r_doctor value, referral doctor name
+                                                List<ProfessionalSpecialist> professionalSpecialists = null;
+						
+                                                if(r_doctor_ohip != null && !r_doctor_ohip.isEmpty()){
+                                		    professionalSpecialists = professionalSpecialistDao.findByReferralNo(r_doctor_ohip);
+						   if(professionalSpecialists != null && professionalSpecialists.size() > 0) 
+						      r_doctor = professionalSpecialists.get(0).getFirstName() 
+                                                               + " " 
+                                                               + professionalSpecialists.get(0).getLastName();
+                                                }
+
 						r_doctor_ohip_s = "";
 						r_doctor_s = "";
 						m_review = ch1Obj.getMan_review();
@@ -414,6 +450,10 @@ function checkSettle(status) {
 						roster_status = "";
 						comment = ch1Obj.getComment();
 						//paid = ch1Obj.getPaid();
+						
+						// get ohip claim number
+						claimNo = raObj.getRAClaimNo4BillingNo( billNo );
+						
 					}
 					    else {
 							UpdateDate = "";
@@ -441,11 +481,11 @@ function checkSettle(status) {
 				Billing3rdPartPrep tObj = new Billing3rdPartPrep();
 				
 				if("HCP".equals(payProgram) || "RMB".equals(payProgram) || "WCB".equals(payProgram)
-						|| request.getParameter("billing_no").length() < 1) {
+						|| billNo.length() < 1) {
 					
 					Properties tProp = null;					
-					if( request.getParameter("billing_no").length() > 0 ) {
-						tProp = tObj.get3rdPartBillPropInactive(request.getParameter("billing_no").trim());						
+					if( billNo.length() > 0 ) {
+						tProp = tObj.get3rdPartBillPropInactive(billNo.trim());						
 					}
 					
 					if( tProp == null || tProp.size() == 0 ) {
@@ -468,7 +508,7 @@ function checkSettle(status) {
 					}
 				} else {
 					thirdParty = true;
-					Properties tProp = tObj.get3rdPartBillProp(request.getParameter("billing_no").trim());	
+					Properties tProp = tObj.get3rdPartBillProp(billNo.trim());	
 					htmlPaid = "Paid<br><input type='text' id='payment' name='payment' size=5 value='"
 						+ tProp.getProperty("payment") + "' /><input type='hidden' id='oldPayment' name='oldPayment' value='"
                                                 + tProp.getProperty("payment") + "' /><input type='hidden' id='payDate' name='payDate' value='"
@@ -672,6 +712,16 @@ if(bFlag) {
 </table>
 
 <table width="600" border="0">
+	<tr class="myGreen">
+		<td><b><bean:message
+			key="billing.billingCorrection.msgAppointmentInf" /></b></td>
+		<td width="46%"><bean:message
+			key="billing.billingCorrection.btnAppointmentDate" /><img
+			src="../../../images/cal.gif" id="xml_service_date_cal" />: <input
+			type="text" id="xml_service_date" name="xml_service_date"
+			value="<%=AppointmentDate%>" size=10 /></td>
+			
+	</tr>
 	<tr class="myGreen">
 		<td><b><bean:message
 			key="billing.billingCorrection.msgBillingInf" /></b></td>
@@ -1011,6 +1061,7 @@ function changeSite(sel) {
 </body>
 <script type="text/javascript">
 Calendar.setup( { inputField : "xml_appointment_date", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_appointment_date_cal", singleClick : true, step : 1 } );
+Calendar.setup( { inputField : "xml_service_date", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_service_date_cal", singleClick : true, step : 1 } );
 Calendar.setup( { inputField : "xml_vdate", ifFormat : "%Y-%m-%d", showsTime :false, button : "xml_vdate_cal", singleClick : true, step : 1 } );
 </script>
 <%!String nullToEmpty(String str) {

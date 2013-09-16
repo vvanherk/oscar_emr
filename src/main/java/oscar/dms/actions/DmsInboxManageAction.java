@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Comparator;
 import java.util.Properties;
 import java.util.Vector;
 
@@ -81,6 +82,10 @@ import oscar.util.OscarRoleObjectPrivilege;
 
 import com.quatro.dao.security.SecObjectNameDao;
 import com.quatro.model.security.Secobjectname;
+
+import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
+import org.oscarehr.common.model.SpireAccessionNumberMap;
+import org.oscarehr.common.model.SpireCommonAccessionNumber;
 
 public class DmsInboxManageAction extends DispatchAction {
 	private static Logger logger=MiscUtils.getLogger();
@@ -467,6 +472,8 @@ public class DmsInboxManageAction extends DispatchAction {
 					mixLabsAndDocs, isAbnormal));
 		}
 
+		labdocs = collapseSpireLabs(labdocs);
+
 		ArrayList<LabResultData> validlabdocs = new ArrayList<LabResultData>();
 
 		DocumentResultsDao documentResultsDao = (DocumentResultsDao) SpringUtils.getBean("documentResultsDao");
@@ -622,6 +629,8 @@ public class DmsInboxManageAction extends DispatchAction {
 				labdocs.add(labMap.get(labNums.get(j)));
 			}
 		}
+
+		Collections.sort(labdocs);
 		logger.debug("labdocs.size()="+labdocs.size());
 
 		/* find all data for the index.jsp page */
@@ -748,6 +757,102 @@ public class DmsInboxManageAction extends DispatchAction {
 		request.setAttribute("oldestLab", oldestLab != null ? DateUtils.formatDate(oldestLab, "yyyy-MM-dd HH:mm:ss") : null);
 
 		return mapping.findForward("dms_page");
+	}
+	
+	/**
+	 * Used to order labs in a List of LabResultData from most to least recent.
+	 * 
+	 * It achieves this by comparing the segment ids (i.e. lab ids).  The larger the segment id, the more recent the lab.
+	 */
+	public class SpireLabSorter implements Comparator<LabResultData> {
+	    @Override
+	    public int compare(LabResultData o1, LabResultData o2) {
+			int i1 = Integer.parseInt( o1.getSegmentID() );
+			int i2 = Integer.parseInt( o2.getSegmentID() );
+			
+	        return (i1 > i2 ? -1 : (i1 == i2 ? 0 : 1));
+	    }
+	} 
+	
+	/**
+	 * Method collapseSpireLabs
+	 * 
+	 * Returns a list of Lab Results that include all non-spire labs, and include only a single spire
+	 * lab for any given unique spire accession number.
+	 * 
+	 * Furthermore, for spire labs that share the same 'common' accession number, the newest lab will be
+	 * included.
+	 * 
+	 * To elaborate, Spire labs have a 'regular' accession number, and also a 'unique' accession number.
+	 * The unique accession number identifies seperate spire labs that are actually part of a single lab, but
+	 * were sent as seperate HL7 files.  
+	 */ 
+	private ArrayList<LabResultData> collapseSpireLabs(ArrayList<LabResultData> labdocs) {
+		ArrayList<LabResultData> collapsedLabdocs = new ArrayList<LabResultData>();
+		
+		List<String> accns = new ArrayList<String>();
+		
+		// Get accession numbers for all labs
+		for (LabResultData data : labdocs) {
+			accns.add(data.getAccessionNum());
+		}
+		
+		// Get accession number mappings for spire labs
+		SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
+		List<SpireAccessionNumberMap> accnsMap = accnDao.getFromCommonAccessionNumbers(accns);
+		
+		// Add non-spire labs to the collapsed lab list
+		for (LabResultData data : labdocs) {
+			boolean found = false;
+			if (accnsMap != null) {
+				for (SpireAccessionNumberMap map : accnsMap) {
+					List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+					for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+						if (data.getAccessionNum() != null && data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+							found = true;
+							break;
+						}
+					}
+					
+					if (found)
+						break;
+				}
+			}
+			
+			// Add the Lab Result to the collapsed list if it isn't a spire lab
+			if (!found) {
+				collapsedLabdocs.add(data);
+			}
+		}
+		
+		
+		if (accnsMap != null) {
+			// Order the labs from most to least recent - the algorithm below assumes this as a precondition
+			Collections.sort( labdocs, new SpireLabSorter() );
+			
+			// Add only a single Spire lab to the collapsed lab list for any given unique spire accession number
+			for (SpireAccessionNumberMap map : accnsMap) {
+				List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+				
+				LabResultData addedData = null;
+				// Only add one spire lab 'LabResultData' for each unique accession number
+				for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+					for (LabResultData data : labdocs) {
+						if (data.getAccessionNum() != null && data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+							if (addedData == null) {
+								collapsedLabdocs.add(data);
+								addedData = data;
+							} else {
+								if (data.isAbnormal())
+									addedData.setIsAbnormal(true);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return collapsedLabdocs;
 	}
 
 	public ActionForward addNewQueue(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {

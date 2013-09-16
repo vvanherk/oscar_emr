@@ -156,7 +156,11 @@ try
 	<input type="hidden" id="check_issue" name="check_issue">
 	<input type="hidden" id="serverDate" value="<%=strToday%>">
 	<input type="hidden" id="resetFilter" name="resetFilter" value="false">
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+	<div id="topContent" style="visibility:hidden; display:none; float: left; width: 100%; margin-right: -2px; padding-bottom: 10px; background-color: #CCCCFF; font-size: 10px;">
+<%} else { %>
 	<div id="topContent" style="float: left; width: 100%; margin-right: -2px; padding-bottom: 10px; background-color: #CCCCFF; font-size: 10px;">
+<% } %>
 		<nested:notEmpty name="caseManagementViewForm" property="filter_providers">
 			<div style="float: left; margin-left: 10px; margin-top: 0px;"><u><bean:message key="oscarEncounter.providers.title" />:</u><br>
 				<nested:iterate type="String" id="filter_provider" property="filter_providers">
@@ -330,7 +334,7 @@ try
 				&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
 				<select id="channel">
-					<option value="http://resource.oscarmcmaster.org/oscarResource/OSCAR_search/OSCAR_search_results?title="><bean:message key="oscarEncounter.Index.oscarSearch" /></option>
+					<option value="http://resource.oscarmcmaster.org/oscarResource?SUBMIT=Search&advancedSearchF=0&taglist=&query="><bean:message key="oscarEncounter.Index.oscarSearch" /></option>
 					<option value="http://www.google.com/search?q="><bean:message key="global.google" /></option>
 					<option value="http://www.ncbi.nlm.nih.gov/entrez/query.fcgi?SUBMIT=y&amp;CDM=Search&amp;DB=PubMed&amp;term="><bean:message key="global.pubmed" /></option>
 					<option value="http://search.nlm.nih.gov/medlineplus/query?DISAMBIGUATION=true&amp;FUNCTION=search&amp;SERVER2=server2&amp;SERVER1=server1&amp;PARAMETER="><bean:message key="global.medlineplus" /></option>
@@ -351,12 +355,14 @@ try
 				<security:oscarSec roleName="<%=roleName%>" objectName="_newCasemgmt.calculators" rights="r" reverse="false">
 					<%@include file="calculatorsSelectList.jspf" %>
 				</security:oscarSec>
-				<security:oscarSec roleName="<%=roleName%>" objectName="_newCasemgmt.templates" rights="r" reverse="false">
-					<select>
-						<option><bean:message key="oscarEncounter.Header.Templates"/></option>
-						<option>------------------</option>
-						<option onClick="popupPage(700,700,'Templates','<%=request.getContextPath()%>/admin/providertemplate.jsp');">New Template</option>
-						<option>------------------</option>
+				<security:oscarSec roleName="<%=roleName%>" objectName="_newCasemgmt.templates" rights="r">
+					<select onchange="javascript:popupPage(700,700,'Templates',this.value);">
+						<option value="-1"><bean:message key="oscarEncounter.Header.Templates"/></option>
+						<option value="-1">------------------</option>
+						<security:oscarSec roleName="<%=roleName%>" objectName="_newCasemgmt.templates" rights="w">
+						<option value="<%=request.getContextPath()%>/admin/providertemplate.jsp">New / Edit Template</option>
+						<option value="-1">------------------</option>
+						</security:oscarSec>
 						<%
 							EncounterTemplateDao encounterTemplateDao=(EncounterTemplateDao)SpringUtils.getBean("encounterTemplateDao");
 							List<EncounterTemplate> allTemplates=encounterTemplateDao.findAll();
@@ -365,7 +371,7 @@ try
 							{
 								String templateName=StringEscapeUtils.escapeHtml(encounterTemplate.getEncounterTemplateName());
 								%>
-									<option onClick="popupPage(700,700,'Templates','<%=request.getContextPath()+"/admin/providertemplate.jsp?dboperation=Edit&name="+templateName%>');"><%=templateName%></option>
+									<option value="<%=request.getContextPath()+"/admin/providertemplate.jsp?dboperation=Edit&name="+templateName%>"><%=templateName%></option>
 								<%
 							}
 						%>
@@ -463,7 +469,11 @@ try
 		</tr>
 	</table>
 	</div>
-	<div id="encMainDiv" style="width: 99%; border-top: thin groove #000000; border-right: thin groove #000000; border-left: thin groove #000000; background-color: #FFFFFF; height: 410px; overflow: auto; margin-left: 2px;">
+	<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+		<div id="encMainDiv" style="width: 99%; border-top: thin groove #000000; border-right: thin groove #000000; border-left: thin groove #000000; background-color: #FFFFFF; height: 100%; overflow: auto; margin-left: 2px;">
+	<% } else { %>
+		<div id="encMainDiv" style="width: 99%; border-top: thin groove #000000; border-right: thin groove #000000; border-left: thin groove #000000; background-color: #FFFFFF; height: 410px; overflow: auto; margin-left: 2px;">
+	<% } %>
 
 	</div>
 	<script type="text/javascript">
@@ -477,7 +487,11 @@ try
 				windowHeight = document.body.offsetHeight;
 			}
 
-			var divHeight=windowHeight-280;
+			<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+				var divHeight=windowHeight-100;
+			<% } else { %>
+				var divHeight=windowHeight-280;
+			<% } %>
 			$("encMainDiv").style.height = divHeight+'px';
 		}
 	</script>

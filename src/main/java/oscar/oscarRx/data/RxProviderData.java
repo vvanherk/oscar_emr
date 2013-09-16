@@ -34,6 +34,7 @@ import org.oscarehr.common.dao.UserPropertyDAO;
 import org.oscarehr.common.model.Clinic;
 import org.oscarehr.common.model.UserProperty;
 import org.oscarehr.util.SpringUtils;
+import org.oscarehr.util.MiscUtils;
 
 import oscar.SxmlMisc;
 
@@ -135,6 +136,19 @@ public class RxProviderData {
         }
         return "";
     }
+    
+    public Provider getProvider(String providerNo, int clinicNo) {
+		MiscUtils.getLogger().info("Get Provider: " + providerNo + " | " + clinicNo);
+		Provider provider = getProvider(providerNo);
+		
+		if (provider != null) {
+			Clinic clinic = clinicDao.find(clinicNo);
+			if (clinic != null)
+				provider.setClinicData(clinic);
+		}
+		
+		return provider;
+	}
 
     public class Provider{
     	boolean fullAddress=true;
@@ -185,6 +199,16 @@ public class RxProviderData {
         public String getFirstName(){
             return this.firstName;
         }
+        
+        public void setClinicData(Clinic clinic) {
+			this.clinicName = clinic.getClinicName();
+			this.clinicAddress = clinic.getClinicAddress();
+			this.clinicCity = clinic.getClinicCity();
+			this.clinicPostal = clinic.getClinicPostal();
+			this.clinicPhone = clinic.getClinicPhone();
+			this.clinicFax = clinic.getClinicFax();
+			this.clinicProvince = clinic.getClinicProvince();
+		}
 
         public String getClinicName(){
             return this.clinicName;

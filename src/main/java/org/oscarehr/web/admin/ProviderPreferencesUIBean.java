@@ -117,10 +117,52 @@ public final class ProviderPreferencesUIBean {
 
 		temp = StringUtils.trimToNull(request.getParameter("default_servicetype"));
 		if (temp != null) providerPreference.setDefaultServiceType(temp);
+		
+		temp = StringUtils.trimToNull(request.getParameter("default_bill_provider"));
+		if (temp != null) {
+			// 'no' is the string representing 'none'
+			if (temp.equals("no"))
+				temp = "";
+			providerPreference.setBillingProviderDefault(temp);
+		}
+		
+		temp = StringUtils.trimToNull(request.getParameter("use_billing_provider_from_previous_bill"));
+		if (temp != null) 
+			providerPreference.setUseBillingProviderFromPreviousBill(true);
+		else
+			providerPreference.setUseBillingProviderFromPreviousBill(false);
+		
+		temp = StringUtils.trimToNull(request.getParameter("default_bill_visit_type"));
+		if (temp == null) 
+			temp = "";
+		providerPreference.setBillingVisitTypeDefault(temp);
+		
+		temp = StringUtils.trimToNull(request.getParameter("default_bill_visit_location"));
+		if (temp == null) 
+			temp = "";
+		providerPreference.setBillingVisitLocationDefault(temp);
 
 		temp = StringUtils.trimToNull(request.getParameter("color_template"));
 		if (temp != null) providerPreference.setColourTemplate(temp);
-
+		
+		temp = StringUtils.trimToNull(request.getParameter("rx_print_pharmacy"));
+		if (temp != null) 
+			providerPreference.setPrintPharmacyOnRx(true);
+		else
+			providerPreference.setPrintPharmacyOnRx(false);
+		
+		temp = StringUtils.trimToNull(request.getParameter("rx_print_dates"));
+		if (temp != null) 
+			providerPreference.setPrintDateOnRx(true);
+		else
+			providerPreference.setPrintDateOnRx(false);
+			
+		temp = StringUtils.trimToNull(request.getParameter("billing_ref_box_default_checked"));
+		if (temp != null) 
+			providerPreference.setBillingRefBoxDefaultChecked(true);
+		else
+			providerPreference.setBillingRefBoxDefaultChecked(false);
+			
 		providerPreference.setPrintQrCodeOnPrescriptions(WebUtils.isChecked(request, "prescriptionQrCodes"));
 
 		// get encounterForms for appointment screen

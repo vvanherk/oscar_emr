@@ -31,11 +31,12 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.EFormValue;
 import org.oscarehr.util.SpringUtils;
 
-public class EFormValueDaoTest extends DaoTestFixtures {
+public class EFormValueDaoTest extends TestFixtures {
 
 	private EFormValueDao eFormValueDao = (EFormValueDao) SpringUtils.getBean("EFormValueDao");
 

@@ -27,12 +27,13 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.View;
 import org.oscarehr.util.SpringUtils;
 
-public class ViewDaoTest extends DaoTestFixtures {
+public class ViewDaoTest extends TestFixtures {
 
 	private ViewDao dao = SpringUtils.getBean(ViewDao.class);
 

@@ -30,12 +30,13 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.CtlFrequency;
 import org.oscarehr.util.SpringUtils;
 
-public class CtlFrequencyDaoTest extends DaoTestFixtures {
+public class CtlFrequencyDaoTest extends TestFixtures {
 
 	private CtlFrequencyDao dao = (CtlFrequencyDao)SpringUtils.getBean("ctlFrequencyDao");
 

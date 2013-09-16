@@ -253,6 +253,13 @@
 			<version>2.1.7</version>
 		</dependency>
 
+		<!-- rtf / lowagie -->
+		<dependency>
+			<groupId>com.lowagie</groupId>
+			<artifactId>itext-rtf</artifactId>
+			<version>2.1.7</version>
+		</dependency>
+
 		<!-- json -->
 		<dependency>
 			<groupId>net.sf.json-lib</groupId>
@@ -796,6 +803,7 @@
                         <validHeader>utils/headers/asl.txt</validHeader>
                         <validHeader>utils/headers/cmi.txt</validHeader>
                         <validHeader>utils/headers/indivica.txt</validHeader>
+                        <validHeader>utils/headers/indivica2013.txt</validHeader>
                         <validHeader>utils/headers/peaceworks.txt</validHeader>
                 </validHeaders>
                 <includes>
@@ -1039,7 +1047,7 @@
 				<version>2.8</version>
 				<configuration>
 					<configLocation>utils/checkstyle.xml</configLocation>
-					<failsOnError>true</failsOnError>
+					<failsOnError>false</failsOnError>
 					<consoleOutput>true</consoleOutput>
 					<sourceDirectory>.</sourceDirectory>
 					<includes>src/main/**/*,database/**/*.sql</includes>

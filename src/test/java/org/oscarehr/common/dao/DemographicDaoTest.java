@@ -29,12 +29,13 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.util.SpringUtils;
 
-public class DemographicDaoTest extends DaoTestFixtures {
+public class DemographicDaoTest extends TestFixtures {
 
 	private DemographicDao dao = (DemographicDao)SpringUtils.getBean("demographicDao");
 
@@ -121,6 +122,21 @@ public class DemographicDaoTest extends DaoTestFixtures {
 		assertEquals(0,dao.searchDemographic("Smi,Ja").size());
 	}
 
+         @Test
+        public void testSearchDemographicActive() throws Exception {
+                Demographic entity = new Demographic();
+                EntityDataGenerator.generateTestDataForModelClass(entity);
+                entity.setDemographicNo(null);
+                entity.setLastName("Smith");
+                entity.setFirstName("John");
+                entity.setPatientStatus("IN");
+                dao.save(entity);
+                assertEquals(0, dao.searchDemographicActive("Smi").size());
+                assertEquals(0, dao.searchDemographicActive("Do").size());
+                assertEquals(0, dao.searchDemographicActive("Smi,Jo").size());
+                assertEquals(1, dao.searchDemographic("Smi").size());
+                assertEquals(0, dao.searchDemographic("Smi,Ja").size());
+	}
 
 	@Test
 	public void testGetRosterStatuses() throws Exception {

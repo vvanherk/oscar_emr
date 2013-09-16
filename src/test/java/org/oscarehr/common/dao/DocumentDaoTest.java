@@ -27,12 +27,13 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.Document;
 import org.oscarehr.util.SpringUtils;
 
-public class DocumentDaoTest extends DaoTestFixtures {
+public class DocumentDaoTest extends TestFixtures {
 
 	private DocumentDao dao = SpringUtils.getBean(DocumentDao.class);
 

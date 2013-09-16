@@ -27,10 +27,11 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.SpringUtils;
 
-public class WaitingListNameDaoTest extends DaoTestFixtures {
+public class WaitingListNameDaoTest extends TestFixtures {
 
 	private WaitingListNameDao dao = SpringUtils.getBean(WaitingListNameDao.class);
 

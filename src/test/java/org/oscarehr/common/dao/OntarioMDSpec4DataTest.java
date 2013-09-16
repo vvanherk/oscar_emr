@@ -81,7 +81,8 @@ import org.oscarehr.casemgmt.model.CaseManagementNote;
 import org.oscarehr.casemgmt.model.CaseManagementNoteExt;
 import org.oscarehr.casemgmt.model.CaseManagementNoteLink;
 import org.oscarehr.casemgmt.model.Issue;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.Allergy;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.BillingONCHeader1;
@@ -106,7 +107,7 @@ import oscar.oscarEncounter.oscarMeasurements.model.Measurements;
 import com.quatro.dao.security.SecurityDao;
 import com.quatro.model.security.Security;
 
-public class OntarioMDSpec4DataTest extends DaoTestFixtures {
+public class OntarioMDSpec4DataTest extends TestFixtures {
 
 
 	@Before

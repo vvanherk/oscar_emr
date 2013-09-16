@@ -150,20 +150,39 @@ BigDecimal adjTotal = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP);
 
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
+<%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@page import="org.oscarehr.common.model.Site"%>
 <%@page import="org.oscarehr.common.model.Provider"%><html>
     <head>
         <title>Bill Status</title>
         <script type="text/javascript" src="../../../share/javascript/Oscar.js"></script>
 		<link rel="stylesheet" type="text/css" href="billingON.css" />
+		<!-- <link rel="stylesheet" type="text/css" href="../../../js/tablesorter_css/themes/blue/style.css" /> -->
+		<link rel="stylesheet" type="text/css" href="../../../js/tablesorter_css/themes/blue/style_custom.css" />
         <link rel="stylesheet" type="text/css" media="all" href="../../../share/calendar/calendar.css" title="win2k-cold-1" /> 
         <script type="text/javascript" src="../../../share/calendar/calendar.js"></script>
         <script type="text/javascript" src="../../../share/calendar/lang/<bean:message key="global.javascript.calendar"/>"></script>                                                            
         <script type="text/javascript" src="../../../share/calendar/calendar-setup.js"></script>
-       
+        <script type="text/javascript" src="../../../js/jquery-1.7.1.min.js"></script>
+		<script type="text/javascript" src="../../../js/jquery.tablesorter.min.js"></script>
+		
+		<script>
+			$(document).ready(function() {
+			    // call the tablesorter plugin 
+			    $("table").tablesorter({
+			        // sort on the first column, order asc 
+					sortList: [[0,0]],
+					widgets: ['zebra']
+			    }); 
+			}); 
+		</script>
+		
         <script type="text/javascript">
         function fillEndDate(d){
            document.serviceform.xml_appointment_date.value= d;  
+        }
+        function fillStartDate(d){
+           document.serviceform.xml_vdate.value= d;  
         }
         function setDemographic(demoNo){
            //alert(demoNo);
@@ -203,9 +222,9 @@ BigDecimal adjTotal = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP);
 				String temp[] = ((String) pList.get(i)).split("\\|");				
 			%>
 			
-			var temp_provider_no = <%=temp[0]%> ;			
+			var temp_provider_no = "<%=StringEscapeUtils.escapeJavaScript(temp[0])%>" ;			
 			if(provider_no==temp_provider_no) {				
-				var provider_ohipNo="<%=temp[3]%>";
+				var provider_ohipNo="<%=StringEscapeUtils.escapeJavaScript(temp[3])%>";
 				document.serviceform.provider_ohipNo.value=provider_ohipNo;	
 				if (shouldSubmit) {
 					if(document.getElementById("xml_vdate").value.length>0 && document.getElementById("xml_appointment_date").value.length>0)
@@ -475,9 +494,9 @@ function changeSite(sel) {
         
           <font size="1" ><a href="javascript: function myFunction() {return false; }" id="hlADate" >To:</a></font> 
           <input type="text" name="xml_appointment_date" id="xml_appointment_date" value="<%=endDate%>" size=10 style="width:70px" /> 
-          <br><a href="javascript: function myFunction() {return false; }" onClick="fillEndDate('<%=DateUtils.sumDate("yyyy-MM-dd","-30")%>')" >30</a>
-          <a href="javascript: function myFunction() {return false; }" onClick="fillEndDate('<%=DateUtils.sumDate("yyyy-MM-dd","-60")%>')" >60</a>
-          <a href="javascript: function myFunction() {return false; }" onClick="fillEndDate('<%=DateUtils.sumDate("yyyy-MM-dd","-90")%>')" >90</a>                         
+          <br><a href="javascript: function myFunction() {return false; }" onClick="fillStartDate('<%=DateUtils.sumDate("yyyy-MM-dd","-30")%>')" >30</a>
+          <a href="javascript: function myFunction() {return false; }" onClick="fillStartDate('<%=DateUtils.sumDate("yyyy-MM-dd","-60")%>')" >60</a>
+          <a href="javascript: function myFunction() {return false; }" onClick="fillStartDate('<%=DateUtils.sumDate("yyyy-MM-dd","-90")%>')" >90</a>                         
 		<input type="submit" name="Submit" value="Create Report">
         <div>         
           <font size="-1">Dx:</font><input type="text" name="dx" size="3" value="<%=dx%>"/>
@@ -538,7 +557,8 @@ function changeSite(sel) {
 <% //
 if(statusType.equals("_")) { %>
     <!--  div class="rejected list"-->
-       <table width="100%" border="1" cellspacing="0" cellpadding="1">
+       <table width="100%" border="1" cellspacing="0" cellpadding="1" class="tablesorter">
+		<thead>
           <tr class="myYellow"> 
              <th>Health#</th>
              <th>D.O.B</th>
@@ -557,7 +577,9 @@ if(statusType.equals("_")) { %>
              <th>Code Error</th>
              <th>Status</th>
              <th>Filename</th>
+             <th>OHIP Claim Id</th>
           </tr>
+        </thead>
 	<% //
         ArrayList<String> aLProviders;
         if( providerNo == null || providerNo.equals(""))  {
@@ -580,20 +602,20 @@ if(statusType.equals("_")) { %>
             BillingProviderData providerObj = (new JdbcBillingPageUtil()).getProviderObj(providerNo);
             lPat = (new JdbcBillingErrorRepImpl()).getErrorRecords(providerObj, startDate, endDate, filename);
             }
-    boolean nC = false;
 	String invoiceNo = "";
 	
-
+	JdbcBillingRAImpl raObj = new JdbcBillingRAImpl();
 	for(int i=0; i<lPat.size(); i++) {
 		BillingErrorRepData bObj = (BillingErrorRepData) lPat.get(i);
-		String color = "";
+		
+		// get ohip claim number
+		String claimNo = raObj.getRAClaimNo4BillingNo( bObj.getBilling_no() );
+		
 		if(!invoiceNo.equals(bObj.getBilling_no())) {
 			invoiceNo = bObj.getBilling_no(); 
-			nC = nC ? false : true;
 		} 
-	    color = nC ? "class='myGreen'" : "";
 	%>
-    		<tr <%=color %>>
+    		<tr>
     			<td><span class="smallFont"><%=bObj.getHin() %> <%=bObj.getVer() %></span></td>
     			<td><font size="-1"><%=bObj.getDob() %></font></td>
     			<td align="right">
@@ -615,10 +637,14 @@ if(statusType.equals("_")) { %>
     			value="Y" <%="N".equals(bObj.getStatus())? "":"checked" %> onclick="startRequest('<%=bObj.getId() %>');" />
     			</td>
     			<td id="<%=bObj.getId() %>"><%=bObj.getReport_name() %></td>
+    			<td>
+					<a href="javascript: function myFunction() {return false; }"  onclick="javascript:popup(700,700,'billingONCorrection.jsp?claim_no=<%=claimNo%>','BillCorrection<%=claimNo%>');return false;"><%=claimNo%></a>
+    			</td>
     		</tr>
 <% }}} else { %>
     <!--  div class="tableListing"-->
-       <table width="100%" border="1" cellspacing="0" cellpadding="1">
+       <table width="100%" border="1" cellspacing="0" cellpadding="1" class="tablesorter">
+       <thead>
           <tr class="myYellow"> 
              <th>SERVICE DATE</th>
              <th>PATIENT</th>
@@ -634,15 +660,18 @@ if(statusType.equals("_")) { %>
              <th>TYPE</th>
              <th>ACCOUNT</th>
              <th>MESSAGES</th>
+             <th>OHIP Claim Id</td>
 		<% if (bMultisites) {%>
 			 <th>SITE</th>             
         <% }%>     
           </tr>
+       </thead>
        
           
        <% //
        String invoiceNo = ""; 
-       boolean nC = false;
+
+		JdbcBillingRAImpl raObj = new JdbcBillingRAImpl();
 
        for (int i = 0 ; i < bList.size(); i++) { 
     	   BillingClaimHeader1Data ch1Obj = (BillingClaimHeader1Data) bList.get(i);
@@ -693,12 +722,10 @@ if(statusType.equals("_")) { %>
 	       BigDecimal adj = (new BigDecimal(ch1Obj.getTotal())).setScale(2,BigDecimal.ROUND_HALF_UP);               
                adj = adj.subtract(bTemp);
                adjTotal = adjTotal.add(adj);
-	       String color = "";
+
 	       if(!invoiceNo.equals(ch1Obj.getId())) {
 	    	   invoiceNo = ch1Obj.getId(); 
-	    	   nC = nC ? false : true;
 	       } 
-	       color = nC ? "class='myGreen'" : "";
                String settleDate = ch1Obj.getSettle_date();
                if( settleDate == null || !ch1Obj.getStatus().equals("S")) {
                    settleDate = "N/A";
@@ -706,10 +733,13 @@ if(statusType.equals("_")) { %>
                else {
                    settleDate = settleDate.substring(0, settleDate.indexOf(" "));
                }
+               
+           // get ohip claim number
+			String claimNo = raObj.getRAClaimNo4BillingNo( ch1Obj.getId() );
 	      
        %>       
-          <tr <%=color %>> 
-             <td align="center"><%= ch1Obj.getBilling_date()%>  <%--=ch1Obj.getBilling_time()--%></td>  <!--SERVICE DATE-->
+          <tr> 
+             <td align="center"><%= ch1Obj.getService_date()%>  <%--=ch1Obj.getBilling_time()--%></td>  <!--SERVICE DATE-->
              <td align="center"><a href="javascript: setDemographic('<%=ch1Obj.getDemographic_no()%>');"><%=ch1Obj.getDemographic_no()%></a></td> <!--PATIENT-->
              <td align="center"><a href=# onclick="popupPage(800,740,'../../../demographic/demographiccontrol.jsp?demographic_no=<%=ch1Obj.getDemographic_no()%>&displaymode=edit&dboperation=search_detail');return false;"><%= ch1Obj.getDemographic_name()%></a></td> 
              <td align="center"><%=ch1Obj.getStatus()%></td> <!--STAT-->
@@ -733,6 +763,9 @@ if(statusType.equals("_")) { %>
                  <a href="javascript: function myFunction() {return false; }"  onclick="javascript:popup(700,700,'billingONCorrection.jsp?billing_no=<%=ch1Obj.getId()%>','BillCorrection<%=ch1Obj.getId()%>');return false;">Edit</a>
                  <%=errorCode%>
              </td><!--MESSAGES-->
+             <td>
+				 <a href="javascript: function myFunction() {return false; }"  onclick="javascript:popup(700,700,'billingONCorrection.jsp?claim_no=<%=claimNo%>','BillCorrection<%=claimNo%>');return false;"><%=claimNo%></a>
+             </td>
              <% if (bMultisites) {%>
 				 <td "<%=(ch1Obj.getClinic()== null || ch1Obj.getClinic().equalsIgnoreCase("null") ? "" : "bgcolor='" + siteBgColor.get(ch1Obj.getClinic()) + "'")%>">
 				 	<%=(ch1Obj.getClinic()== null || ch1Obj.getClinic().equalsIgnoreCase("null") ? "" : siteShortName.get(ch1Obj.getClinic()))%>
@@ -740,7 +773,7 @@ if(statusType.equals("_")) { %>
         	<% }%>     
           </tr>
        <% } %>  
-       
+       <tfoot>
           <tr class="myYellow"> 
              <td>Count:</td>  
              <td align="center"><%=patientCount%></td> 
@@ -756,11 +789,13 @@ if(statusType.equals("_")) { %>
              <td>&nbsp;</td><!--DX3-->
              <td>&nbsp;</td><!--ACCOUNT-->
              <td>&nbsp;</td><!--MESSAGES-->
+             
              <% if (bMultisites) {%>
 				 <td>&nbsp;</td><!--SITE-->          
         	<% }%>    
           </tr>
-       <table>
+       </tfoot>
+       </table>
     </div>
 <% } %>
     

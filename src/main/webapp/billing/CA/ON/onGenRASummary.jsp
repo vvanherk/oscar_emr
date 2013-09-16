@@ -27,35 +27,21 @@ if(session.getAttribute("user") == null) response.sendRedirect("../../../logout.
 	errorPage="errorpage.jsp"%>
 <%@ page import="oscar.oscarBilling.ca.on.pageUtil.*"%>
 
+<%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+<%@page import="org.oscarehr.common.model.Provider"%>
+<%@page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
+
 <jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
 	scope="session" />
 <jsp:useBean id="billingLocalInvNoBean" class="java.util.Properties"
 	scope="page" />
 <%@ include file="dbBilling.jspf"%>
 
-<html>
-<head>
-<script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
-<script type="text/javascript" src="<%= request.getContextPath() %>/js/tablefilter_all_min.js"></script>
-<link rel="stylesheet" type="text/css" href="billingON.css" />
-<title>Billing Reconcilliation</title>
-
-<style>
-<% if (bMultisites) { %>
-	.positionFilter {position:absolute;top:2px;right:350px;display:block;}
-<% } else { %>
-	.positionFilter {display:none;}
-<% } %>
-</style>
-
-</head>
-
-<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
-
 <% 
 String nowDate = UtilDateUtilities.DateToString(UtilDateUtilities.now(), "yyyy/MM/dd"); 
 
-String raNo = "", flag="", plast="", pfirst="", pohipno="", proNo="";
+String raNo = "", flag="", plast="", pfirst="", pohipno="", proNo="", proGrpBillingNo="";
 String filepath="", filename = "", header="", headerCount="", total="", paymentdate="", payable="", totalStatus="", deposit=""; //request.getParameter("filename");
 String transactiontype="", providerno="", specialty="", account="", patient_last="", patient_first="", provincecode="", hin="", ver="", billtype="", location="";
 String servicedate="", serviceno="", servicecode="", amountsubmit="", amountpay="", amountpaysign="", explain="", error="";
@@ -104,8 +90,105 @@ BigDecimal bdLocalHFee = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP)
 BigDecimal BigLocalHTotal = new BigDecimal(0).setScale(2, BigDecimal.ROUND_HALF_UP);
 String localServiceDate = "";
        	
-proNo = request.getParameter("proNo");
-//raNo = request.getParameter("rano");
+proNo = request.getParameter("proNo")!=null? request.getParameter("proNo") : "";
+proGrpBillingNo = request.getParameter("group_billing_no")!=null? request.getParameter("group_billing_no") : "";
+%> 
+
+<%
+List<String> providerNumbers = new ArrayList<String>();
+List aL = obj.getProviderListFromRAReport(raNo);
+
+boolean generateForAll = proNo.compareTo("all") == 0;
+
+for(int i=0; i<aL.size(); i++) {
+	Properties prop = (Properties) aL.get(i);
+	providerNumbers.add( prop.getProperty("provider_no", "") );
+}
+
+
+ProviderDao providerDao =(ProviderDao)SpringUtils.getBean("providerDao");
+List<Provider> providerList = providerDao.getProvidersByProviderNo(providerNumbers);
+List<Provider> providers = new ArrayList<Provider>();
+
+// error check
+if (providerList == null)
+	providerList = new ArrayList<Provider>();
+
+if (generateForAll) {
+	for(int i=0; i < providerList.size(); i++) {
+		providers.add( providerList.get(i) );
+	}
+}
+else {
+	for(int i=0; i < providerList.size(); i++) {
+		Provider p = providerList.get(i);
+		if (p.getProviderNo().equals(proNo)) {
+			providers.add( p );
+			break;
+		}
+	}
+	
+	filterByGroupBillingNumber(providers, proGrpBillingNo);
+}
+
+%>
+
+<html>
+<head>
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
+<script type="text/javascript" src="<%= request.getContextPath() %>/js/tablefilter_all_min.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath() %>/js/jquery.js"></script>
+
+<script>
+$(document).ready(function() {
+	// on page load, set the initial value for the provider group billing number
+	setProviderGroupBillingNo( $("#proNo option:selected").val() );
+});
+</script>
+
+<script>
+var provGroupBillingNoMap = new Object();
+
+<%
+	// print out the mapping from provider # to group billing number
+	for(int i=0; i< providerList.size(); i++) {
+		Provider p = providerList.get(i);
+		String groupBillingNo = SxmlMisc.getXmlContent(p.getComments(), "<xml_p_billinggroup_no>", "</xml_p_billinggroup_no>");
+		
+		%> 
+		provGroupBillingNoMap['<%=p.getProviderNo()%>'] = '<%=groupBillingNo%>'; <%
+	}
+%>
+
+/**
+ * Set the group billing number field based on the provided providerNo.
+ */ 
+function setProviderGroupBillingNo(providerNo) {
+	var groupBillingNo = provGroupBillingNoMap[providerNo];
+	//alert(providerNo + " " + groupBillingNo);
+	
+	if (groupBillingNo != null && groupBillingNo != undefined)
+		document.getElementById("group_billing_no").value = groupBillingNo;
+}
+</script>
+
+<link rel="stylesheet" type="text/css" href="billingON.css" />
+<title>Billing Reconcilliation</title>
+
+<style>
+<% if (bMultisites) { %>
+	.positionFilter {position:absolute;top:2px;right:350px;display:block;}
+<% } else { %>
+	.positionFilter {display:none;}
+<% } %>
+</style>
+
+</head>
+
+<body leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+
+<%
+
 if (raNo.compareTo("") == 0 || raNo == null){
 	flag = "0";
 	return;
@@ -119,20 +202,21 @@ if (raNo.compareTo("") == 0 || raNo == null){
 		Reconcilliation - Summary Report</font></th>
 		<th align='RIGHT'>
 		<select id="loadingMsg" class="positionFilter"><option>Loading filters...</option></select>
-		<select name="proNo">
+		<select id="proNo" name="proNo" onchange="setProviderGroupBillingNo(this.value); return true;">
 			<option value="all" <%=proNo.equals("all")?"selected":""%>>All
 			Providers</option>
 
 			<%   
-//
-List aL = obj.getProviderListFromRAReport(raNo);
+
 for(int i=0; i<aL.size(); i++) {
 	Properties prop = (Properties) aL.get(i);
-	pohipno = prop.getProperty("providerohip_no", "");
+	String providerNo = prop.getProperty("provider_no", "");
+	String providerOhipNo = prop.getProperty("providerohip_no", "");
+	String pgrpbillno = prop.getProperty("providergroup_billing_no", "");
 	plast = prop.getProperty("last_name", "");
 	pfirst = prop.getProperty("first_name", "");
 %>
-			<option value="<%=pohipno%>" <%=proNo.equals(pohipno)?"selected":""%>><%=plast%>,<%=pfirst%></option>
+			<option value="<%=providerNo%>" <%=proNo.equals(providerNo) && proGrpBillingNo.equals(pgrpbillno)?"selected":""%>><%=plast%>,<%=pfirst%></option>
 			<%
 }
 %>
@@ -142,18 +226,19 @@ for(int i=0; i<aL.size(); i++) {
 		<input type='button' name='close' value='Close'
 			onClick='window.close()'></th>
 	</tr>
+	<input type="hidden" name="group_billing_no" id="group_billing_no">
 	</form>
 </table>
 
 
 <% 
-	if (proNo == null || proNo.compareTo("") == 0 || proNo.compareTo("all") == 0){ 
+if (proNo == null || proNo.compareTo("") == 0){ 
 %>
 <table width="100%" border="1" cellspacing="0" cellpadding="0"
 	class="myIvory">
 	<tr class="myYellow">
 		<td width="7%" height="16">Billing No</td>
-		<td width="7%" height="16">Provider</td>
+		<td width="14%" height="16">Provider</td>
 		<td width="15%" height="16">Patient</td>
 		<td width="7%" height="16">HIN</td>
 		<td width="10%" height="16">Service Date</td>
@@ -166,433 +251,97 @@ for(int i=0; i<aL.size(); i++) {
 		<td width="7%" height="16" align=right>OB</td>
 		<td width="5%" height="16" align=right>Error</td>
 	</tr>
-
-	<%
-/*
-	String[] param = new String[2];
-	param[0] = raNo;
-	param[1] = "%";
-	rsdemo = apptMainBean.queryResults(param, "search_rasummary_dt");
-	while (rsdemo.next()) {   
-		account = rsdemo.getString("billing_no");
-		location = "";  
-		demo_name = "";
-		demo_docname = "";
-		demo_hin = rsdemo.getString("hin") != null? rsdemo.getString("hin") : "";
-		rsdemo3 = apptMainBean.queryResults(account, "search_bill_short"); 
-		while (rsdemo3.next()){
-			demo_name = rsdemo3.getString("demographic_name");
-			if (rsdemo3.getString("hin") != null) {
-				if (!(rsdemo3.getString("hin")).startsWith(demo_hin)) {
-					demo_hin = "";
-					demo_name ="";
-				}
-			} else {
-				demo_hin = "";
-				demo_name ="";
-			}
-			location = rsdemo3.getString("visittype");
-			localServiceDate = rsdemo3.getString("billing_date");
-			localServiceDate = localServiceDate.replaceAll("-*", "");
-			demo_docname = propProvierName.getProperty(("no_" + rsdemo3.getString("provider_no")), "");
-		}
-
-		proName = propProvierName.getProperty(rsdemo.getString("providerohip_no"));
-		servicecode = rsdemo.getString("service_code");
-		servicedate = rsdemo.getString("service_date");
-		serviceno = rsdemo.getString("service_count");
-		explain = rsdemo.getString("error_code");
-		amountsubmit = rsdemo.getString("amountclaim");
-		amountpay = rsdemo.getString("amountpay");
-
-		//OBflag="0";
-		// get claim/pay amount
-		dCFee = Double.parseDouble(amountsubmit);
-		bdCFee = new BigDecimal(dCFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-		BigCTotal = BigCTotal.add(bdCFee);
-
-		dPFee = Double.parseDouble(amountpay);
-		bdPFee = new BigDecimal(dPFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-		BigPTotal = BigPTotal.add(bdPFee);
-
-		OBflag="0";
-		COflag="0";
-		// set flag
-		for (int i=0; i<OBbilling_no.size(); i++){
-			sqlRAOB = (String)OBbilling_no.get(i);
-			if(sqlRAOB.compareTo(account)==0) {
-				OBflag = "1";
-				break;
-			}
-		}
-		for (int j=0; j<CObilling_no.size(); j++){
-			sqlRACO = (String)CObilling_no.get(j);
-			if(sqlRACO.compareTo(account)==0) {
-				COflag = "1";
-				break;
-			}
-		}
-      	    
-		if(OBflag.equals("1")) {
-			amountOB=amountpay;
-			dOBFee = Double.parseDouble(amountOB);
-			bdOBFee = new BigDecimal(dOBFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-			BigOBTotal = BigOBTotal.add(bdOBFee);
-		} else {
-			amountOB="N/A";
-		} 
-
-		if(COflag.equals("1")) {
-			amountCO=amountpay;
-			dCOFee = Double.parseDouble(amountCO);
-			bdCOFee = new BigDecimal(dCOFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-			BigCOTotal = BigCOTotal.add(bdCOFee);
-		} else {
-			amountCO="N/A";
-		} 
-
-
-		if (explain.compareTo("") == 0 || explain == null){
-			explain = "**";
-		}
-
-		if (location.compareTo("02") == 0) { // hospital
-			dHFee = Double.parseDouble(amountpay);
-			bdHFee = new BigDecimal(dHFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-			BigHTotal = BigHTotal.add(bdHFee);
-
-			// is local for hospital
-			if (demo_hin.length() > 1 && servicedate.equals(localServiceDate)) {
-				BigLocalHTotal = BigLocalHTotal.add(bdHFee);
-			}
-*/
-%>
-
-	<tr>
-		<td height="16"><%=account%></td>
-		<td height="16"><%=demo_docname%></td>
-		<td height="16"><%=demo_name%></td>
-		<td height="16"><%=demo_hin%></td>
-		<td height="16"><%=servicedate%></td>
-		<td height="16"><%=servicecode%></td>
-		<!-- <td width="8%" height="16"><%=serviceno%></td>-->
-		<td height="16" align=right><%=amountsubmit%></td>
-		<td height="16" align=right><%=amountpay%></td>
-		<td height="16" align=right>N/A</td>
-		<td height="16" align=right><%=amountpay%></td>
-		<td height="16" align=right><%=amountOB%></td>
-		<td height="16" align=right><%=explain%></td>
-	</tr>
-
-
-	<%/*
-		} else { // clinic && local clinic
-			if (location.compareTo("00") == 0 && billingLocalInvNoBean.getProperty(account, "").equals(localClinicNo)) {
-				dFee = Double.parseDouble(amountpay);
-				bdFee = new BigDecimal(dFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-				BigTotal = BigTotal.add(bdFee);
-*/
-%>
-	<tr>
-		<td height="16"><%=account%></td>
-		<td height="16"><%=demo_docname%></td>
-		<td height="16"><%=demo_name%></td>
-		<td height="16"><%=demo_hin%></td>
-		<td height="16"><%=servicedate%></td>
-		<td height="16"><%=servicecode%></td>
-		<!-- <td width="8%" height="16"><%=serviceno%></td>-->
-		<td height="16" align=right><%=amountsubmit%></td>
-		<td height="16" align=right><%=amountpay%></td>
-		<td height="16" align=right><%=amountpay%></td>
-		<td height="16" align=right>N/A</td>
-		<td height="16" align=right><%=amountOB%></td>
-		<td height="16" align=right><%=explain%></td>
-	</tr>
-
-	<%/*
-			} else { // other fee
-				dOFee = Double.parseDouble(amountpay);
-				bdOFee = new BigDecimal(dOFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-				BigOTotal = BigOTotal.add(bdOFee);
-*/
-%>
-	<tr>
-		<td height="16"><%=account%></td>
-		<td height="16"><%=demo_docname%></td>
-		<td height="16"><%=demo_name%></td>
-		<td height="16"><%=demo_hin%></td>
-		<td height="16"><%=servicedate%></td>
-		<td height="16"><%=servicecode%></td>
-		<!-- <td width="8%" height="16"><%=serviceno%></td>-->
-		<td height="16" align=right><%=amountsubmit%></td>
-		<td height="16" align=right><%=amountpay%></td>
-		<td height="16" align=right>N/A</td>
-		<td height="16" align=right>N/A</td>
-		<td height="16" align=right><%=amountOB%></td>
-		<td height="16" align=right><%=explain%></td>
-	</tr>
-	<%
-//			}
-//		}
-//	}	 
+</table>
+<%
 } else { // raNo for all providers
 %>
-
-	<table id="ra_table" width="100%" border="0" cellspacing="1" cellpadding="0"
-		class="myIvory">
-		<tr class="myYellow">
-			<th width="6%">Billing No</th>
-			<td width="7%">Claim No</td>
-			<!--  th width="14%">Provider </th -->
-			<th width="14%">Patient</th>
-			<th>Fam Doc</th>
-			<th width="10%">HIN</th>
-			<th width="9%">Service Date</th>
-			<th width="8%">Service Code</th>
-			<!-- <th width="8%">Count</th> -->
-			<th width="7%" align=right>Invoiced</th>
-			<th width="7%" align=right>Paid</th>
-			<th width="7%" align=right>Clinic Pay</th>
-			<th width="7%" align=right>Hospital Pay</th>
-			<th width="7%" align=right>OB</th>
-			<th align=right>Error</th>
-			<th width="0" align=right style="display:none">Site</th>			
-		</tr>
-
 		<%
-	aL = obj.getRASummary(raNo, proNo, OBbilling_no, CObilling_no,map);
-	for(int i=0; i<aL.size()-1; i++) { //to use table-filter js to generate the sum - so the total-1
-		Properties prop = (Properties) aL.get(i);
-		String color = i%2==0? "class='myGreen'":"";
-		color = i == (aL.size()-1) ? "class='myYellow'" : color;
-%>
-		<tr <%=color %>>
-			<td align="center"><%=prop.getProperty("account", "&nbsp;")%></td>
-			<td align="center"><%=prop.getProperty("claimNo", "&nbsp;")%></td>
-			<!--  >td><%=prop.getProperty("demo_docname", "&nbsp;")%></td -->
-			<td><%=prop.getProperty("demo_name", "&nbsp;")%></td>
-			<td align="center"><%=prop.getProperty("demo_doc", "&nbsp;")%></td>
-			<td align="center"><%=prop.getProperty("demo_hin", "&nbsp;")%></td>
-			<td align="center"><%=prop.getProperty("servicedate", "&nbsp;")%></td>
-			<td align="center"><%=prop.getProperty("servicecode", "&nbsp;")%></td>
-			<!--<td width="8%"><%=serviceno%></td>-->
-			<td align=right><%=prop.getProperty("amountsubmit", "&nbsp;")%></td>
-			<td align=right><%=prop.getProperty("amountpay", "&nbsp;")%></td>
-			<td align=right><%=prop.getProperty("clinicPay", "&nbsp;")%></td>
-			<td align=right><%=prop.getProperty("hospitalPay", "&nbsp;")%></td>
-			<td align=right><%=prop.getProperty("obPay", "&nbsp;")%></td>
-			<td align=right><%=prop.getProperty("explain", "&nbsp;")%></td>
-			<td width="0" style="display:none"><%=prop.getProperty("site", "")%></td>			
-		</tr>
-
-		<% } }
-}
-%>
-<!-- added another TR for table-filter js to automatically calculate totals based on filters -->
-<tr class="myYellow">
-			<td align="center"></td>
-			<td></td>
-			<td align="center"></td>
-			<td align="center"></td>
-			<td align="center"></td>
-			<td align="center">Total:</td>
-			<td id="amountSubmit" align=right></td>
-			<td id="amountPay" align=right></td>
-			<td id="clinicPay" align=right></td>
-			<td id="hospitalPay" align=right></td>
-			<td align=right>&nbsp;</td>
-			<td align=right>&nbsp;</td>
-
-</tr>
-
-		<%-- 	
-	String[] param = new String[2];
-	param[0] = raNo;
-	param[1] = proNo+"%";
-	ResultSet rsdemo = apptMainBean.queryResults(param, "search_rasummary_dt");
-	while (rsdemo.next()) {   
-		account = rsdemo.getString("billing_no");
-		location = "";
-		demo_name ="";
-		demo_docname = "";
-		demo_hin = rsdemo.getString("hin") != null? rsdemo.getString("hin") : "";
-		ResultSet rsdemo3 = apptMainBean.queryResults(account, "search_bill_short");
-		while (rsdemo3.next()){
-			demo_name = rsdemo3.getString("demographic_name");
-			if (rsdemo3.getString("hin") != null) {
-				if (!(rsdemo3.getString("hin")).startsWith(demo_hin)) {
-					demo_hin = "";
-					demo_name ="";
-				}
-			} else {
-				demo_hin = "";
-				demo_name ="";
-			}
-			location = rsdemo3.getString("visittype");
-			localServiceDate = rsdemo3.getString("billing_date");
-			localServiceDate = localServiceDate.replaceAll("-*", "");
-			demo_docname = propProvierName.getProperty(("no_" + rsdemo3.getString("provider_no")), "");
-		}
-
-		proName = propProvierName.getProperty(rsdemo.getString("providerohip_no"));
-		servicecode = rsdemo.getString("service_code");
-		servicedate = rsdemo.getString("service_date");
-		serviceno = rsdemo.getString("service_count");
-		explain = rsdemo.getString("error_code");
-		amountsubmit = rsdemo.getString("amountclaim");
-		amountpay = rsdemo.getString("amountpay");
-
-		//k     location = rsdemo.getString("visittype");
-		dCFee = Double.parseDouble(amountsubmit);
-		bdCFee = new BigDecimal(dCFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-		BigCTotal = BigCTotal.add(bdCFee);
-
-		dPFee = Double.parseDouble(amountpay);
-		bdPFee = new BigDecimal(dPFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-		BigPTotal = BigPTotal.add(bdPFee);
-		COflag="0";
-		OBflag="0";
-
-		for (int i=0; i<OBbilling_no.size(); i++){
-			sqlRAOB = (String)OBbilling_no.get(i);
-			if(sqlRAOB.compareTo(account)==0) {
-				OBflag = "1";
-				break;
-			}
-		}
-
-		for (int j=0; j<CObilling_no.size(); j++){
-			sqlRACO = (String)CObilling_no.get(j);
-			if(sqlRACO.compareTo(account)==0) {
-				COflag = "1";
-				break;
-			}
-		}
-
-		if(OBflag.equals("1")) {
-			amountOB=amountpay;
-			dOBFee = Double.parseDouble(amountOB);
-			bdOBFee = new BigDecimal(dOBFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-			BigOBTotal = BigOBTotal.add(bdOBFee);
-		}else{
-			amountOB="N/A";
-		} 
-
-		if(COflag.equals("1")) {
-			amountCO=amountpay;
-			dCOFee = Double.parseDouble(amountCO);
-			bdCOFee = new BigDecimal(dCOFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-			BigCOTotal = BigCOTotal.add(bdCOFee);
-		}else{
-			amountCO="N/A";
-		} 
-
-		if (explain.compareTo("") == 0 || explain == null){
-			explain = "**";
-		}      
-
-		if (location.compareTo("02") == 0) {
-			dHFee = Double.parseDouble(amountpay);
-			bdHFee = new BigDecimal(dHFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-			BigHTotal = BigHTotal.add(bdHFee);
+		for (Provider p : providers) {
+			String groupBillingNo = "";
+			String comments = p.getComments();
+			groupBillingNo = SxmlMisc.getXmlContent(comments,"<xml_p_billinggroup_no>","</xml_p_billinggroup_no>");
+			// Default to null if group billing number is empty - this will skip the group billing number condition in the sql
+			groupBillingNo = (groupBillingNo.length() == 0? null : groupBillingNo);
 			
-			// is local for hospital
-			if (demo_hin.length() > 1 && servicedate.equals(localServiceDate)) {
-				BigLocalHTotal = BigLocalHTotal.add(bdHFee);
-			}
-%>
-<tr> 
-	<td><%=account%></td>
-	<td><%=demo_docname%></td>
-	<td><%=demo_name%></td>
-	<td><%=demo_hin%></td>
-	<td><%=servicedate%></td>
-	<td><%=servicecode%></td>
-	<!--<td width="8%"><%=serviceno%></td>-->
-	<td align=right><%=amountsubmit%></td>
-	<td align=right><%=amountpay%></td>
-	<td align=right>N/A</td>
-	<td align=right><%=amountpay%></td>
-	<td align=right><%=amountOB%></td>
-	<td align=right><%=explain%></td>
-</tr>         
-
-<%
-		} else {     
-			if (location.compareTo("00") == 0 && billingLocalInvNoBean.getProperty(account, "").equals(localClinicNo)) {
-				dFee = Double.parseDouble(amountpay);
-				bdFee = new BigDecimal(dFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-				BigTotal = BigTotal.add(bdFee);
-%>   
-<tr> 
-	<td><%=account%></td>
-	<td><%=demo_docname%></td>
-	<td><%=demo_name%></td>
-	<td><%=demo_hin%></td>
-	<td><%=servicedate%></td>
-	<td><%=servicecode%></td>
-	<!-- <td width="8%"><%=serviceno%></td>-->
-	<td align=right><%=amountsubmit%></td>
-	<td align=right><%=amountpay%></td>
-	<td align=right><%=amountpay%></td>
-	<td align=right>N/A</td>
-	<td align=right><%=amountOB%></td>
-	<td align=right><%=explain%></td>
-</tr>
-
-<%
-			} else{ 
-				dOFee = Double.parseDouble(amountpay);
-				bdOFee = new BigDecimal(dOFee).setScale(2, BigDecimal.ROUND_HALF_UP);
-				BigOTotal = BigOTotal.add(bdOFee);
-%>
-<tr> 
-	<td><%=account%></td>
-	<td><%=demo_docname%></td>
-	<td><%=demo_name%></td>
-	<td><%=demo_hin%></td>
-	<td><%=servicedate%></td>
-	<td><%=servicecode%></td>
-	<!-- <td width="8%"><%=serviceno%></td>-->
-	<td align=right><%=amountsubmit%></td>
-	<td align=right><%=amountpay%></td>
-	<td align=right>N/A</td>
-	<td align=right>N/A</td>
-	<td align=right><%=amountOB%></td>
-	<td align=right><%=explain%></td>
-</tr>
-
-<%
-			}
+			aL = obj.getRASummary(raNo, p.getOhipNo(), groupBillingNo, OBbilling_no, CObilling_no,map);
+			
+			if (aL.size() <= 1)
+				continue;
+			%>
+			
+			<br>
+			<div style="font-size: large; margin: 4px 0 4px 0;"> <%=p.getFormattedName()%> </div>
+			<table id="ra_table_<%=p.getProviderNo()%>" width="100%" border="0" cellspacing="1" cellpadding="0" class="myIvory">
+				<tr class="myYellow">
+					<th width="6%">Billing No</th>
+					<!--  th width="14%">Provider </th -->
+					<th width="20%">Patient</th>
+					<th>Fam Doc</th>
+					<th width="10%">HIN</th>
+					<th width="9%">Service Date</th>
+					<th width="8%">Service Code</th>
+					<!-- <th width="8%">Count</th> -->
+					<th width="7%" align=right>Invoiced</th>
+					<th width="7%" align=right>Paid</th>
+					<th width="7%" align=right>Clinic Pay</th>
+					<th width="7%" align=right>Hospital Pay</th>
+					<th width="7%" align=right>OB</th>
+					<th align=right>Error</th>
+					<th width="0" align=right style="display:none">Site</th>			
+				</tr>
+			
+			<%
+			for(int i=0; i<aL.size()-1; i++) { //to use table-filter js to generate the sum - so the total-1
+				Properties prop = (Properties) aL.get(i);
+				String color = i%2==0? "class='myGreen'":"";
+				color = i == (aL.size()-1) ? "class='myYellow'" : color;
+			%>
+				<tr <%=color %>>
+					<td align="center"><%=prop.getProperty("account", "&nbsp;")%></td>
+					<!--  >td><%=prop.getProperty("demo_docname", "&nbsp;")%></td -->
+					<td><%=prop.getProperty("demo_name", "&nbsp;")%></td>
+					<td align="center"><%=prop.getProperty("demo_doc", "&nbsp;")%></td>
+					<td align="center"><%=prop.getProperty("demo_hin", "&nbsp;")%></td>
+					<td align="center"><%=prop.getProperty("servicedate", "&nbsp;")%></td>
+					<td align="center"><%=prop.getProperty("servicecode", "&nbsp;")%></td>
+					<!--<td width="8%"><%=serviceno%></td>-->
+					<td align=right><%=prop.getProperty("amountsubmit", "&nbsp;")%></td>
+					<td align=right><%=prop.getProperty("amountpay", "&nbsp;")%></td>
+					<td align=right><%=prop.getProperty("clinicPay", "&nbsp;")%></td>
+					<td align=right><%=prop.getProperty("hospitalPay", "&nbsp;")%></td>
+					<td align=right><%=prop.getProperty("obPay", "&nbsp;")%></td>
+					<td align=right><%=prop.getProperty("explain", "&nbsp;")%></td>
+					<td width="0" style="display:none"><%=prop.getProperty("site", "")%></td>			
+				</tr>
+			<% }
+			%>
+		
+			<!-- added another TR for table-filter js to automatically calculate totals based on filters -->
+			<tr class="myYellow">
+						<td align="center"></td>
+						<td></td>
+						<td align="center"></td>
+						<td align="center"></td>
+						<td align="center"></td>
+						<td align="center">Total:</td>
+						<td id="amountSubmit_<%=p.getProviderNo()%>" align=right></td>
+						<td id="amountPay_<%=p.getProviderNo()%>" align=right></td>
+						<td id="clinicPay_<%=p.getProviderNo()%>" align=right></td>
+						<td id="hospitalPay_<%=p.getProviderNo()%>" align=right></td>
+						<td align=right>&nbsp;</td>
+						<td align=right>&nbsp;</td>
+			
+			</tr>
+			</table>
+			<br>
+			
+		<%
 		}
-
 	}
 }
-
-}
-
-BigLTotal = BigLTotal.add(BigTotal);
-//BigLTotal = BigLTotal.add(BigHTotal);
-BigLTotal = BigLTotal.add(BigLocalHTotal);
 %>
-<tr bgcolor='#FFFF3E'> 
-	<td></td>
-	<td></td>
-	<td></td>
-	<td></td>
-	<td></td>
-	<td>Total</td>
-	<td align=right><%=BigCTotal%></td>
-	<td align=right><%=BigPTotal%><!-- <%=BigOTotal%>--></td>
-	<td align=right><%=BigTotal%><!--<%=BigLTotal%>--></td>
-	<td align=right><%=BigHTotal%></td>
-	<td align=right><%=BigOBTotal%></td>
-	<td></td>
-</tr>
-</table>
 
---%>
-		<%
+<%
 
 String transaction="", content="", balancefwd="", xtotal="", other_total="", ob_total=""; 
 ResultSet rslocal = apptMainBean.queryResults(raNo, "search_rahd_content");
@@ -624,38 +373,61 @@ recordAffected = apptMainBean.queryExecuteUpdate(param2,"update_rahd_content");
 %>
 <script language="javascript" type="text/javascript">
 	document.getElementById('loadingMsg').style.display='none';
-	var totRowIndex = tf_Tag(tf_Id('ra_table'),"tr").length;
-	var table_Props = 	{	
-					col_0: "none",
-					col_1: "none",
-					col_2: "none",
-					col_3: "none",
-					col_4: "none",
-					col_5: "none",
-					col_6: "none",
-					col_7: "none",
-					col_8: "none",
-					col_9: "none",
-					col_10: "none",
-					col_11: "none",
-					col_12: "select",
-					display_all_text: " [ Show all clinics ] ",
-					flts_row_css_class: "dummy",
-					flt_css_class: "positionFilter",
-					sort_select: true,
-					rows_always_visible: [totRowIndex],
-					col_operation: { 
-								id: ["amountSubmit","amountPay","clinicPay","hospitalPay"],
-								col: [6,7,8,9],
-								operation: ["sum","sum","sum","sum"],
-								write_method: ["innerHTML","innerHTML","innerHTML","innerHTML"],
-								exclude_row: [totRowIndex],
-								decimal_precision: [2,2,2,2],
-								tot_row_index: [totRowIndex]
-							}
-				};
-	var tf = setFilterGrid( "ra_table",table_Props );
+	
+	<%
+	for (Provider p : providers) {
+	%>
+		var totRowIndex_<%=p.getProviderNo()%> = tf_Tag(tf_Id('ra_table_<%=p.getProviderNo()%>'),"tr").length;
+		var table_Props_<%=p.getProviderNo()%> = 	{	
+						col_0: "none",
+						col_1: "none",
+						col_2: "none",
+						col_3: "none",
+						col_4: "none",
+						col_5: "none",
+						col_6: "none",
+						col_7: "none",
+						col_8: "none",
+						col_9: "none",
+						col_10: "none",
+						col_11: "none",
+						col_12: "select",
+						display_all_text: " [ Show all clinics ] ",
+						flts_row_css_class: "dummy",
+						flt_css_class: "positionFilter",
+						sort_select: true,
+						rows_always_visible: [totRowIndex_<%=p.getProviderNo()%>],
+						col_operation: { 
+									id: ["amountSubmit_<%=p.getProviderNo()%>","amountPay_<%=p.getProviderNo()%>","clinicPay_<%=p.getProviderNo()%>","hospitalPay_<%=p.getProviderNo()%>"],
+									col: [6,7,8,9],
+									operation: ["sum","sum","sum","sum"],
+									write_method: ["innerHTML","innerHTML","innerHTML","innerHTML"],
+									exclude_row: [totRowIndex_<%=p.getProviderNo()%>],
+									decimal_precision: [2,2,2,2],
+									tot_row_index: [totRowIndex_<%=p.getProviderNo()%>]
+								}
+					};
+		var tf_<%=p.getProviderNo()%> = setFilterGrid( "ra_table_<%=p.getProviderNo()%>",table_Props_<%=p.getProviderNo()%> );
+	<%
+	}
+	%>
 </script>
 	
 </body>
 </html>
+
+<%!
+public void filterByGroupBillingNumber(List<Provider> providers, String groupBillingNo) {
+	Iterator<Provider> it = providers.iterator();
+	
+	while(it.hasNext()) {
+		Provider p = (Provider)it.next();
+		String comments = p.getComments();
+		String grpBillNo = SxmlMisc.getXmlContent(comments, "<xml_p_billinggroup_no>", "</xml_p_billinggroup_no>");
+		
+		if (!grpBillNo.equals(groupBillingNo)) {
+			it.remove();
+		}
+	}
+}
+%>

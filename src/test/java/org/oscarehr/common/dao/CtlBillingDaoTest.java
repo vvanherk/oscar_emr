@@ -30,10 +30,11 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.SpringUtils;
 
-public class CtlBillingDaoTest extends DaoTestFixtures {
+public class CtlBillingDaoTest extends TestFixtures {
 
 	private CtlBillingServiceDao dao = SpringUtils.getBean(CtlBillingServiceDao.class);
 

@@ -49,7 +49,7 @@ public class WLWaitingListNameBeanHandler {
         try {
             
             
-            String sql = " SELECT * FROM waitingListName WHERE group_no='" + groupNo + "' " +
+            String sql = " SELECT * FROM waitingListName WHERE group_no IN (SELECT mygroup_no FROM mygroup WHERE provider_no = '" + providerNo + "') " +
                          " AND is_history='N' order by `name` asc";
             ResultSet rs;
             

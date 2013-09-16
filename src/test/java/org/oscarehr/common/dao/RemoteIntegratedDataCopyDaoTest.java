@@ -51,7 +51,8 @@ import java.util.Date;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.RemoteIntegratedDataCopy;
 import org.oscarehr.util.MiscUtils;
@@ -59,7 +60,7 @@ import org.oscarehr.util.ObjectMarshalUtil;
 import org.oscarehr.util.SpringUtils;
 
 
-public class RemoteIntegratedDataCopyDaoTest extends DaoTestFixtures {
+public class RemoteIntegratedDataCopyDaoTest extends TestFixtures {
 	
 	RemoteIntegratedDataCopyDao  remoteIntegratedDataCopyDao = SpringUtils.getBean(RemoteIntegratedDataCopyDao.class);  
 

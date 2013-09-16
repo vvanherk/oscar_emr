@@ -24,6 +24,7 @@
 --%>
 <%@page contentType="text/javascript"%>
 <%@page import="org.oscarehr.casemgmt.common.Colour"%>
+<%@page import="oscar.OscarProperties"%>
 
 	var numNotes = 0;   //How many saved notes do we have?
     var ctx;        //url context
@@ -57,6 +58,9 @@
         var calendar;
 
         function popupPage(vheight,vwidth,name,varpage) { //open a new popup window
+          if (varpage == null || varpage == -1) {
+		  	return false;
+		  }
           if( varpage.indexOf("..") == 0 ) {
             varpage = ctx + varpage.substr(2);
           }
@@ -314,7 +318,11 @@ function viewFullChart(displayFullChart) {
                                 evalScripts: true,
                                 onSuccess: function(request) {
                                                 $("notCPP").update(request.responseText);
-												$("notCPP").style.height = "50%";
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+	$("notCPP").style.height = "100%";
+<% } else { %>
+	$("notCPP").style.height = "50%";
+<% } %>
 												if( displayFullChart ) {
 													$("quickChart").innerHTML = quickChartMsg;
 													$("quickChart").onclick = function() {return viewFullChart(false);}
@@ -389,6 +397,7 @@ function notesLoader(offset, numToReturn, demoNo) {
 			ctx + "/CaseManagementView.do",
 			{
 				method: 'post',
+				asynchronous:false,
 				postBody: params,
 				evalScripts: true,
 				insertion: Insertion.Top,
@@ -425,7 +434,9 @@ function navBarLoader() {
     this.load = function() {
 
             var leftNavBar = [
-                  ctx + "/oscarEncounter/displayPrevention.do?hC=" + Colour.prevention,
+<% if (!OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+					ctx + "/oscarEncounter/displayPrevention.do?hC=" + Colour.prevention,
+<% } %>
                   ctx + "/oscarEncounter/displayTickler.do?hC=" + Colour.tickler,
                   ctx + "/oscarEncounter/displayDisease.do?hC=" + Colour.disease,
                   ctx + "/oscarEncounter/displayForms.do?hC=" + Colour.forms,
@@ -435,11 +446,20 @@ function navBarLoader() {
                   ctx + "/oscarEncounter/displayMessages.do?hC=" + Colour.messages,
                   ctx + "/oscarEncounter/displayMeasurements.do?hC=" + Colour.measurements,
                   ctx + "/oscarEncounter/displayConsultation.do?hC=" + Colour.consultation,
-                  ctx + "/oscarEncounter/displayHRM.do?hC=",
-                  ctx + "/oscarEncounter/displayMyOscar.do?hC="                 
+				<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+					ctx + "/oscarEncounter/displayAllergy.do?hC=Colour.allergy",
+					ctx + "/oscarEncounter/displayRx.do?hC=Colour.rx&numToDisplay=12",
+				<% } else { %>
+					ctx + "/oscarEncounter/displayHRM.do?hC=",
+				<% } %>
+					ctx + "/oscarEncounter/displayMyOscar.do?hC="
               ];
-
-            var leftNavBarTitles = [ "preventions", "tickler", "Dx", "forms", "eforms", "docs","labs", "msgs", "measurements", "consultation","HRM","myoscar"];
+	
+			<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+	            var leftNavBarTitles = [ "tickler", "Dx", "forms", "eforms", "docs","labs", "msgs", "measurements", "consultation", "allergies", "Rx", "myoscar"];
+			<% } else { %>
+	            var leftNavBarTitles = [ "preventions", "tickler", "Dx", "forms", "eforms", "docs","labs", "msgs", "measurements", "consultation", "HRM", "myoscar"];
+			<% } %>
 
             var rightNavBar = [
                   ctx + "/oscarEncounter/displayAllergy.do?hC=" + Colour.allergy,
@@ -471,6 +491,7 @@ function navBarLoader() {
 
           }
 
+<% if (!OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
           navbar = "rightNavBar";
           for( var idx = 0; idx < rightNavBar.length; ++idx ) {
                 var div = document.createElement("div");
@@ -483,7 +504,7 @@ function navBarLoader() {
                 this.popColumn(rightNavBar[idx],rightNavBarTitles[idx],rightNavBarTitles[idx], navbar, this);
 
           }
-
+<% } %>
 
 
           /*var URLs = new Array();
@@ -630,7 +651,7 @@ function showEdit(e,title, noteId, editors, date, revision, note, url, container
    		coords = Position.positionedOffset($("cppBoxes"));
     }
 
-    var top = coords[1];
+    var top = Math.max(coords[1], 0);
     var right = Math.round(coords[0]/0.66);
     var height = $("showEditNote").getHeight();
     var gutterMargin = 150;
@@ -2024,6 +2045,17 @@ function issueIsAssigned() {
 
 var filterError;
 
+function resetInputElements(element) {
+	if (Object.prototype.toString.call(element) == "[object NodeList]") {
+		var size = element.length;
+		for (var i = 0; i < size; i++) {
+			element[i].checked = false;
+		}
+	} else {
+		element.checked = false;
+	}
+}
+
 function filter(reset) {
     var url = ctx + "/CaseManagementEntry.do";
     var params = "ajaxview=ajaxView&fullChart=" + fullChart;
@@ -2036,6 +2068,13 @@ function filter(reset) {
     document.forms["caseManagementViewForm"].method.value = "view";
     document.forms["caseManagementViewForm"].resetFilter.value = reset;
 
+	if (reset) {
+		resetInputElements(document.forms["caseManagementViewForm"].filter_providers);
+		resetInputElements(document.forms["caseManagementViewForm"].filter_roles);
+		resetInputElements(document.forms["caseManagementViewForm"].note_sort);
+		resetInputElements(document.forms["caseManagementViewForm"].issues);
+	}
+	
     var caseMgtEntryfrm = document.forms["caseManagementEntryForm"];
     var caseMgtViewfrm = document.forms["caseManagementViewForm"];
     params +=  "&" + Form.serialize(caseMgtEntryfrm);
@@ -2049,7 +2088,11 @@ function filter(reset) {
                         evalScripts: true,
                         onSuccess: function(request) {
                                                 $("notCPP").update(request.responseText);
-												$("notCPP").style.height = "50%";
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+	$("notCPP").style.height = "100%";
+<% } else { %>
+	$("notCPP").style.height = "50%";
+<% } %>
                                            },
                                 onFailure: function(request) {
                                                 $(div).innerHTML = "<h3>" + div + "</h3>Error: " + request.status;
@@ -3252,8 +3295,19 @@ function autoCompleteShowMenuCPP(element, update) {
 
         //$("notes2print").value = "";
 
+		// load all notes before printing
+		var container = $('encMainDiv');		
+		if (container.hasChildNodes()) {
+    		while (container.childNodes.length >= 1) {
+        		container.removeChild(container.firstChild);
+        	}
+        }
+		var demographicNo = $("demographicNo").value;
+		notesLoader(0, 9999, demographicNo);
+		var size = $("encMainDiv").children.length;
+
         //cycle through container divs for each note
-        for( idx = 1; idx <= maxNcId; ++idx ) {
+        for( idx = 1; idx <= size; ++idx ) {
         
         	if( $("nc" + idx) == null ) continue;
         

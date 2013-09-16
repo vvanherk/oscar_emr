@@ -21,7 +21,7 @@
  * Hamilton
  * Ontario, Canada
  */
-package org.oscarehr.common.dao.utils;
+package utils;
 
 import java.io.FileInputStream;
 import java.io.IOException;

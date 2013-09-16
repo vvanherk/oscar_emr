@@ -523,8 +523,8 @@ div.logoutBox {
 			<% } %>
 			<li><a href="#"
 				onclick='popupPage(600,900,&quot;<html:rewrite page="/servlet/oscar.DocumentUploadServlet"/>&quot;);return false;'><bean:message
-				key="admin.admin.btnBillingReconcilliation" /></a></li>
-			<!--  li><a href="#" onclick ='popupPage(600,900,&quot;<html:rewrite page="/billing/CA/ON/billingRA.jsp"/>&quot;);return false;'><bean:message key="admin.admin.btnBillingReconcilliation"/></a></li-->
+				key="admin.admin.btnBillingReconciliation" /></a></li>
+			<!--  li><a href="#" onclick ='popupPage(600,900,&quot;<html:rewrite page="/billing/CA/ON/billingRA.jsp"/>&quot;);return false;'><bean:message key="admin.admin.btnBillingReconciliation"/></a></li-->
 			<!--  li><a href="#" onclick ='popupPage(600,1000,&quot;<html:rewrite page="/billing/CA/ON/billingOBECEA.jsp"/>&quot;);return false;'><bean:message key="admin.admin.btnEDTBillingReportGenerator"/></a></li-->
 			<li><a href="#"
 				onclick='popupPage(800,1000,&quot;<html:rewrite page="/billing/CA/ON/billStatus.jsp"/>&quot;);return false;'><bean:message key="admin.admin.invoiceRpts"/></a></li>
@@ -538,6 +538,8 @@ div.logoutBox {
 			<%
 				}
 			%>
+			<li><a href="#"
+				onclick='popupPage(700,1000,&quot;<html:rewrite page="/billing/billingPageDefaults.jsp"/>&quot;);return false;'><bean:message key="admin.admin.billingDefaults"/></a></li>
 		</ul>
 		</div>
 		<%
@@ -696,9 +698,6 @@ div.logoutBox {
 			<li><html:link page="/admin/../eform/efmformrtl_config.jsp"><bean:message key="admin.admin.richTextLetter"/></html:link></li>
 			<% } %>
 
-			<li><html:link page="/admin/../eform/efmmanageformgroups.jsp">
-				<bean:message key="admin.admin.frmGroups"/>
-			</html:link></li>
 			<li><html:link page="/admin/../eform/efmmanageindependent.jsp">
 				<bean:message key="admin.admin.frmIndependent"/>
 			</html:link></li>
@@ -796,11 +795,11 @@ div.logoutBox {
 			<li><a href="#" onclick='popupPage(600,600,&quot;<html:rewrite page="/FacilityManager.do"/>&quot;);return false;'><bean:message key="admin.admin.manageFacilities" /></a></li>
 			<li><a href="#" onClick="popupPage(900, 500, '../setProviderStaleDate.do?method=viewIntegratorProperties');return false;"><bean:message key="provider.btnSetIntegratorPreferences" /></a></li>
 			<li><a href="<%=request.getContextPath()%>/lab/CA/ALL/sendOruR01.jsp"><bean:message key="admin.admin.sendOruR01" /></a></li>
-			<li><a href="#" onclick='popupPage(400, 400,&quot;<html:rewrite page="/hospitalReportManager/hospitalReportManager.jsp"/>&quot;);return false;'>Hospital Report Manager (HRM) Status</a></li>
-			<li><a href="#" onclick='popupPage(400, 400,&quot;<html:rewrite page="/hospitalReportManager/hrmPreferences.jsp"/>&quot;);return false;'>Hospital Report Manager (HRM) Preferences</a></li>
-			<li><a href="#" onclick='popupPage(400, 400,&quot;<html:rewrite page="/hospitalReportManager/hrmShowMapping.jsp"/>&quot;);return false;'>Hospital Report Manager (HRM) Class Mappings</a></li>
-			<li><a href="#" onclick='popupPage(400, 400,&quot;<html:rewrite page="/hospitalReportManager/hrmCategories.jsp"/>&quot;);return false;'>Hospital Report Manager (HRM) Categories</a></li>
-
+			<li><a href="#" onclick='popupPage(800, 1000,&quot;<html:rewrite page="/hospitalReportManager/hospitalReportManager.jsp"/>&quot;);return false;'>Hospital Report Manager (HRM) Status</a></li>
+			<li><a href="#" onclick='popupPage(800, 1000,&quot;<html:rewrite page="/hospitalReportManager/hrmPreferences.jsp"/>&quot;);return false;'>Hospital Report Manager (HRM) Preferences</a></li>
+			<li><a href="#" onclick='popupPage(800, 1000,&quot;<html:rewrite page="/hospitalReportManager/hrmShowMapping.jsp"/>&quot;);return false;'>Hospital Report Manager (HRM) Class Mappings</a></li>
+			<li><a href="#" onclick='popupPage(800, 1000,&quot;<html:rewrite page="/hospitalReportManager/hrmCategories.jsp"/>&quot;);return false;'>Hospital Report Manager (HRM) Categories</a></li>
+			
 			<li><a href="#" onclick='popupPage(800, 700,&quot;<html:rewrite page="/oscarPrevention/PreventionManager.jsp"/>&quot;);return false;' title="Customize prevention notifications."><bean:message key="admin.admin.preventionNotification.title" /></a></li>
 
 			<%

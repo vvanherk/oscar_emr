@@ -27,6 +27,7 @@ package oscar.oscarMDS.pageUtil;
 
 import java.io.IOException;
 import java.sql.ResultSet;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -38,6 +39,10 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.actions.DispatchAction;
 import org.oscarehr.util.MiscUtils;
+import org.oscarehr.util.SpringUtils;
+import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
+import org.oscarehr.common.model.SpireAccessionNumberMap;
+import org.oscarehr.common.model.SpireCommonAccessionNumber;
 
 import oscar.log.LogAction;
 import oscar.log.LogConst;
@@ -75,6 +80,10 @@ public class ReportStatusUpdateAction extends DispatchAction {
         }
 
         try {
+			
+			// Acknowledge all individual pieces of a spire lab
+			updateSpireReportStatus(labNo, providerNo, status, comment, lab_type);
+			
             CommonLabResultData.updateReportStatus(labNo, providerNo, status, comment,lab_type);
             if (multiID != null){
                 String[] id = multiID.split(",");
@@ -133,4 +142,22 @@ public class ReportStatusUpdateAction extends DispatchAction {
 
         return(demographicID);
     }
+    
+    private void updateSpireReportStatus(int labNo, String providerNo, char status, String comment, String lab_type) {
+		SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
+		SpireAccessionNumberMap map = accnDao.getFromLabNumber(new Integer(labNo));
+		
+		if (map != null) {
+			List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+			
+			if (cAccns != null) {				
+				MiscUtils.getLogger().info("cAccns size: " + cAccns.size());
+				
+				for (SpireCommonAccessionNumber cAccn : cAccns) {
+					CommonLabResultData.updateReportStatus(cAccn.getLabNo().intValue(), providerNo, status, comment, lab_type);
+					
+				}
+			}
+		}
+	}
 }

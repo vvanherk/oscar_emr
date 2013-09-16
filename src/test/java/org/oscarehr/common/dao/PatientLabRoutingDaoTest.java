@@ -30,10 +30,11 @@ import javax.persistence.PersistenceException;
 import org.hibernate.HibernateException;
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.util.SpringUtils;
 
-public class PatientLabRoutingDaoTest extends DaoTestFixtures {
+public class PatientLabRoutingDaoTest extends TestFixtures {
 
 	private PatientLabRoutingDao dao = SpringUtils.getBean(PatientLabRoutingDao.class);
 

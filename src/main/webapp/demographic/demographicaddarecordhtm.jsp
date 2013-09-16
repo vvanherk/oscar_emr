@@ -382,14 +382,14 @@ function checkTitleSex(ttl) {
 function removeAccents(s){
         var r=s.toLowerCase();
         r = r.replace(new RegExp("\\s", 'g'),"");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½]", 'g'),"a");
-        r = r.replace(new RegExp("ï¿½", 'g'),"c");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½]", 'g'),"e");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½]", 'g'),"i");
-        r = r.replace(new RegExp("ï¿½", 'g'),"n");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½ï¿½]", 'g'),"o");
-        r = r.replace(new RegExp("[ï¿½ï¿½ï¿½ï¿½]", 'g'),"u");
-        r = r.replace(new RegExp("[ï¿½ï¿½]", 'g'),"y");
+        r = r.replace(new RegExp("[àáâãäå]", 'g'),"a");
+        r = r.replace(new RegExp("ç", 'g'),"c");
+        r = r.replace(new RegExp("[èéêë]", 'g'),"e");
+        r = r.replace(new RegExp("[ìíîï]", 'g'),"i");
+        r = r.replace(new RegExp("ñ", 'g'),"n");
+        r = r.replace(new RegExp("[òóôõö]", 'g'),"o");
+        r = r.replace(new RegExp("[ùúûü]", 'g'),"u");
+        r = r.replace(new RegExp("[ýÿ]", 'g'),"y");
         r = r.replace(new RegExp("\\W", 'g'),"");
         return r;
 }
@@ -527,6 +527,7 @@ function autoFillHin(){
                 <option value="SEN"><bean:message key="demographic.demographicaddrecordhtm.msgSen"/></option>
                 <option value="SGT"><bean:message key="demographic.demographicaddrecordhtm.msgSgt"/></option>
                 <option value="SR"><bean:message key="demographic.demographicaddrecordhtm.msgSr"/></option>
+                <option value="DR"><bean:message key="demographic.demographicaddrecordhtm.msgDr"/></option>
 	    </select>
 	</td>
     </tr>
@@ -868,6 +869,16 @@ function autoFillHin(){
 					type="text" name="eff_date_month" size="2" maxlength="2"> <input
 					type="text" name="eff_date_date" size="2" maxlength="2"> </b></td>
 			</tr>
+			<tr valign="top">
+				<td align="right">&nbsp;</td>
+				<td align="right">&nbsp;</td>
+				<td align="right"><b><bean:message
+					key="demographic.demographiceditdemographic.formHCRenewDate" /></b><b>: </b></td>
+				<td align="left"><b> <input type="text"
+					name="hc_renew_date_year" size="4" maxlength="4"> <input
+					type="text" name="hc_renew_date_month" size="2" maxlength="2"> <input
+					type="text" name="hc_renew_date_date" size="2" maxlength="2"> </b></td>
+			</tr>			
 			<tr>
 				<td align="right"><b><bean:message
 					key="demographic.demographicaddrecordhtm.formHCType" />: </b></td>
@@ -988,6 +999,7 @@ function autoFillHin(){
                                                 : </b></td>
       <td align="left" >
         <select name="staff">
+					<option value=""></option>
           <%
   UserPropertyDAO propertyDao = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
   ResultSet rsdemo = addDemoBean.queryResults("search_provider");

@@ -27,10 +27,11 @@ import static org.junit.Assert.assertEquals;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.DaoTestFixtures;
-import org.oscarehr.common.dao.utils.SchemaUtils;
 
-public class ONAREnhancedBornConnectorTest extends DaoTestFixtures {
+import utils.SchemaUtils;
+import utils.TestFixtures;
+
+public class ONAREnhancedBornConnectorTest extends TestFixtures {
 
 	@Before
 	public void before() throws Exception {

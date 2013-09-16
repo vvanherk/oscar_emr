@@ -1,0 +1,3 @@
+ALTER TABLE ProviderPreference ADD useBillingProviderFromPreviousBill Boolean;
+
+UPDATE ProviderPreference SET useBillingProviderFromPreviousBill=0;

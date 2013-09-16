@@ -25,6 +25,10 @@
 
 package org.oscarehr.common.dao;
 
+import org.apache.log4j.Logger;
+
+import org.oscarehr.util.MiscUtils;
+
 import java.util.List;
 
 import javax.persistence.Query;
@@ -39,8 +43,19 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ClinicDAO extends AbstractDao<Clinic> {
 
+	static Logger logger = MiscUtils.getLogger();
+
     public ClinicDAO() {
     	super(Clinic.class);
+    }
+
+	public int getNumberOfClinics(){
+        List<Clinic> codeList = findAll();
+        
+        if (codeList == null)
+			return 0;
+		
+        return codeList.size();
     }
 
     public Clinic getClinic(){
@@ -53,13 +68,39 @@ public class ClinicDAO extends AbstractDao<Clinic> {
         return null;
     }
 
+	public List<Clinic> findAll(){
+        Query query = entityManager.createQuery("select c from Clinic c");
+        
+        @SuppressWarnings("unchecked")
+        List<Clinic> codeList = query.getResultList();
+        
+        return codeList;
+    }
+    
+    public Clinic find(int clinicNo){
+        Query query = entityManager.createQuery("select c from Clinic c where c.id = :id");
+        query.setParameter("id", clinicNo);
+        
+        @SuppressWarnings("unchecked")
+        List<Clinic> codeList = query.getResultList();
+        
+        if (codeList == null || codeList.size() == 0)
+			return null;
+        
+        return codeList.get(0);
+    }
 
-    public void save(Clinic clinic) {
-        if(clinic.getId() != null && clinic.getId().intValue()>0) {
+
+    public void save(Clinic clinic) {		
+        //if(!clinic.isNew()) {
         	merge(clinic);
-        } else {
-        	persist(clinic);
-        }
+        //} else {
+        //	persist(clinic);
+        //}
+    }
+
+	public void delete(Clinic clinic) {
+        remove( clinic.getId() );
     }
 
 

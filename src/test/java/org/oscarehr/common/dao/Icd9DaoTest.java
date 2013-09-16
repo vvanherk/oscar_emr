@@ -27,12 +27,13 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.Icd9;
 import org.oscarehr.util.SpringUtils;
 
-public class Icd9DaoTest extends DaoTestFixtures {
+public class Icd9DaoTest extends TestFixtures {
 
 	private Icd9Dao dao = SpringUtils.getBean(Icd9Dao.class);
 

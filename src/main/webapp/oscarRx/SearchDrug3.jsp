@@ -35,6 +35,9 @@
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security" %>
 <%@ taglib uri="/WEB-INF/indivo-tag.tld" prefix="indivo" %>
 <%@ page import="oscar.oscarRx.data.*,oscar.oscarProvider.data.ProviderMyOscarIdData,oscar.oscarDemographic.data.DemographicData,oscar.OscarProperties,oscar.log.*"%>
+<%@page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@page import="org.oscarehr.common.model.Clinic" %>
+<%@ page import="org.oscarehr.common.model.OscarAnnotation" %>
 <%@page import="org.oscarehr.casemgmt.service.CaseManagementManager"%>
 <%@page import="java.text.SimpleDateFormat" %>
 <%@page import="java.util.*" %>
@@ -189,6 +192,9 @@ if (rx_enhance!=null && rx_enhance.equals("true")) {
                 boolean eRxTrainingModeTemp = providerPreference.isERxTrainingMode();
                 if(eRxTrainingModeTemp) eRxTrainingMode="1";
              }
+
+			ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+			List<Clinic> clinics = clinicDao.findAll();
              
 %>
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
@@ -939,6 +945,30 @@ body {
                                         <tr>
                                             <td>
                                                 <div style="height: 100px; overflow: auto; background-color: #DCDCDC; border: thin solid green; display: none;" id="reprint">
+                                                
+													<%
+													if (clinics != null && clinics.size() > 1) {
+													%>
+														<div style="float: left; width: 24%; padding-left: 20px;">
+														<label title="Clinic">Clinic: </label>
+														<select id="clinic_no" name="clinic_no">
+														<%
+														String sessionClinicId = (String) session.getAttribute("clinic_id");
+														if (sessionClinicId == null)
+															sessionClinicId = "";
+														for ( Clinic clinic : clinics) {
+														%>
+															<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+														<%
+														}
+														%>
+														</select>
+														</div>
+														<br><br>
+													<%
+													}
+													%>
+													
                                                     <%
 
 
@@ -1404,7 +1434,9 @@ function changeLt(drugId){
     }
 
     function reprint2(scriptNo){
-        var data="scriptNo="+scriptNo + "&rand=" + Math.floor(Math.random()*10001);
+		var clinicNo = jQuery('#clinic_no').val();
+		
+        var data="scriptNo="+scriptNo + "&clinicNo="+clinicNo+"&rand=" + Math.floor(Math.random()*10001);
         var url= "<c:out value="${ctx}"/>" + "/oscarRx/rePrescribe2.do?method=reprint2";
        new Ajax.Request(url,
         {method: 'post',postBody:data,

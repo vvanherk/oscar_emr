@@ -77,9 +77,16 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 	private String defaultCaisiPmm="disabled";
 	private String defaultNewOscarCme="disabled";
 	private boolean printQrCodeOnPrescriptions=Boolean.valueOf(OscarProperties.getInstance().getProperty("QR_CODE_ENABLED_PROVIDER_DEFAULT"));
+	private boolean printDateOnRx;
+	private boolean printPharmacyOnRx;
+	private boolean billingRefBoxDefaultChecked;
+	private boolean useBillingProviderFromPreviousBill;
 	private int appointmentScreenLinkNameDisplayLength=3;
 	private int defaultDoNotDeleteBilling=0;
 	private String defaultDxCode=null;
+	private String billingVisitTypeDefault="";
+	private String billingVisitLocationDefault="";
+	private String billingProviderDefault="";
 	private byte[] encryptedMyOscarPassword=null;
 	
 	/**
@@ -295,6 +302,62 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 
 	public void setDefaultDxCode(String defaultDxCode) {
 		this.defaultDxCode = defaultDxCode;
+	}
+
+	public String getBillingVisitTypeDefault() {
+		return billingVisitTypeDefault;
+	}
+
+	public void setBillingVisitTypeDefault(String billingVisitTypeDefault) {
+		this.billingVisitTypeDefault = billingVisitTypeDefault;
+	}
+	
+	public String getBillingVisitLocationDefault() {
+		return billingVisitLocationDefault;
+	}
+
+	public void setBillingVisitLocationDefault(String billingVisitLocationDefault) {
+		this.billingVisitLocationDefault = billingVisitLocationDefault;
+	}
+
+	public boolean isPrintDateOnRxSet() {
+		return printDateOnRx;
+	}
+
+	public void setPrintDateOnRx(boolean printDateOnRx) {
+		this.printDateOnRx = printDateOnRx;
+	}
+	
+	public boolean isPrintPharmacyOnRxSet() {
+		return printPharmacyOnRx;
+	}
+
+	public void setPrintPharmacyOnRx(boolean printPharmacyOnRx) {
+		this.printPharmacyOnRx = printPharmacyOnRx;
+	}
+
+	public boolean isBillingRefBoxDefaultChecked() {
+		return billingRefBoxDefaultChecked;
+	}
+
+	public void setBillingRefBoxDefaultChecked(boolean billingRefBoxDefaultChecked) {
+		this.billingRefBoxDefaultChecked = billingRefBoxDefaultChecked;
+	}
+
+	public String getBillingProviderDefault() {
+		return billingProviderDefault;
+	}
+
+	public void setBillingProviderDefault(String billingProviderDefault) {
+		this.billingProviderDefault = billingProviderDefault;
+	}
+	
+	public boolean isUseBillingProviderFromPreviousBillSet() {
+		return useBillingProviderFromPreviousBill;
+	}
+
+	public void setUseBillingProviderFromPreviousBill(boolean useBillingProviderFromPreviousBill) {
+		this.useBillingProviderFromPreviousBill = useBillingProviderFromPreviousBill;
 	}
 
 	public Collection<QuickLink> getAppointmentScreenQuickLinks() {

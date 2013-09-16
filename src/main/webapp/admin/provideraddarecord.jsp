@@ -189,6 +189,7 @@ if (isOk && org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
 		}
 }
 
+
 if (isOk) {
 	String proId = p.getPractitionerNo();
 	String ip = request.getRemoteAddr();

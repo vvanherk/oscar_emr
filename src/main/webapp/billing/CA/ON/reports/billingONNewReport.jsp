@@ -457,7 +457,7 @@ $(document).ready(function() {
 	});
 	
 	$.validator.addMethod("currency", function(value, element) { 
-		var re = /^\\$?[0-9][0-9\,]*(\.\d{1,2})?$|^\\$?[\.]([\d][\d]?)$/;
+		var re = /^\$?[0-9][0-9\,]*(\.\d{1,2})?$|^\$?[\.]([\d][\d]?)$/;
 		return this.optional(element) || re.test(value); 
 	}, "Must be a valid amount.");
 
@@ -1008,7 +1008,7 @@ if (vecHeader != null && vecHeader.size() > 0) {
 						</select>
 						
 						<b>Admission date</b>:
-						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=admissionDate%>"<%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" > 
+						<input type="text" name="admission_date<%=i%>" id="admission_date<%=i%>" class="dateCA" value="<%=admissionDate%>"<%=getAdmissionDateOnKeydownString(i, vecDemographicNo.get(i), vecAppointmentNo.get(i))%> size="10" disabled > 
 						<img src="<%= request.getContextPath() %>/images/cal.gif" alt="" id="admission_date<%=i%>_cal">
 						<!-- Disable calendar functionality for admission date (at least for now)
 						<script>
@@ -1024,10 +1024,9 @@ if (vecHeader != null && vecHeader.size() > 0) {
 							} );
 						</script>
 						-->
-						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" value="yes" onclick="return !isElementReadOnly(this);" onkeydown="return !isElementReadOnly(this);"> <span class="input_element_label">Manual</span>
+						<input type="checkbox" class="checkbox" name="manual_checkbox<%=i%>" onclick="return !isElementReadOnly(this);" onkeydown="return !isElementReadOnly(this);"> <span class="input_element_label">Manual</span>
 						<input type="checkbox" class="checkbox" name="referral_doc_checkbox<%=i%>" onclick="if (isElementReadOnly(this)) { return false; } toggleReferralDoctorVisible(<%=i%>); if (this.checked) setFocusOnReferralDoctorInput(<%=i%>);" onkeydown="return !isElementReadOnly(this);" > <span class="input_element_label">Referral Doctor</span>
 						<input type="hidden" name="bill_id<%=i%>" value="<%=billId%>" >
-						<input type="hidden" name="manual_checkbox<%=i%>" value="yes" >
 						<input type="hidden" name="bill_date<%=i%>" value="<%=prop.getProperty("Service Date", "")%>" >
 						<input type="hidden" name="bill_time<%=i%>" value="<%=prop.getProperty("Time", "")%>" >
 						<input type="hidden" name="demo_name<%=i%>" value="<%=prop.getProperty("Patient Name", "")%>" >

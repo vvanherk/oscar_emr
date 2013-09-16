@@ -42,8 +42,16 @@
 <%@ page import="java.util.*,java.text.*,java.sql.*,java.net.*" errorPage="errorpage.jsp" %>
 <%@ page import="oscar.OscarProperties" %>
 <%@ page import="org.oscarehr.common.dao.UserPropertyDAO"%>
+<%@ page import="org.oscarehr.common.dao.ClinicNbrDao"%>
+<%@ page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+<%@ page import="org.oscarehr.common.dao.ClinicLocationDao"%>
 <%@ page import="org.oscarehr.common.model.UserProperty"%>
+<%@ page import="org.oscarehr.common.model.ClinicNbr"%>
+<%@page import="org.oscarehr.common.model.Provider"%>
+<%@page import="org.oscarehr.common.model.ClinicLocation"%>
 <%@ page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
+<%@ page import="oscar.SxmlMisc" %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@page import="org.oscarehr.web.admin.ProviderPreferencesUIBean"%>
@@ -158,6 +166,10 @@ function showHideBillPref() {
     $("billingONpref").toggle();
 }
 
+function showHideRxPrintPref() {
+    $("rxPrintPrefs").toggle();
+}
+
 function showHideERxPref() {
     /*$("eRxPref").toggle();*/
 }
@@ -188,14 +200,47 @@ function showHideERxPref() {
 	{
 		font-size:12px;
 	}
+
+	label {
+		display: block;
+		font-weight:bold;
+		margin-top: 5px;
+	}
 	
+	.container {
+		display: table-cell;
+		vertical-align: middle;
+		margin-top: 5px;
+		margin-bottom: 10px;
+        width: 420px;
+        
+    }
+    
+    .container label {
+		text-align:right;
+		width: 200px;
+		float: left;
+	}
+	
+    .container select {
+		margin-left: 10px;
+        float: left;
+		width: 200px;
+    }
+    
+    .container input {
+		margin-top: 17px;
+		margin-left: 10px;
+        float: left;
+		width: 200px;
+    }
+
 	table.eRxTableCenter
 	{
         width:50%; 
 		margin-left:25%; 
 		margin-right:25%;
     }
-	
 </style>
 </head>
 
@@ -207,7 +252,7 @@ function showHideERxPref() {
 	}
 %>
 
-<body bgproperties="fixed"  onLoad="setfocus();showHideBillPref();showHideERxPref();" topmargin="0"leftmargin="0" rightmargin="0" style="font-family:sans-serif">
+<body bgproperties="fixed"  onLoad="setfocus();showHideBillPref();showHideRxPrintPref();showHideERxPref();" topmargin="0"leftmargin="0" rightmargin="0" style="font-family:sans-serif">
 	<FORM NAME = "UPDATEPRE" METHOD="post" ACTION="providerupdatepreference.jsp" onSubmit="return(checkTypeInAll())">
 
 		<div style="background-color:<%=deepcolor%>;text-align:center;font-weight:bold">
@@ -531,33 +576,170 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
   <tr>
       <td align="center">
 	  <div id="billingONpref">
-          <bean:message key="provider.labelDefaultBillForm"/>:
-	  <select name="default_servicetype">
-	      <option value="no">-- no --</option>
-<%
-	if (providerPreference!=null) {
-		String def = providerPreference.getDefaultServiceType();
-		List<Map<String,Object>> resultList = oscarSuperManager.find("providerDao", "list_bills_servicetype", new Object[] {});
-		for (Map bill : resultList) {
-%>
-				<option value="<%=bill.get("servicetype")%>"
-					<%=bill.get("servicetype").equals(def)?"selected":""%>>
-					<%=bill.get("servicetype_name")%></option>
-<%
+		
+		<label><bean:message key="provider.labelGeneralBillingDefaults"/></label>
+		<div class="container">
+			<%
+		  ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+		  List<Provider> providerList = providerDao.getActiveProviders();
+		  %>
+	
+			<label for="default_bill_provider">Default Provider:</label>
+		  <select name="default_bill_provider">
+				<%
+					String billingProvider = providerPreference.getBillingProviderDefault();
+				%>
+		      <option value="no" <%=billingProvider.length()==0?"selected":""%>>-- None --</option>
+						    <%
+						    for (Provider p : providerList) {
+						    %>
+								<option value="<%=p.getProviderNo()%>"
+									<%=billingProvider.startsWith(p.getProviderNo())?"selected":""%>><%=p.getFormattedName()%>
+								</option>
+							<% 
+							} 
+							%>
+		  </select>
+		  <br>
+		  
+		  <%
+		  boolean useBillingProviderFromPreviousBill = false;
+        
+		  if (providerPreference != null) {
+		  	useBillingProviderFromPreviousBill = providerPreference.isUseBillingProviderFromPreviousBillSet();
+		  }
+	      %>
+    
+		  <label for="use_billing_provider_from_previous_bill"><bean:message key="provider.labelUseBillingProviderFromPreviousBill"/>:</label>
+		  <input type="checkbox" name="use_billing_provider_from_previous_bill" <%=useBillingProviderFromPreviousBill? "checked" : ""%>>
+		  
+		</div>
+		
+		<br>
+		<br>
+		
+		<label><bean:message key="provider.labelDefaultClinicBilling"/></label>
+		<div class="container">
+			
+		  <label for="default_servicetype"><bean:message key="provider.labelDefaultClinicBillingForm"/>:</label>
+		  
+		  <select name="default_servicetype">
+		      <option value="no">-- no --</option>
+	<%
+		if (providerPreference!=null) {
+			String def = providerPreference.getDefaultServiceType();
+			List<Map<String,Object>> resultList = oscarSuperManager.find("providerDao", "list_bills_servicetype", new Object[] {});
+			for (Map bill : resultList) {
+	%>
+					<option value="<%=bill.get("servicetype")%>"
+						<%=bill.get("servicetype").equals(def)?"selected":""%>>
+						<%=bill.get("servicetype_name")%></option>
+	<%
+			}
+		} else {
+			List<Map<String,Object>> resultList = oscarSuperManager.find("providerDao", "list_bills_servicetype", new Object[] {});
+			for (Map bill : resultList) {
+	%>
+			<option value="<%=bill.get("servicetype")%>"><%=bill.get("servicetype_name")%></option>
+	<%
+			}
 		}
-	} else {
-		List<Map<String,Object>> resultList = oscarSuperManager.find("providerDao", "list_bills_servicetype", new Object[] {});
-		for (Map bill : resultList) {
-%>
-		<option value="<%=bill.get("servicetype")%>"><%=bill.get("servicetype_name")%></option>
-<%
-		}
-	}
-%>
-	  </select>
+	%>
+		  </select>
+		  <br>
+		  
+		  <%
+		  boolean billingRefBoxDefaultChecked = false;
+        
+		  if (providerPreference != null) {
+		  	billingRefBoxDefaultChecked = providerPreference.isBillingRefBoxDefaultChecked();
+		  }
+	      %>
+    
+		  <label for="billing_ref_box_default_checked"><bean:message key="provider.labelBillingRefBoxDefaultChecked"/>:</label>
+		  <input type="checkbox" name="billing_ref_box_default_checked" <%=billingRefBoxDefaultChecked? "checked" : ""%>>
+		  
+		</div>
+	  
+		  <br>
+		  <br>
+		  
+		  
+		  <label><bean:message key="provider.labelDefaultHospBilling"/></label>
+	  
+	  <div class="container">
+		  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr: <% } else { %> 
+		  <label for="default_bill_visit_type"><bean:message key="provider.labelDefaultHospBillingVisitType"/>:</label>
+		  <% 
+		  } 
+		  %>
+		  
+		  
+		  <select name="default_bill_visit_type">
+				<%
+					String visitType = providerPreference.getBillingVisitTypeDefault();				
+				%>
+		      <option value="" <%=visitType.length()==0?"selected":""%>>-- None --</option>
+							<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
+						    <% 
+						    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao"); 
+							ArrayList<ClinicNbr> nbrs = cnDao.findAll();	            
+		                    for (ClinicNbr clinic : nbrs) {
+								String valueString = String.format("%s | %s", clinic.getNbrValue(), clinic.getNbrString());
+								%>
+						    	<option value="<%=valueString%>" <%=visitType.startsWith(clinic.getNbrValue())?"selected":""%>><%=valueString%></option>
+						    <%}%>
+						    <% } else { %>
+								<option value="00| Clinic Visit"
+									<%=visitType.startsWith("00")?"selected":""%>><bean:message key="billing.billingCorrection.formClinicVisit"/>
+								</option>
+								<option value="01| Outpatient Visit"
+									<%=visitType.startsWith("01")?"selected":""%>><bean:message key="billing.billingCorrection.formOutpatientVisit"/>
+								</option>
+								<option value="02| Hospital Visit"
+									<%=visitType.startsWith("02")?"selected":""%>><bean:message key="billing.billingCorrection.formHospitalVisit"/>
+								</option>
+								<option value="03| ER"
+									<%=visitType.startsWith("03")?"selected":""%>><bean:message key="billing.billingCorrection.formER"/></option>
+								<option value="04| Nursing Home"
+									<%=visitType.startsWith("04")?"selected":""%>><bean:message key="billing.billingCorrection.formNursingHome"/>
+								</option>
+								<option value="05| Home Visit"
+									<%=visitType.startsWith("05")?"selected":""%>><bean:message key="billing.billingCorrection.formHomeVisit"/>
+								</option>
+								<% } %>
+		  </select>
+		<br>
+	  
+	  
+		  <%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr: <% } else { %> <label for="default_bill_visit_location"><bean:message key="provider.labelDefaultHospBillingVisitLocation"/>:</label> <% } %>
+		  
+		  
+		  <select name="default_bill_visit_location">
+				<%
+					String selectedVisitLocation = providerPreference.getBillingVisitLocationDefault();
+					ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
+					List<ClinicLocation> clinicLocations = clinicLocationDao.findAll();			
+				%>
+		      <option value="" <%=selectedVisitLocation.length()==0?"selected":""%>>-- None --</option>
+					<%	for(int i=0; i<clinicLocations.size(); i++) {
+							ClinicLocation clinicLocation = clinicLocations.get(i);
+							String strLocation = clinicLocation.getId() + "";
+					%>
+								<option
+									value="<%=clinicLocation.getId()%>"
+									<%=selectedVisitLocation.length() != 0 && strLocation.startsWith(selectedVisitLocation)?"selected":""%>>
+								<%=clinicLocation.getClinicLocationName()%></option>
+								<%
+					}
+					%>
+		  </select>
+	  
+	  </div> <!-- end of "container" -->
 	  </div>
       </td>
   </tr>
+
 </security:oscarSec>
 	  <tr>
           <td align="center"><a class='iframe' id='popupgroup' href='providerAddress.jsp'><bean:message key="provider.btnEditAddress"/></a></td>
@@ -577,6 +759,35 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
       <tr>
           <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewUseRx3'><bean:message key="provider.btnSetRx3"/></a></td>
       </tr>
+      <tr>
+	    <td align="center">
+			<a href=# onClick ="showHideRxPrintPref();return false;"><bean:message key="provider.btnRxPrintingPreferences"/></a>
+	    </td>
+	  </tr>
+	
+	  <tr>
+	      <td align="center">
+		  <div id="rxPrintPrefs">
+				<%
+				boolean printDateOnRx = false;
+				boolean printPharmacyOnRx = false;
+		      
+				if (providerPreference != null) {
+					printDateOnRx = providerPreference.isPrintDateOnRxSet();
+					printPharmacyOnRx = providerPreference.isPrintPharmacyOnRxSet();
+				}
+				%>
+	      
+				<bean:message key="provider.labelRxPrintPharmacy"/>:
+				<input type="checkbox" name="rx_print_pharmacy" <%=printPharmacyOnRx? "checked" : ""%>>
+				<br>
+				<bean:message key="provider.labelRxPrintDates"/>:
+				<input type="checkbox" name="rx_print_dates" <%=printDateOnRx? "checked" : ""%>>
+		
+		  </div>
+	      </td>
+	  </tr>
+      
       <tr>
           <td align="center"><a class='iframe' id='popupgroup' href='../setProviderStaleDate.do?method=viewCppSingleLine'><bean:message key="provider.btnSetCppSingleLine"/></a></td>
       </tr>

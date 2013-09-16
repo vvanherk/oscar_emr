@@ -59,7 +59,7 @@ public final class ProblemCheckFilter implements Filter
 		}
 
 		public Object getAttribute(String arg0)
-		{
+		{	
 			return session.getAttribute(arg0);
 		}
 
@@ -121,7 +121,7 @@ public final class ProblemCheckFilter implements Filter
 		public void putValue(String arg0, Object arg1)
 		{
 			if (!(arg1 instanceof Serializable)) logger.debug("Some one putting non serialisable item into session. key="+arg0, new Exception("Non serialisable item in session"));
-			
+
 			session.putValue(arg0, arg1);
 		}
 
@@ -183,12 +183,22 @@ public final class ProblemCheckFilter implements Filter
 	{
 		long usedBefore=Runtime.getRuntime().maxMemory()-Runtime.getRuntime().freeMemory();
 		HttpServletRequest request=(HttpServletRequest)originalRequest;
+		
 		try
 		{
 			chain.doFilter(new ServletRequestProxy(request), originalResponse);
+		} 
+		catch (Exception e)
+		{
+			logger.error("Exception occured during ProblemCheckFilter doFilter: " + e.toString());
 		}
 		finally
 		{
+			boolean isLabUpload = request.getServletPath().equals("/lab/newLabUpload.do");
+			
+			if ( isLabUpload )
+				request.getSession(false).invalidate();
+			
 			long usedAfter=Runtime.getRuntime().maxMemory()-Runtime.getRuntime().freeMemory();
 			
 			long usedForRequest=usedAfter-usedBefore;

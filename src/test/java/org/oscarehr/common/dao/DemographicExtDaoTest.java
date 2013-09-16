@@ -27,12 +27,13 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.DemographicExt;
 import org.oscarehr.util.SpringUtils;
 
-public class DemographicExtDaoTest extends DaoTestFixtures{
+public class DemographicExtDaoTest extends TestFixtures{
 
 	private DemographicExtDao dao = SpringUtils.getBean(DemographicExtDao.class);
 

@@ -27,13 +27,14 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.MyGroup;
 import org.oscarehr.common.model.MyGroupPrimaryKey;
 import org.oscarehr.util.SpringUtils;
 
-public class MyGroupDaoTest extends DaoTestFixtures {
+public class MyGroupDaoTest extends TestFixtures {
 
 	private MyGroupDao dao = SpringUtils.getBean(MyGroupDao.class);
 

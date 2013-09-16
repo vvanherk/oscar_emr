@@ -269,7 +269,7 @@ function popupSearchDemo(keyword){ // open a new popup window
     var vheight = 700;
     var vwidth = 980;  
     windowprops = "height="+vheight+",width="+vwidth+",location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,screenX=0,screenY=0,top=0,left=0";    
-    var page = 'msgSearchDemo.jsp?keyword=' +keyword +'&firstSearch='+true;
+    var page = 'msgSearchDemo.jsp?search_mode=search_name&keyword=' +keyword +'&firstSearch='+true;
     var popUp=window.open(page, "msgSearchDemo", windowprops);
     if (popUp != null) {
         if (popUp.opener == null) {

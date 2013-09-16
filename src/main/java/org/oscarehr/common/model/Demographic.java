@@ -53,6 +53,11 @@ public class Demographic implements Serializable {
 	public static final String ANONYMOUS = "ANONYMOUS";
 	public static final String UNIQUE_ANONYMOUS = "UNIQUE_ANONYMOUS";
 	
+	public static final int DEMO_TYPE_UNKNOWN = 0x0001;
+	public static final int DEMO_TYPE_IMPORT = 0x0002;
+	public static final int DEMO_TYPE_NEW = DEMO_TYPE_IMPORT << 1;
+	public static final int DEMO_TYPE_REGISTERED = DEMO_TYPE_NEW << 1;
+
 	private int hashCode = Integer.MIN_VALUE;// primary key
 	private Integer demographicNo;// fields
 	private String phone;
@@ -115,6 +120,8 @@ public class Demographic implements Serializable {
     private String countryOfOrigin;
     private String newsletter;
     
+    private int demoType = DEMO_TYPE_UNKNOWN;
+
 
         public String getTitle() {
         	return title;
@@ -147,6 +154,14 @@ public class Demographic implements Serializable {
 		public void setLastUpdateDate(Date lastUpdateDate) {
         	this.lastUpdateDate = lastUpdateDate;
         }
+        
+        public void setDemoType(int type) {
+			this.demoType = type;
+		}
+		
+		public int getDemoType() {
+			return this.demoType;
+		}
 
 	/**
      * @return the rosterDate

@@ -20,6 +20,8 @@
 
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 
+<%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
+
 <%    
 if(session.getAttribute("userrole") == null )  response.sendRedirect("../logout.jsp");
 if(((String)session.getAttribute("userrole")).indexOf("admin") >=0 ||

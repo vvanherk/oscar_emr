@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.log4j.Logger;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.Hibernate;
 import org.hibernate.Query;
@@ -44,6 +45,9 @@ import org.springframework.orm.hibernate3.support.HibernateDaoSupport;
 
 import oscar.OscarProperties;
 import oscar.util.SqlUtils;
+
+import org.oscarehr.common.model.ProviderSpireIdMap;
+import org.oscarehr.common.dao.ProviderSpireIdMapDao;
 
 import com.quatro.model.security.SecProvider;
 
@@ -349,7 +353,90 @@ public class ProviderDao extends HibernateDaoSupport {
 
 		return null;
 	}
+	
+	public List<Provider> getProvidersByOhipNo(List<String> ohipNumbers) {
+		if (ohipNumbers == null || ohipNumbers.size() <= 0) {
+			throw new IllegalArgumentException();
+		}
+		
+		String ohipNumbersAsString = "'" + StringUtils.join(ohipNumbers,"','") + "'";
 
+		List<Provider> providerList = getHibernateTemplate().find("From Provider p where p.OhipNo in (" + ohipNumbersAsString + ")");
+
+		return providerList;
+	}
+	
+	public List<Provider> getProvidersByOhipNo(String ohipNo) {
+		if (ohipNo == null || ohipNo.length() <= 0) {
+			throw new IllegalArgumentException();
+		}
+
+		List<Provider> providerList = getHibernateTemplate().find("From Provider p where p.OhipNo=?",new Object[]{ohipNo});
+
+		return providerList;
+	}
+	
+	public List<Provider> getProvidersByProviderNo(List<String> providerNumbers) {
+		if (providerNumbers == null || providerNumbers.size() <= 0) {
+			return null;
+		}
+		
+		String providerNumbersAsString = "'" + StringUtils.join(providerNumbers,"','") + "'";
+
+		List<Provider> providerList = getHibernateTemplate().find("From Provider p where p.ProviderNo in (" + providerNumbersAsString + ")");
+
+		return providerList;
+	}
+
+	public Provider getProviderBySpireId(String spireId) {
+		if (spireId == null || spireId.length() <= 0) {
+			throw new IllegalArgumentException();
+		}
+
+		List<Provider> providerList = getAllProvidersWithSpireId(spireId);
+	
+		if(providerList.size()>1) {
+			logger.warn("Found more than 1 provider with spire_id="+spireId);
+		}
+		if(providerList.size()>0)
+			return providerList.get(0);
+
+		return null;
+	}
+	
+	public List<Provider> getAllProvidersWithSpireId(String spireId) {
+		if (spireId == null || spireId.length() <= 0) {
+			throw new IllegalArgumentException();
+		}
+		
+		// convert spireId from String to an Integer
+		Integer id = null;
+		try {
+			id = Integer.parseInt(spireId);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("spireId '" + spireId +"' is not a valid integer!");
+		}
+		
+		ProviderSpireIdMapDao mapDao = (ProviderSpireIdMapDao)SpringUtils.getBean("providerSpireIdMapDao");
+		ProviderSpireIdMap map = mapDao.getProviderSpireIdMap(id);
+		
+		if (map == null) {
+			logger.warn("Found 0 provider mappings with spire_id="+spireId);
+			return null;
+		}
+		
+		String ohipNumber = map.getOhipNo();
+		
+		if (ohipNumber == null) {
+			logger.warn("No OHIP Number associated with spire_id="+spireId);
+			return null;
+		}
+
+		List<Provider> providerList = getHibernateTemplate().find("From Provider p where OhipNo=?",new Object[]{ohipNumber});
+		
+		return providerList;
+	}
+	
 	public List<String> getUniqueTeams() {
 		@SuppressWarnings("unchecked")
 		List<String> providerList = getHibernateTemplate().find("select distinct p.Team From Provider p");

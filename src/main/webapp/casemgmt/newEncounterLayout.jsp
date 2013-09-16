@@ -681,16 +681,27 @@ function doscroll(){
           <div id="header">
               <tiles:insert attribute="header" />
           </div>
-
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+          <div id="rightNavBar" style="overflow-x: scroll; visibility:hidden; display:none; display:inline; float:right; width:0; margin-left:0px;">
+<% } else { %>
           <div id="rightNavBar" style="display:inline; float:right; width:20%; margin-left:-3px;">
+<% } %>
               <tiles:insert attribute="rightNavigation" />
           </div>
 
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+          <div id="leftNavBar" style="display:inline; float:left; width:15%;">
+<% } else { %>
           <div id="leftNavBar" style="display:inline; float:left; width:20%;">
+<% } %>
               <tiles:insert attribute="leftNavigation" />
           </div>
 
+<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
+          <div id="content" style="display:inline; float:left; width:85%; background-color:#CCCCFF;">
+<% } else { %>
           <div id="content" style="display:inline; float:left; width:60%; background-color:#CCCCFF;">
+<% } %>
               <tiles:insert attribute="body" />
           </div>
 
@@ -768,6 +779,10 @@ function doscroll(){
           <div id="printOps" class="printOps">
               <h3 style="margin-bottom:5px; text-align:center;"><bean:message key="oscarEncounter.Index.PrintDialog"/></h3>
               <form id="frmPrintOps" action="" onsubmit="return false;">
+	              	<%
+	              		String demographicNo = (String) request.getParameter("demographicNo");
+	              	%>
+              		<input type="hidden" id="demographicNo" value="<%=demographicNo%>" />
               		<table id="printElementsTable">
               			<tr>
               				<td><input type="radio" id="printopSelected" name="printop" value="selected"><bean:message key="oscarEncounter.Index.PrintSelect"/></td>

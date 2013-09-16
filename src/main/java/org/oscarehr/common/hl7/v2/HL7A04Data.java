@@ -88,7 +88,7 @@ public class HL7A04Data
     /**
      * Constructor
      */
-	public HL7A04Data( org.oscarehr.common.model.Demographic demograph, ApptData appData, ClinicData clinicData, List programs) {
+	public HL7A04Data( org.oscarehr.common.model.Demographic demograph, ApptData appData, ClinicData clinicData, List programs) throws HL7Exception {
         this.setDemographicData(demograph);
         this.setAppData(appData);
         this.setClinicData(clinicData);
@@ -98,7 +98,7 @@ public class HL7A04Data
     /**
      * Constructor
      */
-	public HL7A04Data( org.oscarehr.common.model.Demographic demograph, ApptData appData, ClinicData clinicData) {
+	public HL7A04Data( org.oscarehr.common.model.Demographic demograph, ApptData appData, ClinicData clinicData) throws HL7Exception {
         this.setDemographicData(demograph);
         this.setAppData(appData);
         this.setClinicData(clinicData);

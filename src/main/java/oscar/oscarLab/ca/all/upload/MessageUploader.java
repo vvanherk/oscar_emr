@@ -48,6 +48,7 @@ import org.oscarehr.common.OtherIdManager;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.Hl7TextInfoDao;
 import org.oscarehr.common.dao.Hl7TextMessageDao;
+import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.Hl7TextInfo;
 import org.oscarehr.common.model.Hl7TextMessage;
@@ -120,21 +121,16 @@ public final class MessageUploader {
             	}
             }
             
+            boolean isSpire = (h instanceof SpireHandler);
+            
             // get actual ohip numbers based on doctor first and last name for spire lab
-            if(h instanceof SpireHandler) {
-				List<String> docNames = ((SpireHandler)h).getDocNames();
-				//logger.debug("docNames:");
-	            for (int i=0; i < docNames.size(); i++) {
-					logger.info(i + " " + docNames.get(i));
-				}
-            	if (docNames != null) {
-					docNums = findProvidersForSpireLab(docNames);
+            if(isSpire) {
+				List<String> docSpireNums = ((SpireHandler)h).getAllDocNums();
+				
+            	if (docSpireNums != null) {
+					docNums = findProvidersForSpireLab(docSpireNums);
 				}
             }
-            //logger.debug("docNums:");
-            for (int i=0; i < docNums.size(); i++) {
-				//logger.debug(i + " " + docNums.get(i));
-			}
 
 			try {
 				// reformat date
@@ -215,6 +211,20 @@ public final class MessageUploader {
 				hl7TextInfo.setReportStatus(reportStatus);
 				hl7TextInfo.setAccessionNumber(accessionNum);
 				hl7TextInfoDao.persist(hl7TextInfo);
+				
+				if (isSpire) {
+					try {
+						// we need to add a mapping from the 'common' accession number to the 'unique' accession number for spire labs
+						String uniqueAccn = ((SpireHandler)h).getUniqueAccessionNum();
+						String accn = h.getAccessionNum();
+						
+						SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
+						accnDao.add( uniqueAccn, accn, hl7TextInfo.getLabNumber() );
+					} catch (Exception e) {
+						logger.warn("Unable to parse Spire Unique Accession number.");
+						logger.debug("Spire Unique Accession number parsing exception:", e);
+					}
+				}
 			}
 
 			String demProviderNo = patientRouteReport(insertID, lastName, firstName, sex, dob, hin, DbConnectionFilter.getThreadLocalDbConnection());
@@ -228,15 +238,17 @@ public final class MessageUploader {
 			    	providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type);
 			    }
 			} else {
+				String matchBy = "ohip_no";
 				Integer limit = null;
 				boolean orderByLength = false;
-				String search = null;
+				
 				if (type.equals("Spire")) {
 					limit = new Integer(1);
 					orderByLength = true;
-					search = "provider_no";
+					matchBy = "provider_no";
 				}
-				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, search, limit, orderByLength);
+				
+				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, matchBy, limit, orderByLength);
 			}
 			retVal = h.audit();
 			if(results != null) {
@@ -253,9 +265,38 @@ public final class MessageUploader {
 	
 	/**
 	 * Method findProvidersForSpireLab
+	 * Finds the providers that are associated with a spire lab.
+	 */ 
+	private static ArrayList<String> findProvidersForSpireLab(List<String> docSpireNums) {
+		List<String> docNums = new ArrayList<String>();
+		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+		
+		for (int i=0; i < docSpireNums.size(); i++) {
+			String spireNumber = docSpireNums.get(i);
+			if (spireNumber == null) {
+				//logger.warn("Doctor does not have a spire number");
+				continue;
+			}
+			List<Provider> provList = providerDao.getAllProvidersWithSpireId( spireNumber );
+			
+			if (provList != null) {
+				int provIndex = findProviderWithShortestFirstName(provList);
+				if (provIndex != -1 && provList.size() >= 1 && !provList.get(provIndex).getProviderNo().equals("0")) {
+					docNums.add( provList.get(provIndex).getProviderNo() );
+					logger.debug("ADDED1: " + provList.get(provIndex).getProviderNo());
+				}
+			}
+		}
+		
+		return (ArrayList<String>)docNums;
+	}
+	
+	/**
+	 * Method findProvidersForSpireLab
 	 * Finds the providers that are associated with a spire lab.  (need to do this using doctor names, as
 	 * spire labs don't have a valid ohip number associated with them).
 	 */ 
+	/*
 	private static ArrayList<String> findProvidersForSpireLab(List<String> docNames) {
 		List<String> docNums = new ArrayList<String>();
 		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
@@ -287,6 +328,7 @@ public final class MessageUploader {
 		
 		return (ArrayList<String>)docNums;
 	}
+	*/
 	
 	/**
 	 * Method findProviderWithShortestFirstName
@@ -334,9 +376,9 @@ public final class MessageUploader {
 		
 		if (docNums != null) {
 			for (int i = 0; i < docNums.size(); i++) {
-
 				if (docNums.get(i) != null && !((String) docNums.get(i)).trim().equals("")) {
 					sql = "select provider_no from provider where "+ sqlSearchOn +" = '" + ((String) docNums.get(i)) + "'" + sqlOrderByLength + sqlLimit;
+					
 					pstmt = conn.prepareStatement(sql);
 					ResultSet rs = pstmt.executeQuery();
 					while (rs.next()) {

@@ -60,6 +60,7 @@
 	errorPage="../appointment/errorpage.jsp"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
+<%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <%--RJ 07/07/2006 --%>
 <jsp:useBean id="providerBean" class="java.util.Properties" scope="session" />
 <%@page import="org.oscarehr.util.SpringUtils" %>
@@ -160,6 +161,11 @@ function calculateEndTime() {
   var smin = stime.substring(stime.length-vlen) ;
   var duration = document.ADDAPPT.duration.value ;
 
+  if(isNaN(duration)) {
+	  alert("<bean:message key="Appointment.msgFillTimeField"/>");
+	  return false;
+  }
+
   if(eval(duration) == 0) { duration =1; }
   if(eval(duration) < 0) { duration = Math.abs(duration) ; }
 
@@ -230,8 +236,8 @@ function pasteAppt(multipleSameDayGroupAppt) {
         //document.forms[0].chart_no.value = "<%=apptObj.getChart_no()%>";
         document.forms[0].keyword.value = "<%=apptObj.getName()%>";
         document.forms[0].demographic_no.value = "<%=apptObj.getDemographic_no()%>";
-        document.forms[0].reason.value = "<%=apptObj.getReason()%>";
-        document.forms[0].notes.value = "<%=apptObj.getNotes()%>";
+        document.forms[0].reason.value = "<%=StringEscapeUtils.escapeJavaScript(apptObj.getReason()) %>";
+        document.forms[0].notes.value = "<%=StringEscapeUtils.escapeJavaScript(apptObj.getNotes()) %>";
         //document.forms[0].location.value = "<%=apptObj.getLocation()%>";
         document.forms[0].resources.value = "<%=apptObj.getResources()%>";
         document.forms[0].type.value = "<%=apptObj.getType()%>";
@@ -270,6 +276,8 @@ function pasteAppt(multipleSameDayGroupAppt) {
 		                          break;
 		                  }
 		          }
+		  } else if (loc.nodeName == "INPUT") {
+			  document.forms['ADDAPPT'].location.value = locSel;
 		  }
 	}
 
@@ -593,12 +601,8 @@ function pasteAppt(multipleSameDayGroupAppt) {
 				    String colo = bMultisites
 				                                        ? ApptUtil.getColorFromLocation(sites, loc)
 				                                        : bMoreAddr? ApptUtil.getColorFromLocation(props.getProperty("scheduleSiteID", ""), props.getProperty("scheduleSiteColor", ""),loc) : "white";
-					 if (bMultisites) {
-			%>
-				    <INPUT TYPE="button" NAME="typeButton" VALUE="<bean:message key="Appointment.formType"/>" onClick="openTypePopup()">
-			<% } else { %>
-				    <div class="label"><bean:message key="Appointment.formType"/>:</div>
-			<% } %>
+			%>                                    
+					<div class="input" style="text-align: right;"> <INPUT TYPE="button" NAME="typeButton" VALUE="<bean:message key="Appointment.formType"/>" onClick="openTypePopup()"> </div>
 
             <div class="input">
                 <INPUT TYPE="TEXT" NAME="type"

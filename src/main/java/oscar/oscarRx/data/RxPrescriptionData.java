@@ -962,6 +962,7 @@ public class RxPrescriptionData {
          */
         String provider_no = bean.getProviderNo();
         int demographic_no = bean.getDemographicNo();
+        int clinic_no = bean.getClinicNo();
         String date_prescribed = oscar.oscarRx.util.RxUtil.DateToString(oscar.oscarRx.util.RxUtil.Today(), "yyyy/MM/dd");
         String date_printed = date_prescribed;
 
@@ -973,7 +974,7 @@ public class RxPrescriptionData {
         oscar.oscarRx.data.RxProviderData.Provider provider = null;
         try {
             patient = RxPatientData.getPatient(demographic_no);
-            provider = new oscar.oscarRx.data.RxProviderData().getProvider(provider_no);
+            provider = new oscar.oscarRx.data.RxProviderData().getProvider(provider_no, clinic_no);
         } catch (Exception e) {
             logger.error("unexpected error", e);
         }
@@ -1476,6 +1477,10 @@ public class RxPrescriptionData {
                         days = days * r;
                     }
                     //    p("days",Integer.toString(days));
+                    
+                    // End date should be on the day the last pill/unit of medication is taken
+                    days--;
+                    
                     if (days > 0) {
                         cal.add(GregorianCalendar.DATE, days);
                     }
@@ -1749,7 +1754,8 @@ public class RxPrescriptionData {
 
             //if (RHS == null || RHS.length() < 6) {
               if (RHS == null || RHS.length() < 4) {
-                  logger.error("Some one is setting the drug special but it appears to be blank : " + special, new IllegalStateException());
+                  logger.warn("Some one is setting the drug special but it appears to be blank : " + special);
+                  logger.debug("IllegalStateException for blank drug special",  new IllegalStateException());
             }
 
             if (RHS != null) {
@@ -1764,7 +1770,8 @@ public class RxPrescriptionData {
 
             //if (special == null || special.length() < 6) {
               if (special == null || special.length() < 4) {
-                  logger.error("after processing the drug special but it appears to be blank : " + special, new IllegalStateException());
+                  logger.warn("after processing the drug special but it appears to be blank : " + special);
+                  logger.debug("IllegalStateException for blank drug special",  new IllegalStateException());
             }
         }
 

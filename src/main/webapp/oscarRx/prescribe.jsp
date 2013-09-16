@@ -28,6 +28,9 @@
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@page import="oscar.oscarRx.data.RxDrugData,java.util.*" %>
+<%@page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@page import="org.oscarehr.common.model.Clinic" %>
+<%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="java.text.SimpleDateFormat" %>
 <%@page import="java.util.Calendar" %>
 <%@page import="oscar.oscarRx.data.*" %>
@@ -144,9 +147,12 @@ if(listRxDrugs!=null){
                         prnStr="prn";
                 drugName=drugName.replace("'", "\\'");
                 drugName=drugName.replace("\"","\\\"");
-                drugName=drugName.replace("�","");
-                drugName=drugName.replace("�","");
+                byte[] drugNameBytes = drugName.getBytes("ISO-8859-1");
+				drugName= new String(drugNameBytes, "UTF-8");
                 
+		//ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+		ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+		List<Clinic> clinics = clinicDao.findAll();
 %>
 <%if (OscarProperties.getInstance().getProperty("rx_enhance")!=null && OscarProperties.getInstance().getProperty("rx_enhance").equals("true")) { %>
 <fieldset style="margin-top:2px;width:580px;" id="set_<%=rand%>">
@@ -332,6 +338,20 @@ if(listRxDrugs!=null){
            <input id="rx_save_updates_<%=rand%>" type="button" value="Save Changes" onclick="saveLinks('<%=rand%>')"/>
        </div>
        <div id="rx_more_<%=rand%>" style="display:none;padding:2px;">
+			<label title="Clinic">Clinic: </label>
+			<select id="clinic_<%=rand%>" name="clinic_<%=rand%>">
+			<%
+			String sessionClinicId = (String) session.getAttribute("clinic_id");
+			if (sessionClinicId == null)
+				sessionClinicId = "";
+			for ( Clinic clinic : clinics) {
+			%>
+				<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+			<%
+			}
+			%>
+			</select>
+			<br>
        	  <bean:message key="WriteScript.msgPrescribedRefill"/>:
        	  &nbsp;
        	  <bean:message key="WriteScript.msgPrescribedRefillDuration"/>
@@ -474,7 +494,8 @@ if(listRxDrugs!=null){
             }
 
             var specArr=new Array();
-            var specStr='<%=specStr%>';
+            var specStr='<%=org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(specStr)%>';
+            
             specArr=specStr.split("*");// * is used as delimiter
             //oscarLog("specArr="+specArr);
             YAHOO.example.BasicLocal = function() {

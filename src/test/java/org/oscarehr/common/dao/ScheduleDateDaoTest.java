@@ -30,12 +30,13 @@ import java.util.Date;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.ScheduleDate;
 import org.oscarehr.util.SpringUtils;
 
-public class ScheduleDateDaoTest extends DaoTestFixtures {
+public class ScheduleDateDaoTest extends TestFixtures {
 
 	private ScheduleDateDao dao = SpringUtils.getBean(ScheduleDateDao.class);
 

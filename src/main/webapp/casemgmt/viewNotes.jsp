@@ -42,7 +42,7 @@
 	scope="request" />
 <nested:size id="num" name="Notes" />
 
-<div style="width: 10%; float: right; text-align: center;">
+<div style="height: 13%; width: 10%; float: right; text-align: center;">
 <h3 style="padding:0px; background-color:#<c:out value="${param.hc}"/>">
 <%
 	String roleName$ = (String)session.getAttribute("userrole") + "," + (String) session.getAttribute("user");
@@ -55,7 +55,7 @@
 <% } %>
 </h3>
 </div>
-<div style="clear: left; float: left; width: 90%;">
+<div style="height: 13%; clear: left; float: left; width: 90%;">
 <h3 style="width:100%; background-color:#<c:out value="${param.hc}"/>"><a
 	href="#"
         onclick="return showIssueHistory('<c:out value="${param.demographicNo}"/>','<%=request.getAttribute("issueIds")%>');"><bean-el:message key="${param.title}" /></a></h3>
@@ -66,7 +66,7 @@
                 <div style="clear: both; overflow: auto;">
             </c:when>
             <c:otherwise>
-                <div style="clear: both; height: inherit; overflow: auto;">
+                <div style="clear: both; height: 87%; overflow: auto;">
             </c:otherwise>
         </c:choose>
 <ul style="margin-left: 5px;">

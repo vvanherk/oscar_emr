@@ -28,12 +28,13 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.PharmacyInfo;
 import org.oscarehr.util.SpringUtils;
 
-public class PharmacyInfoDaoTest extends DaoTestFixtures {
+public class PharmacyInfoDaoTest extends TestFixtures {
 
 	private PharmacyInfoDao dao = (PharmacyInfoDao)SpringUtils.getBean("pharmacyInfoDao");
 

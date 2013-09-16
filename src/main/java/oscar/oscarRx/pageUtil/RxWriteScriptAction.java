@@ -783,6 +783,8 @@ public final class RxWriteScriptAction extends DispatchAction {
 
 	public ActionForward updateSaveAllDrugs(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException, Exception {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
+		String clinicNo = "";
+		
 		request.getSession().setAttribute("rePrint", null);// set to print.
 		List<String> paramList = new ArrayList();
 		Enumeration em = request.getParameterNames();
@@ -796,6 +798,20 @@ public final class RxWriteScriptAction extends DispatchAction {
 					randNum.add(rNum);
 				}
 			}
+			
+			// Set clinic number (if present)
+			if (ele.startsWith("clinic_")) {
+				clinicNo = request.getParameter(ele);
+				try {
+					int clinicNoAsInt = Integer.parseInt(clinicNo);
+					bean.setClinicNo(clinicNoAsInt);
+					logger.info("SET clinic number!: " + clinicNoAsInt);
+					request.getSession().setAttribute("clinic_id", clinicNo);
+				} catch (Exception e) {
+					logger.error("Unable to parse clinic number: " + clinicNo, e);
+				}
+			}
+			
 		}
 
 		List<Integer> allIndex = new ArrayList();

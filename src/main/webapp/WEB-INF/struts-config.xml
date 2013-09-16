@@ -32,6 +32,7 @@
 		</form-bean>
 		<form-bean name="clinicForm" type="org.apache.struts.validator.DynaValidatorForm">
 			<form-property name="clinic" type="org.oscarehr.common.model.Clinic" />
+			<form-property name="clinics" type="java.util.List" />
 		</form-bean>
 		<form-bean name="olisPreferences" type="org.oscarehr.olis.model.OLISSystemPreferences"/>
 
@@ -2304,6 +2305,7 @@
 
 		<action path="/admin/ManageClinic" name="clinicForm" type="org.springframework.web.struts.DelegatingActionProxy" parameter="method" scope="request">
 			<forward name="success" path="/admin/clinicAdmin.jsp" />
+			<forward name="failure" path="/admin/clinicAdmin.jsp" />
 		</action>
 
 		<action path="/olis/Preferences" name="olisPreferences" type="org.oscarehr.olis.OLISPreferencesAction" parameter="method" scope="request">
@@ -2517,7 +2519,7 @@
 			scope="request" validate="false" parameter="method" />
 
 	</action-mappings>
-	<controller processorClass="org.apache.struts.tiles.TilesRequestProcessor" maxFileSize="25M" />
+	<controller processorClass="org.apache.struts.tiles.TilesRequestProcessor" maxFileSize="100M" />
 	<message-resources parameter="oscarResources" null="false" />
 	<message-resources parameter="HelpResources" key="help" null="false" />
 	<message-resources parameter="MessageResources_program" key="pmm" null="false" />

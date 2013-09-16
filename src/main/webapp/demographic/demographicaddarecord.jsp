@@ -98,6 +98,13 @@
 
     String curUser_no = (String)session.getAttribute("user");
 
+    //check to see if new case management is request
+    ArrayList users = (ArrayList)session.getServletContext().getAttribute("CaseMgmtUsers");
+    boolean newCaseManagement = false;
+
+    if( users != null && users.size() > 0 )
+        newCaseManagement = true;
+
   //if action is good, then give me the result
 	  //param[0]=Integer.parseIntdemographicaddarecord((new GregorianCalendar()).get(Calendar.MILLISECOND) ); //int
 	  //temp variables for test/set null dates
@@ -144,6 +151,15 @@
 			demographic.setEffDate(MyDateFormat.getSysDate(year + "-" + month + "-" + day));
 		} else {
 			demographic.setEffDate(null);
+		}
+		
+	    year = StringUtils.trimToNull(request.getParameter("hc_renew_date_year"));
+	    month = StringUtils.trimToNull(request.getParameter("hc_renew_date_month"));
+	    day = StringUtils.trimToNull(request.getParameter("hc_renew_date_date"));
+		if (year!=null && month!=null && day!=null) {
+			demographic.setHcRenewDate(MyDateFormat.getSysDate(year + "-" + month + "-" + day));
+		} else {
+			demographic.setHcRenewDate(null);
 		}
 
 		demographic.setPcnIndicator(request.getParameter("pcn_indicator"));
@@ -315,6 +331,7 @@
 	                    waitingList.setPosition(rsWL.getInt("position")+1);
 	                    waitingList.setOnListSince(MyDateFormat.getSysDate(request.getParameter("waiting_list_referral_date")));
 	                    waitingList.setIsHistory("N");
+	                    waitingList.setOnListSince(new java.util.Date());
 	                    waitingListDao.persist(waitingList);
                     }
                 }

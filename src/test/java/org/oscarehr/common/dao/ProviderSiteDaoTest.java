@@ -28,12 +28,13 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.ProviderSite;
 import org.oscarehr.common.model.ProviderSitePK;
 import org.oscarehr.util.SpringUtils;
 
-public class ProviderSiteDaoTest extends DaoTestFixtures {
+public class ProviderSiteDaoTest extends TestFixtures {
 
 	private ProviderSiteDao dao = SpringUtils.getBean(ProviderSiteDao.class);
 

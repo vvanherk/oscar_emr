@@ -27,13 +27,14 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.IntegratorControl;
 import org.oscarehr.util.SpringUtils;
 
 
-public class IntegratorControlDaoTest extends DaoTestFixtures {
+public class IntegratorControlDaoTest extends TestFixtures {
 
 	private IntegratorControlDao dao = SpringUtils.getBean(IntegratorControlDao.class);
 

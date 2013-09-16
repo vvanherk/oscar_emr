@@ -24,6 +24,7 @@
 
 --%>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
 <%
   if (session.getAttribute("user") == null)    response.sendRedirect("../logout.jsp");
 
@@ -53,6 +54,7 @@
 <%@page import="org.oscarehr.common.dao.DemographicCustDao" %>
 <%
 	DemographicCustDao demographicCustDao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
+	org.oscarehr.PMmodule.dao.ProviderDao providerDao = SpringUtils.getBean(ProviderDao.class);
 %>
 <%
   ApptData apptObj = ApptUtil.getAppointmentFromSession(request);
@@ -188,10 +190,12 @@ function onSub() {
 function calculateEndTime() {
   var stime = document.EDITAPPT.start_time.value;
   var vlen = stime.indexOf(':')==-1?1:2;
+  
   if(vlen==1 && stime.length==4 ) {
     document.EDITAPPT.start_time.value = stime.substring(0,2) +":"+ stime.substring(2);
     stime = document.EDITAPPT.start_time.value;
   }
+
   if(stime.length!=5) {
     alert("<bean:message key="Appointment.msgInvalidDateFormat"/>");
     return false;
@@ -200,6 +204,12 @@ function calculateEndTime() {
   var shour = stime.substring(0,2) ;
   var smin = stime.substring(stime.length-vlen) ;
   var duration = document.EDITAPPT.duration.value ;
+  
+  if(isNaN(duration)) {
+	  alert("<bean:message key="Appointment.msgFillTimeField"/>");
+	  return false;
+  }
+  
   if(eval(duration) == 0) { duration =1; }
   if(eval(duration) < 0) { duration = Math.abs(duration) ; }
 
@@ -261,9 +271,9 @@ function pasteAppt(multipleSameDayGroupAppt) {
                 document.EDITAPPT.repeatButton.style.display = "none";
            }
         }
-        else {
-           warnMsgId.style.display = "none";
-        }
+        //else {
+        //   warnMsgId.style.display = "none";
+        //}
 	document.EDITAPPT.status.value = "<%=apptObj.getStatus()%>";
 	document.EDITAPPT.duration.value = "<%=apptObj.getDuration()%>";
 	document.EDITAPPT.chart_no.value = "<%=apptObj.getChart_no()%>";
@@ -311,6 +321,8 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
                           break;
                   }
           }
+  } else if (loc.nodeName == "INPUT") {
+	  document.forms['EDITAPPT'].location.value = locSel;
   }
 }
 
@@ -353,7 +365,10 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
 			return;
 		} else {
 			appt = resultList.get(0);
+			session.setAttribute("appt", appt);
 		}
+	} else {
+	    appt = (Map) session.getAttribute("appt");
 	}
 
 
@@ -501,11 +516,8 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
                                         ? ApptUtil.getColorFromLocation(sites, loc)
                                         : bMoreAddr? ApptUtil.getColorFromLocation(props.getProperty("scheduleSiteID", ""), props.getProperty("scheduleSiteColor", ""),loc) : "white";
             %>
-                        <% if (bMultisites) { %>
-                                <INPUT TYPE="button" NAME="typeButton" VALUE="<bean:message key="Appointment.formType"/>" onClick="openTypePopup()">
-                        <% } else { %>
-                                <bean:message key="Appointment.formType"/>
-                        <% } %>
+            
+				<INPUT TYPE="button" NAME="typeButton" VALUE="<bean:message key="Appointment.formType"/>" onClick="openTypePopup()">
 
             </div>
 
@@ -671,8 +683,9 @@ if (bMultisites) { %>
         <li class="weak row">
             <div class="label"><bean:message key="Appointment.formLastCreator" />:</div>
             <div class="input">
-<% String lastCreatorNo = bFirstDisp?((String)appt.get("creator")):request.getParameter("user_id"); %>
-                <INPUT TYPE="TEXT" NAME="user_id" VALUE="<%=lastCreatorNo%>" readonly WIDTH="25">
+		<% String lastCreatorNo = bFirstDisp?(String)appt.get("creator"):request.getParameter("user_id"); %>
+
+            <INPUT TYPE="TEXT" NAME="user_id" VALUE="<%=lastCreatorNo%>" readonly WIDTH="25">
             </div>
             <div class="space">&nbsp;</div>
             <div class="label"><bean:message key="Appointment.formLastTime" />:</div>

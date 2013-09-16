@@ -83,7 +83,7 @@ public class LabUploadAction extends Action {
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		LabUploadForm frm = (LabUploadForm) form;
 		FormFile importFile = frm.getImportFile();
-
+		
 		String signature = request.getParameter("signature");
 		String key = request.getParameter("key");
 		String service = request.getParameter("service");
@@ -95,10 +95,12 @@ public class LabUploadAction extends Action {
 		PublicKey clientKey = (PublicKey) clientInfo.get(0);
 		String type = (String) clientInfo.get(1);
 
+		String fileName = "";
+
 		try {
 
 			InputStream is = decryptMessage(importFile.getInputStream(), key, clientKey);
-			String fileName = importFile.getFileName();
+			fileName = importFile.getFileName();
 			String filePath = Utilities.saveFile(is, fileName);
 			importFile.getInputStream().close();
 			File file = new File(filePath);
@@ -110,6 +112,8 @@ public class LabUploadAction extends Action {
 				if(type.equals("HHSEMR") && OscarProperties.getInstance().getProperty("lab.hhsemr.filter_ordering_provider", "false").equals("true")) {
                 	logger.info("Applying filter to HHS EMR lab");
                 	String hl7Data = FileUtils.readFileToString(file, "UTF-8");
+                	logger.info("Uploading lab with contents:");
+                	logger.info(hl7Data);
                 	HHSEmrDownloadHandler filterHandler = new HHSEmrDownloadHandler();
                 	filterHandler.init(hl7Data);
                 	OtherId providerOtherId = OtherIdManager.searchTable(OtherIdManager.PROVIDER, "STAR", filterHandler.getClientRef());
@@ -117,6 +121,7 @@ public class LabUploadAction extends Action {
                 		logger.info("Filtering out this message, as we don't have client ref " + filterHandler.getClientRef() + " in our database (" + file + ")");
                 		outcome="uploaded";
                 		request.setAttribute("outcome", outcome);
+                		logger.info("Lab upload outcome ("+fileName+"): " + outcome);
                 		return mapping.findForward("success");
                 	}
                 }
@@ -155,12 +160,17 @@ public class LabUploadAction extends Action {
 
 		if (request.getParameter("use_http_response_code") != null) {
 			try {
+				logger.info("Lab upload outcome ("+fileName+"): " + outcome);
 	            response.sendError(httpCode, outcome);
             } catch (IOException e) {
 	            logger.error("Error", e);
             }
+            logger.info("Lab upload outcome ("+fileName+"): " + outcome);
 			return (null);
-		} else return mapping.findForward("success");
+		} else {
+			logger.info("Lab upload outcome ("+fileName+"): " + outcome);
+			return mapping.findForward("success");
+		}
 	}
 
 	public LabUploadAction() {
@@ -276,7 +286,7 @@ public class LabUploadAction extends Action {
 		try {
 			OscarKeyDao oscarKeyDao = (OscarKeyDao) SpringUtils.getBean("oscarKeyDao");
 			OscarKey oscarKey = oscarKeyDao.find("oscar");
-			logger.info("oscar key: " + oscarKey);
+			logger.debug("oscar key: " + oscarKey);
 
 			privateKey = base64.decode(oscarKey.getPrivateKey().getBytes(MiscUtils.ENCODING));
 			PKCS8EncodedKeySpec privKeySpec = new PKCS8EncodedKeySpec(privateKey);

@@ -315,4 +315,13 @@ public class OscarProperties extends Properties {
 		return Integer.parseInt(prop);
 	}
 
+	public int getBillingHistoryNumDays() {
+		String numDays = getProperty("billing_history_num_days");
+		int numDaysAsInt = 731;    // 2 years and 1 day
+		try {
+			numDaysAsInt = Integer.parseInt(numDays);
+		} catch (Exception e) {}
+		
+		return numDaysAsInt;
+	}
 }

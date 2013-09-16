@@ -236,7 +236,7 @@ public class EmeraldHL7A04TransportTask extends TimerTask {
 			if (messageReceivedPart == null)
 				break;
 			messageReceived += messageReceivedPart;
-			if (messageReceivedPart.charAt(0) == 28) // (char)0x1c
+			if ((int)messageReceivedPart.charAt(0) == 28) // (char)0x1c
 				break;
 		}
 		

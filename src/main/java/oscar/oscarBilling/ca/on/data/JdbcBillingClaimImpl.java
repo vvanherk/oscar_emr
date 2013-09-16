@@ -113,13 +113,13 @@ public class JdbcBillingClaimImpl {
 
 	public boolean add3rdBillExt(Map<String,String>mVal, int id) {
 		boolean retval = true;
-		String[] temp = { "billTo", "remitTo", "total", "payment", "refund", "provider_no", "gst", "payDate", "payMethod"};
+		String[] temp = { "billTo", "remitTo", "total", "payment", "refund", "provider_no", "gst", "payDate", "payMethod", "clinicNo"};
 		String demoNo = mVal.get("demographic_no");
 		String dateTime = UtilDateUtilities.getToday("yyyy-MM-dd HH:mm:ss");
                 mVal.put("payDate", dateTime);
 		for (int i = 0; i < temp.length; i++) {
 			String sql = "insert into billing_on_ext values(\\N, " + id + "," + demoNo + ", '" + temp[i] + "', '"
-					+ mVal.get(temp[i]) + "', '" + dateTime + "', '1' )";
+					+ StringEscapeUtils.escapeSql( mVal.get(temp[i]) ) + "', '" + dateTime + "', '1' )";
 			retval = dbObj.updateDBRecord(sql);
 			if (!retval) {
 				_logger.error("add3rdBillExt(sql = " + sql + ")");

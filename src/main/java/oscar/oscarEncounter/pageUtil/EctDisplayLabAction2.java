@@ -26,6 +26,7 @@
 package oscar.oscarEncounter.pageUtil;
 
 import java.net.URLEncoder;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -37,10 +38,14 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.log4j.Logger;
 import org.apache.struts.util.MessageResources;
+
 import org.oscarehr.common.dao.OscarLogDao;
 import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
+import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
+import org.oscarehr.common.model.SpireAccessionNumberMap;
+import org.oscarehr.common.model.SpireCommonAccessionNumber;
 
 import oscar.OscarProperties;
 import oscar.oscarLab.ca.all.web.LabDisplayHelper;
@@ -72,7 +77,11 @@ public class EctDisplayLabAction2 extends EctDisplayAction {
 			CommonLabResultData comLab = new CommonLabResultData();
 			ArrayList<LabResultData> labs = comLab.populateLabResultsData("", bean.demographicNo, "", "", "", "U");
 			logger.debug("local labs found : "+labs.size());
-
+			
+			labs = collapseSpireLabs(labs);
+			
+			logger.debug("local labs found after collapsing Spire labs: "+labs.size());
+			
 			LoggedInInfo loggedInInfo = LoggedInInfo.loggedInInfo.get();
 			if (loggedInInfo.currentFacility.isIntegratorEnabled()) {
 				ArrayList<LabResultData> remoteResults = CommonLabResultData.getRemoteLabs(Integer.parseInt(bean.demographicNo));
@@ -203,5 +212,83 @@ public class EctDisplayLabAction2 extends EctDisplayAction {
 
 	public String getCmd() {
 		return cmd;
+	}
+	
+	/**
+	 * Method collapseSpireLabs
+	 * 
+	 * Returns a list of Lab Results that include all non-spire labs, and include only a single spire
+	 * lab for any given unique spire accession number.
+	 * 
+	 * Furthermore, for spire labs that share the same 'common' accession number, the newest lab will be
+	 * included.
+	 * 
+	 * To elaborate, Spire labs have a 'regular' accession number, and also a 'unique' accession number.
+	 * The unique accession number identifies seperate spire labs that are actually part of a single lab, but
+	 * were sent as seperate HL7 files.  
+	 */ 
+	private ArrayList<LabResultData> collapseSpireLabs(ArrayList<LabResultData> labdocs) {
+		ArrayList<LabResultData> collapsedLabdocs = new ArrayList<LabResultData>();
+		
+		List<String> accns = new ArrayList<String>();
+		
+		// get accession numbers for all labs
+		for (LabResultData data : labdocs) {
+			accns.add(data.getAccessionNum());
+		}
+		
+		// Get accession number mappings for spire labs
+		SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
+		List<SpireAccessionNumberMap> accnsMap = accnDao.getFromCommonAccessionNumbers(accns);
+		
+		// Add non-spire labs to the collapsed lab list
+		for (LabResultData data : labdocs) {
+			boolean found = false;
+			if (accnsMap != null) {
+				for (SpireAccessionNumberMap map : accnsMap) {
+					List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+					for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+						if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+							found = true;
+							break;
+						}
+					}
+					
+					if (found)
+						break;
+				}
+			}
+			
+			// Add the Lab Result to the collapsed list if it isn't a spire lab
+			if (!found) {
+				collapsedLabdocs.add(data);
+			}	
+		}
+		
+		
+		if (accnsMap != null) {
+			// Add only a single Spire lab to the collapsed lab list for any given unique spire accession number
+			for (SpireAccessionNumberMap map : accnsMap) {
+				List<SpireCommonAccessionNumber> cAccns = map.getCommonAccessionNumbers();
+				
+				LabResultData addedData = null;
+				// Only add one spire lab 'LabResultData' for each unique accession number
+				for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
+					for (LabResultData data : labdocs) {
+						if (data.getAccessionNum().equals( commonAccessionNumber.getCommonAccessionNumber() )) {
+							if (addedData == null) {
+								collapsedLabdocs.add(data);
+								addedData = data;
+							} else {
+								if (data.isAbnormal())
+									addedData.setIsAbnormal(true);
+							}
+						}
+					}
+				}
+			}
+		}
+		
+		return collapsedLabdocs;
 	}
 }

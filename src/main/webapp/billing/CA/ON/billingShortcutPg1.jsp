@@ -39,30 +39,47 @@
 <%@ page import="java.util.*,java.net.*, java.sql.*, oscar.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
 <%@page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%@page import="org.oscarehr.common.model.ClinicNbr"%>
 <%@page import="org.oscarehr.common.model.Provider"%>
+<%@page import="org.oscarehr.common.dao.ProviderPreferenceDao"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
+<%@ page import="org.oscarehr.common.model.ClinicLocation"%>
+<%@ page import="org.oscarehr.common.dao.ClinicLocationDao"%>
 
-<% java.util.Properties oscarVariables = OscarProperties.getInstance(); %>
+<% oscar.OscarProperties oscarVariables = OscarProperties.getInstance(); %>
 <jsp:useBean id="providerBean" class="java.util.Properties"
 	scope="session" />
 <%@page import="org.oscarehr.util.SpringUtils" %>
 <%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
 <%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
+<%@page import="org.oscarehr.util.MiscUtils"%>
+<%@page import="org.oscarehr.common.model.Billingreferral" %>
+<%@page import="org.oscarehr.common.dao.BillingreferralDao" %>
+<%@ page import="org.oscarehr.billing.model.BillingDefault"%>
+<%@ page import="org.oscarehr.billing.dao.BillingDefaultDao"%>
+<%@page import="oscar.oscarDB.*" %>
 <%
 	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+
+	ProviderPreferenceDao providerPreferenceDao = (ProviderPreferenceDao)SpringUtils.getBean("providerPreferenceDao");
+    ProviderPreference providerPreference = providerPreferenceDao.find(user_no);
+	BillingDefaultDao billingDefaultDao = (BillingDefaultDao) SpringUtils.getBean("billingDefaultDao");
 %>
 <%
   boolean bHospitalBilling = true;
+  String            defaultProvider   = "";
   String            clinicview        = bHospitalBilling? oscarVariables.getProperty("clinic_hospital", "") : oscarVariables.getProperty("clinic_view", "");
   String            clinicNo          = oscarVariables.getProperty("clinic_no", "");
   String            visitType         = bHospitalBilling? "02" : oscarVariables.getProperty("visit_type", "");
+  String 			ctlHtmlGetValues  = request.getParameter("useHtmlGetValues");
+  String			sliCode			  = (request.getParameter("xml_slicode") == null? "" : request.getParameter("xml_slicode"));
   String            appt_no           = request.getParameter("appointment_no");
   String            demoname          = request.getParameter("demographic_name");
   String            demo_no           = request.getParameter("demographic_no");
   String            apptProvider_no   = request.getParameter("apptProvider_no");
-  String ctlBillForm = request.getParameter("billForm");
+  String 			ctlBillForm		  = request.getParameter("billForm");
   String            assgProvider_no   = request.getParameter("assgProvider_no");
   //String            dob               = request.getParameter("dob");
   String            demoSex           = request.getParameter("DemoSex");
@@ -87,7 +104,10 @@
 	proOHIPNO = rs.getString("ohip_no");
 	proRMA = rs.getString("rma_no");
   }
-  if(request.getParameter("xml_provider")!=null) providerview = request.getParameter("xml_provider");
+  if(request.getParameter("xml_provider")!=null) 
+    providerview = request.getParameter("xml_provider");
+  else if(session.getAttribute("hospital_billing_previous_provider_no")!=null) 
+    providerview = (String) session.getAttribute("hospital_billing_previous_provider_no");
   // get patient's detail
   String errorFlag = "";
   String warningMsg = "", errorMsg = "";
@@ -127,16 +147,16 @@
 
 	if (rs.getString("hin") == null ) {
 		errorFlag = "1";
-		errorMsg = errorMsg + "<br><b><font color='red'>Error: The patient does not have a valid HIN. </font></b><br>";
+		errorMsg = errorMsg + "<br><b><div class='myError'>Warning: The patient does not have a valid HIN. </div></b><br>";
 	} else if (rs.getString("hin").equals("")) {
-		warningMsg += "<br><b><font color='orange'>Warning: The patient does not have a valid HIN. </font></b><br>";
+		warningMsg += "<br><b><div class='myError'>Warning: The patient does not have a valid HIN. </div></b><br>";
 	}
 	if (r_doctor_ohip != null && r_doctor_ohip.length()>0 && r_doctor_ohip.length() != 6) {
-		warningMsg += "<br><font color='orange'>Warning: the referral doctor's no is wrong. </font><br>";
+		warningMsg += "<br><div class='myError'>Warning: the referral doctor's no is wrong. </div><br>";
 	}
 	if (demoDOB.length() != 8) {
 		errorFlag = "1";
-		errorMsg = errorMsg + "<br><b><font color='red'>Error: The patient does not have a valid DOB. </font></b><br>";
+		errorMsg = errorMsg + "<br><b><div class='myError'>Error: The patient does not have a valid DOB. </div></b><br>";
 	}
   }
 
@@ -147,8 +167,8 @@
 
   OscarProperties props = OscarProperties.getInstance();
   if(!props.getProperty("isNewONbilling", "").equals("true")) {
-
-  sql = "select billing_no,billing_date,visitdate,visitType, update_date, clinic_ref_code, content from billing " +
+	  
+  sql = "select billing_no,provider_no,billing_date,visitdate,visitType, update_date, clinic_ref_code, content from billing " +
 		" where demographic_no=" + demo_no + " and status!='D' order by billing_date desc, billing_no desc limit 5";
   rs = dbObj.searchDBRecord(sql);
 
@@ -156,6 +176,7 @@
     propHist = new Properties();
 
     propHist.setProperty("billing_no", "" + rs.getInt("billing_no"));
+    propHist.setProperty("provider_no", "" + rs.getString("provider_no"));
     propHist.setProperty("visitdate", rs.getString("visitdate")); // admission date
     propHist.setProperty("billing_date", rs.getString("billing_date")); // service date
     propHist.setProperty("update_date", rs.getString("update_date")); // create date
@@ -202,7 +223,17 @@
   }
   } else {
 		JdbcBillingReviewImpl hdbObj = new JdbcBillingReviewImpl();
-		aL = hdbObj.getBillingHist(demo_no, 5,0, null);
+		
+		Calendar calendar = Calendar.getInstance();
+		String strToday = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DATE);
+		calendar.add(Calendar.DATE, -oscarVariables.getBillingHistoryNumDays());
+		String strStartDay = calendar.get(Calendar.YEAR) + "-" + (calendar.get(Calendar.MONTH)+1) + "-" + calendar.get(Calendar.DATE);
+		
+		DBPreparedHandlerParam[] pDateRange= new DBPreparedHandlerParam[2];
+		pDateRange[0]= new DBPreparedHandlerParam(MyDateFormat.getSysDate(strStartDay));
+		pDateRange[1]= new DBPreparedHandlerParam(MyDateFormat.getSysDate(strToday));
+		
+		aL = hdbObj.getBillingHist(demo_no, 0,0, pDateRange);
 		if (aL.size()>0) {
 			BillingClaimHeader1Data obj = (BillingClaimHeader1Data) aL.get(0);
 			BillingItemData iobj = (BillingItemData) aL.get(1);
@@ -254,8 +285,26 @@
   String paraName = request.getParameter("dxCode");
   String dxCode = getDefaultValue(paraName, vecHistD, "diagnostic_code");
 
+  //provider
+  paraName = request.getParameter("xml_provider");
+  if (providerPreference.isUseBillingProviderFromPreviousBillSet())
+    defaultProvider = (String) session.getAttribute("previous_billing_provider");
+  if (defaultProvider == null || defaultProvider.length() == 0)
+    defaultProvider = providerPreference.getBillingProviderDefault();
+  if (defaultProvider != null)
+	paraName = (paraName == null || paraName.length() == 0? defaultProvider : paraName);
+  String xml_provider = getDefaultValue(paraName, vecHist, "defaultProvider");
+  if(!"".equals(xml_provider)) {
+    defaultProvider = xml_provider;
+  } else {
+    defaultProvider = defaultProvider==null? "":defaultProvider;
+  }
+
   //visitType
   paraName = request.getParameter("xml_visittype");
+  String defaultVisitType = providerPreference.getBillingVisitTypeDefault();
+  if (defaultVisitType != null && defaultVisitType.length() > 0)
+	paraName = (paraName == null || paraName.length() == 0? defaultVisitType : paraName);
   String xml_visittype = getDefaultValue(paraName, vecHist, "visitType");
   if(!"".equals(xml_visittype)) {
     visitType = xml_visittype;
@@ -264,12 +313,31 @@
   }
 
   paraName = request.getParameter("xml_location");
+  String defaultVisitLocation = providerPreference.getBillingVisitLocationDefault();
+  if (defaultVisitLocation != null && defaultVisitLocation.length() > 0) {
+	paraName = (paraName == null || paraName.length() == 0? defaultVisitLocation : paraName);
+}
   String xml_location = getDefaultValue(paraName, vecHist, "clinic_ref_code");
   if(!"".equals(xml_location)) {
     clinicview = xml_location;
   } else {
     clinicview = clinicview==null? "":clinicview;
   }
+  
+  // parse the clinic view value to extract the id of the location
+if (xml_location.indexOf("|") >= 0) {
+	int fromIndex = xml_location.indexOf("|");
+	if (fromIndex < 0)
+		fromIndex = 0;
+	else
+		fromIndex++;
+	
+	int toIndex = xml_location.substring(fromIndex, xml_location.length()).indexOf("|");
+	if (toIndex < 0)
+		toIndex = 2;
+	
+	xml_location = xml_location.substring(fromIndex, fromIndex+toIndex);
+}
 
   String visitdate = null;
   paraName = request.getParameter("xml_vdate");
@@ -344,6 +412,7 @@
     	propPremium.setProperty(rs.getString("service_code"), "A");
   	}
   }
+
   sql = "select c.service_group_name, c.service_order,b.service_code, b.description, b.value, b.percentage, b.sliFlag from billingservice b, ctl_billingservice c where c.service_code=b.service_code and c.status='A' and c.servicetype ='"
    + ctlBillForm + "' and c.service_group ='" + "Group3" + "' and b.billingservice_date in (select max(b2.billingservice_date) from billingservice b2 where b2.billingservice_date <= now() and b2.service_code = b.service_code) order by c.service_order";
   rs = dbObj.searchDBRecord(sql);
@@ -368,6 +437,7 @@
     	propPremium.setProperty(rs.getString("service_code"), "A");
   	}
   }
+
   // create msg
   msg += errorMsg + warningMsg;
 
@@ -614,7 +684,272 @@ function onDblClickServiceCode(item) {
 
 //-->
 
+function onHistory() { 
+    //var dd = document.forms[0].day.value;
+    var dd = document.getElementsByName("day")[0].value;
+    popupPage("1000","640","billingONHistorySpec.jsp?demographic_no=<%=demo_no%>&demo_name=<%=demoname%>&orderby=appointment_date&day=" + dd);
+}
+
   </script>
+  
+<script type="text/javascript">
+var billingDefaults = new Array();
+var defaults = new Object();
+var anyValueMap = new Object();
+
+anyValueMap['provider_no'] 		= "-999999";
+anyValueMap['visit_type_no'] 	= "";
+anyValueMap['location_id'] 		= "-1";
+anyValueMap['sli_code'] 		= "";
+
+<%
+	List<BillingDefault> billingDefaults = billingDefaultDao.getAll();
+	for (BillingDefault billingDefault : billingDefaults) {
+%>
+		defaults = new Object();
+		defaults['id']						= <%=billingDefault.getId()%>;
+		defaults['provider_no']				= <%=billingDefault.getproviderNo()%>;
+		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
+		defaults['location_id']				= "<%=billingDefault.getLocationId()%>";
+		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
+		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
+		defaults['priority']				= "<%=billingDefault.getPriority()%>";
+
+		billingDefaults.push( defaults );
+<%
+	}
+%>
+
+var currentBillingDefault = null;
+</script>
+
+  
+<script type="text/javascript">
+
+	function getParsedDropdownValues() {
+		var providerElem = document.getElementsByName("xml_provider")[0];
+		var visitTypeElem = document.getElementsByName("xml_visittype")[0];
+		var locationElem = document.getElementsByName("xml_location")[0];
+		var sliCodeElem = document.getElementsByName("xml_slicode")[0];
+		
+		var values = new Object();
+		
+		var fromIndex = locationElem.value.indexOf("|");
+		if (fromIndex < 0)
+			fromIndex = 0;
+		else
+			fromIndex++;
+			
+		toIndex = locationElem.value.substring(fromIndex, locationElem.value.length).indexOf("|");
+		if (toIndex < 0)
+			toIndex = 2;
+		else
+			toIndex += fromIndex;
+		
+		values['location_id']	= locationElem.value.substring(fromIndex, toIndex);
+		values['provider_no']	= providerElem.value.trim();
+		values['visit_type_no']	= visitTypeElem.value.substring(0,2);
+		values['sli_code_no']	= sliCodeElem.value.trim();
+		
+		return values;
+	}
+
+	/**
+	 * Method onBillingDefaultsDropdownChange
+	 * 
+	 * Change the dropdown values based on the billing defaults and the currently selected option from
+	 * one of the monitored dropdowns (i.e. xml_provider, etc).
+	 */
+	function onBillingDefaultsDropdownChange(element) {
+		var currentValues = getParsedDropdownValues();
+			
+		var provider_no		= currentValues['provider_no'];
+		var visit_type_no	= currentValues['visit_type_no'];
+		var location_id		= currentValues['location_id'];
+		var sli_code_no		= currentValues['sli_code_no'];
+		
+		if (element.name == 'xml_provider') {
+			var billingDefault = getBillingDefaultByValues( provider_no );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+		
+		if (element.name == 'xml_visittype') {
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+		
+		if (element.name == 'xml_location') {
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+		
+		if (element.name == 'xml_slicode') {
+			var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id, sli_code_no );
+			if (billingDefault != undefined)
+				setBillingDefaults( billingDefault );
+		}
+	}
+	
+	/**
+	 * Method setDefaultsOnPageLoad
+	 * 
+	 * Call this on page load so that the billing default gets checked/set once all of the page defaults have been set.
+	 */ 
+	function setDefaultsOnPageLoad() {
+		var currentValues = getParsedDropdownValues();
+			
+		var provider_no		= currentValues['provider_no'];
+		var visit_type_no	= currentValues['visit_type_no'];
+		var location_id		= currentValues['location_id'];
+		var sli_code_no		= currentValues['sli_code_no'];
+		
+		var billingDefaultsOverride = new Object();
+		<% if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes")) { %>
+		billingDefaultsOverride['provider_no'] = provider_no;
+		billingDefaultsOverride['visit_type_no'] = visit_type_no;
+		billingDefaultsOverride['location_id'] = location_id;
+		billingDefaultsOverride['sli_code'] = sli_code_no;
+		billingDefaultsOverride['billing_form'] = "<%=ctlBillForm%>";
+		<% } %>
+		
+		// check to see if we have any values set that correspond to a billing default (and if so, set those default values)
+		var billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id, sli_code_no );
+		if (billingDefault != undefined) {
+			setBillingDefaults( billingDefault, billingDefaultsOverride );
+		} else {
+			billingDefault = getBillingDefaultByValues( provider_no, visit_type_no, location_id );
+			if (billingDefault != undefined) {
+				setBillingDefaults( billingDefault, billingDefaultsOverride );
+			} else {
+				billingDefault = getBillingDefaultByValues( provider_no, visit_type_no );
+				if (billingDefault != undefined) {
+					setBillingDefaults( billingDefault, billingDefaultsOverride );
+				} else {
+					billingDefault = getBillingDefaultByValues( provider_no );
+					if (billingDefault != undefined) {
+						setBillingDefaults( billingDefault, billingDefaultsOverride );
+					}
+				}
+			}
+		}
+	}
+	
+	/**
+	 * Method getBillingDefaultByValues
+	 * 
+	 * Get the default values that have matching provider, visit_type, etc.  If the function finds an undefined parameter,
+	 * it just matches the billing defaults to any preceeding parameters.
+	 * 
+	 * Assumes that the billing default values are ordered by priority in 'descending' order (i.e. highest to lowest priority).
+	 * 
+	 * Also, the function will skip over default values that match 'Any' value for a provider, visit_type, etc.  It will not match
+	 * a default value if the only match it finds is with 'Any' values.
+	 */
+	function getBillingDefaultByValues(provider, visit_type, location, sli_code) {
+		for (var i = 0; i < billingDefaults.length; i++) {
+			if (billingDefaults[i]['provider_no'] == provider || billingDefaults[i]['provider_no'] == anyValueMap['provider_no']) {
+				if (visit_type == undefined) {
+					if (billingDefaults[i]['provider_no'] != anyValueMap['provider_no']) 
+						return billingDefaults[i];
+				} else if (billingDefaults[i]['visit_type_no'] == visit_type  || billingDefaults[i]['visit_type_no'] == anyValueMap['visit_type_no']) {
+					if (location == undefined) {
+						if (billingDefaults[i]['visit_type_no'] != anyValueMap['visit_type_no']) 
+							return billingDefaults[i];
+					} else if (billingDefaults[i]['location_id'] == location  || billingDefaults[i]['location_id'] == anyValueMap['location_id']) {
+						if (sli_code == undefined) {
+							if (billingDefaults[i]['location_id'] != anyValueMap['location_id']) 
+								return billingDefaults[i];
+						} else if (billingDefaults[i]['sli_code'] == sli_code  || billingDefaults[i]['sli_code'] == anyValueMap['sli_code']) {
+							if (billingDefaults[i]['sli_code'] != anyValueMap['sli_code']) 
+								return billingDefaults[i];
+						}
+					}
+				}
+			}
+		}
+	}
+
+	/**
+	 * Method setBillingDefaults
+	 * 
+	 * Set the dropdown options to the values in the defaults parameter.
+	 */ 
+	function setBillingDefaults( defaults, billingDefaultsOverride ) {
+		billingDefaultsOverride = billingDefaultsOverride || new Object();
+		
+		currentBillingDefault = defaults;
+		
+		
+		var elem = $('select[name="xml_provider"]');
+		if (billingDefaultsOverride['provider_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['provider_no']+'"]' ).attr('selected',true);
+		} else {
+			if (defaults['provider_no'] != anyValueMap['provider_no'])
+				elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
+		}
+		
+		elem = $('select[name="xml_location"]');
+		if (billingDefaultsOverride['location_id'] != undefined) {
+			elem.find( 'option[value*="|'+billingDefaultsOverride['location_id']+'|"]' ).attr('selected',true);
+		} else {
+			if (defaults['location_id'] != anyValueMap['location_id'])
+				elem.find( 'option[value*="|'+defaults['location_id']+'|"]' ).attr('selected',true);
+		}
+		
+		elem = $('select[name="xml_slicode"]');
+		if (billingDefaultsOverride['sli_code'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['sli_code']+'"]' ).attr('selected',true);
+		} else {
+			if (defaults['sli_code'] != anyValueMap['sli_code'])
+				elem.find( 'option[value^="'+defaults['sli_code']+'"]' ).attr('selected',true);
+		}
+		
+		elem = $('select[name="xml_visittype"]');
+		if (billingDefaultsOverride['visit_type_no'] != undefined) {
+			elem.find( 'option[value^="'+billingDefaultsOverride['visit_type_no']+'"]' ).attr('selected',true);
+		} else {
+			if (defaults['visit_type_no'] != anyValueMap['visit_type_no'])
+				elem.find( 'option[value^="'+defaults['visit_type_no']+'"]' ).attr('selected',true);
+		}
+		
+		var isSameBillingForm = false;
+		if (defaults['billing_form'] == '<%=ctlBillForm%>' || billingDefaultsOverride['billing_form'] == '<%=ctlBillForm%>') {
+			isSameBillingForm = true;
+		}
+		
+		if (!isSameBillingForm) {
+			var values = getParsedDropdownValues();
+			// reload billing form if it is different from previous one
+			var url = "billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm="+defaults['billing_form']+"&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1";
+			var defaultsString = "xml_visittype=" + values['visit_type_no'] + "&xml_location=" + values['location_id'] + "&xml_slicode=" + values['sli_code_no'] + "&xml_provider=" + values['provider_no'];
+			window.location = url + "&" + defaultsString;
+		}
+	}
+</script>
+
+<script>
+jQuery(document).ready(function() {
+	// if no default was set, establish a 'default' default
+	if (currentBillingDefault == null) {
+		var currentValues = getParsedDropdownValues();
+		
+		var tempDefault = new Object();
+		tempDefault['provider_no']			= currentValues['provider_no'];
+		tempDefault['location_id']			= currentValues['location_id'];
+		tempDefault['sli_code']				= currentValues['sli_code_no'];
+		tempDefault['visit_type_no']		= currentValues['visit_type_no'];
+		tempDefault['billing_form']			= "<%=ctlBillForm%>";
+		//tempDefault['billing_form_name']	= jQuery('input[name="billFormName"]').val();
+		setBillingDefaults(tempDefault);
+	}
+	
+	setDefaultsOnPageLoad();
+});
+</script>
+
 </head>
 
 <body onload="setfocus();" topmargin="0">
@@ -643,8 +978,8 @@ int ctlCount = 0;
 %>
 	<tr bgcolor=<%=ctlCount%2==0 ? "#FFFFFF" : "#EEEEFF"%>>
 		<td colspan="2"><b><font size="-2" color="#7A388D"><a
-			href="billingShortcutPg1.jsp?billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1"
-			onClick="showHideLayers('Layer1','','hide');"><%=ctlcodename%></a></font></b></td>
+			href="#"
+			onClick="showHideLayers('Layer1','','hide');  window.location='billingShortcutPg1.jsp?useHtmlGetValues=yes&billForm=<%=ctlcode%>&hotclick=<%=URLEncoder.encode("","UTF-8")%>&appointment_no=<%=request.getParameter("appointment_no")%>&demographic_name=<%=URLEncoder.encode(demoname,"UTF-8")%>&demographic_no=<%=request.getParameter("demographic_no")%>&user_no=<%=user_no%>&apptProvider_no=<%=request.getParameter("apptProvider_no")%>&providerview=<%=request.getParameter("apptProvider_no")%>&appointment_date=<%=request.getParameter("appointment_date")%>&status=<%=request.getParameter("status")%>&start_time=<%=request.getParameter("start_time")%>&bNewForm=1&xml_visittype=' + getParsedDropdownValues()['visit_type_no'] + '&xml_location=' + getParsedDropdownValues()['location_id'] + '&xml_slicode=' + getParsedDropdownValues()['sli_code_no'] + '&xml_provider=' + getParsedDropdownValues()['provider_no'];"><%=ctlcodename%></a></font></b></td>
 	</tr>
 	<%
 }
@@ -687,6 +1022,14 @@ ctlCount = 0;
 </div>
 
 
+<%
+String billDates = "";
+if (request.getParameter("billDate")!=null)
+	billDates = request.getParameter("billDate");
+else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
+	billDates = (String) session.getAttribute( "hospital_billing_previous_billing_dates");
+%>
+
 <form method="post" name="titlesearch" action="billingShortcutPg2.jsp"
 	onsubmit="return onNext();">
 <table border="0" cellpadding="0" cellspacing="2" width="100%"
@@ -727,30 +1070,30 @@ ctlCount = 0;
 					<tr>
 						<td nowrap width="30%" align="center"><a id="trigger"
 							href="#">[<bean:message key="billing.servicedate"/>]</a><br>
-						<textarea name="billDate" cols="11" rows="5" readonly><%=request.getParameter("billDate")!=null?request.getParameter("billDate"):""%></textarea>
+						<textarea name="billDate" cols="11" rows="5" readonly><%=billDates%></textarea>
 						</td>
 						<td nowrap align="center"><bean:message key="billing.billingCorrection.formServiceCode"/> x <bean:message key="billing.billingCorrection.formUnit"/><br>
-						<input type="text" name="serviceDate0" size="5" maxlength="5"
+						<input type="text" name="serviceDate0" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate0")!=null?request.getParameter("serviceDate0"):""%>">x
 						<input type="text" name="serviceUnit0" size="2" maxlength="2"
 							style=""
 							value="<%=request.getParameter("serviceUnit0")!=null?request.getParameter("serviceUnit0"):""%>"><br>
-						<input type="text" name="serviceDate1" size="5" maxlength="5"
+						<input type="text" name="serviceDate1" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate1")!=null?request.getParameter("serviceDate1"):""%>">x
 						<input type="text" name="serviceUnit1" size="2" maxlength="2"
 							style=""
 							value="<%=request.getParameter("serviceUnit1")!=null?request.getParameter("serviceUnit1"):""%>"><br>
-						<input type="text" name="serviceDate2" size="5" maxlength="5"
+						<input type="text" name="serviceDate2" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate2")!=null?request.getParameter("serviceDate2"):""%>">x
 						<input type="text" name="serviceUnit2" size="2" maxlength="2"
 							style=""
 							value="<%=request.getParameter("serviceUnit2")!=null?request.getParameter("serviceUnit2"):""%>"><br>
-                                                 <input type="text" name="serviceDate3" size="5" maxlength="5"
+                                                 <input type="text" name="serviceDate3" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate3")!=null?request.getParameter("serviceDate3"):""%>">x
 						<input type="text" name="serviceUnit3" size="2" maxlength="2"
 							style=""
 							value="<%=request.getParameter("serviceUnit3")!=null?request.getParameter("serviceUnit3"):""%>"><br>
-                                                <input type="text" name="serviceDate4" size="5" maxlength="5"
+                                                <input type="text" name="serviceDate4" size="5" maxlength="5" onblur="$(this).val($(this).val().toUpperCase());"
 							value="<%=request.getParameter("serviceDate4")!=null?request.getParameter("serviceDate4"):""%>">x
 						<input type="text" name="serviceUnit4" size="2" maxlength="2"
 							style=""
@@ -798,7 +1141,7 @@ ctlCount = 0;
 					<tr>
 						<td nowrap width="30%" align="center"><b><bean:message key="billing.hospitalBilling.frmBillPhysician"/>
 						</b></td>
-						<td width="20%"><select name="xml_provider">
+						<td width="20%"><select name="xml_provider" onChange="onBillingDefaultsDropdownChange(this);">
 							<%
 				if(vecProvider.size()==1) {
 					propT = (Properties) vecProvider.get(0);
@@ -813,9 +1156,15 @@ ctlCount = 0;
 							<%
 				for(int i=0; i<vecProvider.size(); i++) {
 					propT = (Properties) vecProvider.get(i);
+					String selected = "";
+					if ( defaultProvider.equals(propT.getProperty("proOHIP")) ) {
+						selected = "selected";
+					} else if ( providerview.equals(propT.getProperty("proOHIP")) ) {
+						//selected = "selected";
+					}
 				%>
 							<option value="<%=propT.getProperty("proOHIP")%>"
-								<%=providerview.equals(propT.getProperty("proOHIP"))?"selected":""%>><b><%=propT.getProperty("last_name")%>,
+								<%=selected%>><b><%=propT.getProperty("last_name")%>,
 							<%=propT.getProperty("first_name")%></b></option>
 							<%	}
 				}
@@ -828,7 +1177,7 @@ ctlCount = 0;
 					<tr>
 
 						<td width="30%"><b><%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.formVisitType"/> <% } %></b></td>
-						<td width="20%"><select name="xml_visittype">
+						<td width="20%"><select name="xml_visittype" onChange="onBillingDefaultsDropdownChange(this);">
 						<% if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
 					    <%
 					    ClinicNbrDao cnDao = (ClinicNbrDao) SpringUtils.getBean("clinicNbrDao");
@@ -879,19 +1228,24 @@ ctlCount = 0;
 					</tr>
 					<tr>
 						<td><b><bean:message key="billing.billingCorrection.msgVisitLocation"/></b></td>
-						<td colspan="3"><select name="xml_location">
-							<%
-				for(int i=0; i<vecLocation.size(); i++) {
-					propT = (Properties) vecLocation.get(i);
-					String strLocation = request.getParameter("xml_location")!=null? request.getParameter("xml_location"):clinicview;
-				%>
-							<option
-								value="<%=propT.getProperty("clinic_location_no") + "|" + propT.getProperty("clinic_location_name")%>"
-								<%=strLocation.startsWith(propT.getProperty("clinic_location_no"))?"selected":""%>>
-							<%=propT.getProperty("clinic_location_name")%></option>
-							<%
+						<td colspan="3"><select name="xml_location" onChange="onBillingDefaultsDropdownChange(this);">
+							
+<%
+				ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
+				List<ClinicLocation> clinicLocations = clinicLocationDao.getAll();
+				String strLocation = (xml_location != null? xml_location : clinicview);
+				
+				for (ClinicLocation location : clinicLocations) {
+%>
+						    <option value="<%=location.getClinicLocationNo() + "|" + location.getId() + "|" + location.getClinicLocationName()%>"
+							    <%=strLocation.indexOf(location.getId().intValue() + "") >= 0?"selected":""%>>
+							<%=location.getClinicLocationName()%>
+						    </option>
+<%
 				}
-				%>
+		
+%>
+							
 						</select></td>
 					</tr>
 						<%
@@ -907,56 +1261,56 @@ ctlCount = 0;
 					<tr>
 						<td><b><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode"/></b></td>
 				   	 	<td colspan="3">
-						<select name="xml_slicode">
-
+						<select name="xml_slicode" onChange="onBillingDefaultsDropdownChange(this);">
+						
 							<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
-
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HDS")) {%>
-								<option selected value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+						
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HDS") || sliCode.equals("HDS")) {%>
+								<option selected value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 							<%} else { %>
-								<option value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+								<option value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
 							<%}%>
-
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HED")) {%>
-								<option selected value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+							
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HED") || sliCode.equals("HED")) {%>
+								<option selected value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
 							<%} else { %>
-								<option value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+								<option value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
 							<%}%>
-
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HIP")) {%>
-								<option selected value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+							
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HIP") || sliCode.equals("HIP")) {%>
+								<option selected value="HIP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
 							<%} else { %>
-								<option value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+								<option value="HIP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
 							<%}%>
-
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HOP")) {%>
-								<option selected value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+							
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HOP") || sliCode.equals("HOP")) {%>
+								<option selected value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
 							<%} else { %>
-								<option value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+								<option value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
 							<%}%>
-
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HRP")) {%>
-								<option selected value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+							
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("HRP") || sliCode.equals("HRP")) {%>
+								<option selected value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
 							<%} else { %>
-								<option value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+								<option value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
 							<%}%>
-
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("IHF")) {%>
-								<option selected value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+							
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("IHF") || sliCode.equals("IHF")) {%>
+								<option selected value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
 							<%} else { %>
-								<option value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+								<option value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
 							<%}%>
-
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OFF")) {%>
-								<option selected value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+							
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OFF") || sliCode.equals("OFF")) {%>
+								<option selected value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
 							<%} else { %>
-								<option value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+								<option value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
 							<%}%>
-
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OTN")) {%>
-								<option selected value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+							
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OTN") || sliCode.equals("OTN")) {%>
+								<option selected value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 							<%} else { %>
-								<option value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+								<option value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 							<%}%>
 							</select>
 				   		</td>
@@ -966,16 +1320,16 @@ ctlCount = 0;
 				    <td><b><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode"/></b></td>
 				    <td colspan="3">
 					<select name="xml_slicode">
-						<option value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
-						<option value="HDS "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
-						<option value="HED "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
-						<option value="HIP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
-						<option value="HOP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
-						<option value="HRP "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
-						<option value="IHF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
-						<option value="OFF "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
-						<option value="OTN "><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
-					</select>
+						<option <%=(sliCode.equals(clinicNo) ? "selected" : "")%> value="<%=clinicNo%>"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.NA" /></option>
+						<option <%=(sliCode.equals("HDS") ? "selected" : "")%> value="HDS"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HDS" /></option>
+						<option <%=(sliCode.equals("HED") ? "selected" : "")%> value="HED"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HED" /></option>
+						<option <%=(sliCode.equals("HIP") ? "selected" : "")%> value="HIP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HIP" /></option>
+						<option <%=(sliCode.equals("HOP") ? "selected" : "")%> value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
+						<option <%=(sliCode.equals("HRP") ? "selected" : "")%> value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
+						<option <%=(sliCode.equals("IHF") ? "selected" : "")%> value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
+						<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+						<option <%=(sliCode.equals("OTN") ? "selected" : "")%> value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+					</select> 
 				    </td>
 				</tr>
 				<%} %>
@@ -1192,6 +1546,7 @@ ctlCount = 0;
 	<input type="hidden" name="assgProvider_no"
 		value="<%=assgProvider_no%>" />
 	<input type="hidden" name="billForm" value="<%=ctlBillForm%>" />
+	<input type="hidden" name="useHtmlGetValues" value="<%=ctlHtmlGetValues%>" />
 
 </table>
 </form>
@@ -1213,6 +1568,7 @@ ctlCount = 0;
 			bgcolor="#FFFFFF">
 			<tr bgcolor="#99CCCC" align="center">
 				<td nowrap><bean:message key="billing.hospitalBilling.frmSerial"/></td>
+				<td nowrap>Doctor</td>
 				<td nowrap><bean:message key="billing.billingCorrection.msgBillingDate"/></td>
 				<td nowrap><bean:message key="billing.hospitalBilling.frmApptAdmDate"/></td>
 				<td nowrap><bean:message key="billing.billingCorrection.formServiceCode"/></td>
@@ -1226,6 +1582,7 @@ ctlCount = 0;
 %>
 			<tr bgcolor="<%=i%2==0?"ivory":"#EEEEFF"%>" align="center">
 				<td><%= prop.getProperty("billing_no", "&nbsp;") %></td>
+				<td><%= prop.getProperty("provider_no", "&nbsp;") %></td>
 				<td><%= prop.getProperty("billing_date", "&nbsp;") %></td>
 				<td><%= prop.getProperty("visitdate", "&nbsp;") %></td>
 				<td><%= propD.getProperty("service_code", "&nbsp;") %></td>
@@ -1240,18 +1597,29 @@ ctlCount = 0;
 	</tr>
 </table>
 <% } else { %>
-<table border="0" cellpadding="1" cellspacing="2" width="100%"
-	class="myIvory">
-	<tr class="myYellow">
-		<td colspan="6"><%=demoname%> - <b><bean:message key="billing.hospitalBilling.frmBillHistory"/></b> <bean:message key="billing.hospitalBilling.frmLastFive"/>
-		</td>
-	</tr>
+
+<table border="0" cellpadding="1" cellspacing="2" width="100%" class="myIvory">
+    <tr class="myYellow">
+	<td colspan="6"><%=demoname%> - <b><bean:message key="billing.hospitalBilling.frmBillHistory"/></b> 
+		-
+			<bean:message key="billing.hospitalBilling.frmLast"/> 
+			<%=oscarVariables.getBillingHistoryNumDays()%> 
+			<bean:message key="billing.hospitalBilling.frmDays"/>
+	</td>
+	<td width="20%" align="right">
+	    Last <input type="text" name="day" value="365" size="3" /> days
+	    <input type="button" name="buttonDay" value="Go" onClick="onHistory(); return false;" />
+	</td>
+    </tr>
+</table>
+<table border="0" cellpadding="1" cellspacing="2" width="100%" class="myIvory">
 	<tr>
 		<td>
 		<table border="1" cellspacing="0" cellpadding="1"
 			bordercolorlight="#99A005" bordercolordark="#FFFFFF" width="100%">
 			<tr class="myYellow" align="center">
 				<th><bean:message key="billing.hospitalBilling.frmSerial"/></th>
+				<td nowrap><bean:message key="billing.hospitalBilling.frmDoctorsName"/></td>
 				<th><bean:message key="billing.billingCorrection.msgBillingDate"/></th>
 				<th><bean:message key="billing.hospitalBilling.frmApptAdmDate"/></th>
 				<th><bean:message key="billing.billingCorrection.formServiceCode"/></th>
@@ -1262,10 +1630,13 @@ ctlCount = 0;
 			for (int i = 0; i < aL.size(); i = i + 2) {
 				BillingClaimHeader1Data obj = (BillingClaimHeader1Data) aL.get(i);
 				BillingItemData iobj = (BillingItemData) aL.get(i + 1);
+				ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+				Provider p = providerDao.getProvider(obj.getProviderNo());
 
 				%>
 			<tr <%=i%4==0? "class=\"myGreen\"":""%> align="center">
 				<td><%=obj.getId()%></td>
+				<td><%=p.getLastName()%>, <%=p.getFirstName()%></td>
 				<td><%=obj.getBilling_date()%></td>
 				<td><%=iobj.getService_date()%></td>
 				<td><%=iobj.getService_code()%></td>
@@ -1283,14 +1654,17 @@ ctlCount = 0;
 <script type="text/javascript">//<![CDATA[
     // the default multiple dates selected, first time the calendar is instantiated
     var MA = [];
+    
     function closed(cal) {
       //var el = document.getElementById("output");
       var el = document.titlesearch.billDate;
       // reset initial content.
       el.innerHTML = "";
+      el.value = "";
       MA.length = 0;
       for (var i in cal.multiple) {
         var d = cal.multiple[i];
+        
         if (d) {
           //el.innerHTML += d.print("%Y-%m-%d") + "<br />";
           el.value += d.print("%Y-%m-%d") + "\n";
@@ -1298,6 +1672,7 @@ ctlCount = 0;
         }
       }
       cal.hide();
+      
       return true;
     };
 

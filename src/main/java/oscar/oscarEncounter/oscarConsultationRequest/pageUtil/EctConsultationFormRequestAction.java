@@ -128,6 +128,10 @@ public class EctConsultationFormRequestAction extends Action {
         
         String[] format = new String[] {"yyyy-MM-dd","yyyy/MM/dd"};
 
+
+		String clinicNo = request.getParameter("clinicNo");
+		request.getSession().setAttribute("clinic_id", clinicNo);
+		
 		if (submission.startsWith("Submit")) {
 
 			try {				
@@ -244,8 +248,8 @@ public class EctConsultationFormRequestAction extends Action {
                                 consult.setServiceId(new Integer(frm.getService()));
 
                                 consult.setSignatureImg(signatureId);
-                                
-                                consult.setProviderNo(frm.getProviderNo());
+                                //We shouldn't change the referral provider just because someone updated and printed it! 
+                                //consult.setProviderNo(frm.getProviderNo());
                                 
                         		consult.setLetterheadName(frm.getLetterheadName());
                         		consult.setLetterheadAddress(frm.getLetterheadAddress());

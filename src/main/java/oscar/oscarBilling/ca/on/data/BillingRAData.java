@@ -23,6 +23,7 @@ public class BillingRAData {
 	String raheader_no;
 	String providerohip_no;
 	String billing_no;
+	String provider_group_billing_no;
 	String service_code;
 	String service_count;
 	String hin;
@@ -57,6 +58,12 @@ public class BillingRAData {
 	}
 	public void setBilling_no(String billing_no) {
 		this.billing_no = billing_no;
+	}
+	public String getProvidergroupbilling_no() {
+		return provider_group_billing_no;
+	}
+	public void setProvidergroupbilling_no(String provider_group_billing_no) {
+		this.provider_group_billing_no = provider_group_billing_no;
 	}
 	public String getBilltype() {
 		return billtype;

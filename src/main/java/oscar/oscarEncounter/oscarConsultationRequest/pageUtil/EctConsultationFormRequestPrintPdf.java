@@ -47,13 +47,19 @@ import javax.servlet.http.HttpServletResponse;
 import oscar.OscarProperties;
 import oscar.dms.EDoc;
 import oscar.dms.EDocUtil;
-import oscar.oscarClinic.ClinicData;
 import oscar.oscarDB.DBHandler;
 import oscar.oscarLab.ca.all.pageUtil.LabPDFCreator;
 import oscar.oscarLab.ca.all.parsers.Factory;
 import oscar.oscarLab.ca.all.parsers.MessageHandler;
 import oscar.util.ConcatPDF;
 import oscar.util.UtilDateUtilities;
+
+import org.oscarehr.util.SpringUtils;
+import org.oscarehr.util.MiscUtils;
+import org.apache.log4j.Logger;
+
+import org.oscarehr.common.dao.ClinicDAO;
+import org.oscarehr.common.model.Clinic;
 
 import com.lowagie.text.Document;
 import com.lowagie.text.DocumentException;
@@ -72,6 +78,8 @@ import com.lowagie.text.pdf.PdfWriter;
  * @author wrighd
  */
 public class EctConsultationFormRequestPrintPdf {
+	private static final Logger logger=MiscUtils.getLogger();
+	
     private HttpServletRequest request;
     private HttpServletResponse response;
 
@@ -242,11 +250,29 @@ public class EctConsultationFormRequestPrintPdf {
     }
 
     private void printClinicData(){
-        ClinicData clinic = new ClinicData();
-        clinic.refreshClinicData();
-
+		ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+		
+		String clinicNo = this.request.getParameter("clinicNo");
+		Clinic clinic = null;
+		
+		try {
+			int clinicNoAsInt = Integer.parseInt(clinicNo);
+			clinic = clinicDao.find(clinicNoAsInt);
+		} catch (Exception e) {
+			logger.error("Unable to parse clinic number.", e);
+		}
+		
+		// Error check
+		if (clinic == null)
+			clinic = clinicDao.getClinic();
+		if (clinic == null) {
+			logger.error("No clinic found in OSCAR!");
+			return;
+		}
+		
+		
         cb.beginText();
-
+        
         cb.setFontAndSize(bf, 16);
         cb.showTextAligned(PdfContentByte.ALIGN_LEFT, clinic.getClinicName(), 90, height - 70, 0);
 

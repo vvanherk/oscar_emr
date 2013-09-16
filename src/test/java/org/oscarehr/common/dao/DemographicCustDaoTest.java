@@ -31,12 +31,13 @@ import java.util.List;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.DemographicCust;
 import org.oscarehr.util.SpringUtils;
 
-public class DemographicCustDaoTest extends DaoTestFixtures {
+public class DemographicCustDaoTest extends TestFixtures {
 
 	private DemographicCustDao dao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
 

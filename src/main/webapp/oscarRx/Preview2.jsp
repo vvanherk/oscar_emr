@@ -31,6 +31,7 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ page import="oscar.oscarProvider.data.ProSignatureData, oscar.oscarProvider.data.ProviderData"%>
 <%@ page import="oscar.log.*,oscar.oscarRx.data.*"%>
+<%@ page import="java.text.SimpleDateFormat"%>
 <%@ page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@ page import="org.apache.log4j.Logger" %>
 
@@ -46,6 +47,11 @@
 <%@page import="org.oscarehr.util.LoggedInInfo"%>
 <%@page import="org.oscarehr.util.DigitalSignatureUtils"%>
 <%@page import="org.oscarehr.ui.servlet.ImageRenderingServlet"%>
+
+<%@page import="org.oscarehr.common.dao.ProviderPreferenceDao"%>
+<%@page import="org.oscarehr.common.model.ProviderPreference"%>
+<%@page import="org.oscarehr.web.admin.ProviderPreferencesUIBean"%>
+
 <!-- end -->
 <%
 	String scriptid=request.getParameter("scriptId");
@@ -102,11 +108,16 @@ String rePrint = (String)request.getSession().getAttribute("rePrint");
 oscar.oscarRx.pageUtil.RxSessionBean bean;
 oscar.oscarRx.data.RxProviderData.Provider provider;
 String signingProvider;
+int clinicNo;
 if( rePrint != null && rePrint.equalsIgnoreCase("true") ) {
     bean = (oscar.oscarRx.pageUtil.RxSessionBean)session.getAttribute("tmpBeanRX");
     signingProvider = bean.getStashItem(0).getProviderNo();
-    rxDate = bean.getStashItem(0).getRxDate();
-    provider = new oscar.oscarRx.data.RxProviderData().getProvider(signingProvider);
+    clinicNo = bean.getClinicNo();
+
+    request.getSession().setAttribute("clinic_id", clinicNo + "");
+    
+    rxDate = bean.getStashItem(0).getWrittenDate();
+    provider = new oscar.oscarRx.data.RxProviderData().getProvider(signingProvider, clinicNo);
 //    session.setAttribute("tmpBeanRX", null);
     String ip = request.getRemoteAddr();
     //LogAction.addLog((String) session.getAttribute("user"), LogConst.UPDATE, LogConst.CON_PRESCRIPTION, String.valueOf(bean.getDemographicNo()), ip);
@@ -118,14 +129,18 @@ else {
     Date tmp;
 
     for( int idx = 0; idx < bean.getStashSize(); ++idx ) {
-        tmp = bean.getStashItem(idx).getRxDate();
+        tmp = bean.getStashItem(idx).getWrittenDate();
+        
+        if (idx == 0)
+			rxDate = tmp;
+		
         if( tmp.after(rxDate) ) {
             rxDate = tmp;
         }
     }
     rePrint = "";
     signingProvider = bean.getProviderNo();
-    provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo());
+    provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo(), bean.getClinicNo());
 }
 
 
@@ -143,25 +158,41 @@ if (hasSig){
    doctorName = (provider.getFirstName() + ' ' + provider.getSurname());
 }
 
-//doctorName = doctorName.replaceAll("\\d{6}","");
-//doctorName = doctorName.replaceAll("\\-","");
-
-OscarProperties props = OscarProperties.getInstance();
-
 String pracNo = provider.getPractitionerNo();
 String strUser = (String)session.getAttribute("user");
 ProviderData user = new ProviderData(strUser);
 String pharmaFax = "";
 String pharmaFax2 = "";
 String pharmaName = "";
-RxPharmacyData pharmacyData = new RxPharmacyData();
-PharmacyInfo pharmacy;
-pharmacy = pharmacyData.getPharmacyFromDemographic(Integer.toString(bean.getDemographicNo()));
-if (pharmacy != null) {
-	pharmaFax = pharmacy.fax;
-	pharmaFax2 = "Fax: " + pharmacy.fax;
-	pharmaName = pharmacy.getName();
+
+ProviderPreferenceDao preferenceDao = (ProviderPreferenceDao) SpringUtils.getBean("providerPreferenceDao");
+ProviderPreference preference = null;
+preference = ProviderPreferencesUIBean.getProviderPreferenceByProviderNo(strUser);
+
+boolean printDateOnRx = false;
+boolean printPharmacyOnRx = false;
+Logger.getLogger("preview_jsp").info("preference: " + provider.getPractitionerNo());
+if (preference != null) {
+	printDateOnRx = preference.isPrintDateOnRxSet();
+	printPharmacyOnRx = preference.isPrintPharmacyOnRxSet();
 }
+
+
+PharmacyInfo pharmacy = null;
+if (printPharmacyOnRx) {
+	RxPharmacyData pharmacyData = new RxPharmacyData();
+	pharmacy = pharmacyData.getPharmacyFromDemographic(Integer.toString(bean.getDemographicNo()));	
+	if (pharmacy != null) {
+		pharmaFax = pharmacy.fax;
+		pharmaFax2 = "Fax: " + pharmacy.fax;
+		pharmaName = pharmacy.getName();
+	}
+}
+
+//doctorName = doctorName.replaceAll("\\d{6}","");
+//doctorName = doctorName.replaceAll("\\-","");
+
+OscarProperties props = OscarProperties.getInstance();
 
 String patientDOBStr=RxUtil.DateToString(patient.getDOB(), "MMM d, yyyy") ;
 boolean showPatientDOB=false;
@@ -413,14 +444,69 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
                                                                             Logger.getLogger("preview_jsp").error("drug full outline was null");
                                                                             fullOutLine="<span style=\"color:red;font-size:16;font-weight:bold\">An error occurred, please write a new prescription.</span><br />"+fullOutLine;
                                                                     }
+											SimpleDateFormat df = new SimpleDateFormat("yyyy/MM/dd");
+											java.util.Date endDate = rx.getEndDate();
+											java.util.Date prescriptionDate = rx.getRxDate();
+											java.util.Date prescriptionCreatedDate = rx.getRxCreatedDate();
                                             %>
                                             <%=fullOutLine%>
+                                            <br>
+                                            
+                                            <% if (printDateOnRx) { %>
+	                                            <%
+	                                            try {
+													String prescriptionDateAsString = df.format(prescriptionDate);
+												%>
+													Rx Date: <%=prescriptionDateAsString%>
+													<br>
+												<%
+												} catch (Exception e) {}
+	                                            %>
+	                                            
+	                                            <%
+	                                            try {
+													String prescriptionCreatedDateAsString = df.format(prescriptionCreatedDate);
+												%>
+													Rx Created Date: <%=prescriptionCreatedDateAsString%>
+													<br>
+												<%
+												} catch (Exception e) {}
+	                                            %>
+													
+												<%
+	                                            try {
+													String endDateAsString = df.format(endDate);
+												%>
+													End Date: <%=endDateAsString%>
+												<%
+												} catch (Exception e) {}
+	                                            %>
+	                                        <% } %>
                                                             <hr>
+											
                                                             <%
                                             strRx += rx.getFullOutLine() + ";;";
                                             strRxNoNewLines.append(rx.getFullOutLine().replaceAll(";"," ")+ "\n");
                                             }
-                                            %> <input type="hidden" name="rx"
+                                            %> 
+
+											<%
+											if (pharmacy != null) {
+											%>	
+												<br>
+												<%=pharmacy.getName()%> <br>
+												<%=pharmacy.getAddress()%> <br>
+												<%=pharmacy.getCity()%>, <%=pharmacy.getProvince()%>, <%=pharmacy.getPostalCode()%> <br>
+												Tel: <%=pharmacy.getPhone1()%>, <%=pharmacy.getPhone2()%> <br>
+												Fax: <%=pharmacy.getFax()%> <br>
+												Email: <%=pharmacy.getEmail()%> <br>
+												Note: <%=pharmacy.getNotes()%> <br>
+												<%=pharmacy.getServiceLocationIdentifier() == null? "" : pharmacy.getServiceLocationIdentifier()%> <br>
+											<%
+											}
+											%>
+
+											<input type="hidden" name="rx"
                                                                     value="<%= StringEscapeUtils.escapeHtml(strRx.replaceAll(";","\\\n")) %>" />
                                                             <input type="hidden" name="rx_no_newlines"
                                                                     value="<%= strRxNoNewLines.toString() %>" />
@@ -499,7 +585,7 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
                                                     	 { 
                                                     	 %>
 		                                                    <tr valign=bottom style="font-size: 6px;">
-		                                                        <td height=25px colspan="2"><bean:message key="RxPreview.msgReprintBy"/> <%=ProviderData.getProviderName(strUser)%><span style="float: left;">
+		                                                        <td height=25px colspan="2"><bean:message key="RxPreview.msgReprintBy"/> <%=user.getProviderName(strUser)%><span style="float: left;">
 		                                                            <bean:message key="RxPreview.msgOrigPrinted"/>:&nbsp;<%=rx.getPrintDate()%></span> <span
 		                                                                    style="float: right;"><bean:message key="RxPreview.msgTimesPrinted"/>:&nbsp;<%=String.valueOf(rx.getNumPrints())%></span>
 		                                                            <input type="hidden" name="origPrintDate" value="<%=rx.getPrintDate()%>"/>

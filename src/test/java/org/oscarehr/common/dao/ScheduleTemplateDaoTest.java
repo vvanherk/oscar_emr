@@ -27,13 +27,14 @@ import static org.junit.Assert.assertNotNull;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.ScheduleTemplate;
 import org.oscarehr.common.model.ScheduleTemplatePrimaryKey;
 import org.oscarehr.util.SpringUtils;
 
-public class ScheduleTemplateDaoTest extends DaoTestFixtures {
+public class ScheduleTemplateDaoTest extends TestFixtures {
 
 	private ScheduleTemplateDao dao = SpringUtils.getBean(ScheduleTemplateDao.class);
 

@@ -31,15 +31,16 @@ import java.util.Date;
 import org.junit.Before;
 import org.junit.Test;
 import org.oscarehr.PMmodule.dao.ProviderDao;
-import org.oscarehr.common.dao.utils.EntityDataGenerator;
-import org.oscarehr.common.dao.utils.SchemaUtils;
+import utils.EntityDataGenerator;
+import utils.SchemaUtils;
+import utils.TestFixtures;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.ProviderSite;
 import org.oscarehr.common.model.ProviderSitePK;
 import org.oscarehr.common.model.Site;
 import org.oscarehr.util.SpringUtils;
 
-public class SiteDaoTest extends DaoTestFixtures {
+public class SiteDaoTest extends TestFixtures {
 
 	private SiteDao dao = SpringUtils.getBean(SiteDao.class);
 

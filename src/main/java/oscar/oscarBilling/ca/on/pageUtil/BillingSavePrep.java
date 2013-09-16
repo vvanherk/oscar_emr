@@ -168,7 +168,7 @@ public class BillingSavePrep {
 		claim1Header.setProviderNo(val.getParameter("xml_provider").substring(0,
 				val.getParameter("xml_provider").indexOf("|")));
 
-		claim1Header.setBilling_date(val.getParameter("service_date"));
+		claim1Header.setBilling_date( UtilDateUtilities.getToday("yyyy-MM-dd") );
 		claim1Header.setBilling_time(val.getParameter("start_time"));
 		claim1Header.setUpdate_datetime(UtilDateUtilities.getToday("yyyy-MM-dd HH:mm:ss"));
 		claim1Header.setTotal(val.getParameter("total"));
@@ -255,7 +255,8 @@ public class BillingSavePrep {
 		claim1Header.setSex(val.getParameter("sex"));
 		claim1Header.setProvince(val.getParameter("hc_type"));
 
-		claim1Header.setBilling_date(service_date);
+		//claim1Header.setBilling_date(service_date);
+		claim1Header.setBilling_date( UtilDateUtilities.getToday("yyyy-MM-dd") );
 		claim1Header.setBilling_time(val.getParameter("start_time"));
 		claim1Header.setUpdate_datetime(UtilDateUtilities.getToday("yyyy-MM-dd HH:mm:ss"));
 		claim1Header.setTotal(total);
@@ -306,16 +307,17 @@ public class BillingSavePrep {
 		valsMap.put("demographic_no",val.getParameter("demographic_no"));
 		valsMap.put("billTo",val.getParameter("billto"));
 		valsMap.put("remitTo",val.getParameter("remitto"));
-                valsMap.put("total",val.getParameter("gstBilledTotal"));
-                if (val.getParameter("submit").equalsIgnoreCase("Settle & Print Invoice")) {
-                    valsMap.put("payment", valsMap.get("total"));
-                }
-                else {
-                    valsMap.put("payment", val.getParameter("payment"));
-                }
-		valsMap.put("refund",val.getParameter("refund"));
-                valsMap.put("provider_no",val.getParameter("provider_no"));
-                valsMap.put("gst",val.getParameter("gst"));
+        valsMap.put("clinicNo",val.getParameter("clinicNo"));
+        valsMap.put("total",val.getParameter("gstBilledTotal"));
+        if (val.getParameter("submit").equalsIgnoreCase("Settle & Print Invoice")) {
+          valsMap.put("payment", valsMap.get("total"));
+        }
+        else {
+           valsMap.put("payment", (val.getParameter("payment") != null? val.getParameter("payment") : "0.00"));
+        }
+		valsMap.put("refund", (val.getParameter("refund") != null? val.getParameter("refund") : "0.00"));
+        valsMap.put("provider_no",val.getParameter("provider_no"));
+        valsMap.put("gst",val.getParameter("gst"));
 
 		if (val.getParameter("payMethod") != null) {
 			valsMap.put("payMethod",val.getParameter("payMethod"));

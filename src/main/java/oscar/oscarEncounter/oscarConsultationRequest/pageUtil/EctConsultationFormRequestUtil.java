@@ -205,6 +205,11 @@ public class EctConsultationFormRequestUtil {
                 letterheadPhone = oscar.Misc.getString(rs, "letterheadPhone");
                 letterheadFax = oscar.Misc.getString(rs, "letterheadFax");
 
+		letterheadName = letterheadName == null?"":letterheadName;
+		letterheadAddress = letterheadAddress == null?"":letterheadAddress;
+		letterheadPhone = letterheadPhone == null?"":letterheadPhone;
+		letterheadFax = letterheadFax == null?"":letterheadFax;
+
                 signatureImg = oscar.Misc.getString(rs, "signature_img");
                 
                 appointmentNotes = oscar.Misc.getString(rs, "statusText");                
@@ -245,6 +250,9 @@ public class EctConsultationFormRequestUtil {
 	                    if (h > 12) {
 	                        appointmentPm = "PM";
 	                        appointmentHour = Integer.toString(h - 12);
+	                    } else if (h==12){
+	                    	appointmentPm = "PM";
+	                        appointmentHour = Integer.toString(h);
 	                    } else {
 	                        appointmentPm = "AM";
 	                        appointmentHour = Integer.toString(h);
