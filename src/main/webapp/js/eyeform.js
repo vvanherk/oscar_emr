@@ -889,6 +889,10 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			var item = impressionItems[jsonItem];
 			var date = new Date(item.update_date.time);
 			var provName = item.provider.formattedName;
+			
+			var provName = "";
+			if (item.provider)
+				provName = item.provider.formattedName;
 
 			if (!lastImpressionSet) {
 				lastImpression = item.note;
@@ -917,6 +921,10 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			var item = currentIssueItems[jsonItem];
 			var date = new Date(item.update_date.time);
 			var provName = item.provider.formattedName;
+			
+			var provName = "";
+			if (item.provider)
+				provName = item.provider.formattedName;
 
 			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
 		}
@@ -938,6 +946,11 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			var item = boxItems[jsonItem];
 			var date = new Date(item.update_date.time);
 			var provName = item.provider.formattedName;
+			
+			var provName = "";
+			if (item.provider)
+				provName = item.provider.formattedName;
+			
 			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\" note_id='" + item.id + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong><span class='noteContent'>" + item.note.replace( /\n/g, ' ' ) + "</span><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span></li>");
 		}
 
