@@ -115,7 +115,7 @@ var appointmentDate = [];
 var BoxIssueUrls = {
 		"specsHistory": ctx + "/oscarEncounter/displaySpecsHistory.do",
 		"procedures": ctx + "/oscarEncounter/displayOcularProcedure.do",
-		"consultations": ctx + "/oscarEncounter/displayConsultation.do",
+		"consultations": ctx + "/oscarEncounter/displayConsultation.do?appointment_no=" + appointmentNo,
 		"labResults": ctx + "/oscarEncounter/displayLabs.do",
 		"documents": ctx + "/oscarEncounter/displayDocuments.do",
 		"diagrams": ctx + "/oscarEncounter/displayDiagrams.do?appointment_no=" + appointmentNo,
@@ -436,7 +436,7 @@ function saveEditNote(item) {
 	if ($(item).attr("noteData") != data) {
 		$.ajax({
 			type: "POST",
-			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo,
+			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo,
 			data: "value=" + data + "&noteId=" + noteId + "&sign=true",
 			dataType: "json",
 			success: function(data) {
@@ -444,11 +444,11 @@ function saveEditNote(item) {
 					console.log("Saved " + data.id);
 			}
 		});
-		$(item).find("span.noteContent").text(data);
+		$(item).find("span.noteContent").text( unescape(data) );
 		$(item).addClass("thisVisit");
 
 	} else {
-		$(item).find("span.noteContent").text($(item).attr("noteData"));
+		$(item).find("span.noteContent").text( unescape($(item).attr("noteData")) );
 	}
 
 	$(item).click(function(e) {

@@ -169,6 +169,10 @@ function newWindow(file,window) {
 				<option value="Power of Attorney">Power of Attorney</option>
 				<option value="Insurance">Insurance</option>
 				<option value="Guarantor">Guarantor</option>
+				<option value="Boy Friend">BoyFriend</option>
+                                <option value="Girl Friend">GirlFriend</option>
+                                <option value="Fiancee">Fiancee</option>
+                                <option value="Common Law">Common Law</option>
 				<option value="Other">Other</option>
 			</select> <input type="checkbox" name="sdm" value="yes"> Substitute
 			Decision Maker</input> <input type="checkbox" name="emergContact" value="yes">

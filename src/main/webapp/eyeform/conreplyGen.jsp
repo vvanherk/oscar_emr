@@ -186,6 +186,7 @@ function confirmPrint(btn) {
 		con_<%=customCppIssue%>='<%=request.getAttribute(customCppIssue)%>';
 		<%
 	}
+	String whichEyeForm =  oscar.OscarProperties.getInstance().getProperty("cme_js","");
 %>
 
 
@@ -208,11 +209,13 @@ function confirmPrint(btn) {
  	}
  	function savesubmit(){
  		document.eyeForm.method.value='saveConRequest';
- 		//window.close()
  		document.eyeForm.submit();
+ 		window.close();
  	}
 	function checkform(){
-		if (document.eyeForm.elements['cp.referralNo'].value=='')
+		if (document.eyeForm.elements['cp.referralNo'].value==''
+			&& (document.eyeForm.referral_doc_name.value == null
+				|| document.eyeForm.referral_doc_name.value.length<=0))
 		{
 			alert("Please choose the referral doctor.");
 			return false;
@@ -224,6 +227,22 @@ function confirmPrint(btn) {
 		else document.eyeForm.elements["cp.cc"].value=document.eyeForm.elements["cp.cc"].value+"; "+document.eyeForm.clDoctor.value;
 	}
 	function addFamDoc(){
+		var fd = $("#fam_doc").val();
+		if (document.eyeForm.elements["cp.cc"].value.length<=0)
+			document.eyeForm.elements["cp.cc"].value=fd;
+		else document.eyeForm.elements["cp.cc"].value=document.eyeForm.elements["cp.cc"].value+"; "+ fd;
+	}
+	function setCC() {
+		var fd = $("#hidden_cc").val();
+		
+		if (fd == "")
+			return;
+		
+		if (document.eyeForm.elements["cp.cc"].value.length<=0)
+			document.eyeForm.elements["cp.cc"].value=fd;
+		else document.eyeForm.elements["cp.cc"].value=document.eyeForm.elements["cp.cc"].value+"; "+ fd;
+	}
+	function addCCDocs(){
 		var fd = $("#fam_doc").val();
 		if (document.eyeForm.elements["cp.cc"].value.length<=0)
 			document.eyeForm.elements["cp.cc"].value=fd;
@@ -270,11 +289,13 @@ function confirmPrint(btn) {
 		document.eyeForm.elements["cp.plan"].value+=val;
 
 	}
-	function addExam(ob){
+	function addExaminationOptions(ob){
 		var selected = new Array();
-		for (var i = 0; i < ob.options.length; i++)
-			if (ob.options[ i ].selected)
+		for (var i = 0; i < ob.options.length; i++) {
+			if (ob.options[ i ].selected) {
 				selected.push(ob.options[ i ].value);
+			}	
+		}		
 		for (var i = 0; i < selected.length; i++)
 			addField(selected[i]);
 
@@ -455,6 +476,17 @@ jQuery(document).ready(function() {
 	ctx = '<%=request.getContextPath()%>';
 	demoNo = '<%=demographicNo%>';
 	appointmentNo = document.eyeForm.elements['cp.appointmentNo'].value;
+	
+	// Only set the CC if this is a new consult report
+	<%
+		boolean isNew = false;
+		String flag = request.getParameter("flag");
+		if (flag != null && flag.equals("new"))
+			isNew = true;
+	%>
+	var isNew = <%=isNew?"true":"false"%>;
+	if (isNew)
+		setCC();
 });
 </script>
 
@@ -469,6 +501,7 @@ jQuery(document).ready(function() {
 	<input type="hidden" name="famDoctor" value=""/>
 	<input type="hidden" name="apptno" value=""/>
 
+	<html:hidden property="cp.id"/>
 	<html:hidden property="cp.id"/>
 	<html:hidden property="cp.demographicNo"/>
 	<html:hidden property="cp.providerNo"/>
@@ -487,7 +520,11 @@ jQuery(document).ready(function() {
 				<tr>
 					<td class="Header"
 						style="padding-left: 1px; padding-right: 1px; border-right: 1px solid #003399; text-align: left; font-size: 80%; font-weight: bold; width: 100%;"
-						NOWRAP><c:out value="${demographicName}"/> </td>
+						NOWRAP><c:out value="${demographicName}"/><nested:equal
+						property="isRefOnline" value="true">
+						<img align="absmiddle" src="${pageContext.request.contextPath}/images/onlineicon.gif" height="20"
+							width="20" border="0">
+					</nested:equal> </td>
 				</tr>
 			</table>
 			</td>
@@ -539,7 +576,14 @@ jQuery(document).ready(function() {
 					<td class="tite4" colspan="2">
 					<table>
 						<tr>
-							<td class="stat"><html:radio property="cp.status" value="Completed,and sent" /></td>
+							<td class="stat">
+							<nested:equal property="isRefOnline"
+								value="true">
+								<html:radio property="cp.status" value="Completed,and sent"
+									onclick="return confirmCompleted(this)" />
+							</nested:equal> <nested:notEqual property="isRefOnline" value="true">
+								<html:radio property="cp.status" value="Completed,and sent" />
+							</nested:notEqual></td>
 							<td class="stat">Completed,and sent</td>
 						</tr>
 					</table>
@@ -617,19 +661,28 @@ jQuery(document).ready(function() {
 				</tr>
 
 				<tr>
-					<td colspan="4">
+					<td colspan="2">
 					<table style="width: 100%">
 						<tr>
 							<td width="10%" class="tite4">cc:</td>
-							<td width="90%" class="tite4"><html:text style="width:100%"
-								property="cp.cc" /></td>
+							<td width="90%" class="tite4">
+								<%
+									List<DemographicContact> ccContacts = (List<DemographicContact>)request.getAttribute("family_doc_contact");
+									String cc = null;
+									if (ccContacts != null && ccContacts.size() > 0)
+										cc = ccContacts.get(0).getContactName();
+								%>
+								<input type="hidden" name="hidden_cc" id="hidden_cc" value="<%=(cc==null? "" : cc)%>" />
+								<html:text style="width:100%" property="cp.cc" />
+							</td>
 						</tr>
 					</table>
 					</td>
 				</tr>
 
 				<tr>
-					<td colspan="4">
+				<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) { %>
+					<td>
 					<table style="background-color: #ddddff;" width="100%">
 						<tr>
 							<td class="tite4" width="10%">Greeting:</td>
@@ -641,6 +694,34 @@ jQuery(document).ready(function() {
 						</tr>
 					</table>
 					</td>
+					<td>
+					<table style="background-color: #ddddff;" width="100%">
+						<tr>
+							<td class="tite4" width="10%">Site:</td>
+							<td class="tite4" width="60%">
+								<html:select property="cp.siteId">
+								     <c:forEach var="site" items="${sites}">
+								         <html:option value="${site.id}"><c:out value="${site.name}"/></html:option>
+								     </c:forEach>
+							        </html:select><c:out value="${cp.siteId}"/>
+							</td>
+						</tr>
+					</table>
+					</td>
+				<%  } else { %>
+					<td colspan="4">
+					<table style="background-color: #ddddff;" width="100%">
+						<tr>
+							<td class="tite4" width="10%">Greeting:</td>
+							<td class="tite4" width="60%"><html:select
+								property="cp.greeting">
+								<html:option value="1">standard consult report</html:option>
+								<html:option value="2">assessment report</html:option>
+							</html:select></td>
+						</tr>
+					</table>
+					</td>				
+				<%  }  %>
 				</tr>
 
 				<tr>
@@ -649,6 +730,19 @@ jQuery(document).ready(function() {
 						<tr>
 							<td width="27%" class="tite4">Clinical information:</td>
 							<td>
+					<%if(whichEyeForm !=null && whichEyeForm.equalsIgnoreCase("eyeform_DrJinapriya")) { %>
+							<input type="button" class="btn" value="subjective"	name="chis"	onclick="clinicalInfoAdd('Current history:',con_cHis)">
+							<input type="button" class="btn" value="past ocular hx" name="phis"	onclick="clinicalInfoAdd('Past ocular history:',con_pHis)">
+							<input type="button" class="btn" value="medical hx" name="mhis"	onclick="clinicalInfoAdd('Medical history:',con_mHis)">
+							<input type="button" class="btn" value="ocular diag" name="fhis" onclick="clinicalInfoAdd('Family history:',con_fHis)">
+							<input type="button" class="btn" value="specs hx" name="shis" onclick="clinicalInfoAdd('Specs history:',con_sHis)">
+
+							<input type="button" class="btn" value="drops admin" name="ohis" onclick="clinicalInfoAdd('Ocular meds:',con_oMeds)">
+							<input type="button" class="btn" value="systemic meds" name="ohis"	onclick="clinicalInfoAdd('Other meds:',con_oHis)">
+							<input type="button" class="btn" value="objective" name="dnote" onclick="clinicalInfoAdd('Diagnostics notes:',con_diag)">
+							<input type="button" class="btn" value="ocular proc" name="opro" onclick="ocluarproAdd('Ocular procedure:',con_ocularpro)">
+							
+					<%} else { %>
 							<input type="button" class="btn" value="current hx"	name="chis"	onclick="clinicalInfoAdd('Current history:',con_cHis)">
 							<input type="button" class="btn" value="past ocular hx" name="phis"	onclick="clinicalInfoAdd('Past ocular history:',con_pHis)">
 							<input type="button" class="btn" value="medical hx" name="mhis"	onclick="clinicalInfoAdd('Medical history:',con_mHis)">
@@ -659,7 +753,7 @@ jQuery(document).ready(function() {
 							<input type="button" class="btn" value="other meds" name="ohis"	onclick="clinicalInfoAdd('Other meds:',con_oHis)">
 							<input type="button" class="btn" value="diag notes" name="dnote" onclick="clinicalInfoAdd('Diagnostics notes:',con_diag)">
 							<input type="button" class="btn" value="ocular proc" name="opro" onclick="ocluarproAdd('Ocular procedure:',con_ocularpro)">
-
+					<% } %>
 <%
 	for(String customCppIssue:customCppIssues) {
 		%><input type="button" class="btn" value="<%=customCppIssue %>" name="<%=customCppIssue %>" onclick="clinicalInfoAdd('<%=customCppIssue%>:',con_<%=customCppIssue%>)"><%
@@ -724,6 +818,7 @@ jQuery(document).ready(function() {
                 		</td>
                 		<td>
                 			<select id="fromlist2" name="fromlist2" multiple="multiple" size="9" ondblclick="addExam(ctx,'fromlist2',document.eyeForm.elements['cp.examination'],appointmentNo);">
+                			
                 				<c:forEach var="item" items="${headers}">
                 					<option value="<c:out value="${item.value}"/>"><c:out value="${item.label}"/></option>
                 				</c:forEach>
@@ -739,8 +834,9 @@ jQuery(document).ready(function() {
 					<td colspan=2 style="width: 100%">
 					<table style="width: 100%">
 						<tr>
-							<td width="74%"><html:textarea rows="7" style="width:100%"
-								property="cp.examination" /></td>
+							<td width="74%">
+								<html:textarea rows="7" style="width:100%" property="cp.examination"/>
+							</td>
 						</tr>
 					</table>
 					</td>
@@ -796,8 +892,14 @@ jQuery(document).ready(function() {
 				</c:if>
 				<tr>
 					<td colspan="2" align="right">
-					<input type="button" value="print review"
+					<nested:equal property="isRefOnline" value="true">
+						<input type="button" value="print review"
+							onclick="if (confirmPrint()) if (checkform())printsubmit();else return false;">
+					</nested:equal> 
+					<nested:notEqual property="isRefOnline" value="true">
+						<input type="button" value="print review"
 							onclick="if (checkform())printsubmit();else return false;">
+					</nested:notEqual>
 					<input type="button" value="save and close"
 						onclick="if (checkform())savesubmit();else return false;">
 					</td>

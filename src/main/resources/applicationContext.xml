@@ -355,5 +355,5 @@
 		</bean>
 		
 		
-		
+	<bean id="privateProvidersUtil" class="org.oscarehr.common.dao.PrivateProvidersUtil" autowire="byName" />	
 </beans>

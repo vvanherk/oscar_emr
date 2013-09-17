@@ -66,7 +66,7 @@ public class EctDisplayConsultAction extends EctDisplayAction {
        } else {
             //set lefthand module heading and link
             String winName = "Consultation" + bean.demographicNo;
-            String url = "popupPage(700,960,'" + winName + "','" + request.getContextPath() + "/oscarEncounter/oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp?de=" + bean.demographicNo + "')";            
+            String url = "popupPage(700,960,'" + winName + "','" + request.getContextPath() + "/oscarEncounter/oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp?de=" + bean.demographicNo + "&appNo="+appointmentNo+"')";            
             Dao.setLeftHeading(messages.getMessage(request.getLocale(), "oscarEncounter.LeftNavBar.Consult"));
             Dao.setLeftURL(url);
             
@@ -131,7 +131,11 @@ public class EctDisplayConsultAction extends EctDisplayAction {
                 item.setURL(url);
                 item.setDate(date);
                 Dao.addItem(item);
-            } 
+            }
+            
+            //modified by rohit : displaying consultation requests by date
+			Dao.setInternalDateSort(false);
+			Dao.sortItems(NavBarDisplayDAO.DATESORT_ASC);
             
             return true;
          }

@@ -63,7 +63,7 @@ public class MeasurementsDao extends HibernateDaoSupport {
 			sb.append("'");
 		}
 
-		String queryStr = "From Measurements m WHERE m.demographicNo = " + demo + " AND type IN (" + sb.toString() + ") ORDER BY type,m.dateObserved";
+		String queryStr = "From Measurements m WHERE m.appointmentNo!=0 and m.demographicNo = " + demo + " AND type IN (" + sb.toString() + ") ORDER BY type,m.dateObserved";
 		logger.debug(queryStr);
 
 		List<Measurements> rs = getHibernateTemplate().find(queryStr);
@@ -123,7 +123,8 @@ public class MeasurementsDao extends HibernateDaoSupport {
 		@SuppressWarnings("unchecked")
 		List<Measurements> rs = getHibernateTemplate().find(queryStr, new Object[] { type, startDate, endDate });
 		for (Measurements m : rs) {
-			results.put(m.getAppointmentNo(), true);
+			if(m.getAppointmentNo()>0) //the appointment no. should not be 0.
+				results.put(m.getAppointmentNo(), true);
 		}
 
 		return results.keySet();

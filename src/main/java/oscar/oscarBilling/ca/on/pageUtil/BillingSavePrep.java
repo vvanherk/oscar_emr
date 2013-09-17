@@ -47,6 +47,7 @@ public class BillingSavePrep {
 		BillingClaimHeader1Data claim1Obj = (BillingClaimHeader1Data) val.get(0);
 		int billingNo = dbObj.addOneClaimHeaderRecord(claim1Obj);
 		billingId = billingNo;
+		_logger.info("adding another billing record: " + billingNo);
 		if (billingNo == 0)
 			return false;
 		if (val.size() > 1) {

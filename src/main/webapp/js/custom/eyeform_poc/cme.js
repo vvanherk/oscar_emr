@@ -108,6 +108,9 @@
 				}});
 			});
 
+			// do this so that a browser will cache the input values for auto-completion
+			jQuery("input[name='eye_form_submit_button']").click();
+
 		});
 
 
@@ -212,6 +215,7 @@
 
 
        //right nav bar
+       removeNavDiv('episode');
        removeNavDiv('unresolvedIssues');
        removeNavDiv('resolvedIssues');
        removeNavDiv('Guidelines');

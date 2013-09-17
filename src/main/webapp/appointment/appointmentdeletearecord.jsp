@@ -53,7 +53,11 @@
 <%
 	Appointment appt = appointmentDao.find(Integer.parseInt(request.getParameter("appointment_no")));
 	appointmentArchiveDao.archiveAppointment(appt);
-	int rowsAffected = oscarSuperManager.update("appointmentDao", "delete", new Object [] {request.getParameter("appointment_no")});
+	
+	//modified by rohit.. to update status='D' when appt is deleted.. not deleting the record from appointment table
+	//int rowsAffected = oscarSuperManager.update("appointmentDao", "delete", new Object [] {request.getParameter("appointment_no")});
+	int rowsAffected = oscarSuperManager.update("appointmentDao", "delete_2", new Object [] {"D", session.getAttribute("user"), request.getParameter("appointment_no")});
+	
 	if (rowsAffected == 1) {
 %>
 <p>

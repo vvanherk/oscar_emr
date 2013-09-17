@@ -143,6 +143,7 @@ public class EctDisplayLabAction2 extends EctDisplayAction {
 				}
 			}
 			labs = new ArrayList<LabResultData>(accessionMap.values());
+			
 			logger.info("number of labs: " + labs.size());
 			for (int j = 0; j < labs.size(); j++) {
 				result = labs.get(j);
@@ -205,11 +206,15 @@ public class EctDisplayLabAction2 extends EctDisplayAction {
 				// item.setBgColour(bgcolour);
 				Dao.addItem(item);
 			}
+			
+			//modified by rohit : displaying labs by date
+			Dao.setInternalDateSort(false);
+			Dao.sortItems(NavBarDisplayDAO.DATESORT_ASC);
 
 			return true;
 		}
 	}
-
+	
 	public String getCmd() {
 		return cmd;
 	}

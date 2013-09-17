@@ -123,6 +123,21 @@ public class ProfessionalSpecialistDao extends AbstractDao<ProfessionalSpecialis
 		return null;
 
 	}
+	
+	public ProfessionalSpecialist getById(Integer id) {
+		Query query = entityManager.createQuery("select x from " + modelClass.getName() + " x WHERE x.id=?");
+		query.setParameter(1, id);
+
+		@SuppressWarnings("unchecked")
+		List<ProfessionalSpecialist> cList = query.getResultList();
+
+		if (cList != null && cList.size() > 0) {
+			return cList.get(0);
+		}
+
+		return null;
+
+	}
 
 	public boolean hasRemoteCapableProfessionalSpecialists()
 	{

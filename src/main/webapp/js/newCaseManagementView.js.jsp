@@ -251,9 +251,9 @@ function setupNotes(){
 
     //need to set focus after rounded is called
     adjustCaseNote();
-    setCaretPosition($(caseNote), $(caseNote).value.length);
+    //setCaretPosition($(caseNote), $(caseNote).value.length);
 
-    $(caseNote).focus();
+    //$(caseNote).focus();
 }
 
 function setupOneNote(note) {
@@ -407,7 +407,7 @@ function notesLoader(offset, numToReturn, demoNo) {
 				},
 				onComplete: function() {
 					$("notesLoading").style.display = "none";
-					if (notesCurrentTop != null) $(notesCurrentTop).scrollIntoView();
+					//if (notesCurrentTop != null) $(notesCurrentTop).scrollIntoView();
 				}
 			});
 }
@@ -2439,9 +2439,9 @@ function savePage(method, chain) {
 
     var caseMgtEntryfrm = document.forms["caseManagementEntryForm"];
     tmpSaveNeeded = false;
-
-    caseMgtEntryfrm.submit();
-
+    
+	//caseMgtEntryfrm.submit();
+	
 	jQuery("span[note_addon]").each(function(i){
 		var func = jQuery(this).attr('note_addon');
 		eval(func + "()");
@@ -2455,26 +2455,40 @@ function savePage(method, chain) {
     		 );
 
 
-    /*var frm = document.forms["caseManagementViewForm"];
-    var url = ctx + "/CaseManagementView.do";
-    var objAjax = new Ajax.Request (
-                    url,
-                    {
-                        method: 'post',
-                        postBody: Form.serialize(frm),
-                        onSuccess: function(request) {
-                            tmpSaveNeeded = false;
-                            caseMgtEntryfrm.submit();
-                        },
-                        onFailure: function(request) {
-                            if( request.status == 403 )
-                                alert(sessionExpiredError);
-                            else
-                                alert(request.status + " " + savingNoteError);
-                        }
-                     }
-                   );
-*/
+	var toBill = document.forms['caseManagementEntryForm'].toBill.value;
+
+	if ( toBill ) {
+		jQuery("#save_measurements").click();
+		// Give measurements saving time to complete
+		setTimeout( 
+			function() {
+				document.forms["caseManagementEntryForm"].submit();
+			}, 
+			1000
+		);
+	} else {
+	    var frm = document.forms["caseManagementEntryForm"];
+	    var url = ctx + "/CaseManagementEntry.do";
+	    var objAjax = new Ajax.Request (
+			url,
+			{
+				method: 'post',
+				postBody: Form.serialize(frm),
+				onSuccess: function(request) {
+					tmpSaveNeeded = false;
+					jQuery("#save_measurements").click();
+					window.close();
+					//caseMgtEntryfrm.submit();
+				},
+				onFailure: function(request) {
+					if( request.status == 403 )
+						alert(sessionExpiredError);
+					else
+						alert(request.status + " " + savingNoteError);
+				}
+			}
+		);
+	}
     return false;
 }
 

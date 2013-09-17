@@ -262,7 +262,7 @@ function hideOnSource(){
 			key="report.reportdaysheet.msgAppointmentTime" /></a></b></TH>
 		<TH width="15%"><b><a
 			href="reportdaysheet.jsp?provider_no=<%=provider_no%>&sdate=<%=sdate%>&edate=<%=edate%>&orderby=name<%=request.getParameter("dsmode")==null?"":"&dsmode="+request.getParameter("dsmode")%>"><bean:message
-			key="report.reportdaysheet.msgPatientLastName" /></a> </b></TH>
+			key="report.reportdaysheet.msgPatientName" /></a> </b></TH>
 		<!--<TH width="20%"><b><a href="reportdaysheet.jsp?provider_no=<%=provider_no%>&sdate=<%=sdate%>&edate=<%=edate%>&orderby=p_first_name"><bean:message key="report.reportdaysheet.msgPatientFirstName"/></a> </b></TH>-->
 
  		<TH width="10%"><b><a

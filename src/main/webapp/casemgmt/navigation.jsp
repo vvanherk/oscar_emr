@@ -221,7 +221,7 @@ String backurl=bsurl+"/oscarEncounter/IncomingEncounter.do?";
 
 
 <!-- Consultations -->
-<tr><td><a href="javascript:void(0)" onClick="popupPage('<%=bsurl%>/oscarEncounter/oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp?de=<%=bean.demographicNo%>');return false;">Consultations</a></td></tr>
+<tr><td><a href="javascript:void(0)" onClick="popupPage('<%=bsurl%>/oscarEncounter/oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp?de=<%=bean.demographicNo%>&appNo=<%=bean.appointmentNo%>');return false;">Consultations</a></td></tr>
 
 <caisirole:SecurityAccess accessName="immunization" accessType="access" providerNo="<%=bean.providerNo%>" demoNo="<%=bean.demographicNo%>" programId="<%=pgId%>">
     <!-- IMMUNIZATION -->

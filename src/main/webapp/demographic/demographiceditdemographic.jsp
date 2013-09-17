@@ -1024,7 +1024,7 @@ if(wLReadonly.equals("")){
 			<tr>
 				<td><a
 					href="javascript: function myFunction() {return false; }"
-					onClick="popupPage(700,960,'../oscarEncounter/oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp?de=<%=demographic.getDemographicNo()%>&proNo=<%=demographic.getProviderNo()%>')"><bean:message
+					onClick="popupPage(700,960,'../oscarEncounter/oscarConsultationRequest/DisplayDemographicConsultationRequests.jsp?de=<%=demographic.getDemographicNo()%>&proNo=<%=demographic.getProviderNo()%>&appNo=<%=appointment%>')"><bean:message
 					key="demographic.demographiceditdemographic.btnConsultation" /></a></td>
 			</tr>
 <% if (!vLocale.getCountry().equals("BR")) { %>
@@ -1237,7 +1237,7 @@ if (iviewTag!=null && !"".equalsIgnoreCase(iviewTag.trim())){
                     <!-- A list used in the mobile version for users to pick which information they'd like to see -->
                     <div id="mobileDetailSections" style="display:<%=(isMobileOptimized)?"block":"none"%>;">
                         <ul class="wideList">
-                            <% if (!alert.equals("")) { %>
+                            <% if (alert!=null && !alert.equals("")) { %>
                             <li><a style="color:brown" onClick="showHideMobileSections(new Array('alert'))"><bean:message
                                 key="demographic.demographiceditdemographic.formAlert" /></a></li>
                             <% } %>
@@ -1462,7 +1462,7 @@ if (iviewTag!=null && !"".equalsIgnoreCase(iviewTag.trim())){
 
                                           %>
 							<li><span class="label"><%=relHash.get("relation")%><%=sdb%><%=ec%>:</span>
-                                                            <span class="info"><%=relHash.get("lastName")%>, <%=relHash.get("firstName")%>, <%=relHash.get("phone")%></span>
+							    <span class="info"><a href="demographiccontrol.jsp?demographic_no=<%=relHash.get("demographicNo")%>&displaymode=edit&dboperation=search_detail'"><%=relHash.get("lastName")%>, <%=relHash.get("firstName")%>, <%=relHash.get("phone")%></a></span>
                                                         </li>
 							<%}%>
 
@@ -1482,6 +1482,7 @@ if (iviewTag!=null && !"".equalsIgnoreCase(iviewTag.trim())){
 							DemographicContactDao dContactDao = (DemographicContactDao)SpringUtils.getBean("demographicContactDao");
 							List<DemographicContact> dContacts = dContactDao.findByDemographicNo(demographic.getDemographicNo());
 							dContacts = ContactAction.fillContactNames(dContacts);
+							ContactAction.removeDuplicates(dContacts);
 							for(DemographicContact dContact:dContacts) {
 								String sdm = (dContact.getSdm()!=null && dContact.getSdm().equals("true"))?"<span title=\"SDM\" >/SDM</span>":"";
 								String ec = (dContact.getEc()!=null && dContact.getEc().equals("true"))?"<span title=\"Emergency Contact\" >/EC</span>":"";

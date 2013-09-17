@@ -36,6 +36,7 @@ private String [] curScheduleMultisite;
 private List<String> siteProviderNos = new ArrayList<String>();
 private List<String> siteGroups = new ArrayList<String>();
 private String selectedSite = null;
+private String selectedSiteBgColor = null;
 private HashMap<String,String> siteBgColor = new HashMap<String,String>();
 private HashMap<String,String> CurrentSiteMap = new HashMap<String,String>();
 private String getSiteHTML(String reason, List<Site> sites) {
@@ -147,6 +148,7 @@ if (bMultisites) {
 		session.setAttribute("site_selected", requestSite );
 	}
 	selectedSite = (requestSite == null ? (String)session.getAttribute("site_selected") : requestSite) ;
+	selectedSiteBgColor = (selectedSite != null ? siteBgColor.get(selectedSite) : null);
 	
 	if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
 		//user has Access Privacy, set user provider and group list
@@ -601,9 +603,77 @@ function refreshTabAlerts(id) {
 				<td ALIGN="RIGHT">
 
 
-<% boolean isTeamOnly=false; %>
+<% boolean isTeamOnly=false; 
+   List<String> providerOptions = new ArrayList<String>();
+%>
 
 	<!--  multi-site , add site dropdown list -->
+				<select name="provider_no" onChange="selectprovider(this)">
+					<option value="all" <%=providerview.equals("all")?"selected":""%>><bean:message
+						key="provider.appointmentprovideradminmonth.formAllProviders" /></option>
+<security:oscarSec roleName="<%=roleName$%>"
+	objectName="_team_schedule_only" rights="r" reverse="false">
+<%
+	isTeamOnly=true;
+	String provider_no = curUser_no;
+	resultList = oscarSuperManager.find("providerDao", "searchloginteam", new Object[]{provider_no, provider_no});
+	for (Map provider : resultList) {
+		providerNameBean.setDef(String.valueOf(provider.get("provider_no")), provider.get("last_name")+","+provider.get("first_name"));	
+		providerOptions.add((String)provider.get("provider_no"));
+%>
+					<option value="<%=provider.get("provider_no")%>" <%=providerview.equals(provider.get("provider_no"))?"selected":""%> <%= (selectedSiteBgColor != null ? "style=\"color:"+selectedSiteBgColor+"\"" : "") %> >
+						<%=providerNameBean.getShortDef(String.valueOf(provider.get("provider_no")), "", NameMaxLen)%>
+						</option>
+<%
+	}
+%>
+
+</security:oscarSec>
+<security:oscarSec roleName="<%=roleName$%>"
+	objectName="_team_schedule_only" rights="r" reverse="true">				
+<%
+	resultList = oscarSuperManager.find("providerDao", "searchmygroupno", new Object[] {});
+	for (Map group : resultList) {
+		if (!bMultisites || siteGroups == null || siteGroups.size() == 0 || siteGroups.contains(group.get("mygroup_no"))) {  		
+%>
+					<option value="<%="_grp_"+group.get("mygroup_no")%>" <%=(providerview.indexOf("_grp_") != -1 && mygroupno.equals(group.get("mygroup_no")))?"selected":""%> <%= (selectedSiteBgColor != null ? "style=\"color:"+selectedSiteBgColor+"\"" : "") %>>
+						<bean:message key="provider.appointmentprovideradminmonth.formGRP" />: <%=group.get("mygroup_no")%>
+					</option>
+<%
+		}
+	}
+	
+	resultList = oscarSuperManager.find("providerDao", "searchprovider", new Object[] {});
+	for (Map provider : resultList) {
+		if (!bMultisites || siteProviderNos  == null || siteProviderNos.size() == 0 || siteProviderNos.contains(provider.get("provider_no"))) { 
+			providerOptions.add((String)provider.get("provider_no"));
+			providerNameBean.setDef(String.valueOf(provider.get("provider_no")), provider.get("last_name")+","+provider.get("first_name"));
+%>
+					<option value="<%=provider.get("provider_no")%>" <%=providerview.equals(provider.get("provider_no"))?"selected":""%> <%= (selectedSiteBgColor != null ? "style=\"color:"+selectedSiteBgColor+"\"" : "") %>>
+						<%=providerNameBean.getShortDef(String.valueOf(provider.get("provider_no")), "", NameMaxLen)%>
+					</option>
+<%
+		}
+	}
+%>
+</security:oscarSec>
+
+<%
+	resultList = oscarSuperManager.find("providerDao", "searchprovider", new Object[] {});
+	for (Map provider : resultList) {
+		if (!providerOptions.contains((String)provider.get("provider_no"))) { 
+		providerNameBean.setDef(String.valueOf(provider.get("provider_no")), provider.get("last_name")+","+provider.get("first_name"));
+%>
+					<option value="<%=provider.get("provider_no")%>" <%=providerview.equals(provider.get("provider_no"))?"selected":""%>> 
+						<%=providerNameBean.getShortDef(String.valueOf(provider.get("provider_no")), "", NameMaxLen)%>
+					</option>
+<%
+		}
+	}
+%>
+
+				</select>
+				<space style="padding-left:30px"/>
  <%if (bMultisites) { %>		
 	   <script>
 			function changeSite(sel) {
@@ -635,53 +705,8 @@ function refreshTabAlerts(id) {
     	<% } %>
     	</select>
 <%} %>    	
-				<select name="provider_no" onChange="selectprovider(this)">
-					<option value="all" <%=providerview.equals("all")?"selected":""%>><bean:message
-						key="provider.appointmentprovideradminmonth.formAllProviders" /></option>
-<security:oscarSec roleName="<%=roleName$%>"
-	objectName="_team_schedule_only" rights="r" reverse="false">
-<%
-	isTeamOnly=true;
-	String provider_no = curUser_no;
-	resultList = oscarSuperManager.find("providerDao", "searchloginteam", new Object[]{provider_no, provider_no});
-	for (Map provider : resultList) {
-		providerNameBean.setDef(String.valueOf(provider.get("provider_no")), provider.get("last_name")+","+provider.get("first_name"));		
-%>
-					<option value="<%=provider.get("provider_no")%>"
-						<%=providerview.equals(provider.get("provider_no"))?"selected":""%>><%=providerNameBean.getShortDef(String.valueOf(provider.get("provider_no")), "", NameMaxLen)%></option>
-<%
-	}
-%>
-
-</security:oscarSec>
-<security:oscarSec roleName="<%=roleName$%>"
-	objectName="_team_schedule_only" rights="r" reverse="true">				
-<%
-	resultList = oscarSuperManager.find("providerDao", "searchmygroupno", new Object[] {});
-	for (Map group : resultList) {
-		if (!bMultisites || siteGroups == null || siteGroups.size() == 0 || siteGroups.contains(group.get("mygroup_no"))) {  		
-%>
-					<option value="<%="_grp_"+group.get("mygroup_no")%>"
-						<%=(providerview.indexOf("_grp_") != -1 && mygroupno.equals(group.get("mygroup_no")))?"selected":""%>><bean:message
-						key="provider.appointmentprovideradminmonth.formGRP" />: <%=group.get("mygroup_no")%></option>
-<%
-		}
-	}
-
-	resultList = oscarSuperManager.find("providerDao", "searchprovider", new Object[] {});
-	for (Map provider : resultList) {
-		if (!bMultisites || siteProviderNos  == null || siteProviderNos.size() == 0 || siteProviderNos.contains(provider.get("provider_no"))) { 
-		providerNameBean.setDef(String.valueOf(provider.get("provider_no")), provider.get("last_name")+","+provider.get("first_name"));
-%>
-					<option value="<%=provider.get("provider_no")%>"
-						<%=providerview.equals(provider.get("provider_no"))?"selected":""%>><%=providerNameBean.getShortDef(String.valueOf(provider.get("provider_no")), "", NameMaxLen)%></option>
-<%
-		}
-	}
-%>
-</security:oscarSec>
-				</select>
-
+				<space style="padding-left:30px"/>
+	
 				</td>
 			</tr>
 			<tr>
@@ -776,8 +801,7 @@ function refreshTabAlerts(id) {
     }
     if(isTeamOnly || !providerview.startsWith("_grp_",0) || myGrpBean.containsKey(String.valueOf(date.get("provider_no"))) ) {
     	%>
-    <br><span class='datepname'>&nbsp;<%=providerNameBean.getShortDef(String.valueOf(date.get("provider_no")),"",NameMaxLen )%></span><span
-						class='datephour'><%=date.get("hour") %></span>
+    <br>
 	<%
     	if (bMultisites && CurrentSiteMap.get(date.get("reason")) != null && ( selectedSite == null || "NONE".equals(date.get("reason")) || selectedSite.equals(date.get("reason")))) {
 %> 
@@ -787,7 +811,11 @@ function refreshTabAlerts(id) {
 					
 						<span class='datepreason'><%=date.get("reason") %></span>
 <% } %>
-<%  } } } %>
+<%  } 
+%>	
+<span class='datepname'>&nbsp;<%=providerNameBean.getShortDef(String.valueOf(date.get("provider_no")),"",NameMaxLen )%></span><span
+						class='datephour'><%=date.get("hour") %></span>
+<%   } } %>
 					</a></font></td>
 					<%
                   }

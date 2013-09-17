@@ -190,7 +190,8 @@ public class MeasurementDataAction extends DispatchAction {
 				String values[] = request.getParameterValues(key);
 				if(key.equals("action") || key.equals("demographicNo") || key.equals("appointmentNo"))
 					continue;
-				if(values.length>0 && values[0]!=null && values[0].length()>0) {
+				//if(values.length>0 && values[0]!=null && values[0].length()>0) { //should be able to save empty value...to clear or correct the wrong measurements.
+				if(values.length>0) {
 					measurements.put(key,values[0]);
 					Measurements m = new Measurements();
 					m.setComments("");

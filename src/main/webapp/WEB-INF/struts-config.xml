@@ -513,6 +513,12 @@
 		<form-bean name="eyeForm" type="org.apache.struts.validator.DynaValidatorForm">
 			<form-property name="followup" type="org.oscarehr.eyeform.model.EyeformFollowUp" />
 			<form-property name="cp" type="org.oscarehr.eyeform.model.EyeformConsultationReport" />
+			<form-property name="isRefOnline" type="java.lang.String" />
+		</form-bean>
+
+		<form-bean name="obForm" type="org.apache.struts.validator.DynaValidatorForm">
+			<form-property name="search" type="org.oscarehr.ob.OBConsultationReportForm"/>
+			<form-property name="cp" type="org.oscarehr.common.model.ConsultationReport"/>
 		</form-bean>
                 <form-bean name="PatientEndYearStatementForm" type="oscar.oscarBilling.ca.on.pageUtil.PatientEndYearStatementForm" />
 
@@ -2229,7 +2235,15 @@
 			scope="request" parameter="method">
 		</action>
 
-
+		<action path="/ob/OB" type="org.oscarehr.ob.OBAction" parameter="method" scope="request" validate="false" name="obForm">
+			<forward name="conReport" path="/ob/conreplyGen.jsp" />
+			<forward name="print" path="/ob/conReportPrint.jsp" />
+			<forward name="list" path="/ob/conReportList.jsp"/>
+			<forward name="listDemographic" path="/ob/conReportListDemographic.jsp"/>
+			<forward name="obForm" path="/ob/conReportForm.jsp"/>
+			<forward name="close" path="/oscarEncounter/close.jsp"/>
+		</action>
+		
 		<action path="/casemgmt/ExtPrintRegistry" type="org.oscarehr.casemgmt.web.ExtPrintRegistryAction" parameter="method" scope="request">
 		</action>
 
@@ -2517,6 +2531,20 @@
 
 		<action path="/casemgmt/NotePermissions" type="org.oscarehr.casemgmt.web.NotePermissionsAction"
 			scope="request" validate="false" parameter="method" />
+		<action path="/billing/CA/ON/billingON3rdPayments" scope="request" type="org.springframework.web.struts.DelegatingActionProxy" parameter="method">
+			<forward name="success" path="/billing/CA/ON/billingON3rdPayments.jsp"/>
+			<forward name="failure" path="/billing/CA/ON/billingON3rdPayments.jsp"/>
+		</action>	
+		<action name="BillingDocumentErrorReportUploadForm" path="/billing/CA/ON/displayMOHXML" scope="request" type="org.oscarehr.billing.CA.ON.web.DisplayMOHXMLAction">
+            		<forward name="success" path="/billing/CA/ON/billingLreport.jsp" />
+			<forward name="failure" path="/billing/CA/ON/billingLreport.jsp" />
+		</action> 			
+		<action input="/billing/CA/ON/viewMOHFiles.jsp" scope="request" path="/billing/CA/ON/moveMOHFiles" type="org.oscarehr.billing.CA.ON.web.ArchiveMOHFileAction">
+			<forward name="showInbox" path="/billing/CA/ON/viewMOHFiles.jsp" />
+		</action>
+
+		<action path="/providersListAjax" type="org.springframework.web.struts.DelegatingActionProxy" parameter="method" scope="request" validate="false">
+		</action>
 
 	</action-mappings>
 	<controller processorClass="org.apache.struts.tiles.TilesRequestProcessor" maxFileSize="100M" />

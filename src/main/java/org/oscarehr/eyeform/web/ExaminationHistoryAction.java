@@ -412,7 +412,8 @@ public class ExaminationHistoryAction extends DispatchAction {
 		
 		List<Appointment> appointments = new ArrayList<Appointment>();		
 		for(Integer id:appointmentIds) {
-			appointments.add(0,appointmentDao.find(id));
+			if(appointmentDao.find(id)!=null)
+				appointments.add(0,appointmentDao.find(id));
 		}
 		
 		return appointments;
@@ -430,7 +431,8 @@ public class ExaminationHistoryAction extends DispatchAction {
 				
 		List<Appointment> appointments = new ArrayList<Appointment>();		
 		for(Integer id:appointmentIds) {
-			appointments.add(0,appointmentDao.find(id));
+			if(appointmentDao.find(id)!=null)
+				appointments.add(0,appointmentDao.find(id));
 		}
 		
 		return appointments;
@@ -448,7 +450,8 @@ public class ExaminationHistoryAction extends DispatchAction {
 				
 		List<Appointment> appointments = new ArrayList<Appointment>();		
 		for(Integer id:appointmentIds) {
-			appointments.add(0,appointmentDao.find(id));
+			if(appointmentDao.find(id)!=null)
+				appointments.add(0,appointmentDao.find(id));
 		}
 		
 		return appointments;
@@ -467,7 +470,8 @@ public class ExaminationHistoryAction extends DispatchAction {
 				
 		List<Appointment> appointments = new ArrayList<Appointment>();		
 		for(Integer id:appointmentIds) {
-			appointments.add(0,appointmentDao.find(id));
+			if(appointmentDao.find(id)!=null)
+				appointments.add(0,appointmentDao.find(id));
 		}
 		
 		return appointments;
@@ -486,7 +490,8 @@ public class ExaminationHistoryAction extends DispatchAction {
 				
 		List<Appointment> appointments = new ArrayList<Appointment>();		
 		for(Integer id:appointmentIds) {
-			appointments.add(0,appointmentDao.find(id));
+			if(appointmentDao.find(id)!=null)
+				appointments.add(0,appointmentDao.find(id));
 		}
 		
 		return appointments;
@@ -505,7 +510,8 @@ public class ExaminationHistoryAction extends DispatchAction {
 				
 		List<Appointment> appointments = new ArrayList<Appointment>();		
 		for(Integer id:appointmentIds) {
-			appointments.add(0,appointmentDao.find(id));
+			if(appointmentDao.find(id)!=null)
+				appointments.add(0,appointmentDao.find(id));
 		}
 		
 		return appointments;

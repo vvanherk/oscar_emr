@@ -193,7 +193,7 @@ function doSubmit() {
 	</c:if>
 
 
-	<display:table name="conReportList" requestURI="/eyeform/conreportlist.jsp" defaultsort="2" sort="list" defaultorder="descending"
+	<display:table name="conReportList" requestURI="/eyeform/ConsultationReportList.do" defaultsort="2" sort="list" defaultorder="descending"
 		id="conreport" pagesize="15">
 
 		<c:url var="thisURL" value="/eyeform/Eyeform.do">
