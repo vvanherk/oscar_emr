@@ -113,6 +113,7 @@ var appointmentDate = [];
 
 
 var BoxIssueUrls = {
+		"macros": ctx + "/oscarEncounter/displayMacro.do",
 		"specsHistory": ctx + "/oscarEncounter/displaySpecsHistory.do",
 		"procedures": ctx + "/oscarEncounter/displayOcularProcedure.do",
 		"consultations": ctx + "/oscarEncounter/displayConsultation.do?appointment_no=" + appointmentNo,
@@ -126,6 +127,7 @@ var BoxIssueUrls = {
 };
 
 var cmds = {
+		"macros": "macro",
 		"consultations": "consultation",
 		"specsHistory": "specshistory",
 		"procedures": "ocularprocedure",
@@ -290,74 +292,8 @@ function getApopintmentClass(appointmentNo) {
 		return "";
 }
 
-function initMacroList() {
-	$.ajax({
-		url: ctx + "/eyeform/Util.do?method=getMacroList",
-		dataType: "json",
-		success: function(data) {
-			macros = data.macros;
-
-			$("#macroList option").remove();
-
-			for (var m in macros) {
-				$("#macroList").append("<option value='" + m + "'>" + macros[m].macroName + "</option>");
-			}
-
-			newMacro();
-
-			$("#macroList").change(function() {
-				showEditMacro($(this).val());
-			});
-		}
-	});
-}
-
-function showEditMacro(m) {
-	$("#macroIdField").val(macros[m].id);
-	$("#macroNameBox").val(macros[m].macroName);
-	$("#macroImpressionBox").val(macros[m].impressionText);
-	$("#macroPlanBox").val(macros[m].planText);
-
-	if (macros[m].copyFromLastImpression) {
-		$("#macroCopyLastImpressionBtn").addClass("uiBarBtnOn");
-		$("#macroImpressionBox").val(COPY_LAST_IMPRESSION_TXT)
-		$("#macroImpressionBox").attr("disabled", "disabled");
-	} else {
-		$("#macroCopyLastImpressionBtn").removeClass("uiBarBtnOn");
-		$("#macroImpressionBox").removeAttr("disabled");
-	}
-
-	$("#macroBillingItemBox .macroBillingItem").remove();
-	for (var b in macros[m].billingItems) {
-		$("#macroBillingItemBox").append("<div class='macroBillingItem'><span class='removeBillingItem'>x</span> " + macros[m].billingItems[b].billingServiceCode + " x" + macros[m].billingItems[b].multiplier + "</div>");
-	}
-
-	$(".removeBillingItem").click(function() {
-		$(this).parent().remove();
-	});
-}
-
 function newMacro() {
-	$("#macroIdField").val("");
-	$("#macroNameBox").val("");
-	$("#macroImpressionBox").val("");
-	$("#macroPlanBox").val("");
-	$("#macroCopyLastImpressionBtn").removeClass("uiBarBtnOn");
-	$("#macroImpressionBox").removeAttr("disabled");
-
-	$(".macroBillingItem").remove();
-
-	$("#macroList").val("");
-
-	$("#macroNameBox").focus();
-}
-
-function copyMacro() {
-	$("#macroIdField").val("");
-	$("#macroNameBox").val("");
-	$("#macroNameBox").focus();
-
-	$("#macroList").val("");
+	popupPage(800, 600, "Eyeform Macro Details", ctx + "/eyeform/Macro.do?method=addMacro");
 }
 
 function getMostRecentItem(boxName, callback) {
@@ -701,12 +637,9 @@ function closeAll() {
 	$(".openAddList").remove();
 
 	$(".loaderImg").css("display", "none");
-
-	$("#macroListBox").css("display", "none");
 }
 
 function fillAjaxBox(boxNameId, jsonData, initialLoad) {
-
 	if (jsonData.Items.length > 0) {
 		$("#" + boxNameId + " .wrapper").html("<div class='content'><ul /></div>");
 	}
@@ -745,8 +678,12 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 		} else {
 			if (item.PDF)
 				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"popupPage(800, 1000, '', '" + item.URL + "')\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
-			else
-				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
+			else {
+				var dateString = date.toFormattedString();
+				if (dateString == "Unspecified")
+					dateString = "";
+				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + dateString + "</strong> " + item.title + "</span></li>");
+			}
 		}
 	}
 
@@ -762,7 +699,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 	}
 
 	if (initialLoad) {
-		$("#newTicklerBox, #newSpecsBox, #newProcedureBox, #macroListBox").draggable({
+		$("#newTicklerBox, #newSpecsBox, #newProcedureBox").draggable({
 			handle: "div.boxTitle",
 			cancel: "div.uiBarBtn",
 			drag: function() {
@@ -772,7 +709,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 
 		if (boxNameId == "labResults" || boxNameId == "diagrams" || boxNameId == "documents"
 			|| boxNameId == "billing" || boxNameId == "tickler" || boxNameId == "consultations"
-				|| boxNameId == "ocularMeds" || boxNameId == "allergies") {
+				|| boxNameId == "ocularMeds" || boxNameId == "allergies" || boxNameId == "macros") {
 			$("#" + boxNameId + " .title").click((function (action) {
 				return function(e) {
 					e.stopPropagation();
@@ -1109,7 +1046,7 @@ function displayMeasurements(data, table) {
 
 function refreshBox(boxName, initialLoad) {
 	var boxUrl = BoxIssueUrls[boxName];
-
+	
 	$.ajax({
 		type: "POST",
 		url: boxUrl,
@@ -1376,6 +1313,25 @@ function handleAutocompleteKeyup(autocomplete, textbox, event, submitFn) {
 		submitFn($(autocomplete).find(".selectedListItem"));
 		return true;
 	}
+	return false;
+}
+
+/**
+ * Function to run the macro.  Not sure why we are using the odd name - it's from the echart macro code.
+ */
+function runMacro2(macroId, macroName, appointmentNo, cpp) {
+	var c = confirm('Are you sure to execute macro [ '+ macroName+' ] and sign this form?');
+	if (c == false) 
+		return false;
+		
+	//potentially need admission date.
+	//document.forms['caseManagementEntryForm'].sign.value='on';
+	//jQuery("form[name='caseManagementEntryForm']").append("<input type=\"hidden\" id=\"macro.id\" name=\"macro.id\" value=\""+macroId+"\"/>");
+	
+	//var result =  savePage('runMacro', '');
+	saveEyeform(saveFunc, true, false, true);
+	//saveEyeform(postBillingEntry, true, true, false);
+	
 	return false;
 }
 
@@ -1764,6 +1720,16 @@ function transformDate(dateField) {
 	return true;
 }
 
+function saveFunc() {
+	loadMeasurements();
+	loadNoteBox("impressionHistory", noteBoxes["impressionHistory"], false);
+	loadNoteBox("planHistory", noteBoxes["planHistory"], false);
+	refreshBox("tickler", false);
+	$("#impressionAreaBox").val("");
+	$("#planBox").val("");
+	$("#billDxCodeBox").empty();
+	$("#billCodeBox").empty();
+}
 
 $(document).ready(function() {
 	setHighlight(defaultDateRange);
@@ -1821,17 +1787,6 @@ $(document).ready(function() {
 		e.stopPropagation();
 		postBillingEntry();
 	});
-
-	var saveFunc = function() {
-		loadMeasurements();
-		loadNoteBox("impressionHistory", noteBoxes["impressionHistory"], false);
-		loadNoteBox("planHistory", noteBoxes["planHistory"], false);
-		refreshBox("tickler", false);
-		$("#impressionAreaBox").val("");
-		$("#planBox").val("");
-		$("#billDxCodeBox").empty();
-		$("#billCodeBox").empty();
-	};
 
 	$("#saveBtn").click(function() {
 		saveEyeform(saveFunc, false, false, true);
@@ -2098,10 +2053,6 @@ $(document).ready(function() {
 		$(this).parent().find("loaderImg").css("display", "inline");
 	});
 
-
-	// Macro stuff
-	initMacroList();
-
 	$("#openMacroBoxBtn, #closeMacroBoxBtn").click(function() {
 		if ($("#macroListBox").css("display") == "block") {
 			closeAll();
@@ -2177,12 +2128,12 @@ $(document).ready(function() {
 
 				var completeList = [];
 				for (var m in macros) {
-					if (macros[m].macroName.toLowerCase().indexOf($(this).val().toLowerCase()) >= 0)
+					if (macros[m].label.toLowerCase().indexOf($(this).val().toLowerCase()) >= 0)
 						completeList.push(m);
 				}
 
 				for (var c in completeList) {
-					$("#macroAutocomplete").append("<div class='listItem' code='" + completeList[c] + "'><span class='autocompleteTitle'>" + macros[completeList[c]].macroName + "</span></div>");
+					$("#macroAutocomplete").append("<div class='listItem' code='" + completeList[c] + "'><span class='autocompleteTitle'>" + macros[completeList[c]].label + "</span></div>");
 				}
 
 				$("#macroAutocomplete .listItem").first().addClass("selectedListItem");
@@ -2234,8 +2185,6 @@ $(document).ready(function() {
 				} else {
 					alert("Error in saving macro: " + data.error);
 				}
-
-				initMacroList();
 			}
 		});
 	});

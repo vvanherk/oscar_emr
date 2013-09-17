@@ -95,10 +95,13 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<div id="highlightSlider" class="contentItem"></div>
 			<div id="highlightSliderLengthBox"><strong>Highlight:</strong> <span id="highlightSliderLength"></span></div>
 		</div>
-		<div class="smallBox macroBox">
-			<span class="uiBarBtn macroBtn" id="openMacroBoxBtn">M</span>
-			<input type="text" placeholder="macro" id="selectMacroExecuteBox">
-			<div class="autocompleteList" id="macroAutocomplete" style="display: none;"></div>
+		<div class="smallBox boxTitleLink" id="macros">
+			<div class="title">
+				Macros
+				<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+				<span class="uiBarBtn"><span class="text addBtn" id="addMacroBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
 		</div>
 		<div class="smallBox boxTitleLink" id="allergies">
 			<div class="title">
@@ -562,66 +565,6 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 		<div class="arrow" style="top: 1px;"></div>
 	</div>
 
-	<div class="popoutBox macroListBox" id="macroListBox" style="display: none;">
-		<div class="boxContent">
-			<div class="boxTitle">
-				Macros
-				<div class="uiBarBtn uiCloseBtn" id="closeMacroBoxBtn"><span class="text">x</span></div>
-			</div>
-			<table>
-				<tr>
-					<td>
-					<div class="macroControls">
-							<span class="uiBarBtn" id="newMacroBtn"><span class="text smallerText">New</span></span>
-							<span class="uiBarBtn" id="copyMacroBtn"><span class="text smallerText">Copy</span></span>
-						</div>
-						<select class="macroList" id="macroList" size="2"></select>
-
-					</td>
-					<td>
-						<input type="hidden" id="macroIdField" name="macroIdField" value="" />
-						<table>
-							<tr>
-								<th>Macro Name</th>
-								<td><input type="text" id="macroNameBox" name="macroNameBox" /></td>
-							</tr>
-							<tr>
-								<td colspan=2><hr /></td>
-							<tr>
-								<th>Impression Note</th>
-								<td>
-									<div class="macroControls">
-										<span class="uiBarBtn" id="macroCopyLastImpressionBtn"><span class="text smallerText">Copy Last Impression</span></span>
-									</div>
-									<textarea cols=40 rows=5 id="macroImpressionBox" name="macroImpressionBox"></textarea>
-								</td>
-							</tr>
-							<tr>
-								<th>Plan</th>
-								<td><input type="text" class="planInputBox" id="macroPlanBox" name="macroPlanBox" /></td>
-							</tr>
-							<tr style="display: none;">
-								<th>Billing</th>
-								<td>
-									<div>
-										<input type="text" id="macroBillingTextBox" placeholder="search" />
-										<div class="autocompleteList" id="billingAutocomplete" style="display: none;"></div>
-									</div>
-									<div id="macroBillingItemBox"></div>
-								</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td><div class="uiBtn" id="macroSaveBtn">Save</div><span class="loaderImg"><img src="<%=request.getContextPath()%>/images/DMSLoader.gif" /></span></td>
-							</tr>
-						</table>
-					</td>
-				</tr>
-			</table>
-		</div>
-
-		<div class="arrow" style="top: 1px;"></div>
-	</div>
 	<form name="caseManagementEntryForm"></form>
 
 	<script type="text/javascript">

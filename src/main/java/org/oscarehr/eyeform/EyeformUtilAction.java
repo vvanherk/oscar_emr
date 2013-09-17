@@ -31,13 +31,13 @@ import org.oscarehr.PMmodule.dao.ProviderDao;
 import org.oscarehr.common.dao.BillingServiceDao;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.DiagnosticCodeDao;
-import org.oscarehr.common.dao.EyeformMacroDao;
+import org.oscarehr.eyeform.dao.MacroDao;
 import org.oscarehr.common.dao.OscarAppointmentDao;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.BillingService;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DiagnosticCode;
-import org.oscarehr.common.model.EyeformMacro;
+import org.oscarehr.eyeform.model.Macro;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.eyeform.model.EyeformMacroBillingItem;
 import org.oscarehr.util.LoggedInInfo;
@@ -132,9 +132,9 @@ public class EyeformUtilAction extends DispatchAction {
 
 
 	public ActionForward getMacroList(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
-		EyeformMacroDao eyeformMacroDao = (EyeformMacroDao) SpringUtils.getBean("eyeformMacroDao");
+		MacroDao macroDao = (MacroDao) SpringUtils.getBean("macroDao");
 
-		List<EyeformMacro> macroList = eyeformMacroDao.getMacros();
+		List<Macro> macroList = macroDao.getAll();
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
 		hashMap.put("macros", macroList);
 
@@ -148,14 +148,15 @@ public class EyeformUtilAction extends DispatchAction {
 	}
 
 	public ActionForward saveMacro(ActionMapping maping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
-		EyeformMacroDao eyeformMacroDao = (EyeformMacroDao) SpringUtils.getBean("eyeformMacroDao");
+		MacroDao macroDao = (MacroDao) SpringUtils.getBean("macroDao");
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
 
 		try {
-			EyeformMacro macro = new EyeformMacro();
+			/*
+			Macro macro = new Macro();
 			if (request.getParameter("macroIdField") != null && request.getParameter("macroIdField").length() > 0) {
-				macro = eyeformMacroDao.find(Integer.parseInt(request.getParameter("macroIdField")));
-				macro = (macro == null ? new EyeformMacro() : macro);
+				macro = macroDao.find(Integer.parseInt(request.getParameter("macroIdField")));
+				macro = (macro == null ? new Macro() : macro);
 			}
 
 			macro.setMacroName(request.getParameter("macroNameBox"));
@@ -166,9 +167,9 @@ public class EyeformUtilAction extends DispatchAction {
 			if (request.getParameter("billingData") != null && request.getParameter("billingData").length() > 0) {
 				String[] billingItems = request.getParameterValues("billingData");
 
-				List<EyeformMacroBillingItem> billingItemList = new LinkedList<EyeformMacroBillingItem>();
+				List<MacroBillingItem> billingItemList = new LinkedList<MacroBillingItem>();
 				for (String b : billingItems) {
-					EyeformMacroBillingItem billingItem = new EyeformMacroBillingItem();
+					MacroBillingItem billingItem = new MacroBillingItem();
 					String billingCode = b.substring(0, b.indexOf("|"));
 					String multiplier = b.substring(b.indexOf("|"));
 
@@ -181,9 +182,10 @@ public class EyeformUtilAction extends DispatchAction {
 				macro.setBillingItems(billingItemList);
 			}
 
-			eyeformMacroDao.merge(macro);
+			macroDao.merge(macro);
 
 			hashMap.put("saved", macro.getId());
+			*/
 		} catch (Exception e) {
 			hashMap.put("error", e.getMessage());
 		}
