@@ -888,7 +888,6 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		for (var jsonItem in impressionItems) {
 			var item = impressionItems[jsonItem];
 			var date = new Date(item.update_date.time);
-			var provName = item.provider.formattedName;
 			
 			var provName = "";
 			if (item.provider)
@@ -920,7 +919,6 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		for (var jsonItem in currentIssueItems) {
 			var item = currentIssueItems[jsonItem];
 			var date = new Date(item.update_date.time);
-			var provName = item.provider.formattedName;
 			
 			var provName = "";
 			if (item.provider)
@@ -945,7 +943,6 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		for (var jsonItem in boxItems) {
 			var item = boxItems[jsonItem];
 			var date = new Date(item.update_date.time);
-			var provName = item.provider.formattedName;
 			
 			var provName = "";
 			if (item.provider)
