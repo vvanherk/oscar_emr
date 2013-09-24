@@ -94,9 +94,7 @@ public class EctDisplayOcularProcedureAction extends EctDisplayAction {
     	NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
     	item.setDate(op.getDate());
     	
-    	//Don't need to diplay ocular procedure id 
-    	//item.setValue(op.getId().toString());
-    	item.setValue("");
+    	item.setValue(op.getId().toString());
 
     	Provider provider = providerDao.getProvider(op.getDoctor());
 

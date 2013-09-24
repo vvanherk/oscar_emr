@@ -262,6 +262,7 @@ public class NavBarDisplayDAO {
 
 		 public Item() {
 			 title = "";
+			 value = "";
 			 linkTitle = "";
 			 URL = "";
 			 colour = "";
