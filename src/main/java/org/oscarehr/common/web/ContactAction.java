@@ -297,12 +297,9 @@ public class ContactAction extends DispatchAction {
 		if(id != null && id.length()>0) {
 			contact.setId(Integer.valueOf(id));
 		}
-		if(contact.getId() != null && contact.getId()>0) {
-			contactDao.merge(contact);
-		} else {
-			contactDao.persist(contact);
-		}
-	   return mapping.findForward("cForm");
+		
+		contactDao.merge(contact);
+		return mapping.findForward("cForm");
 	}
 
 	public ActionForward saveProContact(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
