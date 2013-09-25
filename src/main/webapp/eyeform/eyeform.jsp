@@ -168,11 +168,16 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
 	</div>
+	<%
+		String providerName = "";
+		if (d.getProviderNo() != null && d.getProviderNo().length() != 0)
+			providerName = providerDao.getProviderName( d.getProviderNo() );
+	%>
 	<div id="formContent">
 		<div id="patientInfo">
 			<span class="mrp">
 			<span class="name"><%=d.getLastName().toUpperCase() %>, <%=d.getFirstName().toUpperCase() %> (<%=d.getSex() %>) (DOB: <%=d.getYearOfBirth() %>-<%=d.getMonthOfBirth() %>-<%=d.getDateOfBirth() %>, <%=d.getAgeInYears() %> years)</span>
-				<strong>MRP</strong> <%=providerDao.getProviderName(d.getProviderNo()) %>
+				<strong>MRP</strong> <%=providerName%>
 				<% if (rdName != null) { %>
 				<strong>REFERRED BY</strong> <%=rdName %>
 				<% } %>
