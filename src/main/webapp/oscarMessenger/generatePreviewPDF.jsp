@@ -104,7 +104,14 @@ request.getSession().setAttribute("EctSessionBean",bean);
     }
     function GetBottomSRC() {
         f = parent.srcFrame;
-        document.forms[0].srcText.value = f.document.body.innerHTML;       
+        try {
+			document.forms[0].srcText.value = f.document.body.innerHTML;
+		} catch(err) {
+			// For some reason, the srcFrame.document.body is often null (probably something going on with the frame, not sure what though)
+			// If we run this method after it fails the first time, it seems to work...
+			// NOTE: this is totally a hack
+			setTimeout("GetBottomSRC()", 1000);
+		}
     }
     
     function PreviewPDF(url){
