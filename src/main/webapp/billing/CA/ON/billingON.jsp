@@ -799,6 +799,12 @@ function dxScriptAttach(name2) {
 }
 
 function scScriptAttach(nameF) {
+	// Error check
+	if (nameF.value.length < 2) {
+		alert('You must enter at least 2 characters before searching.');
+		return;
+	}
+	
 	f0 = escape(nameF.value);
 	f1 = escape("document.forms[0].elements[\'"+nameF.name + "\'].value");
 	awnd=rs('att','billingCodeSearch.jsp?name='+f0 + '&search=&name1=&name2=&nameF='+f1,600,600,1);
