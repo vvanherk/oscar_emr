@@ -265,7 +265,7 @@ List<Clinic> clinics = clinicDao.findAll();
 				<div class="DivCCBreadCrumbs"><b><bean:message key="SearchDrug.title" /></b></div>
 				</td>
 			</tr>
-			<!----Start new rows here-->
+			<!-- Start new rows here-->
 			<tr>
 				<td>
 					<div class="DivContentTitle"><bean:message key="SearchDrug.title" /></div>
@@ -665,7 +665,7 @@ List<Clinic> clinics = clinicDao.findAll();
 				</tr>
 			</logic:notEqual>
 
-			<!----End new rows here-->
+			<!-- End new rows here-->
 			<tr height="100%">
 				<td></td>
 			</tr>

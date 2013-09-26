@@ -194,7 +194,7 @@ padding-right:6;
 					key="EditAllergies.title" /></b></div>
 				</td>
 			</tr>
-			<!----Start new rows here-->
+			<!-- Start new rows here-->
 
 			<tr>
 				<td>
@@ -551,7 +551,7 @@ padding-right:6;
 					onclick="javascript:window.location.href='<%=sBack%>';"
 					value="Back to Search Drug" /></td>
 			</tr>
-			<!----End new rows here-->
+			<!-- End new rows here-->
 			<tr height="100%">
 				<td></td>
 			</tr>
