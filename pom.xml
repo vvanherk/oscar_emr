@@ -259,6 +259,21 @@
 			<artifactId>itext-rtf</artifactId>
 			<version>2.1.7</version>
 		</dependency>
+		
+		<!-- pdf / itext (this is the updated version of itext, which was previously referred to as 'lowagie') -->
+		<dependency>
+			<groupId>com.itextpdf</groupId>
+			<artifactId>itextpdf</artifactId>
+			<version>5.4.4</version>
+			<type>jar</type>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.itextpdf.tool</groupId>
+			<artifactId>xmlworker</artifactId>
+			<version>5.4.4</version>
+			<type>jar</type>
+		</dependency>
 
 		<!-- json -->
 		<dependency>
