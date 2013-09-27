@@ -41,7 +41,7 @@ public class ConsultationRequestDao extends AbstractDao<ConsultationRequest> {
 
 	public int getCountReferralsAfterCutOffDateAndNotCompleted(Date referralDateCutoff)
 	{
-		Query query = entityManager.createNativeQuery("select count(*) from " + modelClass.getSimpleName() + " where referalDate < ?1 and status != 4", Integer.class);
+		Query query = entityManager.createNativeQuery("select count(*) from " + modelClass.getSimpleName() + " where referalDate < ?1 and status != 4", modelClass);
 		query.setParameter(1, referralDateCutoff);
 
 		return((Integer)query.getSingleResult());
@@ -49,7 +49,7 @@ public class ConsultationRequestDao extends AbstractDao<ConsultationRequest> {
 
 	public int getCountReferralsAfterCutOffDateAndNotCompleted(Date referralDateCutoff,String sendto)
 	{
-		Query query = entityManager.createNativeQuery("select count(*) from " + modelClass.getSimpleName() + " where referalDate < ?1 and status != 4 and sendto = ?2", Integer.class);
+		Query query = entityManager.createNativeQuery("select count(*) from " + modelClass.getSimpleName() + " where referalDate < ?1 and status != 4 and sendto = ?2", modelClass);
 		query.setParameter(1, referralDateCutoff);
 		query.setParameter(2, sendto);
 
@@ -57,7 +57,7 @@ public class ConsultationRequestDao extends AbstractDao<ConsultationRequest> {
 	}
 
         public List<ConsultationRequest> getConsults(String demoNo) {
-            StringBuilder sql = new StringBuilder("select cr from ConsultationRequest cr, Demographic d, Provider p where d.DemographicNo = cr.demographicId and p.ProviderNo = cr.providerNo and cr.demographicId = ?1");
+            StringBuilder sql = new StringBuilder("select cr from ConsultationRequest cr, Demographic d, Provider p where d.DemographicNo = cr.demographicId and p.ProviderNo = cr.providerNo and cr.demographicId = ?1 order by cr.referralDate desc");
             Query query = entityManager.createQuery(sql.toString());
             query.setParameter(1, new Integer(demoNo));
             @SuppressWarnings("unchecked")

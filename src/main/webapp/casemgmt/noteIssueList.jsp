@@ -31,6 +31,7 @@
 <%@page import="org.oscarehr.PMmodule.dao.ProgramDao"%>
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@ include file="/casemgmt/taglibs.jsp"%>
+<%@page import="org.oscarehr.casemgmt.web.formbeans.*"%>
 
 <c:set var="ctx" value="${pageContext.request.contextPath}"
 	scope="request" />
@@ -493,4 +494,25 @@ if(currentFacility.isEnableEncounterTransportationTime() || (currentProgram != n
         //create calendar
         Calendar.setup({ inputField : "observationDate", ifFormat : "%d-%b-%Y %H:%M ", showsTime :true, button : "observationDate_cal", singleClick : true, step : 1 });    
    }
+</script>
+<%
+   String ni_frmName = "caseManagementEntryForm" + demoNo;
+   CaseManagementEntryFormBean ni_cform = (CaseManagementEntryFormBean)session.getAttribute(ni_frmName);
+
+if (request.getParameter("caseManagementEntryForm") == null)
+{
+	request.setAttribute("caseManagementEntryForm", ni_cform);
+}
+
+long ni_savedId = 0;
+if (ni_cform != null && ni_cform.getCaseNote() != null && ni_cform.getCaseNote().getId() != null)
+{
+	ni_savedId = ni_cform.getCaseNote().getId();
+}
+%>
+
+<script type="test/javascript">
+    if(typeof messagesLoaded == 'function') {
+ 	     messagesLoaded('<%=ni_savedId%>');
+    }
 </script>

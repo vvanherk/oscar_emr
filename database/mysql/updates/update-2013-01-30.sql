@@ -1,0 +1,1 @@
+alter table serviceSpecialists add column id int(10) primary key not null auto_increment;

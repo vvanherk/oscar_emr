@@ -57,6 +57,9 @@ Autocompleter.Base.prototype = {
     else
       this.options = options || {};
 
+    if (this.element == null)
+		return;
+
     this.options.paramName    = this.options.paramName || this.element.name;
     this.options.tokens       = this.options.tokens || [];
     this.options.frequency    = this.options.frequency || 0.4;

@@ -529,5 +529,8 @@ function next() {
 <%--
 Please select by clicking on the demographic no button.</center> --%>
 </div>
+<div class="createNew"><a href="../demographic/demographicaddarecordhtm.jsp"><b><font size="+1">Create a new Demographic</font></b></a>
+<br>
+</div>
 </body>
 </html>

@@ -1062,8 +1062,14 @@ function hasFaxNumber() {
 }
 function updateFaxButton() {
 	var disabled = !hasFaxNumber();
-	document.getElementById("fax_button").disabled = disabled;
-	document.getElementById("fax_button2").disabled = disabled;
+	
+	var elem = document.getElementById("fax_button");
+	if (elem)
+		elem.disabled = disabled;
+		
+	elem = document.getElementById("fax_button2");
+	if (elem)
+		elem.disabled = disabled;
 }
 </script>
 

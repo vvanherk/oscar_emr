@@ -1,0 +1,182 @@
+<html>
+<head>
+<title></title>
+<style type="text/css" media="print">
+ .DoNotPrint {
+	 display: none;
+ }
+ .noborder {
+	 border : 0px;
+	 background: transparent;
+	 scrollbar-3dlight-color: transparent;
+	 scrollbar-3dlight-color: transparent;
+	 scrollbar-arrow-color: transparent;
+	 scrollbar-base-color: transparent;
+	 scrollbar-darkshadow-color: transparent;
+	 scrollbar-face-color: transparent;
+	 scrollbar-highlight-color: transparent;
+	 scrollbar-shadow-color: transparent;
+	 scrollbar-track-color: transparent;
+	 background: transparent;
+	 overflow: hidden;
+ }
+ </style>
+
+<script language="javascript">
+function formPrint(){
+			window.print();
+} 
+</script>
+
+<!-- scripts to confirm closing of window if it hadn't been saved yet -->
+<script language="javascript">
+//keypress events trigger dirty flag
+var needToConfirm = false;
+document.onkeyup=setDirtyFlag;
+function setDirtyFlag(){
+		needToConfirm = true;
+}
+function releaseDirtyFlag(){
+		needToConfirm = false; //Call this function if doesn't requires an alert.
+//this could be called when save button is clicked
+}
+window.onbeforeunload = confirmExit;
+function confirmExit(){
+	 if (needToConfirm){
+		 return "You have attempted to leave this page. If you have made any changes to the fields without clicking the Save button, your changes will be lost. Are you sure you want to exit this page?";
+	 }
+}
+</script>
+
+</head>
+
+<body onload="">
+<img id='BGImage' src="${oscar_image_path}MuradDrRegistrationEform.png" style="position: absolute; left: 0px; top: 0px; width:750px">
+<form method="post" action="" name="FormName" id="FormName" >
+
+<textarea name="AutoName1" id="AutoName1" class="noborder" style="position:absolute; left:122px; top:524px; width:509px; height:50px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" ></textarea>
+
+
+<textarea name="AutoName2" id="AutoName2" class="noborder" style="position:absolute; left:122px; top:677px; width:509px; height:58px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" ></textarea>
+
+
+<textarea name="AutoName4" id="AutoName4" class="noborder" style="position:absolute; left:124px; top:915px; width:509px; height:54px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" ></textarea>
+
+
+<input name="AutoName7" id="AutoName7" type="text" class="noborder" style="position:absolute; left:463px; top:578px; width:166px; height:27px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName8" id="AutoName8" type="text" class="noborder" style="position:absolute; left:184px; top:610px; width:446px; height:25px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName9" id="AutoName9" type="text" class="noborder" style="position:absolute; left:246px; top:740px; width:385px; height:23px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName10" id="AutoName10" type="text" class="noborder" style="position:absolute; left:339px; top:768px; width:293px; height:27px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName11" id="AutoName11" type="text" class="noborder" style="position:absolute; left:451px; top:801px; width:181px; height:25px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName14" id="AutoName14" type="text" class="noborder" style="position:absolute; left:192px; top:210px; width:297px; height:29px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName15" id="AutoName15" type="text" class="noborder" style="position:absolute; left:300px; top:244px; width:187px; height:24px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName16" id="AutoName16" type="text" class="noborder" style="position:absolute; left:515px; top:245px; width:108px; height:23px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName17" id="AutoName17" type="text" class="noborder" style="position:absolute; left:235px; top:272px; width:170px; height:25px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName18" id="AutoName18" type="text" class="noborder" style="position:absolute; left:499px; top:274px; width:124px; height:24px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<input name="AutoName19" id="AutoName19" type="checkbox" style="position:absolute; left:234px; top:346px; ">
+
+
+<input name="AutoName20" id="AutoName20" type="checkbox" style="position:absolute; left:279px; top:346px; ">
+
+
+<input name="AutoName21" id="AutoName21" type="checkbox" style="position:absolute; left:569px; top:346px; ">
+
+
+<input name="AutoName22" id="AutoName22" type="checkbox" style="position:absolute; left:616px; top:346px; ">
+
+
+<input name="AutoName23" id="AutoName23" type="checkbox" style="position:absolute; left:290px; top:377px; ">
+
+
+<input name="AutoName24" id="AutoName24" type="checkbox" style="position:absolute; left:335px; top:377px; ">
+
+
+<input name="AutoName25" id="AutoName25" type="checkbox" style="position:absolute; left:565px; top:377px; ">
+
+
+<input name="AutoName26" id="AutoName26" type="checkbox" style="position:absolute; left:609px; top:377px; ">
+
+
+<input name="AutoName27" id="AutoName27" type="checkbox" style="position:absolute; left:239px; top:410px; ">
+
+
+<input name="AutoName28" id="AutoName28" type="checkbox" style="position:absolute; left:284px; top:410px; ">
+
+
+<input name="AutoName29" id="AutoName29" type="checkbox" style="position:absolute; left:503px; top:410px; ">
+
+
+<input name="AutoName30" id="AutoName30" type="checkbox" style="position:absolute; left:547px; top:410px; ">
+
+
+<input name="AutoName31" id="AutoName31" type="checkbox" style="position:absolute; left:244px; top:444px; ">
+
+
+<input name="AutoName32" id="AutoName32" type="checkbox" style="position:absolute; left:289px; top:444px; ">
+
+
+<input name="AutoName33" id="AutoName33" type="checkbox" style="position:absolute; left:494px; top:444px; ">
+
+
+<input name="AutoName34" id="AutoName34" type="checkbox" style="position:absolute; left:539px; top:444px; ">
+
+
+<input name="AutoName35" id="AutoName35" type="checkbox" style="position:absolute; left:219px; top:478px; ">
+
+
+<input name="AutoName36" id="AutoName36" type="checkbox" style="position:absolute; left:264px; top:478px; ">
+
+
+<input name="AutoName37" id="AutoName37" type="checkbox" style="position:absolute; left:564px; top:478px; ">
+
+
+<input name="AutoName38" id="AutoName38" type="checkbox" style="position:absolute; left:607px; top:478px; ">
+
+
+<input name="AutoName39" id="AutoName39" type="checkbox" style="position:absolute; left:236px; top:800px; ">
+
+
+<input name="AutoName40" id="AutoName40" type="checkbox" style="position:absolute; left:280px; top:800px; ">
+
+
+<input name="AutoName41" id="AutoName41" type="text" class="noborder" style="position:absolute; left:183px; top:578px; width:191px; height:27px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" value="">
+
+
+<textarea name="AutoName42" id="AutoName42" class="noborder" style="position:absolute; left:124px; top:863px; width:509px; height:36px; font-family:sans-serif; font-style:normal; font-weight:normal; font-size:12px; text-align:left; background-color:transparent;" ></textarea>
+
+
+
+
+ <div class="DoNotPrint" id="BottomButtons" style="position: absolute; top:970px; left:0px;">
+	 <table><tr><td>
+		 Subject: <input name="subject" size="40" type="text"> 
+			<input value="Submit" name="SubmitButton" id="SubmitButton" type="submit" onclick=" releaseDirtyFlag();"> 
+			<input value="Reset" name="ResetButton" id="ResetButton" type="reset"> 
+			<input value="Print" name="PrintButton" id="PrintButton" type="button" onclick="formPrint();"> 
+			<input value="Print & Submit" name="PrintSubmitButton" id="PrintSubmitButton" type="button" onclick="formPrint();releaseDirtyFlag();setTimeout('SubmitButton.click()',1000);"> 
+	 </td></tr></table>
+ </div>
+ </form>
+
+</body>
+</html>

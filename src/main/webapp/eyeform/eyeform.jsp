@@ -12,14 +12,21 @@
 <%@ include file="/casemgmt/taglibs.jsp" %>
 
 <%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.util.LoggedInInfo, org.oscarehr.util.SpringUtils, oscar.OscarProperties, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment, org.oscarehr.util.MiscUtils, oscar.SxmlMisc, org.oscarehr.common.dao.ProfessionalSpecialistDao"  %>
-
+<%@ page import="org.oscarehr.PMmodule.model.Program" %>
+<%@ page import="org.oscarehr.PMmodule.dao.ProgramDao" %>
 <%
 String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
 OscarProperties properties = OscarProperties.getInstance();
 
 // This is here because the "case_program_id" session attribute is only set during the echart open routine.
-// It's required for CaseManagementManager.filterNotes.  Since all of our Eyeform customers use 10016, this works (for now).
-request.getSession().setAttribute("case_program_id", "10016");
+// It's required for CaseManagementManager.filterNotes.  Since all of our Eyeform customers use 10016, this works (for now).Not working!!!
+// Should get program id from program when name equals 'OSCAR'.
+ProgramDao programDao = SpringUtils.getBean(ProgramDao.class);
+Program p = programDao.getProgramByName("OSCAR");
+if(p != null) 	 
+	request.getSession().setAttribute("case_program_id", String.valueOf(p.getId()));
+else
+	request.getSession().setAttribute("case_program_id", "0");  //not sure if it should be 0..
 
 String appointmentNo = "";
 String appointmentReason = "";
@@ -40,7 +47,6 @@ try {
 } catch (Exception e) {
 	MiscUtils.getLogger().error("[eyeform] Couldn't get appointment data from database", e);
 }
-
 
 DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
 Demographic d = demographicDao.getDemographicById(Integer.parseInt(request.getParameter("demographic_no")));
@@ -162,11 +168,16 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
 	</div>
+	<%
+		String providerName = "";
+		if (d.getProviderNo() != null && d.getProviderNo().length() != 0)
+			providerName = providerDao.getProviderName( d.getProviderNo() );
+	%>
 	<div id="formContent">
 		<div id="patientInfo">
 			<span class="mrp">
 			<span class="name"><%=d.getLastName().toUpperCase() %>, <%=d.getFirstName().toUpperCase() %> (<%=d.getSex() %>) (DOB: <%=d.getYearOfBirth() %>-<%=d.getMonthOfBirth() %>-<%=d.getDateOfBirth() %>, <%=d.getAgeInYears() %> years)</span>
-				<strong>MRP</strong> <%=providerDao.getProviderName(d.getProviderNo()) %>
+				<strong>MRP</strong> <%=providerName%>
 				<% if (rdName != null) { %>
 				<strong>REFERRED BY</strong> <%=rdName %>
 				<% } %>

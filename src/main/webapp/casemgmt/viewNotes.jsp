@@ -37,6 +37,22 @@
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.util.LoggedInInfo"%>
 
+<%
+boolean isPatientLog = false;
+boolean isOcularMeds = false;
+String parentDivId = "";
+%>
+
+<c:choose>
+	<c:when test='${param.title == "oscarEncounter.eyeform.patientLog.title"}'>
+		<% isPatientLog = true; %>
+		<% parentDivId = "patientLog"; %>
+	</c:when>
+	<c:when test='${param.title == "oscarEncounter.NavBar.OcularMeds"}'>
+		<% isOcularMeds = true; %>
+		<% parentDivId = "OcularMedication"; %>
+	</c:when>
+</c:choose>
 
 <c:set var="ctx" value="${pageContext.request.contextPath}"
 	scope="request" />
@@ -70,17 +86,36 @@
             </c:otherwise>
         </c:choose>
 <ul style="margin-left: 5px;">
+
+<% if (isPatientLog || isOcularMeds) { %>
+<c:choose>
+	<c:when test='${num > 6}'>
+		<div style="float: right; cursor:pointer;" onclick="jQuery('#<%=parentDivId%>').find('.cpp').each( function(index) { if (index > 6) jQuery(this).toggle(); }); jQuery('.<%=parentDivId%>ExpandCollapseImage').each( function() { jQuery(this).toggle(); }); return false;">
+			<img class="<%=parentDivId%>ExpandCollapseImage" src="<c:out value="${ctx}"/>/oscarEncounter/graphics/expand.gif">
+			<img class="<%=parentDivId%>ExpandCollapseImage" style="display: none;" src="<c:out value="${ctx}"/>/oscarMessenger/img/collapse.gif">
+		</div>
+	</c:when>
+</c:choose>
+<% } %>
+
 <% List<CaseManagementNoteExt> noteExts = (List<CaseManagementNoteExt>)request.getAttribute("NoteExts"); %>
 	<nested:iterate indexId="noteIdx" id="note" name="Notes"
 		type="org.oscarehr.casemgmt.model.CaseManagementNote">
                 <input type="hidden" id="<c:out value="${param.cmd}"/><nested:write name="note" property="id"/>" value="<nested:write name="noteIdx"/>">
+         
+        <%
+        String hiddenStyle = "";
+		if (noteIdx > 6 && (isPatientLog || isOcularMeds))
+			hiddenStyle = "display: none;";
+        %>
+        
 		<% if( noteIdx % 2 == 0 ) { %>
 		<li class="cpp"
-			style="clear: both; whitespace: nowrap; background-color: #F3F3F3;">
-		<%}else {%>
-		
-		<li class="cpp" style="clear: both; whitespace: nowrap;">
+			style="clear: both; whitespace: nowrap; background-color: #F3F3F3; <%=hiddenStyle%>">
+		<%}else {%>		
+		<li class="cpp" style="clear: both; whitespace: nowrap; <%=hiddenStyle%>">
 		<%}
+		
                 //load up the prefs once
                 CppPreferencesUIBean prefsBean = new CppPreferencesUIBean(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
                 prefsBean.loadValues();
@@ -140,8 +175,20 @@
 			<%=htmlNoteTxt%></a>
 		</span></li>
 	</nested:iterate>
+	
+	<% if (isPatientLog || isOcularMeds) { %>
+		<c:choose>
+			<c:when test='${num > 6}'>
+				<div style="float: right; cursor:pointer;" onclick="jQuery('#<%=parentDivId%>').find('.cpp').each( function(index) { if (index > 6) jQuery(this).toggle(); }); jQuery('.<%=parentDivId%>ExpandCollapseImage').each( function() { jQuery(this).toggle(); }); return false;">
+					<img class="<%=parentDivId%>ExpandCollapseImage" src="<c:out value="${ctx}"/>/oscarEncounter/graphics/expand.gif">
+					<img class="<%=parentDivId%>ExpandCollapseImage" style="display: none;" src="<c:out value="${ctx}"/>/oscarMessenger/img/collapse.gif">
+				</div>
+			</c:when>
+		</c:choose>
+	<% } %>
 </ul>
 </div>
+
 <input type="hidden" id="<c:out value="${param.cmd}"/>num"
 	value="<nested:write name="num"/>">
 <input type="hidden" id="<c:out value="${param.cmd}"/>threshold"

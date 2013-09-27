@@ -34,6 +34,7 @@ import java.util.Vector;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.struts.util.MessageResources;
 import org.oscarehr.util.MiscUtils;
 
@@ -100,10 +101,10 @@ public class EctDisplayTicklerAction extends EctDisplayAction {
         if( days > 0 )
             item.setColour("#FF0000");
 
-        itemHeader = StringUtils.maxLenString(rs.getString("message"), MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES);
+        itemHeader = StringUtils.maxLenString( StringEscapeUtils.escapeHtml(rs.getString("message")), MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES );
         item.setLinkTitle(itemHeader+ " " + DateUtils.formatDate(serviceDate,request.getLocale()));
         item.setTitle(itemHeader);
-        //item.setValue(rs.getString("tickler_no"));
+        item.setValue(rs.getString("tickler_no"));
         winName = StringUtils.maxLenString(oscar.Misc.getString(rs,"message"), MAX_LEN_TITLE, MAX_LEN_TITLE, "");
         hash = Math.abs(winName.hashCode());
         if( org.oscarehr.common.IsPropertiesOn.isTicklerPlusEnable() ) {

@@ -30,6 +30,7 @@
 <%@ page import="org.oscarehr.util.SpringUtils" %>
 <%@ page import="com.quatro.dao.security.SecobjprivilegeDao" %>
 <%@ page import="com.quatro.model.security.Secobjprivilege" %>
+<%@ page import="org.oscarehr.util.MiscUtils" %>
 <%@ page import="java.util.List" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <c:set var="ctx" value="${pageContext.request.contextPath}"
@@ -128,6 +129,7 @@
             div = div.trim();
             int numItems = dao.numItems();
             String strToDisplay = request.getParameter("numToDisplay");
+            MiscUtils.getLogger().info("mnum to display ("+div+"): " + strToDisplay);
             int numToDisplay;
             boolean xpanded = false;
             int displayThreshold = 6;
@@ -160,12 +162,18 @@
             for(j=0; j<numItems; j++) {
                 NavBarDisplayDAO.Item item = dao.getItem(j);
                 Date d = item.getDate();
-                if( d == null )
-                    noDates.add(item);
-                else if( d.compareTo(threeMths) < 0 )
-                    pastDates.add(item);
-                else
-                    current.add(item);
+                
+                if(dao.isInternalDateSort())
+                {
+                	if( d == null )
+	                    noDates.add(item);
+	                else if( d.compareTo(threeMths) < 0 )
+	                    pastDates.add(item);
+	                else
+	                    current.add(item);	
+                }
+                else                
+                	noDates.add(item);
             }
 
             StringBuffer jscode = new StringBuffer();

@@ -44,6 +44,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.oscarehr.common.dao.Hl7TextInfoDao;
 import org.oscarehr.common.model.Hl7TextMessageInfo;
@@ -528,9 +529,32 @@ public class GDMLHandler implements MessageHandler {
     }
 
     public String getHealthNum(){
-        return(getString(msg.getRESPONSE().getPATIENT().getPID().getPatientIDExternalID().getID().getValue()));
+        String hin = getString(msg.getRESPONSE().getPATIENT().getPID().getPatientIDExternalID().getID().getValue());        
+        String ifh = "";
+        try {               	
+    		String ifh_comment = getString(msg.getRESPONSE().getPATIENT().getNTE().getComment()[0].getValue());
+    		//NTE segment option 1: NTE|1|P|IFH1234-5678 30NOV2012
+    		//NTE segment option 2: NTE|1|P|IFH# / EXP DATE 1234-5678
+    		if( ifh_comment.substring(0,4)!=null && ifh_comment.substring(0,4).equalsIgnoreCase("IFH#") ) {
+    			String ifh_num = ifh_comment.substring(16, 25);
+    			ifh_num = ifh_num.replaceAll("-","");
+    			if(ifh_num.matches("[0-9]*"))
+    				ifh = ifh_num;
+    		} else if( ifh_comment.substring(0,3)!=null && ifh_comment.substring(0,3).equalsIgnoreCase("IFH") ) {
+    			String ifh_num = ifh_comment.substring(3, 12);
+    			ifh_num = ifh_num.replaceAll("-","");
+    			if(ifh_num.matches("[0-9]*"))
+    				ifh = ifh_num;
+    		}
+    		
+    	} catch (Exception e) {
+    	}
+		if(StringUtils.isBlank(hin) || "0000000001".equals(hin)) {
+			if(!StringUtils.isBlank(ifh))
+				hin = ifh;
+		}
+		return hin;
     }
-
     public String getHomePhone(){
         String phone = "";
         int i=0;

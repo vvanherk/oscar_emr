@@ -72,7 +72,9 @@
   }
 
   if( request.getParameter("assignedTo") == null ) {
-          assignedTo = "all";
+          //assignedTo = "all";
+          //The default assigned to should be the one who logged in.
+          assignedTo = user_no;
   }
   else {
       assignedTo = request.getParameter("assignedTo");

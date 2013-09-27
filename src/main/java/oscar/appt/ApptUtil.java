@@ -70,10 +70,12 @@ public class ApptUtil {
 		String ret = "white";
 		String[] s = site.split("\\|");
 		String[] c = colo.split("\\|");
-		for (int i = 0; i < s.length; i++) {
-			if (s[i].startsWith(loca)) {
-				ret = c[i];
-				break;
+		if(loca!=null) {
+			for (int i = 0; i < s.length; i++) {
+				if (s[i].startsWith(loca)) {
+					ret = c[i];
+					break;
+				}
 			}
 		}
 		return ret;

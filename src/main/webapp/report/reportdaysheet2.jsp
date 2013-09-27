@@ -38,9 +38,12 @@
 <%@page import="org.oscarehr.common.dao.OscarAppointmentDao" %>
 <%@page import="org.oscarehr.common.model.Appointment" %>
 <%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="org.oscarehr.PMmodule.dao.ProviderDao" %>
+<%@page import="org.oscarehr.common.model.Provider" %>
 <%
 	AppointmentArchiveDao appointmentArchiveDao = (AppointmentArchiveDao)SpringUtils.getBean("appointmentArchiveDao");
 	OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
+	ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
 	SimpleDateFormat dayFormatter = new SimpleDateFormat("yyyy-MM-dd");
 %>
 
@@ -129,7 +132,7 @@ td {
 
 <%
   boolean bFistL = true; //first line in a table for TH
-  String strTemp = "";
+  String strTemp = "", providerName="";
   String dateTemp = "";
   String [] param = new String[3];
   param[0] = (String) session.getAttribute("user");
@@ -183,10 +186,16 @@ td {
 
   bodd = bodd?false:true;
 	if(!strTemp.equals(rsdemo.getString("provider_no")) || !dateTemp.equals(rsdemo.getString("appointment_date")) ) { //new provider for a new table
-	  strTemp = rsdemo.getString("provider_no") ;
-          dateTemp = rsdemo.getString("appointment_date");
-	  bFistL = true;
-	  out.println("</table> <p>") ;
+	  	strTemp = rsdemo.getString("provider_no") ;
+		Provider provider = providerDao.getProvider(strTemp);
+		if(provider!=null) {
+			providerName = provider.getLastName()+", "+provider.getFirstName();
+		} else 
+			providerName = strTemp;
+		
+      	dateTemp = rsdemo.getString("appointment_date");
+	  	bFistL = true;
+	  	out.println("</table> <p>") ;
 	}
 	if(bFistL) {
 	  bFistL = false;
@@ -194,7 +203,7 @@ td {
 %>
 <table width="100%" border="0" cellspacing="1" cellpadding="0">
 	<tr align="center">
-		<td><font size=6>Dr. David Lane</font></td>
+		<td><font size=6><%=providerName %></font></td>
 	</tr>
 	<tr align="center">
 		<td><font size=5> Patient List <%=dateTemp%>

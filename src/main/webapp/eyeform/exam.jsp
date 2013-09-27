@@ -69,15 +69,16 @@ jQuery("document").ready(function() {
 });
 
 function togglediv(el) {
-	jQuery('#s_' + el.id.substring(el.id.indexOf('_')+1)).toggle();
+	jQuery('div[name="s_' + el.id.substring(el.id.indexOf('_')+1) + '"]').toggle();
 }
 
 function expanddiv(el) {
-	jQuery('#s_' + el.id.substring(el.id.indexOf('_')+1)).show();
+	jQuery('div[name="s_' + el.id.substring(el.id.indexOf('_')+1) + '"]').show();
+	
 }
 
 function collapsediv(el) {
-	jQuery('#s_' + el.id.substring(el.id.indexOf('_')+1)).hide();
+	jQuery('div[name="s_' + el.id.substring(el.id.indexOf('_')+1) + '"]').hide();
 }
 
 function whiteField(el){
@@ -317,6 +318,7 @@ span.ge{
 
 </style>
 
+<form id="eye_form" name="eye_form" style="margin-top: 5px;" onsubmit="return false;">
 <span style="font-size:10px">
 	<a id="save_measurements" href="#">[Save Measurements]</a>
 </span>
@@ -325,14 +327,14 @@ span.ge{
 	<a href="javascript:void(0);" onclick="collapseAll();">[collapse all sections]</a>
 </span>
 
-<table border="0" width="100%">
+<table border="0" style="margin-top: 5px;" width="100%">
 <tr>
 <td>
 <div class="slidey">
         <div class="title">
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" href="javascript:void(0)" tabindex="31" id="a_21" onclick="togglediv(this);">Vision Pretest:</a>
         </div>
-        <div id="s_21" class="slideblock">
+        <div name="s_21" id="s_21" class="slideblock">
             <table class="exam" width="100%">
             <tr>
             <td colspan="3">OD</td>
@@ -350,15 +352,15 @@ span.ge{
             <td >Axis</td>
             </tr>
 			<tr>
-            <td><input type="text" tabindex="32"  class="examfieldgrey" size="7" measurement="od_ar_sph" onfocus="whiteField(this);"/></td>
-            <td><input type="text" tabindex="33"  class="examfieldgrey" size="7" measurement="od_ar_cyl" onfocus="whiteField(this);"/></td>
-            <td><input type="text" tabindex="34"  class="examfieldgrey" size="7" measurement="od_ar_axis" onfocus="whiteField(this);"/></td>
+            <td><input type="text" tabindex="32"  class="examfieldgrey" size="7" measurement="od_ar_sph" name="od_ar_sph" onfocus="whiteField(this);"/></td>
+            <td><input type="text" tabindex="33"  class="examfieldgrey" size="7" measurement="od_ar_cyl" name="od_ar_cyl" onfocus="whiteField(this);"/></td>
+            <td><input type="text" tabindex="34"  class="examfieldgrey" size="7" measurement="od_ar_axis" name="od_ar_axis" onfocus="whiteField(this);"/></td>
 
 
             <td >AR</td>
-            <td ><input type="text" tabindex="35" class="examfieldgrey" size="7" measurement="os_ar_sph" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="36" class="examfieldgrey" size="7" measurement="os_ar_cyl" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="37" class="examfieldgrey" size="7" measurement="os_ar_axis" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" tabindex="35" class="examfieldgrey" size="7" measurement="os_ar_sph" name="os_ar_sph" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="36" class="examfieldgrey" size="7" measurement="os_ar_cyl" name="os_ar_cyl" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="37" class="examfieldgrey" size="7" measurement="os_ar_axis" name="os_ar_axis" onfocus="whiteField(this);"/></td>
 
 			</tr>
 			<tr>
@@ -371,15 +373,15 @@ span.ge{
             <td >K2-Axis</td>
             </tr>
 			<tr>
-            <td ><input type="text"  tabindex="38"  class="examfieldgrey" size="7" measurement="od_k1" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="39"  class="examfieldgrey" size="7" measurement="od_k2" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="40"  class="examfieldgrey" size="7"  measurement="od_k2_axis" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="38"  class="examfieldgrey" size="7" measurement="od_k1" name="od_k1" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="39"  class="examfieldgrey" size="7" measurement="od_k2" name="od_k2" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="40"  class="examfieldgrey" size="7"  measurement="od_k2_axis" name="od_k2_axis" onfocus="whiteField(this);"/></td>
 
 
             <td >K</td>
-            <td ><input type="text"  tabindex="41"  class="examfieldgrey" size="7" measurement="os_k1" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="42"  class="examfieldgrey" size="7" measurement="os_k2" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="43"  class="examfieldgrey" size="7" measurement="os_k2_axis" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="41"  class="examfieldgrey" size="7" measurement="os_k1" name="os_k1" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="42"  class="examfieldgrey" size="7" measurement="os_k2" name="os_k2" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="43"  class="examfieldgrey" size="7" measurement="os_k2_axis" name="os_k2_axis" onfocus="whiteField(this);"/></td>
 
 			</tr>
 			<tr>
@@ -392,23 +394,23 @@ span.ge{
             <td >ph</td>
             </tr>
             <tr>
-            <td ><input type="text"  tabindex="44"  class="examfieldgrey" size="7" measurement="od_sc_distance" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="45"  class="examfieldgrey" size="7" measurement="od_cc_distance" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="46"  class="examfieldgrey" size="7" measurement="od_ph_distance" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="44"  class="examfieldgrey" size="7" measurement="od_sc_distance" name="od_sc_distance" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="45"  class="examfieldgrey" size="7" measurement="od_cc_distance" name="od_cc_distance" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="46"  class="examfieldgrey" size="7" measurement="od_ph_distance" name="od_ph_distance" onfocus="whiteField(this);"/></td>
             <td >Distance</td>
-            <td ><input type="text"  tabindex="47"  class="examfieldgrey" size="7" measurement="os_sc_distance" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="48"  class="examfieldgrey" size="7" measurement="os_cc_distance" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  tabindex="49"  class="examfieldgrey" size="7" measurement="os_ph_distance" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="47"  class="examfieldgrey" size="7" measurement="os_sc_distance" name="os_sc_distance" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="48"  class="examfieldgrey" size="7" measurement="os_cc_distance" name="os_cc_distance" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  tabindex="49"  class="examfieldgrey" size="7" measurement="os_ph_distance" name="os_ph_distance" onfocus="whiteField(this);"/></td>
 
             </tr>
 
             <tr>
-            <td><input type="text"  tabindex="50"  class="examfieldgrey" size="7" measurement="od_sc_near" onfocus="whiteField(this);"/></td>
-            <td><input type="text"  tabindex="51"  class="examfieldgrey" size="7" measurement="od_cc_near" onfocus="whiteField(this);"/></td>
+            <td><input type="text"  tabindex="50"  class="examfieldgrey" size="7" measurement="od_sc_near" name="od_sc_near" onfocus="whiteField(this);"/></td>
+            <td><input type="text"  tabindex="51"  class="examfieldgrey" size="7" measurement="od_cc_near" name="od_cc_near" onfocus="whiteField(this);"/></td>
             <td></td>
            <td>Near</td>
-            <td><input type="text"  tabindex="52"  class="examfieldgrey" size="7" measurement="os_sc_near" onfocus="whiteField(this);"/></td>
-            <td><input type="text"  tabindex="53"  class="examfieldgrey" size="7" measurement="os_cc_near" onfocus="whiteField(this);"/></td>
+            <td><input type="text"  tabindex="52"  class="examfieldgrey" size="7" measurement="os_sc_near" name="os_sc_near" onfocus="whiteField(this);"/></td>
+            <td><input type="text"  tabindex="53"  class="examfieldgrey" size="7" measurement="os_cc_near" name="os_cc_near" onfocus="whiteField(this);"/></td>
             <td></td>
             </tr>
 
@@ -434,7 +436,7 @@ span.ge{
             <a href="javascript:void(0)" tabindex="62" onclick="copySpecs();"> [copy Specs] </a>
 
         </div>
-        <div id="s_22" class="slideblock">
+        <div name="s_22" id="s_22" class="slideblock">
             <table class="exam" width="100%">
             <tr>
             <td colspan="6">OD</td>
@@ -459,40 +461,40 @@ span.ge{
             <td width="9%">N</td>
             </tr>
             <tr>
-            <td><input type="text" size="5" tabindex="63" measurement="od_manifest_refraction_sph" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text" size="5" tabindex="64" measurement="od_manifest_refraction_cyl" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td><input type="text" size="5" tabindex="65" measurement="od_manifest_refraction_axis" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text"  size="5" tabindex="66" measurement="od_manifest_refraction_add" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td><input type="text" size="5" tabindex="63" measurement="od_manifest_refraction_sph" name="od_manifest_refraction_sph" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="64" measurement="od_manifest_refraction_cyl" name="od_manifest_refraction_cyl" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td><input type="text" size="5" tabindex="65" measurement="od_manifest_refraction_axis" name="od_manifest_refraction_axis" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text"  size="5" tabindex="66" measurement="od_manifest_refraction_add" name="od_manifest_refraction_add" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
             <td ></td>
-            <td><input type="text"  size="5" tabindex="67" measurement="od_manifest_distance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td><input type="text" size="5" tabindex="68" measurement="od_manifest_near" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td><input type="text"  size="5" tabindex="67" measurement="od_manifest_distance" name="od_manifest_distance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td><input type="text" size="5" tabindex="68" measurement="od_manifest_near" name="od_manifest_near" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
             <td >Manifest</td>
-            <td><input type="text" size="5" tabindex="69" measurement="os_manifest_refraction_sph" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text" size="5" tabindex="70" measurement="os_manifest_refraction_cyl" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td><input type="text" size="5" tabindex="71" measurement="os_manifest_refraction_axis" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text" size="5" tabindex="72" measurement="os_manifest_refraction_add" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td><input type="text" size="5" tabindex="69" measurement="os_manifest_refraction_sph" name="os_manifest_refraction_sph" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="70" measurement="os_manifest_refraction_cyl" name="os_manifest_refraction_cyl" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td><input type="text" size="5" tabindex="71" measurement="os_manifest_refraction_axis" name="os_manifest_refraction_axis" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="72" measurement="os_manifest_refraction_add" name="os_manifest_refraction_add" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
             <td ></td>
-            <td><input type="text" size="5" tabindex="73" measurement="os_manifest_distance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text" size="5" tabindex="74" measurement="os_manifest_near" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td><input type="text" size="5" tabindex="73" measurement="os_manifest_distance" name="os_manifest_distance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="74" measurement="os_manifest_near" name="os_manifest_near" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
 
 
             </tr>
 
             <tr>
-            <td ><input type="text" size="5" tabindex="75" measurement="od_cycloplegic_refraction_sph" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text" size="5" tabindex="76" measurement="od_cycloplegic_refraction_cyl" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text" size="5" tabindex="77" measurement="od_cycloplegic_refraction_axis" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td><input type="text" size="5" tabindex="78" measurement="od_cycloplegic_refraction_add" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="75" measurement="od_cycloplegic_refraction_sph" name="od_cycloplegic_refraction_sph" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="76" measurement="od_cycloplegic_refraction_cyl" name="od_cycloplegic_refraction_cyl" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="77" measurement="od_cycloplegic_refraction_axis" name="od_cycloplegic_refraction_axis" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td><input type="text" size="5" tabindex="78" measurement="od_cycloplegic_refraction_add" name="od_cycloplegic_refraction_add" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
             <td ></td>
-            <td ><input type="text" size="5" tabindex="79" measurement="od_cycloplegic_distance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="79" measurement="od_cycloplegic_distance" name="od_cycloplegic_distance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
             <td></td>
             <td >Cycloplegic</td>
-            <td ><input type="text" size="5" tabindex="80" measurement="os_cycloplegic_refraction_sph" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text" size="5" tabindex="81" measurement="os_cycloplegic_refraction_cyl" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text" size="5" tabindex="82" measurement="os_cycloplegic_refraction_axis" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
-            <td ><input type="text" size="5" tabindex="83" measurement="os_cycloplegic_refraction_add" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="80" measurement="os_cycloplegic_refraction_sph" name="os_cycloplegic_refraction_sph" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="81" measurement="os_cycloplegic_refraction_cyl" name="os_cycloplegic_refraction_cyl" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="82" measurement="os_cycloplegic_refraction_axis" name="os_cycloplegic_refraction_axis" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="83" measurement="os_cycloplegic_refraction_add" name="os_cycloplegic_refraction_add" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
             <td ></td>
-            <td ><input type="text" size="5" tabindex="84" measurement="os_cycloplegic_distance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+            <td ><input type="text" size="5" tabindex="84" measurement="os_cycloplegic_distance" name="os_cycloplegic_distance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
             <td></td>
             </tr>
 
@@ -511,7 +513,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" href="javascript:void(0)" tabindex="90" id="a_23" onclick="togglediv(this);">IOP:</a>
 
         </div>
-        <div id="s_23" class="slideblock">
+        <div name="s_23" id="s_23" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td width="17%"></td>
@@ -524,29 +526,29 @@ span.ge{
         	</tr>
         	<tr>
         	<td ></td>
-        	<td ><input type="text" tabindex="91" measurement="od_iop_nct" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td ><input type="text" tabindex="91" measurement="od_iop_nct" name="od_iop_nct" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td ></td>
         	<td width="34%" nowrap="nowrap">NCT(<span id="nct_ts"></span>)</td>
         	<td ></td>
-        	<td ><input type="text" tabindex="93" measurement="os_iop_nct" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td ><input type="text" tabindex="93" measurement="os_iop_nct" name="os_iop_nct" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td ></td>
         	</tr>
         	<tr>
         	<td ></td>
-        	<td ><input type="text" tabindex="94" measurement="od_iop_applanation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td ><input type="text" tabindex="94" measurement="od_iop_applanation" name="od_iop_applanation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td ></td>
         	<td width="34%">Applanation(<span id="applanation_ts"></span>)</td>
         	<td ></td>
-        	<td ><input type="text" tabindex="95" measurement="os_iop_applanation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td ><input type="text" tabindex="95" measurement="os_iop_applanation" name="os_iop_applanation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td></td>
         	</tr>
         	<tr>
         	<td></td>
-        	<td><input type="text" tabindex="96" measurement="od_cct" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="96" measurement="od_cct" name="od_cct" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td></td>
         	<td width="34%">CCT</td>
         	<td ></td>
-        	<td><input type="text" tabindex="97" measurement="os_cct" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="97" measurement="os_cct" name="os_cct" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td ></td>
         	</tr>
         </table>
@@ -564,7 +566,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" tabindex="100" href="javascript:void(0)" id="a_24" onclick="togglediv(this);">Special Exam:</a>
 
         </div>
-        <div id="s_24" class="slideblock">
+        <div name="s_24" id="s_24" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td width="33%">OD</td>
@@ -572,32 +574,32 @@ span.ge{
         	<td width="33%">OS</td>
         	</tr>
         	<tr>
-        	<td width="33%"><input type="text" tabindex="101" measurement="od_color_vision" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="33%"><input type="text" tabindex="101" measurement="od_color_vision" name="od_color_vision" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td width="34%">color vision</td>
-        	<td width="33%"><input type="text" tabindex="102" measurement="os_color_vision" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="33%"><input type="text" tabindex="102" measurement="os_color_vision" name="os_color_vision" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td width="33%"><input type="text" tabindex="103" measurement="od_pupil" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="33%"><input type="text" tabindex="103" measurement="od_pupil" name="od_pupil" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td width="34%">Pupil</td>
-        	<td width="33%"><input type="text" tabindex="104" measurement="os_pupil" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="33%"><input type="text" tabindex="104" measurement="os_pupil" name="os_pupil" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td width="33%"><input type="text" tabindex="105" measurement="od_amsler_grid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="33%"><input type="text" tabindex="105" measurement="od_amsler_grid" name="od_amsler_grid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td width="34%">Amsler Grid</td>
-        	<td width="33%"><input type="text" tabindex="106" measurement="os_amsler_grid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="33%"><input type="text" tabindex="106" measurement="os_amsler_grid" name="os_amsler_grid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td width="33%"><input type="text" tabindex="107" measurement="od_pam" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="33%"><input type="text" tabindex="107" measurement="od_pam" name="od_pam" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td width="34%">PAM</td>
-        	<td width="33%"><input type="text" tabindex="108" measurement="os_pam" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="33%"><input type="text" tabindex="108" measurement="os_pam" name="os_pam" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
         	<td width="33%">
-        	<input type="text" tabindex="109" measurement="od_confrontation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<input type="text" tabindex="109" measurement="od_confrontation" name="od_confrontation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
 
         	<td width="34%">Confrontation</td>
         	<td width="33%">
-        	<input type="text" tabindex="110" measurement="os_confrontation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<input type="text" tabindex="110" measurement="os_confrontation" name="os_confrontation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
 
         	<tr>
         </table>
@@ -615,8 +617,8 @@ span.ge{
             </a>
 
         </div>
-        <div id="s_25" class="slideblock">
-        <textarea measurement="EOM" tabindex="121" onchange="syncFields(this)" cols="100" rows="4" class="examfieldgrey" onfocus="whiteField(this);"></textarea>
+        <div name="s_25" id="s_25" class="slideblock">
+        <textarea measurement="EOM" name="EOM" tabindex="121" onchange="syncFields(this)" cols="100" rows="4" class="examfieldgrey" onfocus="whiteField(this);"></textarea>
 
         </div>
     </div>
@@ -636,7 +638,7 @@ span.ge{
             <a href="javascript:void(0)" tabindex="127" onclick="clearAnterior();return false;">[clear]</a>
 
         </div>
-        <div id="s_26" class="slideblock">
+        <div name="s_26" id="s_26" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
@@ -644,36 +646,36 @@ span.ge{
         	<td>OS<td>
         	</tr>
         	<tr>
-        	<td><input type="text" size="25" tabindex="130" measurement="od_cornea" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" size="25" tabindex="130" measurement="od_cornea" name="od_cornea" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Cornea</td>
-        	<td><input type="text" size="25" tabindex="131" measurement="os_cornea" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
+        	<td><input type="text" size="25" tabindex="131" measurement="os_cornea" name="os_cornea" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
         	</tr>
         	<tr>
-        	<td><input type="text" size="25" tabindex="132" measurement="od_conjuctiva_sclera" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" size="25" tabindex="132" measurement="od_conjuctiva_sclera" name="od_conjuctiva_sclera" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Conjuctiva/Sclera</td>
-        	<td><input type="text" size="25" tabindex="133" measurement="os_conjuctiva_sclera" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
+        	<td><input type="text" size="25" tabindex="133" measurement="os_conjuctiva_sclera" name="os_conjuctiva_sclera" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
         	</tr>
         	<tr>
-        	<td><input type="text" size="25"  tabindex="134" measurement="od_anterior_chamber" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" size="25"  tabindex="134" measurement="od_anterior_chamber" name="od_anterior_chamber" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Anterior Chamber</td>
-        	<td><input type="text"  size="25" tabindex="135" measurement="os_anterior_chamber" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
+        	<td><input type="text"  size="25" tabindex="135" measurement="os_anterior_chamber" name="os_anterior_chamber" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
         	</tr>
         	<!-- start of angles -->
         	<tr>
         		<td>
         			<table class="exam" style="width:100%">
         				<tr>
-        					<td width="100%" align="center"><input type="text" size="6" tabindex="136" measurement="od_angle_up" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        					<td width="100%" align="center"><input type="text" size="6" tabindex="136" measurement="od_angle_up" name="od_angle_up" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         				</tr>
         				<tr>
         					<td style="text-align:center">
-	        					<input size="6" type="text" tabindex="137" measurement="od_angle_middle0" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
-        						<input size="6" type="text" tabindex="138" measurement="od_angle_middle1" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
-								<input size="6" type="text" tabindex="139" measurement="od_angle_middle2" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
+	        					<input size="6" type="text" tabindex="137" measurement="od_angle_middle0" name="od_angle_middle0" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
+        						<input size="6" type="text" tabindex="138" measurement="od_angle_middle1" name="od_angle_middle1" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
+								<input size="6" type="text" tabindex="139" measurement="od_angle_middle2" name="od_angle_middle2" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
         					</td>
         				</tr>
         				<tr>
-        					<td><input type="text" size="6" tabindex="140" measurement="od_angle_down" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        					<td><input type="text" size="6" tabindex="140" measurement="od_angle_down" name="od_angle_down" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         				</tr>
         			</table>
         		</td>
@@ -681,19 +683,19 @@ span.ge{
         		<td>
         			<table class="exam" style="width:100%">
         				<tr>
-        					<td width="100%" align="center"><input size="6" type="text" tabindex="141" measurement="os_angle_up" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        					<td width="100%" align="center"><input size="6" type="text" tabindex="141" measurement="os_angle_up" name="os_angle_up" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         				</tr>
 
         				<tr>
         					<td style="text-align:center">
-        						<input size="6" type="text" tabindex="142" measurement="os_angle_middle0" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
-								<input size="6" type="text" tabindex="143" measurement="os_angle_middle1" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
-								<input size="6" type="text" tabindex="144" measurement="os_angle_middle2" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
+        						<input size="6" type="text" tabindex="142" measurement="os_angle_middle0" name="os_angle_middle0" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
+								<input size="6" type="text" tabindex="143" measurement="os_angle_middle1" name="os_angle_middle1" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
+								<input size="6" type="text" tabindex="144" measurement="os_angle_middle2" name="os_angle_middle2" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/>
         					</td>
         				</tr>
 
         				<tr>
-        					<td><input type="text" size="6" tabindex="145" measurement="os_angle_down" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        					<td><input type="text" size="6" tabindex="145" measurement="os_angle_down" name="os_angle_down" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         				</tr>
         			</table>
         		</td>
@@ -701,15 +703,15 @@ span.ge{
 
         	<!-- end of angles -->
         	<tr>
-        	<td><input type="text" size="25" tabindex="146" measurement="od_iris" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" size="25" tabindex="146" measurement="od_iris" name="od_iris" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Iris</td>
-        	<td><input type="text" size="25" tabindex="147" measurement="os_iris" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
+        	<td><input type="text" size="25" tabindex="147" measurement="os_iris" name="os_iris" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
         	</tr>
 
         	<tr>
-        	<td><input type="text" size="25" tabindex="148" measurement="od_lens" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" size="25" tabindex="148" measurement="od_lens" name="od_lens" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Lens</td>
-        	<td><input type="text" size="25" tabindex="149" measurement="os_lens" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
+        	<td><input type="text" size="25" tabindex="149" measurement="os_lens" name="os_lens" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/><td>
         	</tr>
 
 
@@ -730,7 +732,7 @@ span.ge{
             <a href="javascript:void(0)" tabindex="162" onclick="clearPosterior();return false;">[clear]</a>
 
         </div>
-        <div id="s_27" class="slideblock">
+        <div name="s_27" id="s_27" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td width="40%" colspan="2">OD</td>
@@ -738,29 +740,29 @@ span.ge{
         	<td width="40%" colspan="2">OS</td>
         	</tr>
         	<tr>
-        	<td width="40%" colspan="2"><input type="text" tabindex="163" measurement="od_disc" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="40%" colspan="2"><input type="text" tabindex="163" measurement="od_disc" name="od_disc" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td width="20%">Disc</td>
-        	<td width="40%" colspan="2"><input type="text" tabindex="164" measurement="os_disc" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="40%" colspan="2"><input type="text" tabindex="164" measurement="os_disc" name="os_disc" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td colspan="2"><input type="text" tabindex="165" measurement="od_cd_ratio_horizontal" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td colspan="2"><input type="text" tabindex="165" measurement="od_cd_ratio_horizontal" name="od_cd_ratio_horizontal" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>c/d ratio</td>
-        	<td colspan="2"><input type="text" tabindex="166" measurement="os_cd_ratio_horizontal" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td colspan="2"><input type="text" tabindex="166" measurement="os_cd_ratio_horizontal" name="os_cd_ratio_horizontal" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td width="40%" colspan="2"><input type="text" tabindex="167" measurement="od_macula" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="40%" colspan="2"><input type="text" tabindex="167" measurement="od_macula" name="od_macula" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td width="20%">Macula</td>
-        	<td width="40%" colspan="2"><input type="text" tabindex="168" measurement="os_macula" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="40%" colspan="2"><input type="text" tabindex="168" measurement="os_macula" name="os_macula" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td width="40%" colspan="2"><input type="text" tabindex="169" measurement="od_retina" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="40%" colspan="2"><input type="text" tabindex="169" measurement="od_retina" name="od_retina" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td width="20%">Retina</td>
-        	<td width="40%" colspan="2"><input type="text" tabindex="170" measurement="os_retina" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="40%" colspan="2"><input type="text" tabindex="170" measurement="os_retina" name="os_retina" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td width="40%" colspan="2"><input type="text" tabindex="171" measurement="od_vitreous" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="40%" colspan="2"><input type="text" tabindex="171" measurement="od_vitreous" name="od_vitreous" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td width="20%">Vitreous</td>
-        	<td width="40%" colspan="2"><input type="text" tabindex="172" measurement="os_vitreous" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td width="40%" colspan="2"><input type="text" tabindex="172" measurement="os_vitreous" name="os_vitreous" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         </table>
         </div>
@@ -778,7 +780,7 @@ span.ge{
             <a href="javascript:void(0)" tabindex="177" onclick="clearExternal();return false;">[clear]</a>
 
         </div>
-        <div id="s_28" class="slideblock">
+        <div name="s_28" id="s_28" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
@@ -786,29 +788,29 @@ span.ge{
         	<td>OS</td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="178" measurement="od_face" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="178" measurement="od_face" name="od_face" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Face</td>
-        	<td><input type="text" tabindex="179" measurement="os_face" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="179" measurement="os_face" name="os_face" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="180" measurement="od_upper_lid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="180" measurement="od_upper_lid" name="od_upper_lid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Upper Lid</td>
-        	<td><input type="text" tabindex="181" measurement="os_upper_lid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="181" measurement="os_upper_lid" name="os_upper_lid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="182" measurement="od_lower_lid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="182" measurement="od_lower_lid" name="od_lower_lid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>lower Lid</td>
-        	<td><input type="text" tabindex="183" measurement="os_lower_lid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="183" measurement="os_lower_lid" name="os_lower_lid" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="184" measurement="od_punctum" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="184" measurement="od_punctum" name="od_punctum" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Punctum</td>
-        	<td><input type="text" tabindex="185" measurement="os_punctum" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="185" measurement="os_punctum" name="os_punctum" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="186" measurement="od_lacrimal_lake" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="186" measurement="od_lacrimal_lake" name="od_lacrimal_lake" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Lacrimal Lake</td>
-        	<td><input type="text" tabindex="187" measurement="os_lacrimal_lake" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="187" measurement="os_lacrimal_lake" name="os_lacrimal_lake" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         </table>
         </div>
@@ -823,7 +825,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" tabindex="190" href="javascript:void(0)" id="a_29" onclick="togglediv(this);">NLD:</a>
 
         </div>
-        <div id="s_29" class="slideblock">
+        <div name="s_29" id="s_29" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
@@ -832,22 +834,22 @@ span.ge{
         	</tr>
         	<tr>
         	<td>
-        	<input type="text" tabindex="191" measurement="od_lacrimal_irrigation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<input type="text" tabindex="191" measurement="od_lacrimal_irrigation" name="od_lacrimal_irrigation" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
 
         	<td>Lacrimal Irrigation</td>
 
-        	<td><input type="text" tabindex="192" measurement="os_lacrimal_irrigation"  onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="192" measurement="os_lacrimal_irrigation" name="os_lacrimal_irrigation"  onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
 
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="193" measurement="od_nld" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="193" measurement="od_nld" name="od_nld" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>NLD</td>
-        	<td><input type="text" tabindex="194" measurement="os_nld" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="194" measurement="os_nld" name="os_nld" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="195" measurement="od_dye_disappearance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="195" measurement="od_dye_disappearance" name="od_dye_disappearance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Dye Disappearance</td>
-        	<td><input type="text" tabindex="196" measurement="os_dye_disappearance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="196" measurement="os_dye_disappearance" name="os_dye_disappearance" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	</table>
         </div>
@@ -862,7 +864,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" tabindex="200" href="javascript:void(0)" id="a_30" onclick="togglediv(this);">Eyelid Measurements:</a>
 
         </div>
-        <div id="s_30" class="slideblock">
+        <div name="s_30" id="s_30" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
@@ -870,39 +872,39 @@ span.ge{
         	<td>OS</td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="201" measurement="od_mrd" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="201" measurement="od_mrd" name="od_mrd" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>MRD</td>
-        	<td><input type="text" tabindex="202" measurement="os_mrd" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="202" measurement="os_mrd" name="os_mrd" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="203" measurement="od_levator_function" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="203" measurement="od_levator_function" name="od_levator_function" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Levator Function</td>
-        	<td><input type="text" tabindex="204" measurement="os_levator_function" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="204" measurement="os_levator_function" name="os_levator_function" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="205" measurement="od_inferior_scleral_show" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="205" measurement="od_inferior_scleral_show" name="od_inferior_scleral_show" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Inferior Scleral Show</td>
-        	<td><input type="text" tabindex="206" measurement="os_inferior_scleral_show" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="206" measurement="os_inferior_scleral_show" name="os_inferior_scleral_show" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="207" measurement="od_cn_vii" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="207" measurement="od_cn_vii" name="od_cn_vii" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>CN VII</td>
-        	<td><input type="text" tabindex="208" measurement="os_cn_vii" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="208" measurement="os_cn_vii" name="os_cn_vii" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="209" measurement="od_blink" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="209" measurement="od_blink" name="od_blink" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Blink</td>
-        	<td><input type="text" tabindex="210" measurement="os_blink" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="210" measurement="os_blink" name="os_blink" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="211" measurement="od_bells" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="211" measurement="od_bells" name="od_bells" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Bells</td>
-        	<td><input type="text" tabindex="212" measurement="os_bells" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="212" measurement="os_bells" name="os_bells" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="213" measurement="od_lagophthalmos" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="213" measurement="od_lagophthalmos" name="od_lagophthalmos" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Lagophthalmos</td>
-        	<td><input type="text" tabindex="214" measurement="os_lagophthalmos" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="214" measurement="os_lagophthalmos" name="os_lagophthalmos" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         </table>
         </div>
@@ -916,7 +918,7 @@ span.ge{
             <a style="font-weight: bold;color:black;text-decoration:none;font-size:12px" tabindex="220" href="javascript:void(0)" id="a_31" onclick="togglediv(this);">Orbit:</a>
 
         </div>
-        <div id="s_31" class="slideblock">
+        <div name="s_31" id="s_31" class="slideblock">
         <table class="exam" width="100%">
         	<tr>
         	<td>OD</td>
@@ -924,14 +926,14 @@ span.ge{
         	<td>OS</td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="221" measurement="od_hertel" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="221" measurement="od_hertel" name="od_hertel" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Hertel</td>
-        	<td><input type="text" tabindex="222" measurement="os_hertel" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="222" measurement="os_hertel" name="os_hertel" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         	<tr>
-        	<td><input type="text" tabindex="223" measurement="od_retropulsion" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="223" measurement="od_retropulsion" name="od_retropulsion" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	<td>Retropulsion</td>
-        	<td><input type="text" tabindex="224" measurement="os_retropulsion" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
+        	<td><input type="text" tabindex="224" measurement="os_retropulsion" name="os_retropulsion" onchange="syncFields(this)" class="examfieldgrey" onfocus="whiteField(this);"/></td>
         	</tr>
         </table>
         </div>
@@ -944,3 +946,7 @@ span.ge{
 	<a href="javascript:void(0);" onclick="expandAll();">[expand all sections]</a>&nbsp;
 	<a href="javascript:void(0);" onclick="collapseAll();">[collapse all sections]</a>
 </span>
+
+<input style="display: none;" id="eye_form_submit_button" name="eye_form_submit_button" type="submit" value="Submit">
+
+</form>

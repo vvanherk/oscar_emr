@@ -87,13 +87,18 @@ public class EctDisplayOcularProcedureAction extends EctDisplayAction {
     OcularProcDao opDao = (OcularProcDao)SpringUtils.getBean("OcularProcDAO");
     ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
 
+	boolean isJsonRequest = request.getParameter("json") != null && request.getParameter("json").equalsIgnoreCase("true");
 
     List<EyeformOcularProcedure> ops = opDao.getByDemographicNo(Integer.parseInt(bean.demographicNo));
 
     for(EyeformOcularProcedure op:ops) {
     	NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
     	item.setDate(op.getDate());
-    	item.setValue(op.getId().toString());
+    	
+    	if (isJsonRequest)
+			item.setValue(op.getId().toString());
+		else
+			item.setValue("");
 
     	Provider provider = providerDao.getProvider(op.getDoctor());
 

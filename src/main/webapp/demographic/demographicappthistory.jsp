@@ -29,6 +29,10 @@
 <%@page import="org.springframework.web.context.WebApplicationContext"%>
 <%@page import="org.oscarehr.PMmodule.caisi_integrator.IntegratorFallBackManager" %>
 <%@page import="org.oscarehr.util.MiscUtils" %>
+<%@page import="org.oscarehr.common.dao.DemographicDao" %>
+<%@page import="org.oscarehr.common.model.Demographic" %>
+<%@page import="org.oscarehr.util.SpringUtils" %>
+
 <%!
 	private List<Site> sites = new ArrayList<Site>();
 	private HashMap<String,String[]> siteBgColor = new HashMap<String,String[]>();
@@ -51,10 +55,19 @@ if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
   String demographic_no = request.getParameter("demographic_no");
   String strLimit1="0";
   String strLimit2="25";
+  
   if(request.getParameter("limit1")!=null) strLimit1 = request.getParameter("limit1");
   if(request.getParameter("limit2")!=null) strLimit2 = request.getParameter("limit2");
-  String demolastname = request.getParameter("last_name")==null?"":request.getParameter("last_name");
+  
+  String demolastname = request.getParameter("last_name")==null?"":request.getParameter("last_name"); 
   String demofirstname = request.getParameter("first_name")==null?"":request.getParameter("first_name");
+  DemographicDao demographicDao = (DemographicDao)SpringUtils.getBean("demographicDao");
+  Demographic demo = demographicDao.getDemographic(demographic_no);
+  if(StringUtils.isBlank(demolastname))  
+	demolastname = demo.getLastName();
+  if(StringUtils.isBlank(demofirstname))
+  	demofirstname = demo.getFirstName();
+  
   String deepColor = "#CCCCFF" , weakColor = "#EEEEFF" ;
 %>
 <%@ page
@@ -277,6 +290,21 @@ function popupPageNew(vheight,vwidth,varpage) {
       if(iRow>iPageSize) break;
       bodd=bodd?false:true; //for the color of rows
       nItems++; //to calculate if it is the end of records
+      
+      String comments = "";
+      String status = apptMainBean.getString(rs,"status");
+      if (status != null) {
+		if(status.contains("N")) {
+		   comments = "No Show";
+		}
+		else if (status.equals("C")) {
+		   comments = "Cancelled";
+		}
+		// Skip printing appointment if it has deleted status
+		else if (status.equals("D")) {
+			continue;
+		}
+	}
        
 %> 
 <tr bgcolor="<%=bodd?weakColor:"white"%>" appt_no="<%=rs.getString("appointment_no")%>" demographic_no="<%=request.getParameter("demographic_no")%>">	  
@@ -292,20 +320,10 @@ function popupPageNew(vheight,vwidth,varpage) {
       </plugin:hideWhenCompExists>
 
       <% String remarks = apptMainBean.getString(rs,"remarks");
-         String comments = "";
          boolean newline = false;
          if (apptMainBean.getString(rs,"remarks") == null){
             remarks = "";
          }
-
-         if (apptMainBean.getString(rs,"status")!=null) {
-            if(apptMainBean.getString(rs,"status").contains("N")) {
-               comments = "No Show";
-            }
-            else if (apptMainBean.getString(rs,"status").equals("C")) {
-               comments = "Cancelled";
-            }
-        }
 
         if (!remarks.isEmpty() && !comments.isEmpty()) {
               newline=true;
@@ -313,9 +331,9 @@ function popupPageNew(vheight,vwidth,varpage) {
       %>
       <td>&nbsp;<%=remarks%><% if(newline){%><br/>&nbsp;<%}%><%=comments%></td>
       <% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) { 
-	String[] sbc = siteBgColor.get(apptMainBean.getString(rs,"location")); 
+	     String[] sbc = siteBgColor.get(apptMainBean.getString(rs,"location")); 
       %>      
-	<td style='background-color:<%= sbc[0] %>'><%= sbc[1] %></td>
+	<td style='background-color:<%= sbc!=null ? sbc[0] : "white" %>'><%= sbc !=null ? sbc[1] : "" %></td>
       <% } %>      
 
 </tr>

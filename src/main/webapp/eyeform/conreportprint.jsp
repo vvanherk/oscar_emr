@@ -156,7 +156,7 @@
 
     }
     function changeAddress(){
-    	var cid=document.inputForm.elements['sateliteId'].value;
+    	var cid=document.inputForm.elements['satelliteId'].value;
     	document.getElementById("sclinicName").innerHTML=clinicName[cid];
     	document.getElementById("sclinicAddress").innerHTML=clinicAddress[cid];
     	document.getElementById("sclinicCity").innerHTML=clinicCity[cid];
@@ -320,11 +320,7 @@
                                             Address:
                                         </td>
                                         <td class="fillLineh">
-                                	<c:out value="${refer.address1}"/>,
-                                	<br>
-                                	<c:out value="${refer.city}"/>,
-                                	<c:out value="${refer.province}"/>,
-                                	<c:out value="${refer.postal}"/>
+                                	<p><c:out value="${refer.streetAddress}"/></p>
                                         </td>
                                     </tr>
                                     <tr>
@@ -333,7 +329,7 @@
                                             Phone:
                                         </td>
                                         <td class="fillLineh">
-                                	<c:out value="${refer.phone}"/>
+                                	<c:out value="${refer.phoneNumber}"/>
                                         </td>
                                     </tr>
                                     <tr>
@@ -342,7 +338,7 @@
                                         </td>
 
                                         <td class="fillLineh">
-                                			<c:out value="${refer.fax}"/>
+                                			<c:out value="${refer.faxNumber}"/>
                                         </td>
                                     </tr>
 
