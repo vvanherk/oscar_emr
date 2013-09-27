@@ -166,7 +166,7 @@ for (int j=0; j<selRoute.length; j++) {
                     </div>
                     </td>
             	  </tr>
-            <!----Start new rows here-->
+            <!-- Start new rows here-->
                   <tr>
                     <td>
  		      <div class="DivContentTitle"><bean:message key="ChooseDrug.title"/></div>
@@ -347,7 +347,7 @@ for (int j=0; j<selRoute.length; j++) {
                                 </div>
                     </td>
                   </tr>
-            <!----End new rows here-->
+            <!-- End new rows here-->
 		  <tr height="100%">
                     <td>
                     </td>

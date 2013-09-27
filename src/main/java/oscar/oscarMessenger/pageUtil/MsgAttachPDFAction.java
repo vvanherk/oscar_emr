@@ -54,8 +54,13 @@ public class MsgAttachPDFAction extends Action {
 		if (frm.getIsPreview()) {
 
 			String srcText = frm.getSrcText();
-			Doc2PDF.parseString2PDF(request, response, "<HTML>" + srcText + "</HTML>");
-			frm.setIsPreview(false);
+			
+			try {
+				Doc2PDF.parseString2PDF(request, response, "<HTML>" + srcText + "</HTML>");
+				frm.setIsPreview(false);
+			} catch (Exception e) {
+				logger.error("Error: " + e.getMessage(), e);
+			}
 		} else {
 
 			try {

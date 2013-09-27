@@ -112,7 +112,7 @@ oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBea
 					key="ChooseAllergy.title" /></b></div>
 				</td>
 			</tr>
-			<!----Start new rows here-->
+			<!-- Start new rows here-->
 			<tr>
 				<td>
 				<div class="DivContentTitle"><bean:message
@@ -338,7 +338,7 @@ oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBea
 					onclick="javascript:window.location.href='<%=sBack%>';"
 					value="Back to View Allergies" /></td>
 			</tr>
-			<!----End new rows here-->
+			<!-- End new rows here-->
 			<tr height="100%">
 				<td></td>
 			</tr>

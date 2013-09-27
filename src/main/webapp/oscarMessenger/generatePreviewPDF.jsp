@@ -104,7 +104,14 @@ request.getSession().setAttribute("EctSessionBean",bean);
     }
     function GetBottomSRC() {
         f = parent.srcFrame;
-        document.forms[0].srcText.value = f.document.body.innerHTML;       
+        try {
+			document.forms[0].srcText.value = f.document.body.innerHTML;
+		} catch(err) {
+			// For some reason, the srcFrame.document.body is often null (probably something going on with the frame, not sure what though)
+			// If we run this method after it fails the first time, it seems to work...
+			// NOTE: this is totally a hack
+			setTimeout("GetBottomSRC()", 1000);
+		}
     }
     
     function PreviewPDF(url){
@@ -269,7 +276,7 @@ request.getSession().setAttribute("EctSessionBean",bean);
 							<td><%=demoName%> Information</td>
 							<td>
 							<% if ( request.getParameter("isAttaching") == null ) { %> <input
-								type=button value=Preview onclick=PreviewPDF( '<%=currentURI%>') />
+								type=button value=Preview onclick="PreviewPDF( '<%=currentURI%>')" />
 							<% } %> &nbsp;</td>
 						</tr>
 
@@ -302,7 +309,7 @@ request.getSession().setAttribute("EctSessionBean",bean);
 							<td><%=rsdemo.getString("timeStamp")%></td>
 							<td>
 							<% if ( request.getParameter("isAttaching") == null ) { %> <input
-								type=button value=Preview onclick=PreviewPDF( '<%=currentURI%>') />
+								type=button value=Preview onclick="PreviewPDF( '<%=currentURI%>')" />
 							<% } %> &nbsp;</td>
 						</tr>
 
@@ -352,7 +359,7 @@ request.getSession().setAttribute("EctSessionBean",bean);
 							<td>Current prescriptions</td>
 							<td>
 							<% if ( request.getParameter("isAttaching") == null ) { %> <input
-								type=button value=Preview onclick=PreviewPDF( '<%=currentURI%>') />
+								type=button value=Preview onclick="PreviewPDF( '<%=currentURI%>')" />
 							<% } %> &nbsp;</td>
 						</tr>
 

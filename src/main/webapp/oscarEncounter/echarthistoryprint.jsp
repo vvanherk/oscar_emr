@@ -155,7 +155,7 @@
 				</table>
 				</td>
 			</tr>
-			<!----End new rows here-->
+			<!-- End new rows here-->
 		</table>
 		</td>
 	</tr>

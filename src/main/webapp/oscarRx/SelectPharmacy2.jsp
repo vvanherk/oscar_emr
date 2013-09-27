@@ -76,7 +76,7 @@ oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBea
 					key="SearchDrug.title" /></a> >  <bean:message key="SelectPharmacy.title" /></div>
 				</td>
 			</tr>
-			<!----Start new rows here-->
+			<!-- Start new rows here-->
 			<tr>
 				<td>
 				<div class="DivContentTitle"><b><bean:message
@@ -139,7 +139,7 @@ oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBea
 					onclick="javascript:window.location.href='<%=sBack%>';"
 					value="Back to Search Drug" /></td>
 			</tr>
-			<!----End new rows here-->
+			<!-- End new rows here-->
 			<tr height="100%">
 				<td></td>
 			</tr>

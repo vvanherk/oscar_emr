@@ -77,7 +77,7 @@ if (request.getParameter("ID") != null && request.getParameter("type")!=null && 
 					key="SearchDrug.title" /></a></div>
 				</td>
 			</tr>
-			<!----Start new rows here-->
+			<!-- Start new rows here-->
 			<tr>
 				<td>
 				<div class="DivContentTitle"><bean:message
@@ -196,7 +196,7 @@ if (request.getParameter("ID") != null && request.getParameter("type")!=null && 
 					onclick="javascript:window.location.href='<%=sBack%>';"
 					value="Back to Search Drug" /></td>
 			</tr>
-			<!----End new rows here-->
+			<!-- End new rows here-->
 			<tr height="100%">
 				<td></td>
 			</tr>
