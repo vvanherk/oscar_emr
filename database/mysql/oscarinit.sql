@@ -7597,7 +7597,7 @@ CREATE TABLE providerSpireIdMap (
 
 CREATE TABLE spireAccessionNumberMap (
 	id int(10) NOT NULL auto_increment,
-	uaccn varchar(40) NOT NULL,
+	uaccn varchar(100) NOT NULL,
 	PRIMARY KEY (id)
 );
 
