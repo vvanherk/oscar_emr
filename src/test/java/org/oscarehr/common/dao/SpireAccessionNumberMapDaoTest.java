@@ -55,8 +55,13 @@ public class SpireAccessionNumberMapDaoTest extends TestFixtures {
 		spireTestData.add( new SpireTestData("HNA_CEACCN7371135", "Q181194859", new Integer(12)) );
 		spireTestData.add( new SpireTestData("HNA_CEACCN7371135", "Q181193159", new Integer(13)) );
 		
-		// We should have 12 maps created (since 2 of the fake lab information have duplicate unique accns)
-		EXPECTED_NUMBER_OF_MAPS = 12;
+		spireTestData.add( new SpireTestData("HNA_CEACCN7374435FPUIOEN3CENSEU5HCSEB4B5B47", "Q181193101", new Integer(14)) );
+		
+		// New id format test
+		spireTestData.add( new SpireTestData("HNAM_CEREFA78E5C0005BC47EF84A0CFE42376AB9A", "Q180338159", new Integer(15)) );
+		
+		// We should have 14 maps created (since 2 of the fake lab information have duplicate unique accns)
+		EXPECTED_NUMBER_OF_MAPS = 14;
 	}
 
 	@Test

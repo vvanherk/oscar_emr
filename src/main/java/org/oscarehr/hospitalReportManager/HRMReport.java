@@ -9,20 +9,22 @@
 
 package org.oscarehr.hospitalReportManager;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.ArrayList;
 
 import javax.xml.datatype.XMLGregorianCalendar;
 
+import org.apache.commons.codec.binary.Base64;
+import org.oscarehr.hospitalReportManager.xsd.DateFullOrPartial;
 import org.oscarehr.hospitalReportManager.xsd.Demographics;
 import org.oscarehr.hospitalReportManager.xsd.OmdCds;
 import org.oscarehr.hospitalReportManager.xsd.PersonNameStandard;
 import org.oscarehr.hospitalReportManager.xsd.PersonNameStandard.LegalName.OtherName;
+import org.oscarehr.hospitalReportManager.xsd.ReportFormat;
 import org.oscarehr.hospitalReportManager.xsd.ReportsReceived.OBRContent;
-import org.oscarehr.hospitalReportManager.xsd.DateFullOrPartial;
 import org.oscarehr.util.MiscUtils;
 
 public class HRMReport {
@@ -163,7 +165,21 @@ public class HRMReport {
 		return demographics.getPersonStatusCode().value();
 	}
 
+	public boolean isBinary() {
+		if(hrmReport.getPatientRecord().getReportsReceived().get(0).getFormat() == ReportFormat.BINARY) {
+			return true;
+		}
+		return false;
+	}
+	
+	public String getFileExtension() {
+		return hrmReport.getPatientRecord().getReportsReceived().get(0).getFileExtensionAndVersion();
+	}
+	
 	public String getFirstReportTextContent() {
+		if(hrmReport.getPatientRecord().getReportsReceived().get(0).getFormat() == ReportFormat.BINARY) {
+			return new Base64().encodeToString(getBinaryContent());
+		}
 		String result = null;
 		try {
 			result = hrmReport.getPatientRecord().getReportsReceived().get(0).getContent().getTextContent();
@@ -171,6 +187,18 @@ public class HRMReport {
 			MiscUtils.getLogger().error("error",e);
 		}
 		return result;
+	}
+	
+	//this is actually BASE64, so using as ASCII ok.
+	public byte[] getBinaryContent() {
+		
+		try {
+			byte[] tmp =hrmReport.getPatientRecord().getReportsReceived().get(0).getContent().getMedia();
+			return tmp;
+		}catch(Exception e) {
+			MiscUtils.getLogger().error("error",e);
+		}
+		return null;
 	}
 	
 	public String getFirstReportClass() {
@@ -253,11 +281,15 @@ public class HRMReport {
 	}
 	
 	public String getDeliverToUserIdFirstName() {
-		return hrmReport.getPatientRecord().getTransactionInformation().get(0).getPhysician().getFirstName();
+		if(hrmReport.getPatientRecord().getTransactionInformation().get(0).getProvider() == null)
+			return null;
+		return hrmReport.getPatientRecord().getTransactionInformation().get(0).getProvider().getFirstName();
 	}
 	
 	public String getDeliverToUserIdLastName() {
-		return hrmReport.getPatientRecord().getTransactionInformation().get(0).getPhysician().getLastName();
+		if(hrmReport.getPatientRecord().getTransactionInformation().get(0).getProvider() == null)
+			return null;
+		return hrmReport.getPatientRecord().getTransactionInformation().get(0).getProvider().getLastName();
 	}
 
 	public Integer getHrmDocumentId() {

@@ -29,10 +29,14 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
@@ -48,10 +52,14 @@ import org.apache.log4j.Logger;
 import org.oscarehr.util.MiscUtils;
 import org.w3c.tidy.Tidy;
 
-import com.lowagie.text.Document;
-import com.lowagie.text.PageSize;
-import com.lowagie.text.html.SAXmyHtmlHandler;
-import com.lowagie.text.pdf.PdfWriter;
+// Updated itext libraries (previously called 'lowagie')
+import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.PageSize;
+import com.itextpdf.text.html.simpleparser.HTMLWorker;
+import com.itextpdf.text.pdf.PdfWriter;
+// Helper to parse xml (in our case, xhtml) and convert it into pdf
+import com.itextpdf.tool.xml.XMLWorkerHelper;
+
 
 /**
  *
@@ -248,32 +256,50 @@ public class Doc2PDF {
         return in;
     }
 
-    public static String GetPDFBin(HttpServletResponse response, String docText) {
-        // step 1: creation of a document-object
-        Document document = new Document(PageSize.A4, 36, 36, 36, 36);
-        // Document document = new Document(PageSize.A4.rotate());
-
+    public static String GetPDFBin(HttpServletResponse response, String docText) {        
         try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            PdfWriter.getInstance(document, baos);
+			com.itextpdf.text.Document document = new com.itextpdf.text.Document(PageSize.A4, 36, 36, 36, 36);
+			
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			PdfWriter pdfWriter = PdfWriter.getInstance(document, baos);
 
-            // step 3: we create a parser and set the document handler
-            SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
+			document.open();
+			document.addCreationDate();
 
-            // step 4: we parse the document
-            // use input stream  
-            parser.parse(new ByteArrayInputStream(docText.getBytes()), new SAXmyHtmlHandler(document));
+			HTMLWorker htmlWorker = new HTMLWorker(document);
 
-            document.close();
+			htmlWorker.parse(new StringReader(docText));
 
-            return(new String(Base64.encodeBase64(baos.toByteArray())));
-        }
+			document.close();
 
-        catch (Exception e) {
-        	logger.error("Unexpected error", e);
-        }
+			return( new String(Base64.encodeBase64(baos.toByteArray())) );
+		} catch (Exception e) {
+			logger.error("Unexpected error", e);
+		}
+		
+		// If we failed to parse the html with the HTMLWorker, try parsing with the XMLWorkerHelper.
+		// We try with HTMLWorker first, as it seems to output a better formatted PDF.
+		try {
+			com.itextpdf.text.Document document = new com.itextpdf.text.Document(PageSize.A4, 36, 36, 36, 36);
+			
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			PdfWriter pdfWriter = PdfWriter.getInstance(document, baos);
+
+			document.open();
+			document.addCreationDate();
+
+			docText = docText.replace("<br>", "<br/>");
+			XMLWorkerHelper.getInstance().parseXHtml(pdfWriter, document, new StringReader(docText));
+
+			document.close();
+
+			return( new String(Base64.encodeBase64(baos.toByteArray())) );
+		} catch (Exception e) {
+			logger.error("Unexpected error", e);
+		}
+		
+
         return null;
-
     }
 
     public static void PrintPDFFromBin(HttpServletResponse response, String docBin) {
@@ -330,37 +356,53 @@ public class Doc2PDF {
     }
 
     public static void PrintPDFFromHTMLString(HttpServletResponse response, String docText) {
+		try {
+			com.itextpdf.text.Document document = new com.itextpdf.text.Document(PageSize.A4, 36, 36, 36, 36);
+			
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			PdfWriter pdfWriter = PdfWriter.getInstance(document, baos);
 
-        // step 1: creation of a document-object
-        Document document = new Document(PageSize.A4, 36, 36, 36, 36);
-        //Document document = new Document(PageSize.A4.rotate());
+			document.open();
+			document.addCreationDate();
 
-        try {
-            ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            PdfWriter.getInstance(document, baos);
+			HTMLWorker htmlWorker = new HTMLWorker(document);
 
-            // step 3: we create a parser and set the document handler
-            SAXParser parser = SAXParserFactory.newInstance().newSAXParser();
+			htmlWorker.parse(new StringReader(docText));
 
-            // step 4: we parse the document
-            // use input stream        
-            parser.parse(new ByteArrayInputStream(docText.getBytes()), new SAXmyHtmlHandler(document));
+			document.close();
 
-            document.close();
+			byte[] binArray = baos.toByteArray();
+			
+			PrintPDFFromBytes(response, binArray);
+			return;
+		} catch (Exception e) {
+			logger.error("Unexpected error", e);
+		}
+		
+		// If we failed to parse the html with the HTMLWorker, try parsing with the XMLWorkerHelper.
+		// We try with HTMLWorker first, as it seems to output a better formatted PDF.
+		try {
+			com.itextpdf.text.Document document = new com.itextpdf.text.Document(PageSize.A4, 36, 36, 36, 36);
+			
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			PdfWriter pdfWriter = PdfWriter.getInstance(document, baos);
 
-            // String yourString = new String(theBytesOfYourString, "UTF-8");
-            // byte[] theBytesOfYourString = yourString.getBytes("UTF-8");
+			document.open();
+			document.addCreationDate();
 
-            byte[] binArray = baos.toByteArray();
+			docText = docText.replace("<br>", "<br/>");
+			XMLWorkerHelper.getInstance().parseXHtml(pdfWriter, document, new StringReader(docText));
 
-            PrintPDFFromBytes(response, binArray);
+			document.close();
 
-        }
+			byte[] binArray = baos.toByteArray();
+			
+			PrintPDFFromBytes(response, binArray);
 
-        catch (Exception e) {
-        	logger.error("Unexpected error", e);
-        }
-
+			return;
+		} catch (Exception e) {
+			logger.error("Unexpected error", e);
+		}
     }
 
     public static String AddAbsoluteTag(HttpServletRequest request, String docText, String uri) {
