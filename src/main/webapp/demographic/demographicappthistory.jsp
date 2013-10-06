@@ -34,7 +34,7 @@
 <%@page import="org.oscarehr.util.SpringUtils" %>
 
 <%!
-	private List<Site> sites = new ArrayList<Site>();
+	private List<Site> sites = new java.util.ArrayList<Site>();
 	private HashMap<String,String[]> siteBgColor = new HashMap<String,String[]>();
 %>
 

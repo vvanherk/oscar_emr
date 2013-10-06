@@ -48,7 +48,6 @@ import org.oscarehr.common.OtherIdManager;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.Hl7TextInfoDao;
 import org.oscarehr.common.dao.Hl7TextMessageDao;
-import org.oscarehr.common.dao.SpireAccessionNumberMapDao;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.Hl7TextInfo;
 import org.oscarehr.common.model.Hl7TextMessage;
@@ -121,16 +120,21 @@ public final class MessageUploader {
             	}
             }
             
-            boolean isSpire = (h instanceof SpireHandler);
-            
             // get actual ohip numbers based on doctor first and last name for spire lab
-            if(isSpire) {
-				List<String> docSpireNums = ((SpireHandler)h).getAllDocNums();
-				
-            	if (docSpireNums != null) {
-					docNums = findProvidersForSpireLab(docSpireNums);
+            if(h instanceof SpireHandler) {
+				List<String> docNames = ((SpireHandler)h).getDocNames();
+				//logger.debug("docNames:");
+	            for (int i=0; i < docNames.size(); i++) {
+					logger.info(i + " " + docNames.get(i));
+				}
+            	if (docNames != null) {
+					docNums = findProvidersForSpireLab(docNames);
 				}
             }
+            //logger.debug("docNums:");
+            for (int i=0; i < docNums.size(); i++) {
+				//logger.debug(i + " " + docNums.get(i));
+			}
 
 			try {
 				// reformat date
@@ -211,20 +215,6 @@ public final class MessageUploader {
 				hl7TextInfo.setReportStatus(reportStatus);
 				hl7TextInfo.setAccessionNumber(accessionNum);
 				hl7TextInfoDao.persist(hl7TextInfo);
-				
-				if (isSpire) {
-					try {
-						// we need to add a mapping from the 'common' accession number to the 'unique' accession number for spire labs
-						String uniqueAccn = ((SpireHandler)h).getUniqueAccessionNum();
-						String accn = h.getAccessionNum();
-						
-						SpireAccessionNumberMapDao accnDao = (SpireAccessionNumberMapDao)SpringUtils.getBean("spireAccessionNumberMapDao");
-						accnDao.add( uniqueAccn, accn, hl7TextInfo.getLabNumber() );
-					} catch (Exception e) {
-						logger.warn("Unable to parse Spire Unique Accession number.");
-						logger.debug("Spire Unique Accession number parsing exception:", e);
-					}
-				}
 			}
 
 			String demProviderNo = patientRouteReport(insertID, lastName, firstName, sex, dob, hin, DbConnectionFilter.getThreadLocalDbConnection());
@@ -238,17 +228,15 @@ public final class MessageUploader {
 			    	providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type);
 			    }
 			} else {
-				String matchBy = "ohip_no";
 				Integer limit = null;
 				boolean orderByLength = false;
-				
+				String search = null;
 				if (type.equals("Spire")) {
 					limit = new Integer(1);
 					orderByLength = true;
-					matchBy = "provider_no";
+					search = "provider_no";
 				}
-				
-				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, matchBy, limit, orderByLength);
+				providerRouteReport(String.valueOf(insertID), docNums, DbConnectionFilter.getThreadLocalDbConnection(), demProviderNo, type, search, limit, orderByLength);
 			}
 			retVal = h.audit();
 			if(results != null) {
@@ -265,38 +253,9 @@ public final class MessageUploader {
 	
 	/**
 	 * Method findProvidersForSpireLab
-	 * Finds the providers that are associated with a spire lab.
-	 */ 
-	private static ArrayList<String> findProvidersForSpireLab(List<String> docSpireNums) {
-		List<String> docNums = new ArrayList<String>();
-		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
-		
-		for (int i=0; i < docSpireNums.size(); i++) {
-			String spireNumber = docSpireNums.get(i);
-			if (spireNumber == null) {
-				//logger.warn("Doctor does not have a spire number");
-				continue;
-			}
-			List<Provider> provList = providerDao.getAllProvidersWithSpireId( spireNumber );
-			
-			if (provList != null) {
-				int provIndex = findProviderWithShortestFirstName(provList);
-				if (provIndex != -1 && provList.size() >= 1 && !provList.get(provIndex).getProviderNo().equals("0")) {
-					docNums.add( provList.get(provIndex).getProviderNo() );
-					logger.debug("ADDED1: " + provList.get(provIndex).getProviderNo());
-				}
-			}
-		}
-		
-		return (ArrayList<String>)docNums;
-	}
-	
-	/**
-	 * Method findProvidersForSpireLab
 	 * Finds the providers that are associated with a spire lab.  (need to do this using doctor names, as
 	 * spire labs don't have a valid ohip number associated with them).
 	 */ 
-	/*
 	private static ArrayList<String> findProvidersForSpireLab(List<String> docNames) {
 		List<String> docNums = new ArrayList<String>();
 		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
@@ -328,7 +287,6 @@ public final class MessageUploader {
 		
 		return (ArrayList<String>)docNums;
 	}
-	*/
 	
 	/**
 	 * Method findProviderWithShortestFirstName
@@ -376,9 +334,9 @@ public final class MessageUploader {
 		
 		if (docNums != null) {
 			for (int i = 0; i < docNums.size(); i++) {
+
 				if (docNums.get(i) != null && !((String) docNums.get(i)).trim().equals("")) {
 					sql = "select provider_no from provider where "+ sqlSearchOn +" = '" + ((String) docNums.get(i)) + "'" + sqlOrderByLength + sqlLimit;
-					
 					pstmt = conn.prepareStatement(sql);
 					ResultSet rs = pstmt.executeQuery();
 					while (rs.next()) {
@@ -426,90 +384,88 @@ public final class MessageUploader {
 	 * Attempt to match the patient from the lab to a demographic, return the patients provider which is to be used then no other provider can be found to match the patient to.
 	 */
 	private static String patientRouteReport(int labId, String lastName, String firstName, String sex, String dob, String hin, Connection conn) throws SQLException {
-
-		String sql;
-		String demo = "0";
-		String provider_no = "0";
-		// 19481015
-		String dobYear = "%";
-		String dobMonth = "%";
-		String dobDay = "%";
-		String hinMod = "%";
-
-		int count = 0;
-		try {
-
-			if (hin != null) {
-				hinMod = new String(hin);
-				if (hinMod.length() == 12) {
-					hinMod = hinMod.substring(0, 10);
-				}
-			}
-
-			if (dob != null && !dob.equals("")) {
-				String[] dobArray = dob.trim().split("-");
-				dobYear = dobArray[0];
-				dobMonth = dobArray[1];
-				dobDay = dobArray[2];
-			}
-
-			if (!firstName.equals("")) firstName = firstName.substring(0, 1);
-			if (!lastName.equals("")) lastName = lastName.substring(0, 1);
-			
-			String nameCondition = "";
-			String hinCondition = "";
+		PatientLabRoutingResult result = null;
 		
-			if (!OscarProperties.getInstance().getBooleanProperty("LAB_NOMATCH_NAMES", "yes")) {
-				nameCondition = "and last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' ";
-			}
-
-			if (!hinMod.equals("%")) {
-				hinCondition = "and hin='"+ hinMod +"' ";
-			}
+			String sql;
+			String demo = "0";
+			String provider_no = "0";
+			// 19481015
+			String dobYear = "%";
+			String dobMonth = "%";
+			String dobDay = "%";
+			String hinMod = "%";
+	
 			
-			sql = 	"select d.demographic_no, d.provider_no from demographic d left join demographic_merged dm on dm.demographic_no = d.demographic_no  where " +
-					"year_of_birth like '" + dobYear + "' " +
-					"and month_of_birth like '" + dobMonth + "' " +
-					"and date_of_birth like '" + dobDay + "' " +
-					"and sex like '" + sex + "%' " +
-					"and dm.merged_to is NULL " +
-					nameCondition +
-					hinCondition
-			;
-
-			logger.info(sql);
-			PreparedStatement pstmt = conn.prepareStatement(sql);
-			ResultSet rs = pstmt.executeQuery();
-			while (rs.next()) {
-				count++;
-				demo = oscar.Misc.getString(rs, "demographic_no");
-				provider_no = oscar.Misc.getString(rs, "provider_no");
+			try {
+	
+				if (hin != null) {
+					hinMod = new String(hin);
+					if (hinMod.length() == 12) {
+						hinMod = hinMod.substring(0, 10);
+					}
+				}
+	
+				if (dob != null && !dob.equals("")) {
+					String[] dobArray = dob.trim().split("-");
+					dobYear = dobArray[0];
+					dobMonth = dobArray[1];
+					dobDay = dobArray[2];
+				}
+	
+				if (!firstName.equals("")) firstName = firstName.substring(0, 1);
+				if (!lastName.equals("")) lastName = lastName.substring(0, 1);
+	
+				if (hinMod.equals("%")) {
+					sql = "select demographic_no, provider_no from demographic where" + " last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
+				} else if (OscarProperties.getInstance().getBooleanProperty("LAB_NOMATCH_NAMES", "yes")) {
+					sql = "select demographic_no, provider_no from demographic where hin='" + hinMod + "' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
+				} else {
+					sql = "select demographic_no, provider_no from demographic where hin='" + hinMod + "' and " + " last_name like '" + lastName + "%' and " + " first_name like '" + firstName + "%' and " + " year_of_birth like '" + dobYear + "' and " + " month_of_birth like '" + dobMonth + "' and " + " date_of_birth like '" + dobDay + "' and " + " sex like '" + sex + "%' ";
+				}
+	
+				logger.info(sql);
+				PreparedStatement pstmt = conn.prepareStatement(sql);
+				ResultSet rs = pstmt.executeQuery();
+				int count = 0;
+				
+				while (rs.next()) {
+					result = new PatientLabRoutingResult();
+					demo = oscar.Misc.getString(rs, "demographic_no");
+					provider_no = oscar.Misc.getString(rs, "provider_no");
+					result.setDemographicNo(Integer.parseInt(demo));
+					result.setProviderNo(provider_no);
+					count++;
+				}
+				rs.close();
+				pstmt.close();
+				if(count > 1) {
+					result = null;
+				}
+			} catch (SQLException sqlE) {
+				throw sqlE;
 			}
-			rs.close();
-			pstmt.close();
-		} catch (SQLException sqlE) {
-			throw sqlE;
-		}
 
+		
 		try {
-			if (count != 1) {
-				demo = "0";
-				logger.info("Could not find patient for lab: " + labId + " # of possible matches :" + count);
+			if (result == null) {
+				logger.info("Could not find patient for lab: " + labId);
 			} else {
-				Hl7textResultsData.populateMeasurementsTable("" + labId, demo);
+				Hl7textResultsData.populateMeasurementsTable("" + labId, result.getDemographicNo().toString());
 			}
 
-			sql = "insert into patientLabRouting (demographic_no, lab_no,lab_type) values ('" + demo + "', '" + labId + "','HL7')";
-			PreparedStatement pstmt = conn.prepareStatement(sql);
-			pstmt.executeUpdate();
-
-			pstmt.close();
+			if(result != null) {
+				sql = "insert into patientLabRouting (demographic_no, lab_no,lab_type,created) values ('" + ((result != null && result.getDemographicNo()!=null)?result.getDemographicNo().toString():"0") + "', '" + labId + "','HL7',now())";
+				PreparedStatement pstmt = conn.prepareStatement(sql);
+				pstmt.executeUpdate();
+	
+				pstmt.close();
+			}
 		} catch (SQLException sqlE) {
 			logger.info("NO MATCHING PATIENT FOR LAB id =" + labId);
 			throw sqlE;
 		}
 
-		return provider_no;
+		return (result != null)?result.getProviderNo():"0";
 	}
 
 	/**
