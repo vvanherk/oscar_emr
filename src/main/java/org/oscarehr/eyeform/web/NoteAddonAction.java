@@ -80,7 +80,7 @@ public class NoteAddonAction extends DispatchAction {
 		}		
 		request.setAttribute("followUps",followUps);
 		
-		List<EyeformTestBook> testBookRecords = testDao.getByAppointmentNo(Integer.parseInt(appointmentNo));
+		List<EyeformTestBook> testBookRecords = testDao.get(Integer.parseInt(demographicNo), Integer.parseInt(appointmentNo));
 		request.setAttribute("testBookRecords",testBookRecords);
 		
 		List<EyeformProcedureBook> procedures = procedureBookDao.get(Integer.parseInt(demographicNo), Integer.parseInt(appointmentNo));

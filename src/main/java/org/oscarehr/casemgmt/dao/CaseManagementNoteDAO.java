@@ -687,4 +687,64 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 		}
 		return mostRecents;
 	}
+	
+	public List<CaseManagementNote> getMostRecentNotes(Integer demographicNo, int appointmentNo) {
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.demographic_no = ? and cmn.appointmentNo = ?";
+		List<String> tmp = this.getHibernateTemplate().find(hql, new Object[] { String.valueOf(demographicNo), new Integer(appointmentNo) });
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		for(String uuid:tmp) {
+			mostRecents.add(this.getMostRecentNote(uuid));
+		}
+		return mostRecents;
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotes(Integer demographicNo, int appointmentNo) {
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.demographic_no = ? and cmn.appointmentNo = ?";
+		List<String> tmp = this.getHibernateTemplate().find(hql, new Object[] { String.valueOf(demographicNo), new Integer(appointmentNo) });
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		for(String uuid:tmp) {
+			mostRecents.add(this.getMostRecentNote(uuid));
+		}
+		return mostRecents;
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotes(Integer demographicNo, int appointmentNo) {
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.demographic_no = ? and cmn.appointmentNo = ?";
+		List<String> tmp = this.getHibernateTemplate().find(hql, new Object[] { String.valueOf(demographicNo), new Integer(appointmentNo) });
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		for(String uuid:tmp) {
+			mostRecents.add(this.getMostRecentNote(uuid));
+		}
+		return mostRecents;
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotes(Integer demographicNo, int appointmentNo) {
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.demographic_no = ? and cmn.appointmentNo = ?";
+		List<String> tmp = this.getHibernateTemplate().find(hql, new Object[] { String.valueOf(demographicNo), new Integer(appointmentNo) });
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		for(String uuid:tmp) {
+			mostRecents.add(this.getMostRecentNote(uuid));
+		}
+		return mostRecents;
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotes(Integer demographicNo, int appointmentNo) {
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.demographic_no = ? and cmn.appointmentNo = ?";
+		List<String> tmp = this.getHibernateTemplate().find(hql, new Object[] { String.valueOf(demographicNo), new Integer(appointmentNo) });
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		for(String uuid:tmp) {
+			mostRecents.add(this.getMostRecentNote(uuid));
+		}
+		return mostRecents;
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotes(Integer demographicNo, int appointmentNo) {
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.demographic_no = ? and cmn.appointmentNo = ?";
+		List<String> tmp = this.getHibernateTemplate().find(hql, new Object[] { String.valueOf(demographicNo), new Integer(appointmentNo) });
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		for(String uuid:tmp) {
+			mostRecents.add(this.getMostRecentNote(uuid));
+		}
+		return mostRecents;
+	}
 }

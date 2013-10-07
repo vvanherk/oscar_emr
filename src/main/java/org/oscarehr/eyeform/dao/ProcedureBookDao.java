@@ -67,4 +67,64 @@ public class ProcedureBookDao extends AbstractDao<EyeformProcedureBook> {
 	    return(results);
 	}
 	
+	public List<EyeformProcedureBook> get(int demographicNo, int appointmentNo) {
+		Query query = entityManager.createQuery("select x from "+modelClass.getSimpleName()+" x where x.demographicNo=?1 and x.appointmentNo=?2");
+		query.setParameter(1, demographicNo);
+		query.setParameter(2, appointmentNo);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformProcedureBook> results=query.getResultList();
+	    return(results);
+	}
+	
+	public List<EyeformProcedureBook> get(int demographicNo, int appointmentNo) {
+		Query query = entityManager.createQuery("select x from "+modelClass.getSimpleName()+" x where x.demographicNo=?1 and x.appointmentNo=?2");
+		query.setParameter(1, demographicNo);
+		query.setParameter(2, appointmentNo);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformProcedureBook> results=query.getResultList();
+	    return(results);
+	}
+	
+	public List<EyeformProcedureBook> get(int demographicNo, int appointmentNo) {
+		Query query = entityManager.createQuery("select x from "+modelClass.getSimpleName()+" x where x.demographicNo=?1 and x.appointmentNo=?2");
+		query.setParameter(1, demographicNo);
+		query.setParameter(2, appointmentNo);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformProcedureBook> results=query.getResultList();
+	    return(results);
+	}
+	
+	public List<EyeformProcedureBook> get(int demographicNo, int appointmentNo) {
+		Query query = entityManager.createQuery("select x from "+modelClass.getSimpleName()+" x where x.demographicNo=?1 and x.appointmentNo=?2");
+		query.setParameter(1, demographicNo);
+		query.setParameter(2, appointmentNo);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformProcedureBook> results=query.getResultList();
+	    return(results);
+	}
+	
+	public List<EyeformProcedureBook> get(int demographicNo, int appointmentNo) {
+		Query query = entityManager.createQuery("select x from "+modelClass.getSimpleName()+" x where x.demographicNo=?1 and x.appointmentNo=?2");
+		query.setParameter(1, demographicNo);
+		query.setParameter(2, appointmentNo);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformProcedureBook> results=query.getResultList();
+	    return(results);
+	}
+	
+	public List<EyeformProcedureBook> get(int demographicNo, int appointmentNo) {
+		Query query = entityManager.createQuery("select x from "+modelClass.getSimpleName()+" x where x.demographicNo=?1 and x.appointmentNo=?2");
+		query.setParameter(1, demographicNo);
+		query.setParameter(2, appointmentNo);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformProcedureBook> results=query.getResultList();
+	    return(results);
+	}
+	
 }

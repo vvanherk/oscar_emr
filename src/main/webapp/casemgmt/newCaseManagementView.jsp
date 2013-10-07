@@ -97,7 +97,7 @@
 				style="clear: right; float: right; width: 49%; margin-right: 3px; height: inherit;">		
 			</div>
 		</div>
-		<span style="visibility:hidden">test</span>
+		
 	</div>
 	
 	<div id="notCPP" style="height: 70%; margin-left: 2px; background-color: #FFFFFF;">	

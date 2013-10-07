@@ -149,12 +149,41 @@ function popupPageNew(vheight,vwidth,varpage) {
 		jQuery("input[name='sel']").each(function(){
 			jQuery(this).attr('checked',true);
 		});
+		
+		numCheckboxesChecked = jQuery("input[name='sel']").length;
+		enablePrintVisitDataButton();
 	}
 	
 	function deselectAllCheckboxes() {
 		jQuery("input[name='sel']").each(function(){
 			jQuery(this).attr('checked',false);
 		});
+		
+		numCheckboxesChecked = 0;
+		disablePrintVisitDataButton();
+	}
+	
+	var numCheckboxesChecked = 0;
+	function clickAppointmentCheckbox(checkbox) {
+		if ( !jQuery(checkbox).is(':checked') )
+			numCheckboxesChecked--;
+		else
+			numCheckboxesChecked++;
+		
+		if (numCheckboxesChecked == 0)
+			disablePrintVisitDataButton();
+		else
+			enablePrintVisitDataButton();
+	}
+	
+	function enablePrintVisitDataButton() {
+		var elem = jQuery("input[name='printVisitData']");
+		elem.removeAttr("disabled");
+	}
+	
+	function disablePrintVisitDataButton() {
+		var elem = jQuery("input[name='printVisitData']");
+		elem.attr("disabled", "disabled");
 	}
 
 </script>
