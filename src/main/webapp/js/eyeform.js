@@ -648,6 +648,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 			(boxNameId == "ocularMeds"
 				|| boxNameId == "consultations"
 				|| boxNameId == "documents"
+				|| boxNameId == "macros"
 				|| boxNameId == "allergies"))
 		jsonData.Items = jsonData.Items.reverse();
 
@@ -1061,7 +1062,7 @@ function refreshBox(boxName, initialLoad) {
 }
 
 
-function saveEyeform(fn, signAndExit, bill, closeForm) {
+function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 	var value = $("#impressionAreaBox").val();
 	var currentPresentingValue = $("#currentIssueAreaBox").val();
 	var planValue = $("#planBox").val();
@@ -1089,13 +1090,13 @@ function saveEyeform(fn, signAndExit, bill, closeForm) {
 
 	$(".loaderImg").css("display", "inline");
 
-
 	$.ajax({
 		type: "POST",
 		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
 		data: "value=" + encodeURIComponent(value) + "&issue_id=" + impressionHistoryIssueId
 			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
-			+ (!isNaN(issueNoteId) ? "&noteId=" + issueNoteId : "&noteId=0"),
+			+ (!isNaN(issueNoteId) ? "&noteId=" + issueNoteId : "&noteId=0")
+			+ (!isNaN(macroId) ? "&macroId=" + macroId : ""),
 		dataType: "json",
 		success: function(data) {
 			savedImpression = true;
@@ -1107,7 +1108,8 @@ function saveEyeform(fn, signAndExit, bill, closeForm) {
 		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
 		data: "value=" + encodeURIComponent(currentPresentingValue) + "&issue_id=" + currentPresentingIssueId
 			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
-			+ (!isNaN(currentPresentingNoteId) ? "&noteId=" + currentPresentingNoteId : "&noteId=0"),
+			+ (!isNaN(currentPresentingNoteId) ? "&noteId=" + currentPresentingNoteId : "&noteId=0")
+			+ (!isNaN(macroId) ? "&macroId=" + macroId : ""),
 		dataType: "json",
 		success: function(data) {
 			savedCurrentPresenting = true;
@@ -1134,14 +1136,15 @@ function saveEyeform(fn, signAndExit, bill, closeForm) {
 		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
 		data: "value=" + encodeURIComponent(planValue) + "&issue_code=eyeformPlan"
 			+ (signAndExit ? "&sign=true" : "")
-			+ (!isNaN(planNoteId) ? "&noteId=" + planNoteId : "&noteId=0"),
+			+ (!isNaN(planNoteId) ? "&noteId=" + planNoteId : "&noteId=0")
+			+ (!isNaN(macroId) ? "&macroId=" + macroId : ""),
 		dataType: "json",
 		success: function(data) {
 			savedPlan = true;
 		}
 	});
-
-	saveInterval = setInterval(function () { afterSave(fn, signAndExit, bill, closeForm); }, 1000);
+	
+	//saveInterval = setInterval(function () { afterSave(fn, signAndExit, bill, closeForm); }, 1000);
 }
 
 function saveMeasurements() {
@@ -1329,7 +1332,7 @@ function runMacro2(macroId, macroName, appointmentNo, cpp) {
 	//jQuery("form[name='caseManagementEntryForm']").append("<input type=\"hidden\" id=\"macro.id\" name=\"macro.id\" value=\""+macroId+"\"/>");
 	
 	//var result =  savePage('runMacro', '');
-	saveEyeform(saveFunc, true, false, true);
+	saveEyeform(saveFunc, true, false, true, macroId);
 	//saveEyeform(postBillingEntry, true, true, false);
 	
 	return false;
