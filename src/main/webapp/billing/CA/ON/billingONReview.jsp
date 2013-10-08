@@ -673,7 +673,7 @@ window.onload=function(){
                         if (codeValid) {
 			%>
 			<tr>
-				<td align='right' colspan='3' class="myGreen">Total: <input type="text" id="total" name="total" size="5" value="0.00" onblur="checkTotal();"  />
+				<td align='right' colspan='3' class="myGreen">Total: <input type="text" id="total" name="total" size="5" value="0.00" onblur="checkTotal(); showtotal();"  />
 				<input type="hidden" name="totalItem" value="<%=vecServiceParam[0].size() %>" /></td>
 <script Language="JavaScript">
 <!--
@@ -730,6 +730,7 @@ function onCheckMaster() {
 	}
         var num = new Number(stotal);
 	document.forms[0].total.value = num.toFixed(2);
+	showtotal();
 }
 	var ntotal = 0.00;
     for (var i =0; i <document.forms[0].elements.length; i++) {
