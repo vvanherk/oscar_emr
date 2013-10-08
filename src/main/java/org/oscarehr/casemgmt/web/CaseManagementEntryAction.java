@@ -529,6 +529,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		String macroId = request.getParameter("macroId");
 		String runMacro = request.getParameter("runMacro");
 		boolean runMacroBoolean = false;
+		String macroImpression = "";
 		
 		if (appointmentNo == null || appointmentNo.equals(""))
 			appointmentNo = "0";
@@ -539,18 +540,19 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		if (macroId != null && !macroId.equals(""))
 			macro = macroDao.find( Integer.parseInt(macroId) );
 		
-		logger.info("In issueNoteSaveJson, loaded macro " + macro.getLabel());
-		
 		if ( (runMacro == null || runMacro.equals("true")) && macro != null)
 			runMacroBoolean = true;
 		
-		if (runMacroBoolean)
+		if (runMacroBoolean) {
 			runMacro(macroId, demographicNo, providerNo, appointmentNo, null);
+			macroImpression = macro.getImpression();
+		}
 
 		Date noteDate = new Date();
 
 		strNote = org.apache.commons.lang.StringUtils.trimToNull(strNote);
-		if( (archived == null || !archived.equalsIgnoreCase("true")) && (strNote == null || strNote.equals("")) )
+		macroImpression = org.apache.commons.lang.StringUtils.trimToNull(macroImpression);
+		if( (archived == null || !archived.equalsIgnoreCase("true")) && (strNote == null || strNote.equals("")) && (macro == null || macroImpression == null) )
 			return null;
 
 		CaseManagementNote note = new CaseManagementNote();
@@ -608,10 +610,15 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			// No appointment number set for this encounter
 		}
 
+		// Error check note string
 		if (strNote != null)
 			note.setNote(strNote);
-		if (macro != null)
-			note.setNote(note.getNote() + "\n" + macro.getImpression());
+		else
+			note.setNote("");
+		
+		// Append macro text if we have any
+		if (macro != null && macroImpression != null)
+			note.setNote(note.getNote() + "\n" + macroImpression);
 
 		note.setProviderNo(providerNo);
 		note.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider);
