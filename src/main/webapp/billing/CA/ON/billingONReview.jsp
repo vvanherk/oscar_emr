@@ -299,6 +299,11 @@ boolean dupServiceCode = false;
                     var element = document.getElementById("stotal");
                     if( element != null )
                         element.value = subtotal;
+                    
+                    // Also update gstBilledTotal
+                    element = document.getElementById("gstBilledTotal");
+                    if( element != null )
+                        element.value = subtotal;
                 }
 
 	//-->
