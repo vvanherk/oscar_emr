@@ -43,7 +43,7 @@ public final class ApptStatusData {
 
     oscar.OscarProperties pros = oscar.OscarProperties.getInstance();
     String strEditable = pros.getProperty("ENABLE_EDIT_APPT_STATUS");
-    String apptStatus = null;
+    String apptStatus = "";
     String[] aStatus =    {"t",            "T",        "H",       "P",          "E",            "N",          "C",          "B",          "tS",          "TS",     "HS",      "PS",      "ES",        "NS",       "CS",       "BS",        "tV",          "TV",     "HV",      "PV",      "EV",       "NV",       "CV",       "BV"};
     String[] aNextStatus ={"T",            "H",        "P",       "E",          "N",            "C",          "t",          "",           "TS",          "HS",      "PS",     "ES",      "NS",        "CS",       "tS",       "",          "TV",          "HV",      "PV",     "EV",      "NV",       "CV",       "tV",       ""};
     String[] aImageName = {"starbill.gif", "todo.gif", "here.gif","picked.gif", "empty.gif",    "noshow.gif", "cancel.gif", "billed.gif", "lts.gif",     "uts.gif", "hs.gif", "ps.gif",  "es.gif",    "noshow.gif","cancel.gif", "bs.gif", "ltv.gif",     "utv.gif", "hv.gif", "pv.gif",  "ev.gif",   "noshow.gif","cancel.gif", "bv.gif"};
@@ -148,7 +148,7 @@ public final class ApptStatusData {
 
     private String appendStatus(String status, String s) {
         String temp = null;
-        if (status.length() == 1) {
+        if (status.length() <= 1) {
             temp = status + s;
         } else {
             temp = status.substring(0, 1) + s;

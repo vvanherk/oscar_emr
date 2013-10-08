@@ -524,16 +524,28 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		String noteId = request.getParameter("noteId");
 		String demographicNo = request.getParameter("demographic_no");
 		String issueCode = request.getParameter("issue_id");
+		String issueAlphaCode = request.getParameter("issue_code");
+		String archived = request.getParameter("archived");
 		String macroId = request.getParameter("macroId");
+		String runMacro = request.getParameter("runMacro");
+		boolean runMacroBoolean = false;
 		
 		if (appointmentNo == null || appointmentNo.equals(""))
 			appointmentNo = "0";
 		
-		runMacro(macroId, demographicNo, providerNo, appointmentNo, null);
+		MacroDao macroDao = (MacroDao) SpringUtils.getBean("macroDao");
+		Macro macro = null;
 		
-		String issueAlphaCode = request.getParameter("issue_code");
-
-		String archived = request.getParameter("archived");
+		if (macroId != null && !macroId.equals(""))
+			macro = macroDao.find( Integer.parseInt(macroId) );
+		
+		logger.info("In issueNoteSaveJson, loaded macro " + macro.getLabel());
+		
+		if ( (runMacro == null || runMacro.equals("true")) && macro != null)
+			runMacroBoolean = true;
+		
+		if (runMacroBoolean)
+			runMacro(macroId, demographicNo, providerNo, appointmentNo, null);
 
 		Date noteDate = new Date();
 
@@ -544,6 +556,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		CaseManagementNote note = new CaseManagementNote();
 		if (!noteId.equals("0")) {
 			note = this.caseManagementMgr.getNote(noteId);
+			
 			if ((archived == null || !archived.equalsIgnoreCase("true"))
 					&& (request.getParameter("sign") == null || !request.getParameter("sign").equalsIgnoreCase("true"))
 					&& note.getNote().equalsIgnoreCase(strNote))
@@ -597,6 +610,8 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 		if (strNote != null)
 			note.setNote(strNote);
+		if (macro != null)
+			note.setNote(note.getNote() + "\n" + macro.getImpression());
 
 		note.setProviderNo(providerNo);
 		note.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider);
@@ -621,7 +636,8 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				try {
 					Appointment appointment = appointmentDao.find(Integer.parseInt(appointmentNo));
 					if (appointment != null) {
-						ApptStatusData statusData = new ApptStatusData();
+						oscar.appt.ApptStatusData statusData = new oscar.appt.ApptStatusData();
+						statusData.setApptStatus(appointment.getStatus());
 						appointment.setStatus(statusData.signStatus());
 						appointmentDao.merge(appointment);
 					}
@@ -2929,17 +2945,22 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		
 		EyeFormDao eyeformDao = (EyeFormDao) SpringUtils.getBean("EyeFormDao");
 		EyeForm eyeform = eyeformDao.getByAppointmentNo(Integer.parseInt(appointmentNo));
-		// load up the eyeform to set/unset checkboxes
-		if (macro.getDischargeFlag() != null && macro.getDischargeFlag().equals("dischargeFlag")) {
-			eyeform.setDischarge("true");
+		
+		logger.info("eyeform: " + eyeform);
+		
+		if (eyeform != null) {
+			// load up the eyeform to set/unset checkboxes
+			if (macro.getDischargeFlag() != null && macro.getDischargeFlag().equals("dischargeFlag")) {
+				eyeform.setDischarge("true");
+			}
+			if (macro.getOptFlag() != null && macro.getOptFlag().equals("optFlag")) {
+				eyeform.setOpt("true");
+			}
+			if (macro.getStatFlag() != null && macro.getStatFlag().equals("statFlag")) {
+				eyeform.setStat("true");
+			}
+			eyeformDao.merge(eyeform);
 		}
-		if (macro.getOptFlag() != null && macro.getOptFlag().equals("optFlag")) {
-			eyeform.setOpt("true");
-		}
-		if (macro.getStatFlag() != null && macro.getStatFlag().equals("statFlag")) {
-			eyeform.setStat("true");
-		}
-		eyeformDao.merge(eyeform);
 
 		// follow ups
 		FollowUpDao followUpDao = (FollowUpDao) SpringUtils.getBean("FollowUpDAO");

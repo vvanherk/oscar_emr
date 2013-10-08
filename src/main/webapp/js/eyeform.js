@@ -1096,7 +1096,8 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		data: "value=" + encodeURIComponent(value) + "&issue_id=" + impressionHistoryIssueId
 			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
 			+ (!isNaN(issueNoteId) ? "&noteId=" + issueNoteId : "&noteId=0")
-			+ (!isNaN(macroId) ? "&macroId=" + macroId : ""),
+			+ (!isNaN(macroId) ? "&macroId=" + macroId : "")
+			+ "&runMacro=true", // We only want to run the macro once
 		dataType: "json",
 		success: function(data) {
 			savedImpression = true;
@@ -1109,7 +1110,8 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		data: "value=" + encodeURIComponent(currentPresentingValue) + "&issue_id=" + currentPresentingIssueId
 			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
 			+ (!isNaN(currentPresentingNoteId) ? "&noteId=" + currentPresentingNoteId : "&noteId=0")
-			+ (!isNaN(macroId) ? "&macroId=" + macroId : ""),
+			+ (!isNaN(macroId) ? "&macroId=" + macroId : "") // We need to include the macro id here so that 'issueNoteSaveJson' knowns what macro note data to add to the clinical note
+			+ "&runMacro=false",
 		dataType: "json",
 		success: function(data) {
 			savedCurrentPresenting = true;
@@ -1136,15 +1138,14 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
 		data: "value=" + encodeURIComponent(planValue) + "&issue_code=eyeformPlan"
 			+ (signAndExit ? "&sign=true" : "")
-			+ (!isNaN(planNoteId) ? "&noteId=" + planNoteId : "&noteId=0")
-			+ (!isNaN(macroId) ? "&macroId=" + macroId : ""),
+			+ (!isNaN(planNoteId) ? "&noteId=" + planNoteId : "&noteId=0"),
 		dataType: "json",
 		success: function(data) {
 			savedPlan = true;
 		}
 	});
 	
-	//saveInterval = setInterval(function () { afterSave(fn, signAndExit, bill, closeForm); }, 1000);
+	saveInterval = setInterval(function () { afterSave(fn, signAndExit, bill, closeForm); }, 1000);
 }
 
 function saveMeasurements() {
