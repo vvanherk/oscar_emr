@@ -147,8 +147,6 @@ if(listRxDrugs!=null){
                         prnStr="prn";
                 drugName=drugName.replace("'", "\\'");
                 drugName=drugName.replace("\"","\\\"");
-                byte[] drugNameBytes = drugName.getBytes("ISO-8859-1");
-				drugName= new String(drugNameBytes, "UTF-8");
                 
 		//ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
 		ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
