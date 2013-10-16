@@ -53,15 +53,23 @@ public class RxProviderData {
 		return results;
 	}
 	
+	public Provider getProvider(String providerNo, int clinicNo) {
+        return convertProvider(providerDao.getProvider(providerNo), clinicNo);
+    }
+	
     public Provider getProvider(String providerNo) {
-        return convertProvider(providerDao.getProvider(providerNo));
+        return getProvider(providerNo, -1);
     }
     
     public Provider convertProvider(org.oscarehr.common.model.Provider p) {
+		return convertProvider( p, -1 );
+	}
+    
+    public Provider convertProvider(org.oscarehr.common.model.Provider p, int clinicNo) {
     	String surname=null, firstName=null,  clinicName=null, clinicAddress=null, clinicCity=null, clinicPostal=null, clinicPhone=null, clinicFax=null, clinicProvince=null, practitionerNo=null;
     	boolean useFullAddress=true;
-        //Get Provider from database
 
+		// Set the providers clinic address to the default clinic
         Clinic clinic = clinicDao.getClinic();
         if(clinic != null) {
         	clinicName = clinic.getClinicName();
@@ -96,8 +104,22 @@ public class RxProviderData {
         		clinicAddress = p.getAddress();
         		useFullAddress=false;
         	}
+        	
+        	// If we specified a valid clinic, set the providers clinic address to this clinic
+        	clinic = clinicDao.find(clinicNo);
+			if ( clinic != null ) {
+				clinicName = clinic.getClinicName();
+	        	clinicAddress = clinic.getClinicAddress();
+	        	clinicCity = clinic.getClinicCity();
+	        	clinicPostal = clinic.getClinicPostal();
+	        	clinicPhone = clinic.getClinicPhone();
+	        	clinicProvince = clinic.getClinicProvince();
+	        	clinicFax = clinic.getClinicFax();
+			}
+				
         }
 
+		// Override clinic address segments with values from the providers rx address / phone preferences
         UserProperty prop = null;
         
         prop = userPropertyDao.getProp(p.getProviderNo(), "faxnumber");
@@ -136,19 +158,6 @@ public class RxProviderData {
         }
         return "";
     }
-    
-    public Provider getProvider(String providerNo, int clinicNo) {
-		MiscUtils.getLogger().info("Get Provider: " + providerNo + " | " + clinicNo);
-		Provider provider = getProvider(providerNo);
-		
-		if (provider != null) {
-			Clinic clinic = clinicDao.find(clinicNo);
-			if (clinic != null)
-				provider.setClinicData(clinic);
-		}
-		
-		return provider;
-	}
 
     public class Provider{
     	boolean fullAddress=true;
