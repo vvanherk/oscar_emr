@@ -95,14 +95,6 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<div id="highlightSlider" class="contentItem"></div>
 			<div id="highlightSliderLengthBox"><strong>Highlight:</strong> <span id="highlightSliderLength"></span></div>
 		</div>
-		<div class="smallBox boxTitleLink" id="macros">
-			<div class="title">
-				Macros
-				<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
-				<span class="uiBarBtn"><span class="text addBtn" id="addMacroBtn">+</span></span>
-			</div>
-			<div class="wrapper"><div class="content"></div></div>
-		</div>
 		<div class="smallBox boxTitleLink" id="allergies">
 			<div class="title">
 				Allergies
@@ -167,6 +159,14 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				Consultations
 				<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
 				<span class="uiBarBtn"><span class="text addBtn" id="addConsultationBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>
+		<div class="smallBox boxTitleLink" id="macros">
+			<div class="title">
+				Macros
+				<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+				<span class="uiBarBtn"><span class="text addBtn" id="addMacroBtn">+</span></span>
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
