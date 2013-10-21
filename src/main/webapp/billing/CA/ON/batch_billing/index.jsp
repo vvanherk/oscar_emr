@@ -194,34 +194,32 @@ String user_no = (String) session.getAttribute("user");
 
 	%>
 	$(function(){
+		var address = window.location + '';
+		var contentID = '#' + address.split('#')[1];
+		
 		$('#billingNav').tab();
-		$('#billingNav').bind("show", function(e){
-			var contentID = $(e.target).attr("href");
-			var contentURL= $(e.target).attr("data-url");
+		$('#billingNav').bind("click", function(e){
 			
-			if(typeof(contentURL) != 'undefined' && contentURL != '' && $(e.target).attr('data-loaded') == 'false' ) 
-				$(contentID).load(contentURL,{ 
-					'providers': "<%=providerSelectionList%>",
-					'locations': "<%=clinicSelectionList%>",
-					'superCodes': "<%= superCodeSelectionList %>",
-					'rDoctors' : "<%= pSpecSelectionList %>",
-					'sliCodes' : "<%= sliCodeSelectionList %>"
-				},function(){
- 											
-					var id = contentID.slice(1);
-					// this code executes every time a tab is loaded
-					$(e.target).attr('data-loaded', 'true');
-					$.getScript(id +".js");
-					tab_load(contentID);
-				});
-			else{
-				$(contentID).tab('show');
-				selected_id = -1;
-				prev_id = "";
-			}
-
+			contentID = $(e.target).attr("href");
+ 			window.location = address.split('#')[0] + contentID;
+			location.reload();
+			
 		});
-		$('#billingNav a:eq(0)').tab("show");
+		
+		$(contentID).load("forms.jsp " + contentID,{ 
+			'providers': "<%=providerSelectionList%>",
+			'locations': "<%=clinicSelectionList%>",
+			'superCodes': "<%= superCodeSelectionList %>",
+			'rDoctors' : "<%= pSpecSelectionList %>",
+			'sliCodes' : "<%= sliCodeSelectionList %>"
+		},	function(){
+			$.getScript(contentID.slice(1) +".js");
+			tab_load(contentID);
+			
+		});
+		
+		
+		$('#billingNav a[href="'+ contentID + '"]').tab("show");
 	});
 
 	</script>
@@ -243,11 +241,11 @@ String user_no = (String) session.getAttribute("user");
 	<h3 align="center"> Oscar Billing </h3>	
 	<div class="tabbable">
 		<ul class="nav nav-tabs" id="billingNav">
-			<li><a href="#clinical" data-loaded="false" data-toggle="tab" data-url="forms.jsp #clinical">Clinical</a></li>
-			<li><a href="#offsite" data-loaded="false" data-toggle="tab" data-url="forms.jsp #offsite">Off-site</a></li>
-			<li><a href="#hospital" data-loaded="false" data-toggle="tab" data-url="forms.jsp #hospital">Hospital</a></li>
-			<li><a href="#register" data-loaded="false" data-toggle="tab" data-url="forms.jsp #register">Cash Register</a></li>
-			<li><a href="#settings" data-loaded="false" data-toggle="tab">Settings</a></li>
+			<li><a href="#clinical" data-toggle="tab" data-url="forms.jsp #clinical">Clinical</a></li>
+			<li><a href="#offsite" data-toggle="tab" data-url="forms.jsp #offsite">Off-site</a></li>
+			<li><a href="#hospital" data-toggle="tab" data-url="forms.jsp #hospital">Hospital</a></li>
+			<li><a href="#register" data-toggle="tab" data-url="forms.jsp #register">Cash Register</a></li>
+			<li><a href="#settings" data-toggle="tab">Settings</a></li>
 		</ul>
 		
 		<div class="tab-content">
