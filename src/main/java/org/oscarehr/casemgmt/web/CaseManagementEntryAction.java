@@ -2924,14 +2924,14 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 	}
 	
 	private void runMacro(String macroId, String demographicNo, String providerNo, String appointmentNo, String appointmentDate) {
-		logger.info("macroId " + macroId + " appointmentDate: " + appointmentDate + " appointmentNo: " + appointmentNo + " demographicNo: " + demographicNo + " providerNo: " + providerNo);
+		//logger.info("macroId " + macroId + " appointmentDate: " + appointmentDate + " appointmentNo: " + appointmentNo + " demographicNo: " + demographicNo + " providerNo: " + providerNo);
 		
 		if (macroId == null || macroId.equals(""))
 			return;
-		logger.info("going");
+		
 		MacroDao macroDao = (MacroDao) SpringUtils.getBean("macroDao");
 		Macro macro = macroDao.find( Integer.parseInt(macroId) );
-		logger.info("loaded macro " + macro.getLabel());
+		logger.debug("loaded macro " + macro.getLabel());
 		
 		if (appointmentDate == null)
 			appointmentDate = "";
@@ -2952,8 +2952,6 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		
 		EyeFormDao eyeformDao = (EyeFormDao) SpringUtils.getBean("EyeFormDao");
 		EyeForm eyeform = eyeformDao.getByAppointmentNo(Integer.parseInt(appointmentNo));
-		
-		logger.info("eyeform: " + eyeform);
 		
 		if (eyeform != null) {
 			// load up the eyeform to set/unset checkboxes
