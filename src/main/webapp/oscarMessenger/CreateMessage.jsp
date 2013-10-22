@@ -496,16 +496,13 @@ function popupAttachDemo(demographic){ // open a new popup window
 								size="67" /> <br>
 							<br>
 							<html:textarea name="msgCreateMessageForm" property="message"
-								cols="60" rows="18" /> <%
-                                                String att = bean.getAttachment();
-                                                String pdfAtt = bean.getPDFAttachment();
-                                                if (att != null || pdfAtt != null){ %>
-							<br>
-							<bean:message key="oscarMessenger.CreateMessage.msgAttachments" />
-
-							<% }
-
-                                                %>
+								cols="60" rows="18" /><br />
+                     <TEXTAREA readonly rows="4" name="attachedInfo"  
+						             style="background: #EEEEFF; border: none; visibility:hidden;
+						             overflow:hidden; width:98%;">
+						      <bean:message key="oscarMessenger.CreateMessage.msgAttachments" />
+						   </TEXTAREA>
+							</td>
 							</td>
 						</tr>
 

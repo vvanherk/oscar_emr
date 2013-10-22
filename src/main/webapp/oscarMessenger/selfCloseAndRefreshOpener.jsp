@@ -30,7 +30,7 @@
 <body>
 
 <script>
-top.opener.location.reload();
+top.opener.document.forms[0].attachedInfo.style.visibility = "visible";
 top.window.close();
         </script>
 

@@ -358,7 +358,6 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
 	String demono="", chartno="", phone="", rosterstatus="", alert="", doctorNo="";
 	String strApptDate = bFirstDisp?"":request.getParameter("appointment_date") ;
 
-
 	if (bFirstDisp) {
 		List<Map<String,Object>> resultList = oscarSuperManager.find("appointmentDao",
 				request.getParameter("dboperation"), new Object [] {appointment_no});
@@ -374,6 +373,13 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
 	} else {
 	    appt = (Map) session.getAttribute("appt");
 	}
+	
+	SimpleDateFormat inform = new SimpleDateFormat ("yyyy-MM-dd");
+	SimpleDateFormat outform = new SimpleDateFormat("EEE");
+	
+	java.util.Date apptDate = inform.parse( (bFirstDisp? appt.get("appointment_date").toString() : strApptDate) );
+	
+	String dateString1 = outform.format(apptDate);
 
 
 	if (bFirstDisp && appt.get("demographic_no")!=null) {
@@ -450,7 +456,7 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
     <ul>
         <li class="row weak">
             <div class="label">
-                <bean:message key="Appointment.formDate" />:
+                <bean:message key="Appointment.formDate" /><font size='-1' color='brown'>(<%=dateString1%>)</font>:
             </div>
             <div class="input">
 		<INPUT TYPE="TEXT"
@@ -894,7 +900,6 @@ Currently this is only used in the mobile version -->
 <div id="viewAppointment" style="display:<%=(bFirstDisp && isMobileOptimized) ? "block":"none"%>;">
     <%
         // Format date to be more readable
-        java.text.SimpleDateFormat inform = new java.text.SimpleDateFormat ("yyyy-MM-dd");
         String strDate = bFirstDisp ? appt.get("appointment_date").toString() : request.getParameter("appointment_date");
         java.util.Date d = inform.parse(strDate);
         String formatDate = "";

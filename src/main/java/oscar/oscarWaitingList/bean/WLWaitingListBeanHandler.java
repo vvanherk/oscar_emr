@@ -25,6 +25,8 @@
 
 package oscar.oscarWaitingList.bean;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -54,7 +56,7 @@ public class WLWaitingListBeanHandler {
             
             String sql = " SELECT CONCAT(d.last_name, ', ', d.first_name) AS patientName, d.demographic_no, " + 
             			 " d.phone, w.listID, w.position, w.note, w.onListSince FROM waitingList w, demographic d " + 
-            			 " WHERE w.demographic_no = d.demographic_no AND w.listID='"+ waitingListID + "' " + 
+            			 " WHERE w.demographic_no = d.demographic_no AND w.listID='"+ StringEscapeUtils.escapeSql( waitingListID ) + "' " + 
             			 " AND w.is_history = 'N' " + " ORDER BY w.position ";
             log.debug(sql);
             ResultSet rs;      
@@ -73,7 +75,7 @@ public class WLWaitingListBeanHandler {
                 waitingListArrayList.add(wLBean);
             }                            
             
-            sql = "SELECT * FROM waitingListName where ID="+waitingListID + " AND is_history = 'N' ";
+            sql = "SELECT * FROM waitingListName where ID='"+ StringEscapeUtils.escapeSql( waitingListID ) + "' AND is_history = 'N' ";
             log.debug(sql);
             rs = DBHandler.GetSQL(sql);
             if(rs.next()){
@@ -92,7 +94,7 @@ public class WLWaitingListBeanHandler {
                 
         try {
             
-            String sql = " SELECT demographic_no FROM waitingList WHERE listID=" + waitingListID + 
+            String sql = " SELECT demographic_no FROM waitingList WHERE listID='"+ StringEscapeUtils.escapeSql( waitingListID ) + "'" + 
                          " AND is_history = 'N' ";
             log.debug(sql);
             ResultSet rs;
@@ -102,7 +104,7 @@ public class WLWaitingListBeanHandler {
                 
                 //check if the patient has an appointment already
                 sql = "select a.demographic_no, a.appointment_date, wl.onListSince from appointment a, waitingList wl where a.appointment_date >= wl.onListSince AND a.demographic_no=wl.demographic_no AND a.demographic_no="
-                      + oscar.Misc.getString(rs, "demographic_no") + "";
+                      + "'" + StringEscapeUtils.escapeSql( oscar.Misc.getString(rs, "demographic_no") ) + "'";
                 log.debug(sql);
                 ResultSet rsCheck = DBHandler.GetSQL(sql);        
                 
@@ -118,13 +120,13 @@ public class WLWaitingListBeanHandler {
             rs.close();
             //update the list
             if(needUpdate){
-                sql = " SELECT * FROM waitingList WHERE listID=" + waitingListID + "  AND is_history = 'N' ORDER BY onListSince";
+                sql = " SELECT * FROM waitingList WHERE listID='"+ StringEscapeUtils.escapeSql( waitingListID ) + "'  AND is_history = 'N' ORDER BY onListSince";
                 log.debug(sql);
                 int i=1;            
                 for(rs = DBHandler.GetSQL(sql); rs.next();){                    
                     sql =   " UPDATE waitingList SET position="+ i + 
-                    		" WHERE listID=" + waitingListID + 
-                            " AND demographic_no=" + oscar.Misc.getString(rs, "demographic_no") +
+                    		" WHERE listID='"+ StringEscapeUtils.escapeSql( waitingListID ) + "'" + 
+                            " AND demographic_no='" + StringEscapeUtils.escapeSql( oscar.Misc.getString(rs, "demographic_no") ) + "'" +
                             " AND is_history = 'N' ";
 
                     log.debug(sql);

@@ -56,6 +56,10 @@ public final class ProviderPreferencesUIBean {
 		// update preferences based on request parameters
 		String temp;
 		HttpSession session = request.getSession();
+		
+		// Hack to only update checkbox values if we are receiving this update/create request from the Provider Preferences page
+		temp = StringUtils.trimToNull(request.getParameter("updating_from_preferences_page"));
+		boolean updateCheckboxValues = (temp != null);
 
 		// new tickler window
 		temp = StringUtils.trimToNull(request.getParameter("new_tickler_warning_window"));
@@ -126,11 +130,19 @@ public final class ProviderPreferencesUIBean {
 			providerPreference.setBillingProviderDefault(temp);
 		}
 		
-		temp = StringUtils.trimToNull(request.getParameter("use_billing_provider_from_previous_bill"));
-		if (temp != null) 
-			providerPreference.setUseBillingProviderFromPreviousBill(true);
-		else
-			providerPreference.setUseBillingProviderFromPreviousBill(false);
+		if ( updateCheckboxValues ) {
+			temp = StringUtils.trimToNull(request.getParameter("use_billing_provider_from_previous_bill"));
+			providerPreference.setUseBillingProviderFromPreviousBill( temp != null );
+				
+			temp = StringUtils.trimToNull(request.getParameter("rx_print_pharmacy"));
+			providerPreference.setPrintPharmacyOnRx(temp != null);
+			
+			temp = StringUtils.trimToNull(request.getParameter("rx_print_dates"));
+			providerPreference.setPrintDateOnRx(temp != null);
+				
+			temp = StringUtils.trimToNull(request.getParameter("billing_ref_box_default_checked"));
+			providerPreference.setBillingRefBoxDefaultChecked(temp != null);
+		}
 		
 		temp = StringUtils.trimToNull(request.getParameter("default_bill_visit_type"));
 		if (temp == null) 
@@ -144,24 +156,6 @@ public final class ProviderPreferencesUIBean {
 
 		temp = StringUtils.trimToNull(request.getParameter("color_template"));
 		if (temp != null) providerPreference.setColourTemplate(temp);
-		
-		temp = StringUtils.trimToNull(request.getParameter("rx_print_pharmacy"));
-		if (temp != null) 
-			providerPreference.setPrintPharmacyOnRx(true);
-		else
-			providerPreference.setPrintPharmacyOnRx(false);
-		
-		temp = StringUtils.trimToNull(request.getParameter("rx_print_dates"));
-		if (temp != null) 
-			providerPreference.setPrintDateOnRx(true);
-		else
-			providerPreference.setPrintDateOnRx(false);
-			
-		temp = StringUtils.trimToNull(request.getParameter("billing_ref_box_default_checked"));
-		if (temp != null) 
-			providerPreference.setBillingRefBoxDefaultChecked(true);
-		else
-			providerPreference.setBillingRefBoxDefaultChecked(false);
 			
 		providerPreference.setPrintQrCodeOnPrescriptions(WebUtils.isChecked(request, "prescriptionQrCodes"));
 
