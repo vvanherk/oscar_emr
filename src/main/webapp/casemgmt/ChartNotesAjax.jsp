@@ -61,6 +61,7 @@
 <%@page import="oscar.util.UtilDateUtilities"%>
 <%@page import="org.oscarehr.casemgmt.web.NoteDisplayNonNote"%>
 <%@page import="org.oscarehr.common.dao.EncounterTemplateDao"%>
+<%@ page import="org.oscarehr.common.model.EncounterTemplate" %>
 <%@page import="org.oscarehr.casemgmt.web.CheckBoxBean"%>
 
 <%
@@ -863,15 +864,19 @@ int maxId = 0;
     <%int MaxLen = 20;
 			int TruncLen = 17;
 			String ellipses = "...";
-			for (int j = 0; j < bean.templateNames.size(); j++)
-			{
-				String encounterTmp = bean.templateNames.get(j);
-				encounterTmp = oscar.util.StringUtils.maxLenString(encounterTmp, MaxLen, TruncLen, ellipses);
-				encounterTmp = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(encounterTmp);%>
-     autoCompleted["<%=encounterTmp%>"] = "ajaxInsertTemplate('<%=encounterTmp%>')";
-     autoCompList.push("<%=encounterTmp%>");
-     itemColours["<%=encounterTmp%>"] = "99CCCC";
-   <%}%>
+			
+			EncounterTemplateDao encounterTemplateDao = SpringUtils.getBean(EncounterTemplateDao.class);
+			List<EncounterTemplate> allTemplates = encounterTemplateDao.findAll();
+
+			for (EncounterTemplate encounterTemplate : allTemplates) {
+				String templateName = encounterTemplate.getEncounterTemplateName();
+				templateName = oscar.util.StringUtils.maxLenString(templateName, MaxLen, TruncLen, ellipses);
+				templateName = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(templateName);
+			%>
+				autoCompleted["<%=templateName%>"] = "ajaxInsertTemplate('<%=templateName%>')";
+				autoCompList.push("<%=templateName%>");
+				itemColours["<%=templateName%>"] = "99CCCC";
+			<%}%>
    //set default event for assigning issues
    //we do this here so we can change event listener when changing diagnosis
    var obj = { };
