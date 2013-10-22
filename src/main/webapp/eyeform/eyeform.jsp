@@ -162,7 +162,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
-		<div class="smallBox boxTitleLink" id="macros">
+		<div class="smallBox boxTitleLink" id="macro">
 			<div class="title">
 				Macros
 				<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />

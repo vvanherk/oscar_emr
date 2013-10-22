@@ -113,7 +113,7 @@ var appointmentDate = [];
 
 
 var BoxIssueUrls = {
-		"macros": ctx + "/oscarEncounter/displayMacro.do",
+		"macro": ctx + "/oscarEncounter/displayMacro.do",
 		"specsHistory": ctx + "/oscarEncounter/displaySpecsHistory.do",
 		"procedures": ctx + "/oscarEncounter/displayOcularProcedure.do",
 		"consultations": ctx + "/oscarEncounter/displayConsultation.do?appointment_no=" + appointmentNo,
@@ -127,7 +127,7 @@ var BoxIssueUrls = {
 };
 
 var cmds = {
-		"macros": "macro",
+		"macro": "macro",
 		"consultations": "consultation",
 		"specsHistory": "specshistory",
 		"procedures": "ocularprocedure",
@@ -640,6 +640,14 @@ function closeAll() {
 }
 
 function fillAjaxBox(boxNameId, jsonData, initialLoad) {
+	var showAll = false;
+	
+	// If we are reloading a box and the user has already clicked 'show more', we want to show all upon reloading
+	if (!initialLoad) {
+		if ( $("#" + boxNameId + " .content ul li").length > 5 )
+			showAll = !$( $("#" + boxNameId + " .content ul li").get(5) ).hasClass("oldEntry");
+	}
+	
 	if (jsonData.Items.length > 0) {
 		$("#" + boxNameId + " .wrapper").html("<div class='content'><ul /></div>");
 	}
@@ -648,7 +656,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 			(boxNameId == "ocularMeds"
 				|| boxNameId == "consultations"
 				|| boxNameId == "documents"
-				|| boxNameId == "macros"
+				|| boxNameId == "macro"
 				|| boxNameId == "allergies"))
 		jsonData.Items = jsonData.Items.reverse();
 
@@ -688,7 +696,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 		}
 	}
 
-	if ($("#" + boxNameId + " .content ul li").length > 5) {
+	if ($("#" + boxNameId + " .content ul li").length > 5 && !showAll) {
 		$("#" + boxNameId + " .content ul li").slice(5).attr("class", "oldEntry");
 
 		var showMoreBtn = $("<span class='showAllBtn uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
@@ -710,7 +718,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 
 		if (boxNameId == "labResults" || boxNameId == "diagrams" || boxNameId == "documents"
 			|| boxNameId == "billing" || boxNameId == "tickler" || boxNameId == "consultations"
-				|| boxNameId == "ocularMeds" || boxNameId == "allergies" || boxNameId == "macros") {
+				|| boxNameId == "ocularMeds" || boxNameId == "allergies" || boxNameId == "macro") {
 			$("#" + boxNameId + " .title").click((function (action) {
 				return function(e) {
 					e.stopPropagation();
@@ -1708,6 +1716,12 @@ function loadMeasurements() {
 		}
 	});
 }
+
+// Ported from newEncounterLayout.jsp - used after creating / editing a macro
+function reloadNav(name) {
+	refreshBox(name, false);
+}
+
 
 //For OscarRx "Paste into EMR" functionality
 function pasteToEncounterNote(text) {
