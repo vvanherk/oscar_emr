@@ -463,7 +463,7 @@ if(bFlag) {
 		</select></td>
 	</tr>
 	<tr class="myGreen">
-		<td width="54%"><b><%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.formVisitType"/> <% } %>:</b> <input type="hidden"
+		<td width="54%"><b><%if (OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %> Clinic Nbr <% } else { %> <bean:message key="billing.billingCorrection.formVisit"/> <% } %>:</b> <input type="hidden"
 			name="xml_clinic_ref_code" value="<%=location%>"> <select
 			name="clinic_ref_code">
 			<option value=""><bean:message
