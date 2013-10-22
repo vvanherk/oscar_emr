@@ -175,7 +175,7 @@ int i, j;
 			</tr>
 
 
-			<!----Start new rows here-->
+			<!-- Start new rows here-->
 			<tr>
 				<td>
 				<div class="DivContentPadding">
@@ -351,7 +351,7 @@ int i, j;
 				</td>
 			</tr>
 
-			<!----End new rows here-->
+			<!-- End new rows here-->
 
 			<tr height="100%">
 				<td></td>

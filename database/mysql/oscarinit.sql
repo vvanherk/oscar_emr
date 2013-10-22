@@ -56,7 +56,7 @@ CREATE TABLE appointment (
   name varchar(50) default NULL,
   demographic_no int(10) default NULL,
   program_id int default 0,
-  notes varchar(80) default NULL,
+  notes varchar(255),
   reason varchar(80) default NULL,
   location varchar(30) default NULL,
   resources varchar(255) default NULL,
@@ -580,10 +580,9 @@ CREATE TABLE diseases (
 --
 -- Table structure for table `document`
 --
-
 CREATE TABLE document (
   document_no int(20) NOT NULL auto_increment,
-  doctype varchar(20) default NULL,
+  doctype varchar(60),
   docClass varchar(60),
   docSubClass varchar(60),
   docdesc varchar(255) NOT NULL default '',
@@ -7598,7 +7597,7 @@ CREATE TABLE providerSpireIdMap (
 
 CREATE TABLE spireAccessionNumberMap (
 	id int(10) NOT NULL auto_increment,
-	uaccn varchar(40) NOT NULL,
+	uaccn varchar(100) NOT NULL,
 	PRIMARY KEY (id)
 );
 

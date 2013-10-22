@@ -76,7 +76,7 @@ public class PlanAction extends DispatchAction {
     	int demographicNo = Integer.parseInt(strDemographicNo);
 
     	//get all follow ups, procs, and tests for this appointment
-    	List<EyeformFollowUp> followUps = followUpDao.getByAppointmentNo(appointmentNo);
+    	List<EyeformFollowUp> followUps = followUpDao.get(demographicNo, appointmentNo);
     	request.setAttribute("followUps", followUps);
     	request.setAttribute("followup_num", followUps.size());
 
@@ -84,7 +84,7 @@ public class PlanAction extends DispatchAction {
     	request.setAttribute("procedures", procedures);
     	request.setAttribute("procedure_num", procedures.size());
 
-    	List<EyeformTestBook> tests = testBookDao.getByAppointmentNo(appointmentNo);
+    	List<EyeformTestBook> tests = testBookDao.get(demographicNo, appointmentNo);
     	request.setAttribute("tests", tests);
     	request.setAttribute("test_num", tests.size());
 

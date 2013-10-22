@@ -99,7 +99,12 @@ public class EctDisplayConReportAction extends EctDisplayAction {
     	item.setDate(cr.getDate());
 
     	ProfessionalSpecialist specialist = professionalSpecialistDao.find(cr.getReferralId());
-    	String title = specialist.getFormattedName() + " - " + cr.getStatus();
+    	String title = "No Specialist Found - " + cr.getStatus();
+    	if ( specialist != null )
+			title = specialist.getFormattedName() + " - " + cr.getStatus();
+		else
+			MiscUtils.getLogger().warn("No Specialist Found with referral id: " + cr.getReferralId());
+			
     	String itemHeader = StringUtils.maxLenString(title, MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES);
         item.setLinkTitle(itemHeader);
         item.setTitle(itemHeader);

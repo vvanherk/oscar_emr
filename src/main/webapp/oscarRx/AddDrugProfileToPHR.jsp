@@ -138,7 +138,7 @@ String level2 = CddmLevels.MEDICATIONS;
 				</div>
 				</td>
 			</tr>
-			<!----Start new rows here-->
+			<!-- Start new rows here-->
 			<tr>
 				<td>
 				<div class="DivContentTitle">Send Prescriptions to <%=patientPingId%>
@@ -222,7 +222,7 @@ String level2 = CddmLevels.MEDICATIONS;
 				<td><input type=button class="ControlPushButton"
 					onclick="javascript:window.close();" value="Close Window" /></td>
 			</tr>
-			<!----End new rows here-->
+			<!-- End new rows here-->
 			<tr height="100%">
 				<td></td>
 			</tr>

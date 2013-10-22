@@ -94,8 +94,10 @@ function popupPage(varpage, windowname) {
 function updateAjax() {
     var parentAjaxId = "<%=parentAjaxId%>";    
     if( parentAjaxId != "null" ) {
-        window.opener.document.forms['encForm'].elements['reloadDiv'].value = parentAjaxId;
-        window.opener.updateNeeded = true;    
+      if (window.opener.document.forms['encForm']) { 
+        window.opener.document.forms['encForm'].elements['reloadDiv'].value=parentAjaxId;
+        window.opener.updateNeeded = true; 
+      }        
     }
 
 }

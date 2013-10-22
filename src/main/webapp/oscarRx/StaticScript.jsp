@@ -107,7 +107,7 @@
 				<div class="DivCCBreadCrumbs"><a href="SearchDrug.jsp"> <bean:message key="SearchDrug.title" /></a> &gt; <b><bean:message key="StaticScript.title" /></b></div>
 				</td>
 			</tr>
-			<!----Start new rows here-->
+			<!-- Start new rows here-->
 			<tr>
 				<td style="font-size: small;"><br />
 				<br />
@@ -201,7 +201,7 @@
 				<br />
 				<input type="button" value="Back To Search Drug" class="ControlPushButton" onclick="javascript:window.location.href='SearchDrug.jsp';" /></td>
 			</tr>
-			<!----End new rows here-->
+			<!-- End new rows here-->
 			<tr height="100%">
 				<td></td>
 			</tr>

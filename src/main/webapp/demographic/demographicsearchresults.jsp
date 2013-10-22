@@ -158,7 +158,7 @@ function popup(vheight,vwidth,varpage) {
 function popupEChart(vheight,vwidth,varpage) { //open a new popup window
   var page = "" + varpage;
   windowprops = "height="+vheight+",width="+vwidth+",location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,screenX=50,screenY=50,top=20,left=20";
-  var popup=window.open(page, "Encounter", windowprops);
+  var popup=window.open(page, "encounter", windowprops);
   if (popup != null) {
     if (popup.opener == null) {
       popup.opener = self;
@@ -407,10 +407,11 @@ function popupEChart(vheight,vwidth,varpage) { //open a new popup window
 }
 %>
 
-<div class="createNew"><a href="demographicaddarecordhtm.jsp"><b><font size="+1"><bean:message
-	key="demographic.search.btnCreateNew" /></font></b></a>
-<br>
+<div class="createNew">
+	<a href="demographiccontrol.jsp?displaymode=Create"><b><font size="+1"><bean:message key="demographic.search.btnCreateNew" /></font></b></a>
+	<br>
 </div>
+
 <p><bean:message key="demographic.demographicsearchresults.msgClick" /></p>
 </center>
 </body>

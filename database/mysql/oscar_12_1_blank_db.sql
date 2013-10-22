@@ -477,6 +477,7 @@ CREATE TABLE `EyeformMacro` (
   `statFlag` varchar(20) DEFAULT NULL,
   `optFlag` varchar(20) DEFAULT NULL,
   `sliCode` varchar(10) DEFAULT NULL,
+  `includeAdmissionDate` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -22296,7 +22297,9 @@ DROP TABLE IF EXISTS `serviceSpecialists`;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `serviceSpecialists` (
   `serviceId` int(10) DEFAULT NULL,
-  `specId` int(10) DEFAULT NULL
+  `specId` int(10) DEFAULT NULL,
+  `id` int(10) NOT NULL AUTO_INCREMENT,
+  PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -23007,4 +23010,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-08-27 11:17:32
+-- Dump completed on 2013-09-24 16:40:58

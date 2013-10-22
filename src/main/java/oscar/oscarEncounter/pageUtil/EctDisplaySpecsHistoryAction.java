@@ -86,6 +86,8 @@ public class EctDisplaySpecsHistoryAction extends EctDisplayAction {
 
     List<EyeformSpecsHistory> shs = shDao.getByDemographicNo(Integer.parseInt(bean.demographicNo));
 
+	boolean isJsonRequest = request.getParameter("json") != null && request.getParameter("json").equalsIgnoreCase("true");
+
     for(EyeformSpecsHistory sh:shs) {
     	NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
     	item.setDate(sh.getDate());
@@ -94,9 +96,11 @@ public class EctDisplaySpecsHistoryAction extends EctDisplayAction {
     	String itemHeader = StringUtils.maxLenString(title, MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES);
     	item.setTitle(itemHeader);
 
-    	//Don't need to display specs id.
-    	//item.setValue(sh.getId().toString());
-    	item.setValue("");
+		if (isJsonRequest)
+			item.setValue(sh.getId().toString());
+		else
+			item.setValue("");
+    	
     	
     	item.setLinkTitle(sh.toString3());
 

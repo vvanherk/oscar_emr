@@ -75,7 +75,7 @@ function BackToOscar()
 			style="border-collapse: collapse" bordercolor="#111111" width="100%"
 			height="100%">
 
-			<!----Start new rows here-->
+			<!-- Start new rows here-->
 
 			<tr>
 				<td></td>
@@ -109,7 +109,7 @@ function BackToOscar()
 				</table>
 				</td>
 			</tr>
-			<!----End new rows here-->
+			<!-- End new rows here-->
 
 			<tr height="100%">
 				<td></td>

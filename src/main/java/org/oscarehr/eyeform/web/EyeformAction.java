@@ -193,6 +193,13 @@ public class EyeformAction extends DispatchAction {
 		   if(cpp != null && cpp.equals("measurements")) {
 			   cppFromMeasurements=true;
 		   }
+		   
+		   Integer demographicNo = new Integer(0);
+		   try {
+			   demographicNo = new Integer(demo);
+		   } catch (Exception e) {
+			   logger.error("Cannot case demographic number to Integer: " + demo, e);
+		   }
 
 		   Provider provider = LoggedInInfo.loggedInInfo.get().loggedInProvider;
 		   ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
@@ -325,7 +332,7 @@ public class EyeformAction extends DispatchAction {
         	   appNo = Integer.parseInt(tmp);
         	   request.setAttribute("appNo",appNo);
            }
-           String impression = getImpression(appNo);
+           String impression = getImpression(demographicNo, appNo);
            request.setAttribute("impression", StringEscapeUtils.escapeJavaScript("Impression:" + "\n" + impression));
 
 
@@ -449,8 +456,8 @@ public class EyeformAction extends DispatchAction {
 		   return text + "\n" + sb.toString();
 	   }
 */
-	   private String getImpression(int appointmentNo) {
-		   List<CaseManagementNote> notes = caseManagementNoteDao.getMostRecentNotesByAppointmentNo(appointmentNo);
+	   private String getImpression(Integer demographicNo, int appointmentNo) {
+		   List<CaseManagementNote> notes = caseManagementNoteDao.getMostRecentNotes(demographicNo, appointmentNo);
 		   notes = filterOutCpp(notes);
 		   if(notes.size()>0) {
 			   StringBuilder sb = new StringBuilder();
@@ -474,7 +481,7 @@ public class EyeformAction extends DispatchAction {
 	   public void doPrint(HttpServletRequest request, OutputStream os) throws IOException, DocumentException {
 			String ids[] = request.getParameter("apptNos").split(",");
 			String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
-
+				
 			String cpp = request.getParameter("cpp");
 			boolean cppFromMeasurements=false;
 			if(cpp != null && cpp.equals("measurements")) {
@@ -512,9 +519,8 @@ public class EyeformAction extends DispatchAction {
 						}
 					}
 				}
-
-
-
+				
+				
 				printer.printDocHeaderFooter();
 
 				//get cpp items by appointmentNo (current history,past ocular hx,
@@ -561,13 +567,13 @@ public class EyeformAction extends DispatchAction {
 				if(specsHistory.size()>0) {
 					printer.printSpecsHistory(specsHistory);
 				}
-
+				
 				//allergies
 				List<Allergy> allergies = allergyDao.findAllergies(demographic.getDemographicNo());
 				if(allergies.size()>0) {
 					printer.printAllergies(allergies);
 				}
-
+				
 				//rx
 				printer.printRx(String.valueOf(demographic.getDemographicNo()));
 
@@ -586,7 +592,7 @@ public class EyeformAction extends DispatchAction {
 						printer.printEyeformMeasurements(formatter);
 //					}
 				}
-
+				
 				//impression
 				//let's filter out custom cpp notes, as they will already have been
 				//printed out in CPP section
@@ -614,7 +620,7 @@ public class EyeformAction extends DispatchAction {
 				EyeForm eyeform = eyeFormDao.getByAppointmentNo(appointmentNo);
 		        printer.printEyeformPlan(followUps, procedureBooks, testBooks,eyeform);
 				*/
-
+				
 		        //photos
 		        DocumentResultsDao documentDao = (DocumentResultsDao)SpringUtils.getBean("documentResultsDao");
 		        List<Document> documents = documentDao.getPhotosByAppointmentNo(appointmentNo);
@@ -748,6 +754,7 @@ public class EyeformAction extends DispatchAction {
 		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
 		   for(CaseManagementNote note:notes) {
 			   boolean skip=false;
+			   
 			 for(CaseManagementIssue issue:note.getIssues()) {
 				 for(int x=0;x<cppIssues.length;x++) {
 					 if(issue.getIssue().getCode().equals(cppIssues[x])) {
@@ -974,7 +981,7 @@ public class EyeformAction extends DispatchAction {
 	           request.setAttribute("specs", StringEscapeUtils.escapeJavaScript(specsStr1));
 
 	           //impression
-	           String impression = getImpression(appNo);
+	           String impression = getImpression(demographicNo, appNo);
 	           request.setAttribute("impression", StringEscapeUtils.escapeJavaScript(impression));
 
 	           //followUp

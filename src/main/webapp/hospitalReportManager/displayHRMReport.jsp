@@ -96,7 +96,7 @@ if(demographicLink != null){
 	background-color: red;
 }
 
-#metadataBox, #commentBox {
+#commentBox {
 	clear: both;
 	border: 1px solid black;
 	margin: 20px;
@@ -275,7 +275,24 @@ function revokeSignOffHrm(reportId) {
 	<% } %>
 	</div>
 
+<%
+	if(hrmReport.isBinary()) {
+		String reportFileData = hrmReport.getFileData();
+		String noMessageIdFileData = reportFileData.replaceAll("<MessageUniqueID>.*?</MessageUniqueID>", "<MessageUniqueID></MessageUniqueID>");
+		String noMessageIdHash = org.apache.commons.codec.digest.DigestUtils.md5Hex(noMessageIdFileData);
+		
+		if(hrmReport.getFileExtension() != null && (".gif".equals(hrmReport.getFileExtension()) || ".jpg".equals(hrmReport.getFileExtension()) || ".png".equals(hrmReport.getFileExtension()))) {
+			%><img src="<%=request.getContextPath() %>/hospitalReportManager/HRMDownloadFile.do?hash=<%=noMessageIdHash%>"/><br/><%	
+		}
+		%><a href="<%=request.getContextPath() %>/hospitalReportManager/HRMDownloadFile.do?hash=<%=noMessageIdHash%>"><%=(hrmReport.getLegalLastName() + "-" + hrmReport.getLegalFirstName() + "-" +  hrmReport.getFirstReportClass() + hrmReport.getFileExtension()).replaceAll("\\s", "_") %></a>&nbsp;&nbsp;(Download Attachment)<%
+		
+	} else {
+
+%>
 	<%=hrmReport.getFirstReportTextContent().replaceAll("\n", "<br />") %>
+	
+	<% } %>
+	
 	<%
 	String confidentialityStatement = (String) request.getAttribute("confidentialityStatement");
 	if (confidentialityStatement != null && confidentialityStatement.trim().length() > 0) {
@@ -441,7 +458,7 @@ if (documentComments != null) {
 </div>
 
 <div id="metadataBox">
-	<table>
+	<table style="border: 1px solid black;margin: 20px;">
 		<tr>
 			<th>Message Unique ID</th>
 			<td><%=hrmReport.getMessageUniqueId() %></td>

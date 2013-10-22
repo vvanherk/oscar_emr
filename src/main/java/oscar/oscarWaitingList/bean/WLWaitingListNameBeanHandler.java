@@ -25,6 +25,8 @@
 
 package oscar.oscarWaitingList.bean;
 
+import org.apache.commons.lang.StringEscapeUtils;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -48,8 +50,7 @@ public class WLWaitingListNameBeanHandler {
         boolean verdict = true;
         try {
             
-            
-            String sql = " SELECT * FROM waitingListName WHERE group_no IN (SELECT mygroup_no FROM mygroup WHERE provider_no = '" + providerNo + "') " +
+            String sql = " SELECT * FROM waitingListName WHERE group_no IN (SELECT mygroup_no FROM mygroup WHERE provider_no = '" + StringEscapeUtils.escapeSql( providerNo ) + "') " +
                          " AND is_history='N' order by `name` asc";
             ResultSet rs;
             

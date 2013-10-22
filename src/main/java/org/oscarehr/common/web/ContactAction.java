@@ -161,6 +161,8 @@ public class ContactAction extends DispatchAction {
 		        			c.setCategory(DemographicContact.CATEGORY_PERSONAL);
 		        			c.setSdm("");
 		        			c.setEc("");
+		        			c.setFacilityId(LoggedInInfo.loggedInInfo.get().currentFacility.getId());
+							c.setCreator(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
 		        			if(c.getId() == null)
 		        				demographicContactDao.persist(c);
 		        			else
@@ -295,12 +297,9 @@ public class ContactAction extends DispatchAction {
 		if(id != null && id.length()>0) {
 			contact.setId(Integer.valueOf(id));
 		}
-		if(contact.getId() != null && contact.getId()>0) {
-			contactDao.merge(contact);
-		} else {
-			contactDao.persist(contact);
-		}
-	   return mapping.findForward("cForm");
+		
+		contactDao.merge(contact);
+		return mapping.findForward("cForm");
 	}
 
 	public ActionForward saveProContact(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {

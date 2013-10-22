@@ -28,7 +28,7 @@
 %>
 <%@ page
 	import="java.math.*, java.util.*, java.sql.*, oscar.*, java.net.*"
-	errorPage="../errorpage.jsp"%>
+	errorPage="errorpage.jsp"%>
 <jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean"
 	scope="session" />
 <html>

@@ -66,5 +66,4 @@ public class ProcedureBookDao extends AbstractDao<EyeformProcedureBook> {
 	    List<EyeformProcedureBook> results=query.getResultList();
 	    return(results);
 	}
-	
 }

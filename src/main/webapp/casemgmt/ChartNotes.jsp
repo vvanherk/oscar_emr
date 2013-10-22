@@ -156,11 +156,8 @@ try
 	<input type="hidden" id="check_issue" name="check_issue">
 	<input type="hidden" id="serverDate" value="<%=strToday%>">
 	<input type="hidden" id="resetFilter" name="resetFilter" value="false">
-<% if (OscarProperties.getInstance().isPropertyActive("echart_specialist_view")) { %>
-	<div id="topContent" style="visibility:hidden; display:none; float: left; width: 100%; margin-right: -2px; padding-bottom: 10px; background-color: #CCCCFF; font-size: 10px;">
-<%} else { %>
+
 	<div id="topContent" style="float: left; width: 100%; margin-right: -2px; padding-bottom: 10px; background-color: #CCCCFF; font-size: 10px;">
-<% } %>
 		<nested:notEmpty name="caseManagementViewForm" property="filter_providers">
 			<div style="float: left; margin-left: 10px; margin-top: 0px;"><u><bean:message key="oscarEncounter.providers.title" />:</u><br>
 				<nested:iterate type="String" id="filter_provider" property="filter_providers">

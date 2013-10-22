@@ -931,7 +931,47 @@ public class SpireHandler implements MessageHandler {
 				}
 			}
 			
+			// If there is no HNA_ACCN, try HNA_CEACCN
+			if (uniqueAccn.length() == 0) {
+				if (name != null && id != null && name.equals("HNA_CEACCN")) {
+					uniqueAccn = name + id;
+				}
+				else {
+					String messageAsString = originalMessage;
+					
+					// Skip over other segments (sometimes HNAM_CEREF is embedded in other segments)
+					int temp = indexOf(Pattern.compile("OBR"), messageAsString);
+					messageAsString = messageAsString.substring(temp, messageAsString.length());
+					
+					int accnIndex1 = 0;
+					int accnIndex2 = indexOf(Pattern.compile("\\^HNA_CEACCN(\\||~)"), messageAsString);
+					
+					if (accnIndex2 > 0) {
+						// Find the first ~ or | before HNAM_CEREF
+						accnIndex1 = accnIndex2;
+						String tempString = messageAsString.substring(accnIndex1, accnIndex2);
+						while (messageAsString.charAt(accnIndex1) != '~' && messageAsString.charAt(accnIndex1) != '|' ) {
+							accnIndex1--;
+						}
+						
+						// Increment, as we don't actually want to include the ~ or | character
+						accnIndex1++;
+						
+						tempString = messageAsString.substring(accnIndex1, accnIndex2);
+						
+						if ( tempString.length() > 100 || tempString.length() == 0 ) {
+							errorMsg += "Spire HNA_CEACCN id is not in the expected format (accnIndex2: " + accnIndex2 + "):\n";
+							errorMsg += messageAsString + "\n";
+						}
+						else {
+							uniqueAccn = "HNA_CEACCN" + tempString;
+						}
+					}
+				}
+			}
+			
 			// If there is no HNA_ACCN, check for HNA_CEACCN
+			/*
 			if (uniqueAccn.length() == 0) {
 				if (name != null && id != null && name.equals("HNA_CEACCN")) {
 					uniqueAccn = name + id;
@@ -947,6 +987,49 @@ public class SpireHandler implements MessageHandler {
 					}
 					else if (accnIndex2 > 7) {
 						uniqueAccn = "HNA_CEACCN" + messageAsString.substring(accnIndex2-7, accnIndex2);
+					}
+				}
+			}
+			*/
+			
+			// If there is no HNA_ACCN, try HNAM_CEREF
+			if (uniqueAccn.length() == 0) {
+				name = terser.get("/.OBR-3-2");
+				id = terser.get("/.OBR-3-1");
+				
+				if (name != null && id != null && name.equals("HNAM_CEREF")) {
+					uniqueAccn = name + id;
+				}
+				else {
+					String messageAsString = originalMessage;
+					
+					// Skip over other segments (sometimes HNAM_CEREF is embedded in other segments)
+					int temp = indexOf(Pattern.compile("OBR"), messageAsString);
+					messageAsString = messageAsString.substring(temp, messageAsString.length());
+					
+					int accnIndex1 = 0;
+					int accnIndex2 = indexOf(Pattern.compile("\\^HNAM_CEREF(\\||~)"), messageAsString);
+					
+					if (accnIndex2 > 0) {
+						// Find the first ~ or | before HNAM_CEREF
+						accnIndex1 = accnIndex2;
+						String tempString = messageAsString.substring(accnIndex1, accnIndex2);
+						while (messageAsString.charAt(accnIndex1) != '~' && messageAsString.charAt(accnIndex1) != '|' ) {
+							accnIndex1--;
+						}
+						
+						// Increment, as we don't actually want to include the ~ or | character
+						accnIndex1++;
+						
+						tempString = messageAsString.substring(accnIndex1, accnIndex2);
+						
+						if ( tempString.length() > 100 || tempString.length() == 0 ) {
+							errorMsg += "Spire HNAM_CEREF id is not in the expected format (accnIndex2: " + accnIndex2 + "):\n";
+							errorMsg += messageAsString + "\n";
+						}
+						else {
+							uniqueAccn = "HNAM_CEREF" + tempString;
+						}
 					}
 				}
 			}

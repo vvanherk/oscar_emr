@@ -69,20 +69,33 @@ if(session.getValue("user") == null)
 <script type="text/javascript"
 	src="<c:out value="${ctx}"/>/share/calendar/calendar-setup.js"></script>
 <script type="text/javascript">            
-            function setup() {
-                Calendar.setup({ inputField : "staleDate", ifFormat : "%Y-%m-%d", showsTime :false, button : "staleDate_cal", singleClick : true, step : 1 });
-            }
-            
-            function validate() {
-                var date = document.getElementById("staleDate");
-                if( date.value == "" ) {
-                    alert("Please select a date before saving");
-                    return false;
-                }
-                
-                return true;
-            }
-        </script>
+   function setup() {
+       Calendar.setup({ inputField : "staleDate", ifFormat : "%Y-%m-%d", showsTime :false, button : "staleDate_cal", singleClick : true, step : 1 });
+   }
+   
+   function validate() {
+       var date = document.getElementById("staleDate");
+       if( date.value == "" ) {
+           alert("Please select a date before saving");
+           return false;
+       }
+       
+       return true;
+   }
+   function validateCutoffTime() {       
+        var msg = "Desired Consultation Cutoff Time should be integer";
+        var strnum = document.forms[0].elements[1].value;
+        var objRegExp  = /(^-?\d\d*$)/; 
+        if(strnum.length > 0) {        
+           if( !objRegExp.test(strnum) ) {
+               alert(msg);
+               return false;
+           }
+        }
+                    
+        return true;        
+    }
+</script>
 
 </head>
 
@@ -115,7 +128,7 @@ if(session.getValue("user") == null)
 			</html:select>
 
 			<%}%>
-			<input type="submit"
+			<input type="submit" onclick="return validateCutoffTime();"
 				value="<bean-el:message key="${providerbtnSubmit}" />" />
 		</html:form> <%}else {%> <bean-el:message key="${providermsgSuccess}" /> <br>
 		<%}%>
