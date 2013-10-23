@@ -74,9 +74,41 @@ String demographicID = request.getParameter("demographicId");
 UserPropertyDAO userPropertyDAO = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
 UserProperty uProp = userPropertyDAO.getProp(providerNo, UserProperty.LAB_ACK_COMMENT);
 boolean skipComment = false;
+boolean showLatest = false;
+
+Hl7TextMessageDao hl7TxtMsgDao = (Hl7TextMessageDao)SpringUtils.getBean("hl7TextMessageDao");
+Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
+MeasurementMapDao measurementMapDao = (MeasurementMapDao) SpringUtils.getBean("measurementMapDao");
+
+String showLatestAsString = request.getParameter("showLatest");
+if (showLatestAsString != null && showLatestAsString.equalsIgnoreCase("true"))
+	showLatest = true;
+
 
 if (segmentID != null)
 	segmentID = segmentID.trim();
+
+int segmentIDAsInt = 0;
+try {
+	segmentIDAsInt = Integer.parseInt(segmentID);
+} catch (Exception e) {
+	MiscUtils.getLogger().error("Unable to parse segmentID to integer: " + segmentID);
+}
+
+// Show the latest version of the lab with the given lab id
+if (showLatest) {
+	List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId( segmentIDAsInt );
+		
+	// The below algorithm depends on the Hl7TextInfo objects being sorted by lab id from highest to lowest
+	Collections.sort( vers, new LabSorter() );
+	
+	if (vers.size() > 1) {
+		Hl7TextInfo first = vers.get(0);
+		
+		segmentIDAsInt = first.getLabNumber();
+		segmentID = "" + segmentIDAsInt;
+	}
+}
 
 if( uProp != null && uProp.getValue().equalsIgnoreCase("yes")) {
 	skipComment = true;
@@ -90,17 +122,7 @@ else {
 	ackLabFunc = "getComment('ackLab');";
 }
 
-int segmentIDAsInt = 0;
-try {
-	segmentIDAsInt = Integer.parseInt(segmentID);
-} catch (Exception e) {
-	MiscUtils.getLogger().error("Unable to parse segmentID to integer: " + segmentID);
-}
-
 //Need date lab was received by OSCAR
-Hl7TextMessageDao hl7TxtMsgDao = (Hl7TextMessageDao)SpringUtils.getBean("hl7TextMessageDao");
-Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
-MeasurementMapDao measurementMapDao = (MeasurementMapDao) SpringUtils.getBean("measurementMapDao");
 Hl7TextMessage hl7TextMessage = hl7TxtMsgDao.find(Integer.parseInt(segmentID));
 
 String dateLabReceived = "n/a";
@@ -1763,6 +1785,7 @@ public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInf
 		
 		if (vers.size() > 1) {
 			Hl7TextInfo first = vers.get(0);
+			
 			for (Hl7TextInfo ver : vers) {
 				// Generally, we want to keep the first (i.e. newest) version of a lab
 				if (first == ver) {
