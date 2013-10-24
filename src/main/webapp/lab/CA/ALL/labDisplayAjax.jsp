@@ -58,6 +58,9 @@ String searchProviderNo = request.getParameter("searchProviderNo");
 String patientMatched = request.getParameter("patientMatched");
 String sql = "SELECT demographic_no FROM patientLabRouting WHERE lab_type='HL7' and lab_no='"+segmentID+"';";
 
+Hl7TextMessageDao hl7TxtMsgDao = (Hl7TextMessageDao)SpringUtils.getBean("hl7TextMessageDao");
+Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
+MeasurementMapDao measurementMapDao = (MeasurementMapDao) SpringUtils.getBean("measurementMapDao");
 UserPropertyDAO userPropertyDAO = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
 UserProperty uProp = userPropertyDAO.getProp(providerNo, UserProperty.LAB_ACK_COMMENT);
 boolean skipComment = false;
@@ -68,6 +71,26 @@ if( uProp != null && uProp.getValue().equalsIgnoreCase("yes")) {
 if (segmentID != null)
 	segmentID = segmentID.trim();
 
+int segmentIDAsInt = 0;
+try {
+	segmentIDAsInt = Integer.parseInt(segmentID);
+} catch (Exception e) {
+	MiscUtils.getLogger().error("Unable to parse segmentID to integer: " + segmentID);
+}
+
+List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId( segmentIDAsInt );
+		
+// The below algorithm depends on the Hl7TextInfo objects being sorted by lab id from highest to lowest
+Collections.sort( vers, new LabSorter() );
+
+// We always want the most recent version of a lab for the ajax view
+if (vers.size() > 1) {
+	Hl7TextInfo first = vers.get(0);
+	
+	segmentIDAsInt = first.getLabNumber();
+	segmentID = "" + segmentIDAsInt;
+}
+
 String ackLabFunc;
 if( skipComment ) {
 	ackLabFunc = "handleLab('acknowledgeForm_" + segmentID + "','" + segmentID + "','ackLab');";
@@ -77,9 +100,6 @@ else {
 }
 
 //Need date lab was received by OSCAR
-Hl7TextMessageDao hl7TxtMsgDao = (Hl7TextMessageDao)SpringUtils.getBean("hl7TextMessageDao");
-Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
-MeasurementMapDao measurementMapDao = (MeasurementMapDao) SpringUtils.getBean("measurementMapDao");
 Hl7TextMessage hl7TextMessage = hl7TxtMsgDao.find(Integer.parseInt(segmentID));
 
 ArrayList<ReportStatus> ackList=null;
@@ -90,13 +110,6 @@ Long reqIDL = LabRequestReportLink.getIdByReport("hl7TextMessage",Long.valueOf(s
 String reqID = reqIDL==null ? "" : reqIDL.toString();
 reqIDL = LabRequestReportLink.getRequestTableIdByReport("hl7TextMessage",Long.valueOf(segmentID.trim()));
 String reqTableID = reqIDL==null ? "" : reqIDL.toString();
-
-int segmentIDAsInt = 0;
-try {
-	segmentIDAsInt = Integer.parseInt(segmentID);
-} catch (Exception e) {
-	MiscUtils.getLogger().error("Unable to parse segmentID to integer: " + segmentID);
-}
 
 Hl7TextInfo f = olderLabs.get(0);
 for (Hl7TextInfo info : olderLabs) {
@@ -1257,16 +1270,39 @@ if (request.getAttribute("printError") != null && (Boolean) request.getAttribute
 
 <%!
 
+/**
+ * Used to order labs in a List of LabResultData from most to least recent.
+ * 
+ * It achieves this by comparing the segment ids (i.e. lab ids).  The larger the segment id, the more recent the lab.
+ */
+public class LabSorter implements Comparator<Hl7TextInfo> {
+    public int compare(Hl7TextInfo o1, Hl7TextInfo o2) {
+		int i1 = o1.getLabNumber();
+		int i2 = o2.getLabNumber();
+		
+        return (i1 > i2 ? -1 : (i1 == i2 ? 0 : 1));
+    }
+} 
+
+/**
+ * Removes duplicate labs from the cAccns list.  Note that this method will keep the latest labs from the duplicate list, except in the case
+ * where the user has requested an older version of a lab.
+ */
 public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInfoDao hl7TextInfoDao, String currentAccn, int currentLabNo) {
 	List<SpireCommonAccessionNumber> removeList = new ArrayList<SpireCommonAccessionNumber>();
 	
 	for (SpireCommonAccessionNumber commonAccessionNumber : cAccns) {
 		int labNo = commonAccessionNumber.getLabNo().intValue();
+		
 		List<Hl7TextInfo> vers = hl7TextInfoDao.getMatchingLabsByLabId(labNo);
+		
+		// The below algorithm depends on the Hl7TextInfo objects being sorted by lab id from highest to lowest
+		Collections.sort( vers, new LabSorter() );
 		
 		if (vers.size() > 1) {
 			Hl7TextInfo first = vers.get(0);
-			for (Hl7TextInfo ver : vers) {				
+			
+			for (Hl7TextInfo ver : vers) {
 				// Generally, we want to keep the first (i.e. newest) version of a lab
 				if (first == ver) {
 					// Unless newest lab is NOT the version the user wants to see
@@ -1286,6 +1322,9 @@ public void removeDuplicates(List<SpireCommonAccessionNumber> cAccns, Hl7TextInf
 	cAccns.removeAll(removeList);
 }
 
+/**
+ * Helper method - adds Hl7TextInfo object ver to the list of Hl7TextInfo objects to remove.
+ */
 public void addToSCANRemoveList(Hl7TextInfo ver, List<SpireCommonAccessionNumber> cAccns, List<SpireCommonAccessionNumber> removeList) {
 	for (int i=0; i < cAccns.size(); i++) {
 		if (ver.getLabNumber() == cAccns.get(i).getLabNo().intValue()) {
