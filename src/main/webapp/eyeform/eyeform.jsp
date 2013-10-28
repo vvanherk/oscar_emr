@@ -264,7 +264,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 			<div class="smallBox boxTitleLink" id="ocularHistory">
 				<div class="title">
-					Ocular History
+					Past Eye History
 					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
 					<span class="uiBarBtn"><span class="text addBtn" id="addOcularHistoryBtn">+</span></span>
 				</div>
