@@ -24,7 +24,7 @@
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
 <%@ taglib uri="/WEB-INF/oscar-tag.tld" prefix="oscar" %>
 <%@ page errorPage="errorpage.jsp"
-	import="java.util.*,java.math.*,java.net.*,java.sql.*,oscar.util.*,oscar.*,oscar.appt.*"%>
+	import="java.util.*,java.math.*,java.net.*,java.sql.*,java.text.NumberFormat,oscar.util.*,oscar.*,oscar.appt.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.administration.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.pageUtil.*, java.util.Properties"%>
@@ -36,6 +36,8 @@
 <%@ page import="org.oscarehr.common.dao.DiagnosticCodeDao" %>
 <%@ page import="org.oscarehr.common.dao.ClinicDAO" %>
 <%@ page import="org.oscarehr.common.model.Clinic" %>
+<%@ page import="org.apache.struts.Globals" %>
+
 <%
 	DiagnosticCodeDao diagnosticCodeDao = SpringUtils.getBean(DiagnosticCodeDao.class);
 %>
@@ -588,6 +590,12 @@ window.onload=function(){
 				Vector vecPercMax = new Vector();
 				for(int i=0; i<vecServiceParam[0].size(); i++) {
 					String codeName = (String)vecServiceParam[0].get(i);
+					
+					String codePercent = (String) vecServiceParam[2].get(i);
+					Double d = new Double(codePercent);
+					Locale currentLocale = (Locale) request.getSession().getAttribute(Globals.LOCALE_KEY);
+				    codePercent = NumberFormat.getPercentInstance(currentLocale).format(d);
+					
 					if(nCode<vecCodeItem.size() && codeName.equals((String) ((BillingReviewCodeItem)vecCodeItem.get(nCode)).getCodeName())) {
 						n++;
 						String codeUnit = (String)((BillingReviewCodeItem)vecCodeItem.get(nCode)).getCodeUnit();
@@ -620,7 +628,7 @@ window.onload=function(){
                     <% if( strWarning.length() > 0 ) { %>
                     <span style="color:red; float:left;"><%=strWarning%></span>
                     <%}%>
-                    <span style="float:right;"> <%=codeFee %> x <%=codeUnit %><% if (gstFlag.equals("1")){%> + <%=percent%>% GST<%}%> =
+                    <span style="float:right;"> <%=codeFee %> x <%=codeUnit %> @ <%=codePercent%> <% if (gstFlag.equals("1")){%> + <%=percent%>% GST<%}%> =
 				<input type="text" name="percCodeSubtotal_<%=i %>" size="5" value="<%=codeTotal %>" />
 				<input type="hidden" name="xserviceCode_<%=i %>" value="<%=codeName %>" />
 				<input type="hidden" name="xserviceUnit_<%=i %>" value="<%=codeUnit %>" />

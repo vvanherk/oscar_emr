@@ -25,6 +25,9 @@
 --%>
 
 <%@page import="oscar.oscarRx.data.RxPatientData"%>
+<%@page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.common.dao.EncounterTemplateDao"%>
+<%@ page import="org.oscarehr.common.model.EncounterTemplate" %>
 <%@ taglib uri="/WEB-INF/caisi-tag.tld" prefix="caisi"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
@@ -276,22 +279,24 @@ if (request.getParameter("casetoEncounter")==null)
     autoCompleted["<bean:message key="oscarEncounter.Index.generalConversions"/>"] = "popupPage(650,775,'GeneralConversions','calculators/GeneralCalculators.jsp')";
     autoCompList.push("<bean:message key="oscarEncounter.Index.generalConversions"/>");
     itemColours["<bean:message key="oscarEncounter.Index.generalConversions"/>"] = calculatorColour;
+   
+   <%int MaxLen = 20;
+			int TruncLen = 17;
+			String ellipses = "...";
+			
+			EncounterTemplateDao encounterTemplateDao = SpringUtils.getBean(EncounterTemplateDao.class);
+			List<EncounterTemplate> allTemplates = encounterTemplateDao.findAll();
 
-   <%
-   int MaxLen = 25;
-   int TruncLen = 22;
-   String ellipses = "...";
-  for(int j=0; j<bean.templateNames.size(); j++) {
-     String encounterTmp = (String)bean.templateNames.get(j);
-     encounterTmp = StringUtils.maxLenString(encounterTmp, MaxLen, TruncLen, ellipses);
-     encounterTmp = StringEscapeUtils.escapeJavaScript(encounterTmp);
-   %>
-     autoCompleted["<%=encounterTmp%>"] = "ajaxInsertTemplate('<%=encounterTmp%>')";
-     autoCompList.push("<%=encounterTmp%>");
-     itemColours["<%=encounterTmp%>"] = "99CCCC";
-   <%
-  }
-   %>
+			for (EncounterTemplate encounterTemplate : allTemplates) {
+				String templateName = encounterTemplate.getEncounterTemplateName();
+				templateName = oscar.util.StringUtils.maxLenString(templateName, MaxLen, TruncLen, ellipses);
+				templateName = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(templateName);
+			%>
+				autoCompleted["<%=templateName%>"] = "ajaxInsertTemplate('<%=templateName%>')";
+				autoCompList.push("<%=templateName%>");
+				itemColours["<%=templateName%>"] = "99CCCC";
+			<%}%>
+   
     function closeEncounterWindow() {
         return window.confirm("<bean:message key="oscarEncounter.Index.closeEncounterWindowConfirm"/>");
     }

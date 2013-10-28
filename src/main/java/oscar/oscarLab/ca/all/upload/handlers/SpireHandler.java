@@ -50,8 +50,8 @@ public class SpireHandler implements MessageHandler {
     Logger logger = Logger.getLogger(SpireHandler.class);
 	Hl7TextInfoDao hl7TextInfoDao = (Hl7TextInfoDao)SpringUtils.getBean("hl7TextInfoDao");
 	
-	public String parse(String serviceName, String fileName, int fileId) {
-
+	public synchronized String parse(String serviceName, String fileName, int fileId) {
+		logger.info("UPLOADING: " + fileName);
 		int i = 0;
 		try {
 			ArrayList<String> messages = Utilities.separateMessages(fileName);

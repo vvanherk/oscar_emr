@@ -82,14 +82,17 @@ if(session.getValue("user") == null)
        
        return true;
    }
-   function validateCutoffTime() {       
-        var msg = "Desired Consultation Cutoff Time should be integer";
-        var strnum = document.forms[0].elements[1].value;
-        var objRegExp  = /(^-?\d\d*$)/; 
-        if(strnum.length > 0) {        
-           if( !objRegExp.test(strnum) ) {
-               alert(msg);
-               return false;
+   function validateCutoffTime(identify) { 
+        if(identify=='Consultation Cutoff Time Warning')
+        {
+           var msg = "Desired Consultation Cutoff Time should be integer";
+           var strnum = document.forms[0].elements[1].value;
+           var objRegExp  = /(^-?\d\d*$)/; 
+           if(strnum.length > 0) {        
+              if( !objRegExp.test(strnum) ) {
+                  alert(msg);
+                  return false;
+              }
            }
         }
                     
@@ -128,7 +131,8 @@ if(session.getValue("user") == null)
 			</html:select>
 
 			<%}%>
-			<input type="submit" onclick="return validateCutoffTime();"
+			<input type="submit" onclick="return validateCutoffTime('<bean-el:message
+			key="${providermsgProvider}" />');"
 				value="<bean-el:message key="${providerbtnSubmit}" />" />
 		</html:form> <%}else {%> <bean-el:message key="${providermsgSuccess}" /> <br>
 		<%}%>
