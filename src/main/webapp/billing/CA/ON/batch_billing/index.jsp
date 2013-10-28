@@ -214,10 +214,8 @@ String user_no = (String) session.getAttribute("user");
 			'sliCodes' : "<%= sliCodeSelectionList %>"
 		},	function(){
 			$.getScript(contentID.slice(1) +".js");
-			tab_load(contentID);
 			
 		});
-		
 		
 		$('#billingNav a[href="'+ contentID + '"]').tab("show");
 	});

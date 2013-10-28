@@ -102,58 +102,47 @@ span.dropdown-toggle.btn.add-on{
 	width:97%;	
 }
 
-*/
-/* float right style 
-.right{
-	float:right;
-}
-*/
-/* billing code label in tables
-label.b_code{
-	text-align: right;
+/* changing margin for invoice list table */
+
+.bodycontainer { 
+	height: 100px;
+	width: 100%; 
+	margin: 0; 
+	overflow-y: scroll; 
 }
 
-*/
-
-/* changing margin for datable table */
-
-
-div.dataTables_length label {
-    width: 460px;
-    float: left;
-    text-align: left;
+.table-scrollable { 
+	margin: 0; 
+	padding: 0; 
 }
- 
-div.dataTables_length select {
-    width: 75px;
-}
- 
-div.dataTables_filter label {
-    float: right;
-    width: 460px;
-}
- 
-div.dataTables_info {
-    padding-top: 8px;
-}
- 
-div.dataTables_paginate {
-    float: right;
-    margin: 0;
+.table-header {
+	border: 1px solid #cccccc;
+	margin: 0; 
+	padding: 0; 
+	background-color: lightgrey;
 }
 
-tr.row_selected td{
-    font-weight: bold;
+.table-header th{
+	border: 2px solid #dddddd;
 }
  
 table {
     margin: 1em 0;
     clear: both;
+    table-layout:fixed;
+}
+
+table td{
+    margin: 1em 0;
+    clear: both;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 #register .tabbable{
 	height:500px;
 	overflow-y:scroll;
 }
+
 
 

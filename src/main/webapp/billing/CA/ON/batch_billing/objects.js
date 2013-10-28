@@ -15,30 +15,26 @@ function demographic(jsonObj){
 function invoice(){
 	this.demo = "";
 
-
-	this.start = "";
-	this.end = "";
+	this.date = "";	//use for admission date as well
+//	this.start = "";
+//	this.end = "";
 	this.time = "";
-	this.date = "";
 
 	this.status = "Ready";
-	this.admission_date = "";
 	this.rdoctor = "";
 	this.sli_code = "";
 
-	this.dx_codes = new Array();
 	this.items= new Array();
 
-	this.description="";
+//	this.description="";
 	this.manual="";
 	this.notes="";
 
 	this.inv_amount=0.00;
 
-	this.saveInvoiceInfo = function(rdoc, sli, dx, man, note){	//for quick update
+	this.saveInvoiceInfo = function(rdoc, sli, man, note){	//for quick update
 		this.rdoctor = rdoc;
 		this.sli_code = sli;
-		this.dx_codes = dx;
 		this.manual = man;
 		this.notes = note;
 	}
@@ -90,10 +86,11 @@ function item(){
 	this.units= 0;
 	this.percent = 0.0;
 	this.total=0;
+	this.dx_code = "";
 
 	this.updateUnits = function(newUnt){
 		this.units = newUnt;
-		this.total = this.amount*this.units*this.percent
+		this.total = this.amount*this.units*this.percent;
 		this.total = parseFloat(this.total).toFixed(2);
 	}
 

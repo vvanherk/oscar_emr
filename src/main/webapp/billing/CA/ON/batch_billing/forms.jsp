@@ -16,15 +16,9 @@
 		<div class="span12"> 			<!-- for pages with 2 rows -->
 			<div><label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= providerSelectionList %></select></div>
 			<div><label for="group_no"> Group # </label><input type="text" class="input-mini uneditable-input" placeholder="00000" id="group_no" name="group_no" readonly="true"></div>
-			<div><label for="provider"> Provider </label><select id="provider" name="prov" class="input-mini combobox"><%= providerSelectionList %></select></div>
-			<div>	<label for="billing-type"> Billing Type </label><select id="billing-type" name="btype" class="input-mini combobox">
-				<option value="b1">OHIP</option><option value="b2">RMB</option></select>
-			</div>
-			<div><label for="location"> Location </label><select id="location" name="loc" class="input-small combobox"><%= clinicSelectionList %></select></div>
-			<div>	<label for="billing-center"> Billing Center </label>
-				<input type="text" class="input-mini uneditable-input" placeholder="Hamilton" id="billing-center" name="bcenter" readonly="true">
-			</div>
-			<div><button id="hold" type="submit" class="btn"> Show Hold </button></div>
+			<div><label for="provider"> Provider </label><select id="provider" name="prov" class="input-small combobox"><%= providerSelectionList %></select></div>
+			<div><label for="location"> Location </label><select id="location" name="loc" class="input-medium combobox"><%= clinicSelectionList %></select></div>
+			<div><label for="billing-center"> Billing Center </label><input type="text" class="input-small uneditable-input" placeholder="Hamilton" id="billing-center" name="bcenter" readonly="true"></div>
 		</div>
 		<div class="span12 formrow" style="margin-left:-5px"> 			<!-- for pages with 2 rows -->
 		    <div class="span11">
@@ -59,21 +53,29 @@
 	  </div>
 	</section>
 	<section id="batch-invoices">
-	   <div class="row-fluid"><div class="span12">
-		<table class="table table-hover table-condense" id="invList">
-	  		<thead class="header">
+		<table class="table table-striped table-hover table-condensed table-header" id="invList_header">
+	  		<thead>
 	  			<tr>
-				     <th><input id="select-all" type="checkbox"></th><th>Date</th><th>Time</th>
-				     <th>Patient Name</th><th>HCN</th><th>DOB</th><th>Remarks</th><th>Notes</th>
-				     <th>Service Description</th><th>Amount</th>
+				     <th class="bc_apply" style="width: 2%"><input id="select-all" type="checkbox"></th>
+				     <th class="date" style="width: 7%">Date</th>
+				     <th class="time" style="width: 6%">Time</th>
+				     <th class="patient-name" style="width: 15%">Patient Name</th>
+				     <th class="health-card-number" style="width: 9%">HCN</th>
+				     <th class="date-of-birth" style="width: 7%">DOB</th>
+				     <th class="man_note">Manual Note</th>
+				     <th class="notes" style="width: 20%">Notes</th>
+				     <th class="service-description" style="width: 10%">Service Desc</th>
+				     <th class="amount" style="width: 6%">Amount</th>
 				</tr>
 	  		</thead>
-	  		<tbody>
-
-	  		</tbody>
-	  		
 	  	</table>
-	   </div></div>
+		<div class="bodycontainer scrollable">
+			<table id="invList_body" class="table table-hover table-striped table-condensed table-scrollable">
+				<tbody>
+					<td style="text-align: center"> No items: Please choose query attributes above</td>
+				</tbody>
+			</table>
+		</div>
 	</section>
 	<section id="invoice-detail" class="invisible">
 	    <div class="row-fluid">
