@@ -861,6 +861,11 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 
 			currentIssueItems = currentIssueItems.slice(1);
 		}
+		
+		$("#currentHistoryBox .title").click(function(e) {
+			e.stopPropagation();
+			popupPage(800, 600, "Current Issue History", ctx + "/CaseManagementEntry.do?method=issuehistory&demographicNo=" + demographicNo + "&issueIds=" + currentPresentingIssueId);
+		});
 
 		for (var jsonItem in currentIssueItems) {
 			var item = currentIssueItems[jsonItem];
@@ -1793,12 +1798,7 @@ $(document).ready(function() {
 		$("#currentIssueAreaBox").autogrow();
 	});
 
-	$("#currentIssueShowHistoryBtn").click(function(e) {
-		e.stopPropagation();
-		popupPage(800, 600, "Current Issue History", ctx + "/CaseManagementEntry.do?method=issuehistory&demographicNo=" + demographicNo + "&issueIds=" + currentPresentingIssueId);
-	});
-
-
+	
 	$(".eChartBtn").click(function() {
 		window.open(ctx + "/oscarEncounter/IncomingEncounter.do?demographicNo=" + demographicNo + "&curProviderNo=&reason=Progress+Notes&encType=&curDate=&appointmentDate=&startTime=&status=", "width=1024,height=710");
 	});

@@ -201,6 +201,16 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<input type="text" id="complaintBox" value="" />
 		</div>
 		<div class="formBoxes">
+			<div class="smallBox boxTitleLink" id="currentHistoryBox">
+				<div class="title">
+					Current Hx
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+					<span class="uiBarBtn"><span class="text smallerText" id="copyApptReasonBtn">Copy Appointment Reason</span></span>
+				</div>
+				<div class="content" style="overflow: hidden;">
+					<textarea style="width: 100%; height: 99%;" id="currentIssueAreaBox"></textarea>
+				</div>
+			</div>
 			<div class="smallBox boxTitleLink" id="planHistory">
 				<div class="title">
 					Previous Plans
@@ -294,16 +304,6 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				<div class="content">
 					<ul></ul>
 				</div>
-			</div>
-		</div>
-		<div class="wideBox" id="currentIssueBox">
-			<div class="title">
-				Current Presenting Issue/History
-				<span class="uiBarBtn"><span class="text smallerText" id="copyApptReasonBtn">Copy Appointment Reason</span></span>
-				<span class="uiBarBtn"><span class="text smallerText" id="currentIssueShowHistoryBtn">History</span></span>
-			</div>
-			<div class="content" style="overflow: hidden;">
-				<textarea style="width: 100%; height: 99%;" id="currentIssueAreaBox"></textarea>
 			</div>
 		</div>
 		<div class="formBoxes">
