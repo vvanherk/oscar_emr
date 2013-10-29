@@ -103,6 +103,14 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
+		<div class="smallBox boxTitleLink" id="ocularMeds">
+			<div class="title">
+				Prescriptions
+				<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+				<span class="uiBarBtn"><span class="text addBtn" id="addOcularMedsBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>
 		<div class="smallBox" id="specsHistory">
 			<div class="title">
 				Specs History
@@ -211,6 +219,90 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 					<textarea style="width: 100%; height: 99%;" id="currentIssueAreaBox"></textarea>
 				</div>
 			</div>
+			<div class="smallBox boxTitleLink" id="medicalOcularHistory">
+				<div class="title">
+					Medical History
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+					<span class="uiBarBtn"><span class="text addBtn" id="addHistoryBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="reminders">
+				<div class="title">
+					<abbr title="(Reminders)">Research/Notes</abbr>
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+					<span class="uiBarBtn"><span class="text addBtn" id="addReminderBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+		</div>
+		<div class="formBoxes">
+			<div class="smallBox boxTitleLink" id="ocularHistory">
+				<div class="title">
+					Past Eye History
+					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+					<span class="uiBarBtn"><span class="text addBtn" id="addOcularHistoryBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="familyMedicalOcularHistory">
+				<div class="title">
+					Family History
+					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+					<span class="uiBarBtn"><span class="text addBtn" id="addFamilyHistoryBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="officeCommunication">
+				<div class="title">
+					Office Communication
+				</div>
+				<div class="content" style="overflow: hidden;">
+					<textarea style="width: 100%; height: 99%;" id="officeCommunicationAreaBox"></textarea>
+				</div>
+			</div>
+		</div>
+		<div class="formBoxes">
+			<div class="smallBox boxTitleLink" id="eyedrops">
+				<div class="title">
+					Eye Meds
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+					<span class="uiBarBtn"><span class="text addBtn" id="addEyedropBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="ocularMeds">
+				<div class="title">
+					Prescriptions
+					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+					<span class="uiBarBtn"><span class="text addBtn" id="addOcularMedsBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="patientLog">
+				<div class="title">
+					Patient Log
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+					<span class="uiBarBtn"><span class="text addBtn" id="addPatientLogBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			
+			<!--
 			<div class="smallBox boxTitleLink" id="planHistory">
 				<div class="title">
 					Previous Plans
@@ -230,103 +322,39 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 					<ul></ul>
 				</div>
 			</div>
-			<div class="smallBox boxTitleLink" id="medicalOcularHistory">
-				<div class="title">
-					Medical History
-					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
-					<span class="uiBarBtn"><span class="text addBtn" id="addHistoryBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
+			-->
+		</div>		
+		
+		<div class="wideBox" id="quickGlance">
+			<div class="title">
+				Quick Glance
+			</div>
+			<div class="content">
+				
+			</div>
+		</div>
+		
+		<div class="wideBox" id="impressionHistory">
+			<div class="title">
+				Impression History
+			</div>
+			<div class="content">
+				<div class="historyList">
 				</div>
 			</div>
 		</div>
-		<div class="formBoxes">
-			<div class="smallBox boxTitleLink" id="ocularMeds">
-				<div class="title">
-					Medications and Drops
-					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
-					<span class="uiBarBtn"><span class="text addBtn" id="addOcularMedsBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
+		
+		<div class="wideBox" id="measurements">
+			<div class="title">
+				Measurements
+				<span class="uiBarBtn"><span class="text smallerText" id="nextMeasurementsBtn">Next</span></span>
+				<span class="uiBarBtn"><span class="text smallerText" id="prevMeasurementsBtn">Previous</span></span>
+				<span class="uiBarBtn"><span class="text smallerText" id="showMeasurementsBtn">Modify</span></span>
 			</div>
-			<div class="smallBox boxTitleLink" id="familyMedicalOcularHistory">
-				<div class="title">
-					Family History
-					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
-					<span class="uiBarBtn"><span class="text addBtn" id="addFamilyHistoryBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-			<div class="smallBox boxTitleLink" id="ocularHistory">
-				<div class="title">
-					Past Eye History
-					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
-					<span class="uiBarBtn"><span class="text addBtn" id="addOcularHistoryBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-
-		</div>
-		<div class="formBoxes">
-			<div class="smallBox boxTitleLink" id="reminders">
-				<div class="title">
-					<abbr title="(Reminders)">Notes</abbr>
-					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
-					<span class="uiBarBtn"><span class="text addBtn" id="addReminderBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-			<div class="smallBox boxTitleLink" id="patientLog">
-				<div class="title">
-					Patient Log
-					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
-					<span class="uiBarBtn"><span class="text addBtn" id="addPatientLogBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-			<div class="smallBox boxTitleLink" id="eyedrops">
-				<div class="title">
-					Eye Drops/Ocular Medications
-					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
-					<span class="uiBarBtn"><span class="text addBtn" id="addEyedropBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
+			<div class="content">
 			</div>
 		</div>
-		<div class="formBoxes">
-			<div class="halfBox tallHalfBox" id="measurements">
-				<div class="title">
-					Measurements
-					<span class="uiBarBtn"><span class="text smallerText" id="nextMeasurementsBtn">Next</span></span>
-					<span class="uiBarBtn"><span class="text smallerText" id="prevMeasurementsBtn">Previous</span></span>
-					<span class="uiBarBtn"><span class="text smallerText" id="showMeasurementsBtn">Modify</span></span>
-				</div>
-				<div class="content">
-				</div>
-			</div>
-			<div class="halfBox tallHalfBox" id="impressionHistory">
-				<div class="title">
-					Impression History
-				</div>
-				<div class="content">
-					<div class="historyList">
-					</div>
-				</div>
-			</div>
-		</div>
+		
 		<div class="wideBox" id="impressionBox">
 			<div class="title">
 				Impression

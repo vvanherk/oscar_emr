@@ -76,6 +76,7 @@ Date.prototype.toFormattedString = function() {
  */
 var impressionHistoryIssueId;
 var currentPresentingIssueId;
+var officeCommunicationIssueId;
 var lastAppointmentNo = "999";
 var savedForm = false;
 
@@ -148,6 +149,7 @@ var noteBoxes = {
 		"impressionHistory": "eyeformImpression",
 		"planHistory": "eyeformPlan",
 		"currentIssueHistory": "eyeformCurrentIssue",
+		"officeCommunication": "officeCommunication",
 		"ocularHistory": "PastOcularHistory",
 		"familyMedicalOcularHistory": "FamHistory",
 		"eyedrops": "OcularMedication"
@@ -253,7 +255,7 @@ var procedureItems = ["procedure_eye", "procedure_procedure", "procedure_locatio
 var diagnosticsItems = ["diagnostics_eye", "diagnostics_name", "diagnostics_urgency", "diagnostics_comment"];
 
 
-var savedImpression = false, savedCurrentPresenting = false, sendPlanTickler = false, savedPlan = false;
+var savedImpression = false, savedCurrentPresenting = false, savedOfficeCommunication = false, sendPlanTickler = false, savedPlan = false;
 var saveInterval;
 var billingArgs;
 
@@ -880,6 +882,29 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 
 		currentPresentingIssueId = jsonData.Issues[0].id;
 
+	} else if (boxNameId == "officeCommunication") {
+		console.log("HERE");
+		var officeCommunicationItems = jsonData.Items;
+		if (jsonData.Items.length > 0 && !jsonData.Items[0].signed) {
+			$("#officeCommunicationAreaBox").val(jsonData.Items[0].note);
+			$("#officeCommunicationAreaBox").attr("noteId", jsonData.Items[0].id);
+
+			officeCommunicationItems = officeCommunicationItems.slice(1);
+		}
+
+		for (var jsonItem in officeCommunicationItems) {
+			var item = officeCommunicationItems[jsonItem];
+			var date = new Date(item.update_date.time);
+			
+			var provName = "";
+			if (item.provider)
+				provName = item.provider.formattedName;
+
+			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
+		}
+
+		officeCommunicationIssueId = jsonData.Issues[0].id;
+
 	} else {
 		var boxItems = jsonData.Items;
 		if (boxNameId == "planHistory") {
@@ -1088,12 +1113,15 @@ function refreshBox(boxName, initialLoad) {
 function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 	var value = $("#impressionAreaBox").val();
 	var currentPresentingValue = $("#currentIssueAreaBox").val();
+	var officeCommunicationValue = $("#officeCommunicationAreaBox").val();
 	var planValue = $("#planBox").val();
 	var issueNoteId = $("#impressionAreaBox").attr("noteId");
 	var planNoteId = $("#planBox").attr("noteId");
 	var currentPresentingNoteId = $("#currentIssueAreaBox").attr("noteId");
+	var officeCommunicationNoteId = $("#officeCommunicationAreaBox").attr("noteId");
 	savedImpression = false;
 	savedCurrentPresenting = false;
+	savedOfficeCommunication = false;
 	sendPlanTickler = false;
 	savedPlan = false;
 	savedForm = false;
@@ -1138,6 +1166,20 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		dataType: "json",
 		success: function(data) {
 			savedCurrentPresenting = true;
+		}
+	});
+	
+	$.ajax({
+		type: "POST",
+		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
+		data: "value=" + encodeURIComponent(officeCommunicationValue) + "&issue_id=" + officeCommunicationIssueId
+			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
+			+ (!isNaN(currentPresentingNoteId) ? "&noteId=" + officeCommunicationNoteId : "&noteId=0")
+			+ (!isNaN(macroId) ? "&macroId=" + macroId : "") // We need to include the macro id here so that 'issueNoteSaveJson' knowns what macro note data to add to the clinical note
+			+ "&runMacro=false",
+		dataType: "json",
+		success: function(data) {
+			savedOfficeCommunication = true;
 		}
 	});
 
