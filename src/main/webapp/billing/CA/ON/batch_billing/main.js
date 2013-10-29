@@ -19,7 +19,7 @@ function set_selected(sel){
 	var id = $active_class.attr('id');
 	$active_class.css('font-weight', 'normal');
 	$active_class.removeClass('active');
-	if(selected.id > -1){ save_invoice_info(); }
+	if(selected.id > -1){ 	save_invoice_info(); }
 	selected = {'inv': null, 'row': null, 'id':-1};
 	
 	if($active_class.length === 0 || $active_class.attr('id') !== "row"+sel){
@@ -30,8 +30,6 @@ function set_selected(sel){
 		load_invoice_info();
 	}
 	
-	
-	
 	return selected;
 }
 
@@ -41,7 +39,6 @@ function set_selected(sel){
  * to generate a new table row for an invoice that is not selected
  * */
 function update_table_row(inv, table_row){
-	
 	if(inv == null){	//if inv not given, use selected invoice
 		inv = selected.inv;
 	}
@@ -118,19 +115,49 @@ function invoice_detail_map(action){
 	$.each($invFields.find('input'), function(i, fieldData){
 		switch($(fieldData).attr('id')){ //preserves input/jsobject mapping
 			case 'invStatus':
-				action(selected.inv.status, fieldData);
+				action(fieldData, "status");
 				break;
 			case 'rdoctor':
-				action(selected.inv.rdoctor, fieldData);
+				action(fieldData, "rdoctor");
 				break;
 			case 'sli_code':
-				action(selected.inv.sli_code, fieldData);
+				action(fieldData, "sli_code");;
 				break;
-			case 'manual':
-				action(selected.inv.manual, fieldData);
+			case 'manual_text':
+				action(fieldData, "manual");
 				break;
 			case 'b_notes':
-				action(selected.inv.notes, fieldData);
+				action( fieldData, "notes");
+				break;
+			case 'b_code':
+				if($(fieldData).closest(".item").length > 0){
+					var id = $(fieldData).closest(".item").attr('id').split('item')[1];
+					action(fieldData, "item."+ id +".code");
+				}
+				break;
+			case 'units':
+				if($(fieldData).closest(".item").length > 0){
+					var id = $(fieldData).closest(".item").attr('id').split('item')[1];
+					action(fieldData, "item."+ id +".units");
+				}
+				break;
+			case 'amount':
+				if($(fieldData).closest(".item").length > 0){
+					var id = $(fieldData).closest(".item").attr('id').split('item')[1];
+					action(fieldData, "item."+ id +".amount");
+				}
+				break;
+			case 'percent':
+				if($(fieldData).closest(".item").length > 0){
+					var id = $(fieldData).closest(".item").attr('id').split('item')[1];
+					action(fieldData, "item."+ id +".percent");
+				}
+				break;
+			case 'l_total':
+				if($(fieldData).closest(".item").length > 0){
+					var id = $(fieldData).closest(".item").attr('id').split('item')[1];
+					action(fieldData, "item."+ id +".total");
+				}
 				break;
 		}
 	});
@@ -143,16 +170,39 @@ function invoice_detail_map(action){
 function save_invoice_info(){
 	
 	//reads fields and updates the appropriate invoice property(indicated using selected_id)
-	invoice_detail_map(function(invData, fieldData){
-		invData = $(fieldData).val();
-		if($(fieldData).attr('id') == 'rdoctor'){ alert(invData);}
+	invoice_detail_map(function(fieldData, id){
+		var temp = id.split('.');
+		if(temp[0] === "item"){	//if this is an item, find item and save that
+			while(selected.inv.items.length < parseInt(temp[1]) + 1)
+			{	
+				selected.inv.items.push(new item());
+			}
+			selected.inv.items[temp[1]][temp[2]] = $(fieldData).val();
+		}
+		else{
+			if(id === "manual" ){	//check if manual should be checked or not. Buggy.
+				if($(fieldData).val() !== ''){
+					$("#manualCHK").prop("checked", false);
+				} else{
+					$("#manualCHK").prop("checked", true);
+				}
+				$("#manualCHK").change();
+			}
+			selected.inv[id] = $(fieldData).val();
+		}
+		$(fieldData).val("");
+
 	});
 	
+	selected.inv.update_inv_total();
+	
 	//update the table to reflect invoice changes.
-	//update_table_row(null, table_row)
+	update_table_row(selected.inv, $("#invList_body tbody").children(" #row"+selected.id)[0]);
 	
 	//resets the invoice details area back to blank with one item
 	//write external function: create-list requires this functionality
+	$("#items-space").children(".item").remove();
+	create_item_row();
 	
 }
 
@@ -162,20 +212,27 @@ function save_invoice_info(){
  * */
 function load_invoice_info(){
 	
+	while( $('#invoice-items .item').length < selected.inv.items.length)
+	{	create_item_row();		}
+	
 	//uses the mapping to load data into the html elements.
-	invoice_detail_map(function(invData, fieldData){
-		if($(fieldData).hasClass('combobox')){
-			fill_combobox($(fieldData), invData);
+	invoice_detail_map(function(fieldData, id){
+		var temp = id.split('.');
+		if(temp[0] === "item" && selected.inv.items.length > 0){
+			$(fieldData).val(selected.inv.items[temp[1]][temp[2]]);
+			if(temp[2] === "code" && $(fieldData).val() !== ""){
+				$("#item"+temp[1]).find("#description").val(bscList[$(fieldData).val()].desc);
+			}
 		}
-		$(fieldData).val(invData);
+		else{ 
+			if($(fieldData).hasClass('combobox')){
+				fill_combobox($(fieldData), selected.inv[id]);
+			}
+			$(fieldData).val(selected.inv[id]);
+		}
+		
 	});
 }
-
-/* handles the adjust table to window sizes
- * 
-function adjust_table_layout(){
-	$('.table-header').css('width', window.innerWidth-15);
-}*/
 
 /* handles initiation of add-ons.
  * */
@@ -332,7 +389,7 @@ function create_item_row (){
 
 	// only happens for new rows
 	if(num_rows > 0){
-		var prev = $(contentID + ' #invoice-items .item :eq(' + (num_rows-1) +')');
+		var prev = $('#invoice-items .item :eq(' + (num_rows-1) +')');
 		from.val(prev.find('#from-date input').val());
 		// delete button on click
 		btn_del.click(function(){

@@ -32,67 +32,27 @@ function invoice(){
 
 	this.inv_amount=0.00;
 
-	this.saveInvoiceInfo = function(rdoc, sli, man, note){	//for quick update
-		this.rdoctor = rdoc;
-		this.sli_code = sli;
-		this.manual = man;
-		this.notes = note;
-	}
-	
-	this.addItem = function(newItem){		//quick add
-		this.items.push(newItem);
-
-		this.inv_amount = parseFloat(this.inv_amount) + parseFloat(newItem.total);
-		this.inv_amount = parseFloat(this.inv_amount).toFixed(2);
-	}
-
-	this.removeItem = function(oldItem){	//quick remove
-		this.items.pop(oldItem);
-		this.inv_amount = parseFloat(this.inv_amount) - parseFloat(oldItem.total);
-		this.inv_amount = parseFloat(this.inv_amount).toFixed(2);
-	}
-
-	this.saveItems = function(unSavedItems){	//batch add/remove of items
-		if(unSavedItems.length > 0){
-			if(this.inv_amount == "NaN") { 
-				this.inv_amount = 0.0;
-				this.items  = []; 
-			}
-			for(var i = 0; i < unSavedItems.length; i++){
-				if(i + 1 > this.items.length){ this.addItem(unSavedItems[i]); }	//if all things match until the end, just add
-				else if(unSavedItems[i] != this.items[i]){	//if there is discrepancy, replace
-					this.inv_amount = parseFloat(this.inv_amount) - parseFloat(this.items[i].total);
-					this.inv_amount = parseFloat(this.inv_amount) + parseFloat(unSavedItems[i].total);
-					this.inv_amount = parseFloat(this.inv_amount).toFixed(2);
-					this.items[i] = unSavedItems[i];
-				}
-			}
-			if(unSavedItems.length < this.items.length){	//if items were removed
-				for(var i = unSavedItems.length; i < this.items.length; i++){
-					this.removeItem(this.items[i]);
-				}
-			}
+	this.update_inv_total = function(){
+		this.inv_amount=0.00;
+		for(it in this.items){
+			this.inv_amount = parseFloat(this.inv_amount) + parseFloat(this.items[it].total);
+			this.inv_amount = parseFloat(this.inv_amount).toFixed(2);
 		}
 	}
+	
 
 }
 
 
 function item(){
-	this.from = "";
-	this.days = "";
+//	this.from = "";
+//	this.days = "";
 	this.code = "";
 	this.amount=0;
 	this.units= 0;
 	this.percent = 0.0;
 	this.total=0;
 	this.dx_code = "";
-
-	this.updateUnits = function(newUnt){
-		this.units = newUnt;
-		this.total = this.amount*this.units*this.percent;
-		this.total = parseFloat(this.total).toFixed(2);
-	}
 
 }
 
