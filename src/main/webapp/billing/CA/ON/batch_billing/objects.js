@@ -16,6 +16,7 @@ function invoice(){
 	this.demo = "";
 
 	this.date = "";	//use for admission date as well
+	this.btype = "OHIP";
 //	this.start = "";
 //	this.end = "";
 	this.time = "";

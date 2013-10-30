@@ -76,7 +76,9 @@ function update_table_row(inv, table_row){
 				newdata += inv.description ;
 				break;
 			case "amount":
-				newdata += inv.inv_amount;
+				if(inv.inv_amount !== "NaN"){
+					newdata += inv.inv_amount;
+				} else { newdata += "0.00"; }
 				break;
 		}
 		newdata += '</td>';
@@ -123,6 +125,9 @@ function invoice_detail_map(action){
 			case 'sli_code':
 				action(fieldData, "sli_code");;
 				break;
+			case 'billing-type':
+				action(fieldData, "btype");;
+				break;
 			case 'manual_text':
 				action(fieldData, "manual");
 				break;
@@ -133,6 +138,12 @@ function invoice_detail_map(action){
 				if($(fieldData).closest(".item").length > 0){
 					var id = $(fieldData).closest(".item").attr('id').split('item')[1];
 					action(fieldData, "item."+ id +".code");
+				}
+				break;
+			case 'dx':
+				if($(fieldData).closest(".item").length > 0){
+					var id = $(fieldData).closest(".item").attr('id').split('item')[1];
+					action(fieldData, "item."+ id +".dx_code");
 				}
 				break;
 			case 'units':
@@ -252,8 +263,6 @@ function initialize_billing(){
 		$('.table-header').css('width', $(window).width() -15);
 	});
 	
-	create_dx_row();
-	
 	create_item_row();
 	
 }
@@ -291,77 +300,14 @@ function clear_combobox($tar){	//really terrible implementation. :/
 	$btn.trigger('click');	//toggle the toggle
 };
 
-// ************************************************************************* FIX THESE NEXT WEEK
-
-/* creates dx rows.
- * */
-function create_dx_row(){
-	// clone row
-	row = $('#dx_master').clone();
-	row.attr('class', 'tablerow span12 diagnostic visible');
-	row.attr('style', '');
-	
-	var num_rows = $('#dx-space .diagnostic').length;
-
-	row.attr('id', 'dx'+ num_rows);
-	// make visible
-	row.css('position','relative');
-
-	// make shortcuts for each element in row
-	var code = row.find('.dxCode');
-	var description = row.find('.dxDesc');
-	var btn_add = row.find('#add_Dx');
-	var btn_del = row.find('#delete_Dx');
-
-	// only happens for new rows
-	if(num_rows > 0){
-		btn_del.attr('class', 'btn visible')
-		btn_del.css('display', 'block');
-
-		// delete button on click
-		btn_del.click(function(){
-			$(this).closest('.tablerow').remove();
-		})
-	}
-
-	// code autocomplete rules here
-	code.typeahead({
-		source: Object.keys(dxCodes),
-		items:5,
-		// needed to update dx description
-		updater : function(item){
-			description.val(dxCodes[item]);
-			return item;
-		}
-	});
-
-	// description autocomplete rules here
-	description.typeahead({
-		source: $.map(dxCodes, function(key){ return key; }),
-		items:5,
-		updater: function(desc){
-			for(key in dxCodes){ if(dxCodes[key] == desc){ code.val(key); break; } }
-			return desc;
-		}
-	});
-	// button on click listener
-	btn_add.click(function(){
-		// boolean indicates that this is a button click
-		create_dx_row();
-	});
-
-	// add to form
-	$('#dx-space').append(row);
-
-	// return row for further modifications
-	return row;
-};
+// ************************************************************************* LEGACY CODE
 
 function create_item_row (){
 
 	// clone row
 	row = $('#items-master').clone();
-	row.attr('class', 'tablerow row-fluid visible item');
+	row.removeClass('invisible');
+	row.addClass('visible item');
 
 	//if(contentID != "#hospital"){
 		row.attr('style', 'margin-left:10px;');
@@ -379,6 +325,7 @@ function create_item_row (){
 	var days = row.find('#days');
 	var code = row.find('#b_code');
 	var description = row.find('#description');
+	var dx = row.find('#dx');
 	var amount = row.find('#amount');
 	var units = row.find('#units');
 	var percent = row.find('#percent');
@@ -400,6 +347,15 @@ function create_item_row (){
 	}
 	
 	// code autocomplete rules here
+	dx.typeahead({
+		source: Object.keys(dxCodes),
+		items:5,
+		// needed to update dx description
+		//updater : function(item){
+		//	description.val(dxCodes[item]);
+		//	return item;
+		//}
+	});
 	code.typeahead({	//should be fixed so it searches bscList and only makes ajax call if more results are required
 		source: function(query, process){
 			return $.get('getBillServCodes.jsp', 

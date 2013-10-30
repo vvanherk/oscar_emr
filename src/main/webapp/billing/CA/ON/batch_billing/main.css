@@ -28,6 +28,10 @@ label{
 	margin-right: 5px;
 }
 
+#invoice-status div{
+	margin-left: 5%;
+}
+
 .batch-info div button{
 	position: relative;
 	top: 20px;
@@ -77,11 +81,6 @@ label{
 	margin-bottom: 20px;
 }
 /* additional things - by rohan */
-/* change height of manual text box/ bill note text box + add dx button to align properly*/
-.no-label{
-	position: relative;
-	top:20px;
-}
 
 
 .checkbox input[type="checkbox"] {
