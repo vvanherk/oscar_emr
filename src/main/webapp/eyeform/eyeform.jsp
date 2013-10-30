@@ -14,6 +14,7 @@
 <%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.util.LoggedInInfo, org.oscarehr.util.SpringUtils, oscar.OscarProperties, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment, org.oscarehr.util.MiscUtils, oscar.SxmlMisc, org.oscarehr.common.dao.ProfessionalSpecialistDao"  %>
 <%@ page import="org.oscarehr.PMmodule.model.Program" %>
 <%@ page import="org.oscarehr.PMmodule.dao.ProgramDao" %>
+<%@ page import="org.apache.commons.lang.StringEscapeUtils" %>
 <%
 String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
 OscarProperties properties = OscarProperties.getInstance();
@@ -86,7 +87,19 @@ var providerNo = "<%=providerNo %>";
 var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 </script>
 <script type="text/javascript" src="<%=request.getContextPath() %>/js/eyeform.js"></script>
-
+<script language="JavaScript" type="text/javascript">
+  function popupPage(vheight,vwidth,varpage) { //open a new popup window
+    var page = "" + varpage;
+    windowprops = "height="+vheight+",width="+vwidth+",location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,screenX=50,screenY=50,top=20,left=20";
+    var popup=window.open(page, "demodetail", windowprops);
+    if (popup != null) {
+      if (popup.opener == null) {
+        popup.opener = self;
+      }
+      popup.focus();
+    }
+  }
+</script>
 <title><%=d.getLastName() %>, <%=d.getFirstName() %> (<%=d.getSex() %>) - Eyeform</title>
 </head>
 <body>
@@ -122,6 +135,12 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<div class="title">
 				Procedures
 				<span class="uiBarBtn"><span class="text addBtn" id="addProcedureBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>		
+		<div class="smallBox boxTitleLink" id="iViews">
+			<div class="title">				
+				<a href="../oscarEncounter/eyeform/downloadIViews.do?demographicNo=<%=d.getDemographicNo()%>">I-views</a>
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
@@ -167,6 +186,12 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				Consultations
 				<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
 				<span class="uiBarBtn"><span class="text addBtn" id="addConsultationBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>		
+		<div class="smallBox boxTitleLink" id="consulationReport">
+			<div class="title">				
+				<a onclick="popupPage(500,900,'/oscar/eyeform/ConsultationReportList.do?method=list&cr.demographicNo=<%=d.getDemographicNo()%>&dmname=<%=StringEscapeUtils.escapeHtml(d.getFormattedName())%>'); return false;" href="#">Consulation Report</a>
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
