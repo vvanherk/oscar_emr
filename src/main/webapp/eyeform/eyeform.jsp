@@ -281,11 +281,11 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 					<ul></ul>
 				</div>
 			</div>
-			<div class="smallBox boxTitleLink" id="ocularMeds">
+			<div class="smallBox boxTitleLink" id="otherMeds">
 				<div class="title">
-					Prescriptions
+					Other Meds
 					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
-					<span class="uiBarBtn"><span class="text addBtn" id="addOcularMedsBtn">+</span></span>
+					<span class="uiBarBtn"><span class="text addBtn" id="addOtherMedsBtn">+</span></span>
 				</div>
 				<div class="content">
 					<ul></ul>

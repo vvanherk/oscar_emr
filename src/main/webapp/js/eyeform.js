@@ -151,7 +151,8 @@ var noteBoxes = {
 		"officeCommunication": "officeCommunication",
 		"ocularHistory": "PastOcularHistory",
 		"familyMedicalOcularHistory": "FamHistory",
-		"eyedrops": "OcularMedication"
+		"eyedrops": "OcularMedication",
+		"otherMeds": "OMeds"
 };
 
 var measurementsToTypes = {
@@ -947,7 +948,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 
 
 		if (initialLoad) {
-			if (boxNameId == "planHistory" || boxNameId == "diagnostics" || boxNameId == "patientLog" || boxNameId == "reminders" || boxNameId == "ocularHistory" || boxNameId == "familyMedicalOcularHistory" || boxNameId == "eyedrops") {
+			if (boxNameId == "planHistory" || boxNameId == "diagnostics" || boxNameId == "patientLog" || boxNameId == "otherMeds" || boxNameId == "reminders" || boxNameId == "ocularHistory" || boxNameId == "familyMedicalOcularHistory" || boxNameId == "eyedrops") {
 				$("#" + boxNameId + " .title").click(function(e) {
 					e.stopPropagation();
 					var rnd = Math.round(Math.random() * 1000);
