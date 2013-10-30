@@ -47,6 +47,8 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import java.lang.IllegalArgumentException;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
@@ -95,12 +97,14 @@ import org.oscarehr.common.dao.BillingServiceDao;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.OscarAppointmentDao;
 import org.oscarehr.common.dao.ProviderDefaultProgramDao;
+import org.oscarehr.common.dao.OfficeCommunicationDao;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DxAssociation;
 import org.oscarehr.common.model.PartialDate;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.ProviderDefaultProgram;
+import org.oscarehr.common.model.OfficeCommunication;
 import org.oscarehr.eyeform.dao.EyeFormDao;
 import org.oscarehr.eyeform.dao.FollowUpDao;
 import org.oscarehr.eyeform.dao.MacroDao;
@@ -515,6 +519,47 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		} catch (Throwable e) {
 			logger.warn("Warning", e);
 		}
+	}
+
+	public ActionForward officeCommunicationSaveJson(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String strNote = request.getParameter("value");
+		String appointmentNoAsString = request.getParameter("appointment_no");
+		String demographicNoAsString = request.getParameter("demographic_no");
+		String noteIdAsString = request.getParameter("noteId");
+		boolean signed = (request.getParameter("sign") != null && request.getParameter("sign").equalsIgnoreCase("true"));
+		
+		Integer appointmentNo = null;
+		Integer demographicNo = null;
+		Integer noteId = null;
+		
+		if (appointmentNoAsString == null || appointmentNoAsString.equals(""))
+			appointmentNoAsString = "0";
+		if (demographicNoAsString == null || demographicNoAsString.equals(""))
+			throw new IllegalArgumentException("Demographic number null or empty.");
+		if (noteIdAsString == null || noteIdAsString.equals(""))
+			noteIdAsString = "0";
+		
+		appointmentNo = Integer.parseInt( appointmentNoAsString );
+		demographicNo = Integer.parseInt( demographicNoAsString );
+		noteId = Integer.parseInt( noteIdAsString );
+				
+		strNote = org.apache.commons.lang.StringUtils.trimToNull(strNote);
+		
+		OfficeCommunicationDao officeCommunicationDao = (OfficeCommunicationDao) SpringUtils.getBean("officeCommunicationDao");
+		
+		if ( noteId.intValue() == 0) {
+			officeCommunicationDao.add( appointmentNo, demographicNo, strNote, signed );
+			//
+			return null;
+		}
+		
+		OfficeCommunication oc = officeCommunicationDao.get( noteId );
+		
+		oc.setNote( strNote );
+		if ( signed )
+			oc.setSigned( true );
+		officeCommunicationDao.update( oc );
+		return null;
 	}
 
 	public ActionForward issueNoteSaveJson(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {

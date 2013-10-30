@@ -76,7 +76,6 @@ Date.prototype.toFormattedString = function() {
  */
 var impressionHistoryIssueId;
 var currentPresentingIssueId;
-var officeCommunicationIssueId;
 var lastAppointmentNo = "999";
 var savedForm = false;
 
@@ -299,10 +298,15 @@ function newMacro() {
 }
 
 function getMostRecentItem(boxName, callback) {
+	var apptNo = "";
+	
+	if ( boxName == "officeCommunication" )
+		apptNo = "&appointment_no=" + appointmentNo;
+	
 	$.ajax({
 		type: "POST",
 		url: ctx + "/CaseManagementView.do",
-		data: noteExtraParams + "&issue_code=" + noteBoxes[boxName],
+		data: noteExtraParams + apptNo + "&issue_code=" + noteBoxes[boxName],
 		dataType: "json",
 		success: function(data) {
 			var item = {note: ""};
@@ -315,10 +319,15 @@ function getMostRecentItem(boxName, callback) {
 }
 
 function loadNoteBox(boxName, boxIssue, initialLoad) {
+	var apptNo = "";
+	
+	if ( boxName == "officeCommunication" )
+		apptNo = "&appointment_no=" + appointmentNo;
+	
 	$.ajax({
 		type: "POST",
 		url: ctx + "/CaseManagementView.do",
-		data: noteExtraParams + "&issue_code=" + boxIssue,
+		data: noteExtraParams + apptNo + "&issue_code=" + boxIssue,
 		dataType: "json",
 		success: function(data) {
 			fillAjaxBoxNote(boxName, data, initialLoad);
@@ -820,7 +829,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 	if (jsonData.Items.length > 0) {
 		if (boxNameId == "impressionHistory" || boxNameId == "currentIssueHistory")
 			$("#" + boxNameId + " .content").html("<div class='historyList'></div>");
-		else
+		else if (boxNameId != "officeCommunication")
 			$("#" + boxNameId + " .content").html("<ul></ul>");
 	}
 
@@ -883,15 +892,15 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		currentPresentingIssueId = jsonData.Issues[0].id;
 
 	} else if (boxNameId == "officeCommunication") {
-		console.log("HERE");
 		var officeCommunicationItems = jsonData.Items;
+		
 		if (jsonData.Items.length > 0 && !jsonData.Items[0].signed) {
 			$("#officeCommunicationAreaBox").val(jsonData.Items[0].note);
 			$("#officeCommunicationAreaBox").attr("noteId", jsonData.Items[0].id);
-
 			officeCommunicationItems = officeCommunicationItems.slice(1);
 		}
 
+		/*
 		for (var jsonItem in officeCommunicationItems) {
 			var item = officeCommunicationItems[jsonItem];
 			var date = new Date(item.update_date.time);
@@ -902,8 +911,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 
 			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
 		}
-
-		officeCommunicationIssueId = jsonData.Issues[0].id;
+		*/
 
 	} else {
 		var boxItems = jsonData.Items;
@@ -950,7 +958,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			}
 		}
 	}
-	if (initialLoad) {
+	if (initialLoad && boxNameId != "officeCommunication") {
 		$("#" + boxNameId + " .addBtn, #" + boxNameId + " .content").click(function(e) {
 			e.stopPropagation();
 
@@ -1171,10 +1179,10 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 	
 	$.ajax({
 		type: "POST",
-		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
-		data: "value=" + encodeURIComponent(officeCommunicationValue) + "&issue_id=" + officeCommunicationIssueId
+		url: ctx + "/CaseManagementEntry.do?method=officeCommunicationSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
+		data: "value=" + encodeURIComponent(officeCommunicationValue)
 			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
-			+ (!isNaN(currentPresentingNoteId) ? "&noteId=" + officeCommunicationNoteId : "&noteId=0")
+			+ (!isNaN(officeCommunicationNoteId) ? "&noteId=" + officeCommunicationNoteId : "&noteId=0")
 			+ (!isNaN(macroId) ? "&macroId=" + macroId : "") // We need to include the macro id here so that 'issueNoteSaveJson' knowns what macro note data to add to the clinical note
 			+ "&runMacro=false",
 		dataType: "json",
@@ -1835,7 +1843,8 @@ $(document).ready(function() {
 
 	});
 
-	$("#copyApptReasonBtn").click(function() {
+	$("#copyApptReasonBtn").click(function(e) {
+		e.stopPropagation();
 		$("#currentIssueAreaBox").val($.trim($("#currentIssueAreaBox").val() + "\n\n" + $("#complaint .content").text()));
 		$("#currentIssueAreaBox").autogrow();
 	});

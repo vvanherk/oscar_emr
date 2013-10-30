@@ -94,11 +94,13 @@ import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.EFormDataDao;
 import org.oscarehr.common.dao.EncounterFormDao;
 import org.oscarehr.common.dao.GroupNoteDao;
+import org.oscarehr.common.dao.OfficeCommunicationDao;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.Drug;
 import org.oscarehr.common.model.Dxresearch;
 import org.oscarehr.common.model.GroupNoteLink;
 import org.oscarehr.common.model.UserProperty;
+import org.oscarehr.common.model.OfficeCommunication;
 import org.oscarehr.eyeform.EyeformInit;
 import org.oscarehr.eyeform.dao.FollowUpDao;
 import org.oscarehr.eyeform.dao.MacroDao;
@@ -1318,65 +1320,100 @@ public class CaseManagementViewAction extends BaseCaseManagementViewAction {
 				return mapping.findForward("success"); // The link of Medical History won't show up on new CME screen.
 			}
 		}
-
-		// set save url to be used by ajax editor
-		String identUrl = request.getQueryString();
-		request.setAttribute("identUrl", identUrl);
-
-		// filter the notes by the checked issues
-		// UserProperty userProp = caseManagementMgr.getUserProperty(providerNo, UserProperty.STALE_NOTEDATE);
-
-		List<Issue> issues = caseManagementMgr.getIssueInfoByCode(providerNo, codes);
-		StringBuilder checked_issues = new StringBuilder();
-		StringBuilder cppIssues = new StringBuilder();
-		String[] issueIds = new String[issues.size()];
-		int idx = 0;
-		for (Issue issue : issues) {
-			checked_issues.append("&issue_id=" + String.valueOf(issue.getId()));
-			if (idx > 0) {
-				cppIssues.append(";");
+		
+		List<Issue> issues = null;
+		String addUrl = null;
+		
+		if (codes[0].equalsIgnoreCase("officeCommunication")) {
+			//a = hasPrivilege("_newCasemgmt.medicalHistory", roleName);
+			//if (!a) {
+			//	return mapping.findForward("success"); // The link of Medical History won't show up on new CME screen.
+			//}
+			
+			String appointmentNoAsString = appointmentNo;
+			if (appointmentNoAsString == null || appointmentNoAsString.equals(""))
+				appointmentNoAsString = "0";
+			
+			notes = new ArrayList<CaseManagementNote>();
+			issues = new ArrayList<Issue>();
+			addUrl = "";
+			
+			OfficeCommunicationDao officeCommunicationDao = (OfficeCommunicationDao) SpringUtils.getBean("officeCommunicationDao");
+			List<OfficeCommunication> ocList = officeCommunicationDao.getByAppointmentNo( Integer.parseInt(appointmentNoAsString) );
+			
+			if (ocList != null) {
+				for ( OfficeCommunication oc : ocList ) {
+					CaseManagementNote cmn = new CaseManagementNote();
+					cmn.setId( new Long(oc.getId().intValue()) );
+					cmn.setDemographic_no( oc.getDemographicNo().toString() );
+					cmn.setAppointmentNo( oc.getAppointmentNo().intValue() );
+					cmn.setNote( oc.getNote() );
+					cmn.setSigned( oc.getSigned() );
+					cmn.setCreate_date( oc.getCreateDate() );
+					cmn.setUpdate_date( oc.getUpdateDate() );
+					notes.add( cmn );
+				}
 			}
-			cppIssues.append(issue.getId() + ";" + issue.getCode() + ";" + issue.getDescription());
-			issueIds[idx] = String.valueOf(issue.getId());
-			idx++;
+		} else {
+			// set save url to be used by ajax editor
+			String identUrl = request.getQueryString();
+			request.setAttribute("identUrl", identUrl);
+		
+			// filter the notes by the checked issues
+			// UserProperty userProp = caseManagementMgr.getUserProperty(providerNo, UserProperty.STALE_NOTEDATE);
+		
+			issues = caseManagementMgr.getIssueInfoByCode(providerNo, codes);
+			StringBuilder checked_issues = new StringBuilder();
+			StringBuilder cppIssues = new StringBuilder();
+			String[] issueIds = new String[issues.size()];
+			int idx = 0;
+			for (Issue issue : issues) {
+				checked_issues.append("&issue_id=" + String.valueOf(issue.getId()));
+				if (idx > 0) {
+					cppIssues.append(";");
+				}
+				cppIssues.append(issue.getId() + ";" + issue.getCode() + ";" + issue.getDescription());
+				issueIds[idx] = String.valueOf(issue.getId());
+				idx++;
+			}
+		
+			// set save Url
+			addUrl = request.getContextPath() + "/CaseManagementEntry.do?method=issueNoteSave&providerNo=" + providerNo + "&demographicNo=" + demoNo + "&appointmentNo="+appointmentNo + "&noteId=";
+			request.setAttribute("addUrl", addUrl);
+			request.setAttribute("cppIssue", cppIssues.toString());
+		
+			// set issueIds for retrieving history
+			request.setAttribute("issueIds", StringUtils.join(issueIds, ","));
+		
+			// need to apply issue filter
+			notes = caseManagementMgr.getActiveNotes(demoNo, issueIds);
+			notes = manageLockedNotes(notes, true, this.getUnlockedNotesMap(request));
+		
+			logger.debug("FETCHED " + notes.size() + " NOTES filtered by " + StringUtils.join(issueIds, ","));
+			logger.debug("REFERER " + request.getRequestURL().toString() + "?" + request.getQueryString());
+		
+			String programId = (String) request.getSession().getAttribute("case_program_id");
+		
+			if (programId == null || programId.length() == 0) {
+				programId = "0";
+			}
+		
+			notes = caseManagementMgr.filterNotes(notes, programId);
+			this.caseManagementMgr.getEditors(notes);
+		
+			List<CaseManagementNoteExt> lcme = new ArrayList<CaseManagementNoteExt>();
+			for (Object obj : notes) {
+				CaseManagementNote cmn = (CaseManagementNote) obj;
+				lcme.addAll(caseManagementMgr.getExtByNote(cmn.getId()));
+			}
+			request.setAttribute("NoteExts", lcme);
+			request.setAttribute("Notes", notes);
+			/*
+			 * oscar.OscarProperties p = oscar.OscarProperties.getInstance(); String noteSort = p.getProperty("CMESort", ""); if (noteSort.trim().equalsIgnoreCase("UP")) request.setAttribute("Notes", sortNotes(notes, "observation_date_asc")); else
+			 * request.setAttribute("Notes", sortNotes(notes, "observation_date_desc"));
+			 */
 		}
-
-		// set save Url
-		String addUrl = request.getContextPath() + "/CaseManagementEntry.do?method=issueNoteSave&providerNo=" + providerNo + "&demographicNo=" + demoNo + "&appointmentNo="+appointmentNo + "&noteId=";
-		request.setAttribute("addUrl", addUrl);
-		request.setAttribute("cppIssue", cppIssues.toString());
-
-		// set issueIds for retrieving history
-		request.setAttribute("issueIds", StringUtils.join(issueIds, ","));
-
-		// need to apply issue filter
-		notes = caseManagementMgr.getActiveNotes(demoNo, issueIds);
-		notes = manageLockedNotes(notes, true, this.getUnlockedNotesMap(request));
-
-		logger.debug("FETCHED " + notes.size() + " NOTES filtered by " + StringUtils.join(issueIds, ","));
-		logger.debug("REFERER " + request.getRequestURL().toString() + "?" + request.getQueryString());
-
-		String programId = (String) request.getSession().getAttribute("case_program_id");
-
-		if (programId == null || programId.length() == 0) {
-			programId = "0";
-		}
-
-		notes = caseManagementMgr.filterNotes(notes, programId);
-		this.caseManagementMgr.getEditors(notes);
-
-		List<CaseManagementNoteExt> lcme = new ArrayList<CaseManagementNoteExt>();
-		for (Object obj : notes) {
-			CaseManagementNote cmn = (CaseManagementNote) obj;
-			lcme.addAll(caseManagementMgr.getExtByNote(cmn.getId()));
-		}
-		request.setAttribute("NoteExts", lcme);
-		request.setAttribute("Notes", notes);
-		/*
-		 * oscar.OscarProperties p = oscar.OscarProperties.getInstance(); String noteSort = p.getProperty("CMESort", ""); if (noteSort.trim().equalsIgnoreCase("UP")) request.setAttribute("Notes", sortNotes(notes, "observation_date_asc")); else
-		 * request.setAttribute("Notes", sortNotes(notes, "observation_date_desc"));
-		 */
-
+		
 		boolean isJsonRequest = request.getParameter("json") != null && request.getParameter("json").equalsIgnoreCase("true");
         if (isJsonRequest) {
         	HashMap<String, Object> hashMap = new HashMap<String, Object>();

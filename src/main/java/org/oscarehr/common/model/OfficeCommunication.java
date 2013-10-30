@@ -37,6 +37,9 @@ public class OfficeCommunication extends AbstractModel<Integer> {
 	@Column(name="note")
 	private String note;
 	
+	@Column(name="signed")
+	private Boolean signed;
+	
 	@Column(name="create_date")
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date createDate;
@@ -82,6 +85,14 @@ public class OfficeCommunication extends AbstractModel<Integer> {
 		this.note = note;
 	}
 	
+	public Boolean getSigned() {
+	    return signed;
+    }
+
+	public void setSigned(Boolean signed) {
+		this.signed = signed;
+	}
+	
 	public Date getCreateDate() {
 	    return createDate;
     }
@@ -96,6 +107,14 @@ public class OfficeCommunication extends AbstractModel<Integer> {
 
 	public void setNote(Date updateDate) {
 		this.updateDate = updateDate;
+	}
+	
+	@PrePersist
+	public void prePersist() {
+		if (createDate == null)
+			createDate = new Date();
+		
+		updateDate = new Date();
 	}
 
 }
