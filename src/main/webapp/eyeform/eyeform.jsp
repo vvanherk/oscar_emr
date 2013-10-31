@@ -87,19 +87,6 @@ var providerNo = "<%=providerNo %>";
 var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 </script>
 <script type="text/javascript" src="<%=request.getContextPath() %>/js/eyeform.js"></script>
-<script language="JavaScript" type="text/javascript">
-  function popupPage(vheight,vwidth,varpage) { //open a new popup window
-    var page = "" + varpage;
-    windowprops = "height="+vheight+",width="+vwidth+",location=no,scrollbars=yes,menubars=no,toolbars=no,resizable=yes,screenX=50,screenY=50,top=20,left=20";
-    var popup=window.open(page, "demodetail", windowprops);
-    if (popup != null) {
-      if (popup.opener == null) {
-        popup.opener = self;
-      }
-      popup.focus();
-    }
-  }
-</script>
 <title><%=d.getLastName() %>, <%=d.getFirstName() %> (<%=d.getSex() %>) - Eyeform</title>
 </head>
 <body>
@@ -140,7 +127,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 		</div>		
 		<div class="smallBox boxTitleLink" id="iViews">
 			<div class="title">				
-				<a href="../oscarEncounter/eyeform/downloadIViews.do?demographicNo=<%=d.getDemographicNo()%>">I-views</a>
+				<!-- <a href="../oscarEncounter/eyeform/downloadIViews.do?demographicNo=<%=d.getDemographicNo()%>">I-views</a> -->
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
@@ -191,7 +178,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 		</div>		
 		<div class="smallBox boxTitleLink" id="consulationReport">
 			<div class="title">				
-				<a onclick="popupPage(500,900,'/oscar/eyeform/ConsultationReportList.do?method=list&cr.demographicNo=<%=d.getDemographicNo()%>&dmname=<%=StringEscapeUtils.escapeHtml(d.getFormattedName())%>'); return false;" href="#">Consulation Report</a>
+				<!-- <a onclick="popupPage(500,900,'/oscar/eyeform/ConsultationReportList.do?method=list&cr.demographicNo=<%=d.getDemographicNo()%>&dmname=<%=StringEscapeUtils.escapeHtml(d.getFormattedName())%>'); return false;" href="#">Consulation Report</a> -->
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
