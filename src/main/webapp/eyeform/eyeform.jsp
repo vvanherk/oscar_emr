@@ -86,7 +86,6 @@ var providerNo = "<%=providerNo %>";
 var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 </script>
 <script type="text/javascript" src="<%=request.getContextPath() %>/js/eyeform.js"></script>
-
 <title><%=d.getLastName() %>, <%=d.getFirstName() %> (<%=d.getSex() %>) - Eyeform</title>
 </head>
 <body>
