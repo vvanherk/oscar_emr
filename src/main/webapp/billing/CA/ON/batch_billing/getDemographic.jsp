@@ -16,10 +16,13 @@ for(int i=0; i < demoList.size(); i++){
 
 	String rdoc = "0";
 	String family_doctor= demo.getFamilyDoctor();
-	String xml_parse = "<rd>";
-	if(family_doctor != null && family_doctor.indexOf(xml_parse) >= 0){ //if it exists
-		rdoc = family_doctor.substring(family_doctor.indexOf(xml_parse) + xml_parse.length(),
+	String rdoc_xmlparse = "<rd>";
+	String rdocno_xmlparse = "<rdohip>";
+	if(family_doctor != null && family_doctor.indexOf(rdoc_xmlparse) >= 0){ //if it exists
+		rdoc = family_doctor.substring(family_doctor.indexOf(rdoc_xmlparse) + rdoc_xmlparse.length(),
 		 family_doctor.indexOf("</rd>"));
+		rdocno = family_doctor.substring(family_doctor.indexOf(rdocno_xmlparse) + rdocno_xmlparse.length(),
+		 family_doctor.indexOf("</rdohip>"));
 	}
 %>
 	{"id": "<%= demo.getDemographicNo() %>",
@@ -27,6 +30,7 @@ for(int i=0; i < demoList.size(); i++){
 	 "dob" : "<%= demo.getBirthDayAsString() %>", 
 	 "health_card":"<%= hin %>",
 	 "rdoctor": "<%= rdoc %>",
+	 "rdocNum": "<%= rdocno %>";
 	 "gender": "<%= demo.getSex() %>" 
 	}<%	if( i + 1 < demoList.size() ){ %>, <% }
 }

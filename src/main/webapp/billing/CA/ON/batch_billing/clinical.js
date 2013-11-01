@@ -4,7 +4,6 @@
 
 initialize_billing();
 
-
 $("#b_provider_val").on('change', function(){
 	var sel = $("#b_provider_val").val();
 	if(sel){
@@ -22,6 +21,8 @@ $("#create-list").on('click', function(){	//Creates list based off appointments
 	
 	$('#invList_body tbody').children().remove();	//ensures the table does not concatenate
 	invoices = [];	//removes any current invoices
+	$("#items-space").children(".item").remove();
+	create_item_row();
 	
 	if(invoices.length === 0){	//if the form is not visible, show.
 		$('#invoice-detail').removeClass('invisible');
@@ -48,6 +49,8 @@ $("#create-list").on('click', function(){	//Creates list based off appointments
 		set_selected(response.length-1);	//select first item
 		$('#invStatus').focus();	//choose what item to focus on next.
 	});
+	
+	$('#item0 #b_code').focus();
 
 });
 
@@ -58,9 +61,18 @@ $("#b_provider").focus()
 
 // Still testing.
 $('#save-batch').click( function(){
-		batch_save("clinical"); //hoping contentID is universal
-		return false;			
-	});
+	var today = new Date();
+	
+	var batch = {};
+	batch["b_provider"] = $("#b_provider_val").val();
+	batch["provider"] = $("#provider_val").val();
+	batch["billDate"] = today.getFullYear() + "/" + (today.getMonth() + 1)+ "/" + today.getDate();
+	batch["billTime"] = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
+	batch["location"] = $("#location_val").val();
+	
+	batch_save("clinical", batch); //hoping contentID is universal
+	return false;			
+});
 
 // click function on manual checkbox
 $('#manualCHK').change(function(){
@@ -77,28 +89,28 @@ $('#manualCHK').change(function(){
 
 // patient selection functionality
 $('#next_patient').on('click', function(){ 
-		var next = parseInt(selected.id) - 1;
-		if(next < 0){ 
-			next = $('#invList tbody tr').length -1; 
-		}
-		set_selected(next); 
-	} );
+	var next = parseInt(selected.id) - 1;
+	if(next < 0){ 
+		next = $('#invList_body tbody tr').length -1; 
+	}
+	set_selected(next); 
+});
 
 $('#prev_patient').on('click', function(){
-		var prev = parseInt(selected.id) + 1; 
-		if(prev == $(' #invList tbody tr').length){ 
-			prev = 0;
-			/*else{
-				if(contentID  == "#offsite"){
-					invoices['offsite'][next] = new invoice();
-					create_invList_row('#offsite', [' ', ' ', ' ', ' ', ' ', '0.00']);
-				}
-				else{						
-					invoices['hospital'][next] = new invoice();
-					create_invList_row('#hospital', [' ', ' ', ' ', ' ', ' ', ' ', '0.00']);
-				}
-			}*/
-		}
-		set_selected(prev);
-	} );
+	var prev = parseInt(selected.id) + 1; 
+	if(prev > $(' #invList_body tbody tr').length - 1){ 
+		prev = 0;
+		/*else{
+			if(contentID  == "#offsite"){
+				invoices['offsite'][next] = new invoice();
+				create_invList_row('#offsite', [' ', ' ', ' ', ' ', ' ', '0.00']);
+			}
+			else{						
+				invoices['hospital'][next] = new invoice();
+				create_invList_row('#hospital', [' ', ' ', ' ', ' ', ' ', ' ', '0.00']);
+			}
+		}*/
+	}
+	set_selected(prev);
+});
 

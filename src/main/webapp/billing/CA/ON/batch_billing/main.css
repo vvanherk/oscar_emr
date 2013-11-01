@@ -28,7 +28,7 @@ label{
 	margin-right: 5px;
 }
 
-#invoice-status div{
+#invoice-status .inv-prop{
 	margin-left: 5%;
 }
 
@@ -76,10 +76,6 @@ label{
 	margin-top: 20px;
 }
 
-
-#dx-space{
-	margin-bottom: 20px;
-}
 /* additional things - by rohan */
 
 

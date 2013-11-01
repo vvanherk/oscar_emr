@@ -6,7 +6,7 @@
  * */
 var invoices = new Array();
 var bscList = {};		//billing service codes
-
+var demoList = {};
 var selected = {'inv': null, 'row': null, 'id':-1};	//contains current selected information
 
 /* Scans the invoice list table for an active row. If none are found, returns
@@ -52,13 +52,13 @@ function update_table_row(inv, table_row){
 				newdata += '<input type="checkbox">';
 				break;
 			case "patient-name":
-				newdata += inv.demo.name;
+				if(inv.demo !== ""){	newdata += inv.demo.name; 	}
 				break;
 			case "health-card-number":
-				newdata += inv.demo.health_card;
+				if(inv.demo !== ""){	newdata += inv.demo.health_card;	}
 				break;
 			case "date-of-birth":
-				newdata += inv.demo.dob;
+				if(inv.demo !== ""){	newdata += inv.demo.dob;	}
 				break;
 			case "date":
 				newdata += inv.date;
@@ -86,41 +86,33 @@ function update_table_row(inv, table_row){
 		
 	table_row.innerHTML = newdata;
 }
-
-/* given a invoice object inv, inserts DOM and js Array
- * */
-function insert_invoice(inv){	
-	//add to invoice list table
-	var invList = document.getElementById('invList_body');
-	invList.insertRow(0); //create the newest row
-	
-	var $new_row = $('#invList_body tr:first'); //isolate the DOM;	
-	update_table_row(inv, $new_row[0]);
-	$new_row.attr("id", "row" + invoices.length);
-	
-	//ties row DOM object to expected functionality
-	$new_row.click(function(){
-		var id = $(this).attr("id").split('row')[1];
-		set_selected(id);
-	});
-	
-	//add to invoices array.
-	invoices.push(inv);		
-}
-
 /* To be used to control interaction between the HTML invoice fields and
  * the invoice object. May be moved into the invoice object. 
  *  */
-function invoice_detail_map(action){
-	var $invFields = $('#invoice-detail');
+function invoice_detail_map($invFields, action){
 	
 	$.each($invFields.find('input'), function(i, fieldData){
 		switch($(fieldData).attr('id')){ //preserves input/jsobject mapping
+			case 'demo-name-search':
+				action(fieldData, "demo.name");
+				break;
+			case 'demo-hin-search':
+				action(fieldData, "demo.health_card");
+				break;
+			case 'demo-dob-search':
+				action(fieldData, "demo.dob");
+				break;
+			case 'service_date':
+				action(fieldData, "date");
+				break;
 			case 'invStatus':
 				action(fieldData, "status");
 				break;
 			case 'rdoctor':
 				action(fieldData, "rdoctor");
+				break;
+			case 'rdoctor_val':
+				action(fieldData, "rdocNum");
 				break;
 			case 'sli_code':
 				action(fieldData, "sli_code");;
@@ -174,6 +166,27 @@ function invoice_detail_map(action){
 	});
 }
 
+/* given a invoice object inv, inserts DOM and js Array
+ * */
+function insert_invoice(inv){	
+	//add to invoice list table
+	var invList = document.getElementById('invList_body');
+	invList.insertRow(0); //create the newest row
+	
+	var $new_row = $('#invList_body tr:first'); //isolate the DOM;	
+	update_table_row(inv, $new_row[0]);
+	$new_row.attr("id", "row" + invoices.length);
+	
+	//ties row DOM object to expected functionality
+	$new_row.click(function(){
+		var id = $(this).attr("id").split('row')[1];
+		set_selected(id);
+	});
+	
+	//add to invoices array.
+	invoices.push(inv);		
+}
+
 /* saves the selected invoice information from user input (fields)
  * requires the DOM object containing the invoice fields
  * To be called before changing the selection index 
@@ -181,7 +194,7 @@ function invoice_detail_map(action){
 function save_invoice_info(){
 	
 	//reads fields and updates the appropriate invoice property(indicated using selected_id)
-	invoice_detail_map(function(fieldData, id){
+	invoice_detail_map($('#invoice-detail'), function(fieldData, id){
 		var temp = id.split('.');
 		if(temp[0] === "item"){	//if this is an item, find item and save that
 			while(selected.inv.items.length < parseInt(temp[1]) + 1)
@@ -208,10 +221,9 @@ function save_invoice_info(){
 	selected.inv.update_inv_total();
 	
 	//update the table to reflect invoice changes.
-	update_table_row(selected.inv, $("#invList_body tbody").children(" #row"+selected.id)[0]);
+	update_table_row(selected.inv, $("#invList_body tbody").children("#row"+selected.id)[0]);
 	
 	//resets the invoice details area back to blank with one item
-	//write external function: create-list requires this functionality
 	$("#items-space").children(".item").remove();
 	create_item_row();
 	
@@ -227,7 +239,7 @@ function load_invoice_info(){
 	{	create_item_row();		}
 	
 	//uses the mapping to load data into the html elements.
-	invoice_detail_map(function(fieldData, id){
+	invoice_detail_map($('#invoice-detail'), function(fieldData, id){
 		var temp = id.split('.');
 		if(temp[0] === "item" && selected.inv.items.length > 0){
 			$(fieldData).val(selected.inv.items[temp[1]][temp[2]]);
@@ -241,8 +253,9 @@ function load_invoice_info(){
 			}
 			$(fieldData).val(selected.inv[id]);
 		}
-		
 	});
+	
+	item_total();
 }
 
 /* handles initiation of add-ons.
@@ -284,21 +297,50 @@ function fill_combobox($tar, val){	//really terrible implementation. :/
 		if(val == "First"){
 			$menu.children(':eq(0)').addClass('active');
 		}
-
    		$input.val('')
-    		$target.removeClass('combobox-selected')
+    	$target.removeClass('combobox-selected')
 	}
 	$menu.trigger('click');
 };
 
 /* handles back-end clearing of combobox objects
  * */
-function clear_combobox($tar){	//really terrible implementation. :/
+function clear_combobox($tar){	//does not work should use the above + ""
 	var $target = $tar.parent();
 	var $input = $target.find('.combobox');
 	var $btn = $target.find('.dropdown-toggle');
 	$btn.trigger('click');	//toggle the toggle
 };
+
+/* Sends off batch information to be saved into OSCAR database.
+ *  */
+function batch_save(contentID, batchInfo){
+	save_invoice_info();
+	$.ajax({
+		type: "POST",
+		dataType: "html",
+		url: "batch-save.jsp",
+		data:{
+			invoicesType: contentID,
+			invoicesData: JSON.stringify(invoices),
+			batchData: JSON.stringify(batchInfo)
+		}
+	}).done(function(msg){
+		alert(msg);
+		location.reload();
+	});
+}
+
+function item_total(){
+	var $totals = $('#invoice-items .item').find('#l_total');
+	var tot = 0;
+	$.each($totals, function(i, x){
+		if($(x).val() !== ""){
+			tot = parseFloat(tot) + parseFloat($(x).val());
+		}
+	});
+	$('#invoice-items #total')[0].innerHTML =  parseFloat(tot).toFixed(2);
+}
 
 // ************************************************************************* LEGACY CODE
 
@@ -338,10 +380,19 @@ function create_item_row (){
 	if(num_rows > 0){
 		var prev = $('#invoice-items .item :eq(' + (num_rows-1) +')');
 		from.val(prev.find('#from-date input').val());
+		dx.val(prev.find('#dx').val());
+		
 		// delete button on click
 		btn_del.click(function(){
+			var id = $(this).closest('.tablerow').attr('id').split('item')[1];
+			if(selected.inv.items.length >= id ){ //works on the assumption that the js object perfectly mimics the invoice. There is a chance it doesn't. We need to ensure that it does.
+				selected.inv.items.splice(id,1);
+			}
 			$(this).closest('.tablerow').remove();
-		})
+			$.each($('#invoice-items .item'), function(i, x){
+				$(x).attr('id', 'item'+i);
+			});
+		});
 	}else{
 		btn_del.remove();
 	}
@@ -376,11 +427,12 @@ function create_item_row (){
 			} else {
 				amount.val(row.prev().find('#amount').val());
 			}
-			units.val('1.0');
+			units.val('1');
 			percent.val(bscList[item].percent);
 			var amt = amount.val() * bscList[item].percent;
 			//if(contentID == '#hospital'){ amt = amt * days.val(); }
 			total.val(amt.toFixed(2));
+			item_total();
 			return item;
 		}
 	});
@@ -408,11 +460,12 @@ function create_item_row (){
 			} else {
 				amount.val(row.prev().find('#amount').val());
 			}
-			units.val('1.0');
+			units.val('1');
 			percent.val(bscList[item].percent);
 			var amt = amount.val() * bscList[item].percent;
 			//if(contentID == '#hospital'){ amt = amt * days.val(); }
 			total.val(amt.toFixed(2));
+			item_total();
 			return desc;
 		}
 	});
@@ -426,6 +479,7 @@ function create_item_row (){
 		var amt = amount.val() * percent.val()*units.val();
 		//if(contentID == '#hospital'){ amt = amt * days.val(); }
 		total.val(amt.toFixed(2));
+		item_total();
 	});
 
 	// datepicker 

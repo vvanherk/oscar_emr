@@ -184,10 +184,12 @@ String user_no = (String) session.getAttribute("user");
 		for(int i=0; i < spList.size(); i++){	
 			ProfessionalSpecialist curr = spList.get(i);
 			String pName = (curr.getProfessionalLetters() == null) ? "" : curr.getProfessionalLetters();
-			pName+= " " + curr.getLastName() + ", " + curr.getFirstName();
-			pSpecSelectionList += "<option value='"+ curr.getReferralNo() +"'>";
-			pSpecSelectionList += pName;
-			pSpecSelectionList += "</option>";	
+			if(curr.getReferralNo() != null){
+				pName+= " " + curr.getLastName() + ", " + curr.getFirstName();
+				pSpecSelectionList += "<option value='"+ curr.getReferralNo() +"'>";
+				pSpecSelectionList += pName;
+				pSpecSelectionList += "</option>";	
+			}
 		}
 
 		String sliCodeSelectionList = "<option value='0'> Not Applicable </option><option value='HDS'> HDS | Hospital Day Surgery </option><option value='HED'> HED | Hospital Emergency Department </option><option value='HIP'> HIP | Hospital In-Patient </option><option value='HOP'> HOP | Hospital Out-Patient </option><option value='HRP'> HRP | Hospital Referred Patient </option><option value='IHF'> IHF |Independant Health Facility </option><option value='OFF'> OFF | Office of community Physician </option><option value='OTRN'> OTN | Ontario Telemedicine Network </option>";

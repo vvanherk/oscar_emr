@@ -1,4 +1,10 @@
-<%@taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%><%@page import="java.util.List, java.util.Set, java.util.Collections, java.util.Comparator, java.util.Date, java.util.Calendar, java.text.SimpleDateFormat" %><%@page import="org.oscarehr.util.SpringUtils" %><%@ page import="org.oscarehr.common.dao.OscarAppointmentDao" %><%@ page import="org.oscarehr.common.model.Appointment"%><%@page import="org.oscarehr.common.dao.DemographicDao" %><%@page import="org.oscarehr.common.model.Demographic" %>
+<%@taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
+<%@page import="java.util.List, java.util.Set, java.util.Collections, java.util.Comparator, java.util.Date, java.util.Calendar, java.text.SimpleDateFormat" %>
+<%@page import="org.oscarehr.util.SpringUtils" %>
+<%@ page import="org.oscarehr.common.dao.OscarAppointmentDao" %>
+<%@ page import="org.oscarehr.common.model.Appointment"%>
+<%@page import="org.oscarehr.common.dao.DemographicDao" %>
+<%@page import="org.oscarehr.common.model.Demographic" %>
 <%
 OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
 DemographicDao demographicDao = (DemographicDao)SpringUtils.getBean("demographicDao");

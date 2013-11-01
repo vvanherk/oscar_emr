@@ -15,19 +15,16 @@ function demographic(jsonObj){
 function invoice(){
 	this.demo = "";
 
-	this.date = "";	//use for admission date as well
+	this.date = "";	//use for admission/service date as well
 	this.btype = "OHIP";
-//	this.start = "";
-//	this.end = "";
 	this.time = "";
 
 	this.status = "Ready";
 	this.rdoctor = "";
+	this.rdocNum = "";
 	this.sli_code = "";
 
 	this.items= new Array();
-
-//	this.description="";
 	this.manual="";
 	this.notes="";
 
