@@ -2547,6 +2547,9 @@
 
 		<action path="/providersListAjax" type="org.springframework.web.struts.DelegatingActionProxy" parameter="method" scope="request" validate="false">
 		</action>
+		
+		<action path="/oscarEncounter/eyeform/downloadIViews" type="oscar.oscarEncounter.util.IViewsDownloadFileAction">
+		</action>
 
 		<action path="/oscarEncounter/eyeform/downloadIViews" type="oscar.oscarEncounter.util.IViewsDownloadFileAction">
 		</action>

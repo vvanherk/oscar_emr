@@ -1851,6 +1851,10 @@ $(document).ready(function() {
 	});
 
 	
+	$(".iViewsBtn").click(function() {
+		window.open(ctx + "/oscarEncounter/eyeform/downloadIViews.do?demographicNo=" + demographicNo);
+	});
+	
 	$(".eChartBtn").click(function() {
 		window.open(ctx + "/oscarEncounter/IncomingEncounter.do?demographicNo=" + demographicNo + "&curProviderNo=&reason=Progress+Notes&encType=&curDate=&appointmentDate=&startTime=&status=", "width=1024,height=710");
 	});
