@@ -30,6 +30,7 @@
 <%@page import="org.oscarehr.PMmodule.caisi_integrator.ConformanceTestHelper"%>
 <%@page import="org.oscarehr.common.dao.DemographicExtDao" %>
 <%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%
@@ -1100,7 +1101,12 @@ if(wLReadonly.equals("")){
 
       			</td></tr>
       			</special:SpecialEncounterTag>
-      		</plugin:hideWhenCompExists>
+      		</plugin:hideWhenCompExists>      		
+      		<tr>
+				<td>
+				<a onclick="popupPage(500,900,'/oscar/eyeform/ConsultationReportList.do?method=list&cr.demographicNo=<%=demographic.getDemographicNo()%>&dmname=<%=StringEscapeUtils.escapeHtml(demographic.getFormattedName())%>'); return false;" href="#">Consulation Report</a>                                  
+				</td>
+			</tr>    		
 			<tr>
 				<td>
 				<%if( org.oscarehr.common.IsPropertiesOn.isTicklerPlusEnable() ) {%>

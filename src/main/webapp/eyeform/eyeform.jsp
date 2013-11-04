@@ -14,6 +14,7 @@
 <%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.util.LoggedInInfo, org.oscarehr.util.SpringUtils, oscar.OscarProperties, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment, org.oscarehr.util.MiscUtils, oscar.SxmlMisc, org.oscarehr.common.dao.ProfessionalSpecialistDao"  %>
 <%@ page import="org.oscarehr.PMmodule.model.Program" %>
 <%@ page import="org.oscarehr.PMmodule.dao.ProgramDao" %>
+<%@ page import="org.apache.commons.lang.StringEscapeUtils" %>
 <%
 String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
 OscarProperties properties = OscarProperties.getInstance();
@@ -123,6 +124,12 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				<span class="uiBarBtn"><span class="text addBtn" id="addProcedureBtn">+</span></span>
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
+		</div>		
+		<div class="smallBox boxTitleLink" id="iViews">
+			<div class="title">				
+				<!-- <a href="../oscarEncounter/eyeform/downloadIViews.do?demographicNo=<%=d.getDemographicNo()%>">I-views</a> -->
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
 		</div>
 		<div class="smallBox boxTitleLink" id="labResults">
 			<div class="title">
@@ -166,6 +173,12 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				Consultations
 				<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
 				<span class="uiBarBtn"><span class="text addBtn" id="addConsultationBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>		
+		<div class="smallBox boxTitleLink" id="consulationReport">
+			<div class="title">				
+				<!-- <a onclick="popupPage(500,900,'/oscar/eyeform/ConsultationReportList.do?method=list&cr.demographicNo=<%=d.getDemographicNo()%>&dmname=<%=StringEscapeUtils.escapeHtml(d.getFormattedName())%>'); return false;" href="#">Consulation Report</a> -->
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
