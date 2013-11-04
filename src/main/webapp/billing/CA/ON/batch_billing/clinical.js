@@ -17,6 +17,10 @@ $("#b_provider_val").on('change', function(){
 	}*/
 });
 
+$("#b_provider_val").on('blur', function(){
+	$('#provider').focus();
+});
+
 $("#create-list").on('click', function(){	//Creates list based off appointments
 	
 	$('#invList_body tbody').children().remove();	//ensures the table does not concatenate

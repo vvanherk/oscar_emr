@@ -204,7 +204,7 @@ function save_invoice_info(){
 			selected.inv.items[temp[1]][temp[2]] = $(fieldData).val();
 		}
 		else{
-			if(id === "manual" ){	//check if manual should be checked or not. Buggy.
+			if(id === "manual" ){	//check if manual should be checked or not. Buggy. Should be in load invoice??
 				if($(fieldData).val() !== ''){
 					$("#manualCHK").prop("checked", false);
 				} else{
