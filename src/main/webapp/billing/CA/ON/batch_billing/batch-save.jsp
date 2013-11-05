@@ -74,7 +74,11 @@
 		newInvoice.setBilling_date(new SimpleDateFormat("yyyy/MM/dd").parse(batch.optString("billDate")));
 		newInvoice.setBilling_time(new SimpleDateFormat("HH:mm:ss").parse(batch.optString("billTime")));
 		newInvoice.setDemographic_name(demographic.getFormattedName());
-		newInvoice.setStatus("O");
+		if(newInvoiceData.optString("status").equals("Ready")){
+			newInvoice.setStatus("O");
+		} else if(newInvoiceData.optString("status").equals("Hold")){
+			newInvoice.setStatus("Z");								//new Status Code! HATE ME
+		}
 		newInvoice.setRef_num(newInvoiceData.optString("rdocNum"));
 		newInvoice.setComment1(newInvoiceData.optString("notes"));
 		newInvoice.setMan_review( (!newInvoiceData.optString("manual").equals("") ? "Y" : "") );
