@@ -197,7 +197,8 @@ String user_no = (String) session.getAttribute("user");
 	%>
 	$(function(){
 		var address = window.location + '';
-		var contentID = '#' + address.split('#')[1];
+		var contentID = '#' + address.split('#')[1]; // drops everything before #
+		
 		
 		$('#billingNav').tab();
 		$('#billingNav').bind("click", function(e){
@@ -208,16 +209,19 @@ String user_no = (String) session.getAttribute("user");
 			
 		});
 		
-		$(contentID).load("forms.jsp " + contentID,{ 
-			'providers': "<%=providerSelectionList%>",
-			'locations': "<%=clinicSelectionList%>",
-			'superCodes': "<%= superCodeSelectionList %>",
-			'rDoctors' : "<%= pSpecSelectionList %>",
-			'sliCodes' : "<%= sliCodeSelectionList %>"
-		},	function(){
-			$.getScript(contentID.slice(1) +".js");
-			
-		});
+		if(contentID === "#workbench"){
+			$(contentID).load("wbforms.jsp");
+		} else {
+			$(contentID).load("forms.jsp " + contentID,{ 
+				'providers': "<%=providerSelectionList%>",
+				'locations': "<%=clinicSelectionList%>",
+				'superCodes': "<%= superCodeSelectionList %>",
+				'rDoctors' : "<%= pSpecSelectionList %>",
+				'sliCodes' : "<%= sliCodeSelectionList %>"
+			},	function(){
+				$.getScript(contentID.slice(1) +".js");
+			});
+		}
 		
 		$('#billingNav a[href="'+ contentID + '"]').tab("show");
 	});
@@ -241,10 +245,11 @@ String user_no = (String) session.getAttribute("user");
 	<h3 align="center"> Oscar Billing </h3>	
 	<div class="tabbable">
 		<ul class="nav nav-tabs" id="billingNav">
-			<li><a href="#clinical" data-toggle="tab" data-url="forms.jsp #clinical">Clinical</a></li>
-			<li><a href="#offsite" data-toggle="tab" data-url="forms.jsp #offsite">Off-site</a></li>
-			<li><a href="#hospital" data-toggle="tab" data-url="forms.jsp #hospital">Hospital</a></li>
-			<li><a href="#register" data-toggle="tab" data-url="forms.jsp #register">Cash Register</a></li>
+			<li><a href="#clinical" data-toggle="tab">Clinical</a></li>
+			<li><a href="#offsite" data-toggle="tab">Off-site</a></li>
+			<li><a href="#hospital" data-toggle="tab">Hospital</a></li>
+			<li><a href="#workbench" data-toggle="tab">OHIP Workbench</a></li>
+			<li><a href="#register" data-toggle="tab">Cash Register</a></li>
 			<li><a href="#settings" data-toggle="tab">Settings</a></li>
 		</ul>
 		
@@ -252,6 +257,7 @@ String user_no = (String) session.getAttribute("user");
 			<div class="tab-pane" id="clinical"></div>
 			<div class="tab-pane" id="offsite"></div>
 			<div class="tab-pane" id="hospital"></div>
+			<div class="tab-pane" id="workbench"></div>
 			<div class="tab-pane" id="register"></div>
 		  	<div class="tab-pane" id="settings"></div>
 		</div>
