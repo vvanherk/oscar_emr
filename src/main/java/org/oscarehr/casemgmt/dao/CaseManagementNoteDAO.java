@@ -427,11 +427,15 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 	}
 
 	public void saveNote(CaseManagementNote note) {
-		if (note.getUuid() == null) {
-			UUID uuid = UUID.randomUUID();
-			note.setUuid(uuid.toString());
+		if (note.getId() != null) {
+			updateNote(note);
+		} else {
+			if (note.getUuid() == null) {
+				UUID uuid = UUID.randomUUID();
+				note.setUuid(uuid.toString());
+			}
+			this.getHibernateTemplate().save(note);
 		}
-		this.getHibernateTemplate().save(note);
 	}
 
 	public Object saveAndReturn(CaseManagementNote note) {
