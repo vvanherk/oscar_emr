@@ -123,7 +123,8 @@ var BoxIssueUrls = {
 		"tickler": ctx + "/oscarEncounter/displayTickler.do",
 		"billing": ctx + "/oscarEncounter/displayBilling.do",
 		"ocularMeds": ctx + "/oscarEncounter/displayRx.do",
-		"allergies": ctx + "/oscarEncounter/displayAllergy.do"
+		"allergies": ctx + "/oscarEncounter/displayAllergy.do",
+		"consultationReport": ctx + "/oscarEncounter/displayConReport.do?appointment_no=" + appointmentNo
 };
 
 var cmds = {
@@ -137,7 +138,8 @@ var cmds = {
 		"tickler": "tickler",
 		"billing": "Billing",
 		"ocularMeds": "Rx",
-		"allergies": "allergies"
+		"allergies": "allergies",
+		"consultationReport": "conReport"
 };
 
 var noteBoxes = {
@@ -730,6 +732,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 
 		if (boxNameId == "labResults" || boxNameId == "diagrams" || boxNameId == "documents"
 			|| boxNameId == "billing" || boxNameId == "tickler" || boxNameId == "consultations"
+			|| boxNameId == "consultationReport"
 				|| boxNameId == "ocularMeds" || boxNameId == "allergies" || boxNameId == "macro") {
 			$("#" + boxNameId + " .title").click((function (action) {
 				return function(e) {
