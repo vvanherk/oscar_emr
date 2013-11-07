@@ -326,7 +326,7 @@ function batch_save(contentID, batchInfo){
 			batchData: JSON.stringify(batchInfo)
 		}
 	}).done(function(msg){
-		alert(msg);
+		alert(msg.trim());
 		location.reload();
 	});
 }

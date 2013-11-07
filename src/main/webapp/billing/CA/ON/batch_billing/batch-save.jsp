@@ -1,13 +1,8 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@page import="java.util.List, java.util.Set, java.util.Collections, java.util.Comparator, java.util.Date, java.util.Calendar, java.text.SimpleDateFormat, java.util.HashSet, java.util.ArrayList" %>
 <%@page import="javax.validation.Validator, javax.validation.Validation, javax.validation.ValidationException, javax.validation.ConstraintViolation, javax.validation.ConstraintViolationException" %>
-
-<%@page import="net.sf.json.JSONArray" %>
-<%@page import="net.sf.json.JSONObject" %>
-<%@page import="net.sf.json.JSONSerializer" %>
-
-<%@page import="oscar.OscarProperties" %>
-<%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="net.sf.json.JSONArray, net.sf.json.JSONObject, net.sf.json.JSONSerializer" %>
+<%@page import="oscar.OscarProperties, org.oscarehr.util.SpringUtils" %>
 
 <%@page import="org.oscarehr.common.dao.OscarAppointmentDao" %>
 <%@page import="org.oscarehr.common.model.Appointment"%>
@@ -40,11 +35,16 @@
 	Provider provider = providerDao.getProvider(batch.optString("b_provider"));
 	
 	for(int i = 0; i < invoices.size(); i++){
+		
 		Date service_date = new SimpleDateFormat("yyyy/MM/dd").parse(batch.optString("billDate"));
+		
 		JSONObject newInvoiceData = invoices.getJSONObject(i);
 		JSONArray newInvItemsData = newInvoiceData.getJSONArray("items");
 		
 		String curuser = (String) session.getAttribute("user");
+		String sli = newInvoiceData.optString("sli_code").trim();
+		
+		sli = sli.equals("") ? "Not" : sli.substring(0,3);
 		 
 		Demographic demographic;
 		BillingClaimHeader1 newInvoice = new BillingClaimHeader1();
@@ -66,6 +66,17 @@
 			demographic = demographicDao.getDemographic(jsonDemo.optString("id"));
 
 			if(invType.equals("hospital")){
+				if(sli.equals("HOP")){
+					newInvoice.setVisittype("01");
+				} else if (sli.equals("HED") ){
+					newInvoice.setVisittype("03");
+				} else {
+					newInvoice.setVisittype("02");
+				}
+				//newInvoice.setAdmission_date();					//only hospital inpatient, not ER or outpatient
+			}
+			 else if(invType.equals("offsite")){
+				newInvoice.setVisittype("05");
 				//newInvoice.setAdmission_date();					//only hospital inpatient, not ER or outpatient
 			}
 		}
@@ -91,7 +102,11 @@
 		newInvoice.setVer(demographic.getVer());
 		newInvoice.setDob(demographic.getYearOfBirth() +""+ demographic.getMonthOfBirth() +""+ demographic.getDateOfBirth());
 		newInvoice.setFacilty_num(batch.optString("location"));
-		//newInvoice.setLocation("3821"); 			// potentially for multisite
+		if(sli.equals("Not") || sli.equals("")){
+			newInvoice.setLocation("3821"); 
+		} else {
+			newInvoice.setLocation(sli);
+		}
 		newInvoice.setSex(demographic.getSex());
 		newInvoice.setProvince(demographic.getHcType());
 		newInvoice.setProvider_ohip_no(provider.getOhipNo());
@@ -128,9 +143,7 @@
 				MiscUtils.getLogger().error("Error while creating/updating bill:", e);
 		}
 	}
- %>
- Billing Saved
-<%!
+ %> Billing Saved <%!
 /*
 void validate(BillingClaimHeader1 newBill, BillingServiceDao billingServiceDao, DiagnosticCodeDao diagnosticCodeDao) throws ValidationException, ConstraintViolationException {
     // Validate

@@ -30,8 +30,8 @@ $('#save-batch').click( function(){
 	var batch = {};
 	batch["b_provider"] = $("#b_provider_val").val();
 	batch["provider"] = $("#provider_val").val();
-	batch["billDate"] = today.getFullYear() + "/" + today.getMonth()+1 + "/" + today.getDate();
-	batch["billTime"] = today.getHours() + ":" + today.getMinutes()+1 + ":" + today.getSeconds();
+	batch["billDate"] = today.getFullYear() + "/" + (today.getMonth()+1) + "/" + today.getDate();
+	batch["billTime"] = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 	batch["location"] = $("#location_val").val();
 	
 	batch_save("offsite", batch); //hoping contentID is universal

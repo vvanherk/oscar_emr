@@ -95,7 +95,7 @@ String user_no = (String) session.getAttribute("user");
 	<link rel="stylesheet" href="add-ons.css"/>
 	<link rel="stylesheet" href="main.css"/>
 		
-        <title>Billing Bootstrapped</title>
+        <title>OSCAR Billing</title>
 
     	<script type="text/javascript" src="js/jquery-1.9.1.js"></script>
         <script type="text/javascript" src="js/bootstrap.js"></script>
@@ -210,7 +210,7 @@ String user_no = (String) session.getAttribute("user");
 		});
 		
 		if(contentID === "#workbench"){
-			$(contentID).load("wbforms.jsp");
+			$(contentID).load("wbforms.jsp #main");
 		} else {
 			$(contentID).load("forms.jsp " + contentID,{ 
 				'providers': "<%=providerSelectionList%>",
@@ -242,7 +242,7 @@ String user_no = (String) session.getAttribute("user");
     		<button type="button" class="close" data-dismiss="alert">&times;</button>
    			<strong>Success!</strong><span id='text-here'></span>
     	</div>
-	<h3 align="center"> Oscar Billing </h3>	
+	<h3 align="center"> OSCAR Billing </h3>	
 	<div class="tabbable">
 		<ul class="nav nav-tabs" id="billingNav">
 			<li><a href="#clinical" data-toggle="tab">Clinical</a></li>

@@ -15,6 +15,7 @@ for(int i=0; i < demoList.size(); i++){
 	String hin = !demo.getHin().equals("") ? demo.getHin() : "HIN not Set";
 
 	String rdoc = "0";
+	String rdocno = "0";
 	String family_doctor= demo.getFamilyDoctor();
 	String rdoc_xmlparse = "<rd>";
 	String rdocno_xmlparse = "<rdohip>";
@@ -30,7 +31,7 @@ for(int i=0; i < demoList.size(); i++){
 	 "dob" : "<%= demo.getBirthDayAsString() %>", 
 	 "health_card":"<%= hin %>",
 	 "rdoctor": "<%= rdoc %>",
-	 "rdocNum": "<%= rdocno %>";
+	 "rdocNum": "<%= rdocno %>",
 	 "gender": "<%= demo.getSex() %>" 
 	}<%	if( i + 1 < demoList.size() ){ %>, <% }
 }
