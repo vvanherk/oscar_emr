@@ -698,6 +698,8 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 			$("#procedures .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"displayProcedure('" + item.value + "', this)\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
 		} else if (boxNameId == "billing") {
 			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
+		} else if (boxNameId == "macro") {
+			$("#" + boxNameId + " .content ul").prepend("<li><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\">" + item.title + "</span></li>");
 		} else {
 			if (item.PDF)
 				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"popupPage(800, 1000, '', '" + item.URL + "')\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
@@ -705,14 +707,14 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 				var dateString = date.toFormattedString();
 				if (dateString == "Unspecified")
 					dateString = "";
-				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + dateString + "</strong> " + item.title + "</span></li>");
+				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + itemTime + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + dateString + "</strong> " + item.title + "</span></li>");
 			}
 		}
 	}
 
 	if ($("#" + boxNameId + " .content ul li").length > 5 && !showAll) {
 		$("#" + boxNameId + " .content ul li").slice(5).attr("class", "oldEntry");
-
+		
 		var showMoreBtn = $("<span class='showAllBtn uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
 			e.stopPropagation();
 			$(this).parent().find("li").removeClass("oldEntry");
@@ -2431,7 +2433,12 @@ $(document).ready(function() {
 		var appointmentListItemCallback = function(e) {
 			e.stopPropagation();
 
-			$(".showAllBtn").remove();
+			$(".showAllBtn").each(function() {
+				// Remove all 'show all' buttons except the one for macros
+				$this = $(this);
+				if (!$this.closest("#macro").length)
+					$this.remove();
+			});
 
 			$("[itemtime]").show();
 
