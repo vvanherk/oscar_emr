@@ -330,6 +330,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 					<ul></ul>
 				</div>
 			</div>
+
 			-->
 		</div>		
 		
@@ -342,7 +343,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 		</div>
 		
-		<div class="wideBox" id="impressionHistory">
+		<div class="wideBox tallWideBox" id="impressionHistory">
 			<div class="title">
 				Impression History
 			</div>
