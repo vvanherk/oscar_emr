@@ -40,21 +40,21 @@ for(int i=0; i < appList.size(); i++){
 %>
 	{ "demo": 
 		{"id": "<%= apmt.getDemographicNo() %>",
-		 "name": "<%= demo.getDisplayName() %>",
+		 "name": "<%= demo.getDisplayName().trim() %>",
 		 "dob" : "<%= demo.getBirthDayAsString() %>", 
 		 "health_card":"<%= hin %>",
 		 "gender": "<%= demo.getSex() %>" },
 	   "id": <%= apmt.getId() %>,
 	   "time": "<%= apmt.getStartTime() %>",
 	   "date": "<%= apmt.getAppointmentDate() %>",
-	   "description": "<%= desc %>",
+	   "description": "<%= desc.trim() %>",
 	   "status" : "Ready",
 	   "rdoctor": "<%= rdoc %>",
 	   "sli_code":"",
 	   "dx_codes": [],
 	   "items":[],
 	   "manual":"",
-	   "notes":"<%= apmt.getNotes() %>",
+	   "notes":"<%= apmt.getNotes().trim() %>",
 	   "inv_amount":"0.00"
 	 }<%	if( i + 1 < appList.size() ){ %>, <% }
 }
