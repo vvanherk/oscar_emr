@@ -697,7 +697,7 @@ public class JdbcBillingRAImpl {
 		
 		List ret = new Vector();
 		String sql = "select billing_no, service_count, error_code, amountclaim, service_code,service_date, "
-				+ "providerohip_no, amountpay, hin from radetail where raheader_no= " + id + " and providerohip_no ="
+				+ "providerohip_no, amountpay, hin, claim_no from radetail where raheader_no= " + id + " and providerohip_no ="
 				+ providerOhipNo + providerGroupBillingConditional;
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
 		try {
@@ -709,15 +709,14 @@ public class JdbcBillingRAImpl {
 				String demo_hin = rsdemo.getString("hin") != null ? rsdemo.getString("hin") : "";
 				demo_hin = demo_hin.trim();
 				String site = "";
+				String famProviderNo =null;
 				sql = "select b.provider_no, b.demographic_name, b.hin, b.billing_date, b.billing_time, b.visittype,d.provider_no as fdoc, b.clinic as site "
-						+ "from billing_on_cheader1 b, demographic d where b.id= " + account+ " and b.demographic_no = d.demographic_no";
-
+					+ "from billing_on_cheader1 b, demographic d where b.id= " + account+ " and b.demographic_no = d.demographic_no";
 				ResultSet rsdemo3 = dbObj.searchDBRecord(sql);
-                                String famProviderNo =null;
 				while (rsdemo3.next()) {
 					demo_name = rsdemo3.getString("demographic_name");
-                                        famProviderNo = rsdemo3.getString("fdoc");
-                                        site = rsdemo3.getString("site");
+										famProviderNo = rsdemo3.getString("fdoc");
+										site = rsdemo3.getString("site");
 					if (rsdemo3.getString("hin") != null) {
 						if (!(rsdemo3.getString("hin")).startsWith(demo_hin)) {
 							demo_hin = "";
@@ -764,7 +763,7 @@ public class JdbcBillingRAImpl {
 			}
 			rsdemo.close();
 		} catch (SQLException e) {
-			_logger.error("getRASummary(sql = " + sql + ")");
+			_logger.error("getRASummary(sql = " + sql + ")", e);
 		}
 		return ret;
 	}
