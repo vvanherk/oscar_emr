@@ -121,6 +121,7 @@ var BoxIssueUrls = {
 		"documents": ctx + "/oscarEncounter/displayDocuments.do",
 		"diagrams": ctx + "/oscarEncounter/displayDiagrams.do?appointment_no=" + appointmentNo,
 		"tickler": ctx + "/oscarEncounter/displayTickler.do",
+		"messages": ctx + "/oscarEncounter/displayMessages.do",
 		"billing": ctx + "/oscarEncounter/displayBilling.do",
 		"ocularMeds": ctx + "/oscarEncounter/displayRx.do",
 		"allergies": ctx + "/oscarEncounter/displayAllergy.do",
@@ -136,6 +137,7 @@ var cmds = {
 		"documents": "docs",
 		"diagrams": "diagrams",
 		"tickler": "tickler",
+		"messages": "msgs",
 		"billing": "Billing",
 		"ocularMeds": "Rx",
 		"allergies": "allergies",
@@ -692,6 +694,8 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 
 		if (boxNameId == "tickler") {
 			$("#tickler .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"displayTickler('" + item.value + "', this)\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
+		} else if (boxNameId == "messages") {
+			$("#messages .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
 		} else if (boxNameId == "specsHistory") {
 			$("#specsHistory .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"displaySpecs('" + item.value + "', this)\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
 		} else if (boxNameId == "procedures") {
@@ -734,7 +738,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 
 		if (boxNameId == "labResults" || boxNameId == "diagrams" || boxNameId == "documents"
 			|| boxNameId == "billing" || boxNameId == "tickler" || boxNameId == "consultations"
-			|| boxNameId == "consultationReport"
+			|| boxNameId == "consultationReport" || boxNameId == "messages"
 				|| boxNameId == "ocularMeds" || boxNameId == "allergies" || boxNameId == "macro") {
 			$("#" + boxNameId + " .title").click((function (action) {
 				return function(e) {
