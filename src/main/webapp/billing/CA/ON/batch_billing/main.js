@@ -342,6 +342,17 @@ function item_total(){
 	$('#invoice-items #total')[0].innerHTML =  parseFloat(tot).toFixed(2);
 }
 
+function item_batchTotal(){
+	var $totals = $('#invList_body tbody tr td.amount');
+	var total = 0;	
+	$.each($totals, function(i, x){
+		if($(x).html() !== ""){
+			total = parseFloat(total) + parseFloat($(x).html());
+		}
+	});
+	$('#batch-total-amt').val(parseFloat(total).toFixed(2));
+}
+
 // ************************************************************************* LEGACY CODE
 
 function create_item_row (){
