@@ -204,14 +204,6 @@ function save_invoice_info(){
 			selected.inv.items[temp[1]][temp[2]] = $(fieldData).val();
 		}
 		else{
-			if(id === "manual" ){	//check if manual should be checked or not. Buggy. Should be in load invoice??
-				if($(fieldData).val() !== ''){
-					$("#manualCHK").prop("checked", false);
-				} else{
-					$("#manualCHK").prop("checked", true);
-				}
-				$("#manualCHK").change();
-			}
 			selected.inv[id] = $(fieldData).val();
 		}
 		$(fieldData).val("");
@@ -249,9 +241,23 @@ function load_invoice_info(){
 		}
 		else{ 
 			if($(fieldData).hasClass('combobox')){
-				fill_combobox($(fieldData), selected.inv[id]);
+				if($(fieldData).val() === ''){
+					fill_combobox($(fieldData),"First");
+				} else {
+					fill_combobox($(fieldData), selected.inv[id]);
+				}
 			}
-			$(fieldData).val(selected.inv[id]);
+			else{
+				if(id === "manual" ){	//check if manual should be checked or not. Buggy. Should be in load invoice??
+					if($(fieldData).val() !== ''){
+						$("#manualCHK").prop("checked", true);
+					} else{
+						$("#manualCHK").prop("checked", false);
+					}
+					$("#manualCHK").change();
+				}
+				$(fieldData).val(selected.inv[id]);
+			}
 		}
 	});
 	

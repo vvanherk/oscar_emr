@@ -85,7 +85,7 @@ $('#next_patient').on('click', function(){
 $('#prev_patient').on('click', function(){
 	var prev = parseInt(selected.id) + 1; 
 	if(prev > $('#invList_body tbody tr').length-1){ 
-		insert_invoice(new invoice);
+		insert_invoice(new invoice());
 	}
 	set_selected(prev);
 });
