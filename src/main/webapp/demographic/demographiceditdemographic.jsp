@@ -1101,11 +1101,16 @@ if(wLReadonly.equals("")){
 
       			</td></tr>
       			</special:SpecialEncounterTag>
-      		</plugin:hideWhenCompExists>      		
+      		</plugin:hideWhenCompExists>  
+      		<%
+      		String appNo = "";
+      		if (appointment != null && !appointment.equalsIgnoreCase("null"))
+				appNo = appointment;
+      		%>    		
       		<tr>
 				<td>
 					<a onclick="popupPage(500,900,'<%=request.getContextPath()%>/eyeform/ConsultationReportList.do?method=list&cr.demographicNo=<%=demographic.getDemographicNo()%>&dmname=<%=StringEscapeUtils.escapeHtml(demographic.getFormattedName())%>'); return false;" href="#">Consulation Report</a>
-					<a style="text-decoration: none;" onclick="popupPage(700,1000,'<%=request.getContextPath()%>/eyeform/Eyeform.do?method=prepareConReport&demographicNo=<%=demographic.getDemographicNo()%>&appNo=<%=appointment%>&flag=new&cpp='); return false;" href="javascript:void(0);">+</a>
+					<a style="text-decoration: none;" onclick="popupPage(700,1000,'<%=request.getContextPath()%>/eyeform/Eyeform.do?method=prepareConReport&demographicNo=<%=demographic.getDemographicNo()%>&appNo=<%=appNo%>&flag=new&cpp='); return false;" href="javascript:void(0);">+</a>
 				</td>
 			</tr>
 			<tr>
