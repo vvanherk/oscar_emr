@@ -109,7 +109,15 @@ public class BillingCorrectionPrep {
 			ch1Obj.setCreator((String) requestData.getSession().getAttribute(
 					"user"));
 			
-			ch1Obj.setClinic(requestData.getParameter("site"));
+			Integer siteNo = null;
+			if (requestData.getParameter("site") != null) {
+				try {
+					siteNo = Integer.parseInt( requestData.getParameter("site") );
+				} catch (Exception e) {
+					_logger.error("Unable to parse site number.", e);
+				}
+			}
+			ch1Obj.setSite(siteNo);
 			
 			ch1Obj.setProvince(requestData.getParameter("hc_type"));
 			
@@ -299,6 +307,11 @@ public class BillingCorrectionPrep {
 				request.getParameter("provider_no")))
 			MiscUtils.getLogger().debug("getProvider_no");
 
+		Integer siteNo = existObj.getSite();
+		String siteNoAsString = null;
+		if (siteNo != null)
+			siteNoAsString = siteNo.toString();
+
 		if (!existObj.getStatus().equals(
 				request.getParameter("status").substring(0, 1))
 				|| !existObj.getPay_program().equals(
@@ -320,7 +333,7 @@ public class BillingCorrectionPrep {
 						request.getParameter("provider_no"))
 				|| !existObj.getLocation().equals(
 						request.getParameter("xml_slicode"))
-				|| !StringUtils.nullSafeEquals(existObj.getClinic(), request.getParameter("site"))
+				|| !StringUtils.nullSafeEquals(siteNoAsString, request.getParameter("site"))
                                 || !existObj.getProvince().equals(
 						request.getParameter("hc_type"))) {
 			ret = true;

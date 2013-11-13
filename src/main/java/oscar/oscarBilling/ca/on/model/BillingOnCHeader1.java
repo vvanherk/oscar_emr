@@ -67,7 +67,7 @@ public class BillingOnCHeader1 implements Serializable {
     private String asstProvider_no;
     private String creator;
     private Timestamp timestamp1;
-    private String clinic;
+    private String site;
 
     public Integer getId() {
         return this.id;
@@ -171,8 +171,8 @@ public class BillingOnCHeader1 implements Serializable {
     public Timestamp getTimestamp1() {
         return this.timestamp1;
     }
-    public String getClinic() {
-        return this.clinic;
+    public String getSite() {
+        return this.site;
     }
 
     public void setId(Integer i) {
@@ -277,7 +277,7 @@ public class BillingOnCHeader1 implements Serializable {
     public void setTimestamp1(Timestamp t) {
         this.timestamp1 = t;
     }
-    public void setClinic(String s) {
-        this.clinic = s;
+    public void setSite(String s) {
+        this.site = s;
     }
 }

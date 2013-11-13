@@ -30,6 +30,7 @@ import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Properties;
+import java.lang.Exception;
 
 import org.apache.log4j.Logger;
 import org.oscarehr.common.dao.BillingServiceDao;
@@ -103,8 +104,8 @@ public class JdbcBillingCreateBillingFile {
 	private java.util.Date today;
 	private String totalAmount;
 	private String value;
-	private String clinicBgColor;
-	private HashMap<String,String> clinicShortName;
+	private String siteBgColor;
+	private HashMap<Integer,String> siteShortName;
 	private boolean summaryView;
 	
 	public JdbcBillingCreateBillingFile() {
@@ -113,11 +114,11 @@ public class JdbcBillingCreateBillingFile {
 		output = formatter.format(today);
 		
 		//multisite, get site short name
-		clinicShortName = new HashMap<String,String>();
+		siteShortName = new HashMap<Integer,String>();
 		SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
 		List<Site> sites = siteDao.getAllSites();
 		for (Site s : sites) {
-			clinicShortName.put(s.getName(), s.getShortName());
+			siteShortName.put(s.getId(), s.getShortName());
 		}
 	}
 
@@ -291,7 +292,13 @@ public class JdbcBillingCreateBillingFile {
 
 	private String buildSiteHTMLContentRecord(int invCount) {
 		String ret = null;
-		if (invCount == 0) {
+		String siteDisplayName = "";
+			
+		if (ch1Obj.getSite() != null) {
+			siteDisplayName = siteShortName.get( ch1Obj.getSite() );
+		}
+		
+		if (invCount == 0) {			
 			ret = "\n<tr><td class='myIvory'>" + ch1Obj.getId()	+ "</td>"
 					+ "<td class='myIvory'>" + ch1Obj.getDemographic_name() + "</td>"
 					+ "<td class='myIvory'>"
@@ -305,14 +312,14 @@ public class JdbcBillingCreateBillingFile {
 					+ "</td><td align='right' class='myIvory'>"
 					+ itemObj.getDx()
 					+ "</td><td class='myIvory'> &nbsp; &nbsp;" + referral + hcFlag + m_Flag + " </td>" 
-					+ "<td bgcolor='" + clinicBgColor + "'> " + clinicShortName.get(ch1Obj.getClinic()) + "</td></tr>";
+					+ "<td bgcolor='" + siteBgColor + "'> " + siteDisplayName + "</td></tr>";
 		} else {
 			ret = "\n<tr><td class='myIvory'>&nbsp;</td> <td class='myIvory'>&nbsp;</td>"
 					+ "<td class='myIvory'>&nbsp;</td> <td class='myIvory'>&nbsp;</td>" + "<td class='myIvory'>"
 					+ itemObj.getService_code() + "</td><td align='right' class='myIvory'>" + itemObj.getFee()
 					+ "</td><td align='right' class='myIvory'>" + itemObj.getDx()
 					+ "</td><td class='myIvory'>&nbsp;</td>" 
-					+ "<td bgcolor='" + clinicBgColor + "'> " + clinicShortName.get(ch1Obj.getClinic()) + "</td></tr>";
+					+ "<td bgcolor='" + siteBgColor + "'> " + siteDisplayName + "</td></tr>";
 		}
 		return ret;
 	}
@@ -576,7 +583,15 @@ public class JdbcBillingCreateBillingFile {
 				ch1Obj.setAsstProvider_no(rs.getString("asstProvider_no"));
 				ch1Obj.setCreator(rs.getString("creator"));
 				
-				ch1Obj.setClinic(rs.getString("clinic"));
+				Integer siteNo = null;
+				if (rs.getString("site") != null) {
+					try {
+						siteNo = Integer.parseInt( rs.getString("site") );
+					} catch (Exception e) {
+						_logger.error("Unable to parse site number.", e);
+					}
+				}
+				ch1Obj.setSite(siteNo);
 
 				// invNo = rs.getString("id");
 				// ohipVer = rs.getString("organization_spec_code");
@@ -704,7 +719,7 @@ public class JdbcBillingCreateBillingFile {
 		}
 	}
 
-	public void createSiteBillingFileStr(String bid, String status) {
+	public void createSiteBillingFileStr(String bid, String status) throws Exception {
 		
 		SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
 		
@@ -773,15 +788,28 @@ public class JdbcBillingCreateBillingFile {
 				ch1Obj.setAsstProvider_no(rs.getString("asstProvider_no"));
 				ch1Obj.setCreator(rs.getString("creator"));
 				
-				ch1Obj.setClinic(rs.getString("clinic"));
-				if (ch1Obj.getClinic() == null || ch1Obj.getClinic().equalsIgnoreCase("null")) {
-					ch1Obj.setClinic("");
-					clinicBgColor = "FFFFFF";
+				Integer siteNo = null;
+				if (rs.getString("site") != null) {
+					try {
+						siteNo = Integer.parseInt( rs.getString("site") );
+					} catch (Exception e) {
+						_logger.error("Unable to parse site number.", e);
+						throw new Exception("Unable to parse site number.");
+					}
 				}
-				else {
-					clinicBgColor = siteDao.getByLocation(ch1Obj.getClinic()).getBgColor();
-					clinicBgColor = (clinicBgColor == null || clinicBgColor.equalsIgnoreCase("null") ? "FFFFFF" : clinicBgColor);
+				ch1Obj.setSite(siteNo);
+				
+				
+				siteBgColor = null;
+				Site s = siteDao.getById( ch1Obj.getSite() );
+				if (s != null) {
+					siteBgColor = s.getBgColor();
+				} else {
+					throw new Exception("Unable to find Site with site number '" + siteNo.toString() + "'.");
 				}
+				
+				siteBgColor = (siteBgColor == null || siteBgColor.equalsIgnoreCase("null") ? "FFFFFF" : siteBgColor);
+				
 				
 				// invNo = rs.getString("id");
 				// ohipVer = rs.getString("organization_spec_code");

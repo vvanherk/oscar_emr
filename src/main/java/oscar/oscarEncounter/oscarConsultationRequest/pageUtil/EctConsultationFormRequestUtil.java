@@ -43,8 +43,6 @@ public class EctConsultationFormRequestUtil {
 
 	private ConsultationServiceDao consultationServiceDao = (ConsultationServiceDao)SpringUtils.getBean("consultationServiceDao");
 
-	private boolean bMultisites=org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
-
     public boolean estPatient(String demo) {
 
         demoNo = demo;
@@ -218,9 +216,12 @@ public class EctConsultationFormRequestUtil {
                 }
                 estPatient(oscar.Misc.getString(rs, "demographicNo"));
 
-                if (bMultisites) {
-                	siteName = oscar.Misc.getString(rs, "site_name");
-                }
+               	String siteNoAsString = oscar.Misc.getString(rs, "site_no");
+               	try {
+					siteNo = Integer.parseInt( siteNoAsString );
+				} catch (Exception e) {
+					MiscUtils.getLogger().error("Unable to parse site number.", e);
+				}
 
                 String date = oscar.Misc.getString(rs, "appointmentDate");
                 if( date == null || date.equals("") ) {
@@ -437,7 +438,7 @@ public class EctConsultationFormRequestUtil {
     public String demoNo;
     public String pwb;
     public String mrp = "";
-    public String siteName;
+    public Integer siteNo;
     public String signatureImg;
     
     public String letterheadName;

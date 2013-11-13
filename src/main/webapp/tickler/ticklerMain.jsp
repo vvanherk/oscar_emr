@@ -516,10 +516,10 @@ var beginD = "1900-01-01"
 
           <!-- -->
           &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<font face="Verdana, Arial, Helvetica, sans-serif" size="2" color="#333333"><b><bean:message key="tickler.ticklerMain.msgAssignedTo"/></b></font>
-<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable())
-{ // multisite start ==========================================
-        	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-          	List<Site> sites = siteDao.getActiveSitesByProviderNo(user_no);
+
+	<%
+       	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+       	List<Site> sites = siteDao.getActiveSitesByProviderNo(user_no);
       %>
       <script>
 var _providers = [];
@@ -548,19 +548,8 @@ function changeSite(sel) {
      	changeSite(document.getElementById("site"));
       	document.getElementById("assignedTo").value='<%=request.getParameter("assignedTo")%>';
       	</script>
-<% } // multisite end ==========================================
-} else {
-%>
-        <select id="assignedTo" name="assignedTo">
-        <option value="all" <%=assignedTo.equals("all")?"selected":""%>><bean:message key="tickler.ticklerMain.formAllProviders"/></option>
-        <%
-            List<Provider> providersActive = providerDao.getActiveProviders(); 
-            for (Provider p : providersActive) {
-        %>
-        <option value="<%=p.getProviderNo()%>" <%=assignedTo.equals(p.getProviderNo())?"selected":""%>><%=p.getLastName()%>, <%=p.getFirstName()%></option>
-        <%}%>
-        </select>
 <% } %>
+
 
 
       <!--/td>

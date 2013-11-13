@@ -561,7 +561,7 @@ public class ProviderDao extends HibernateDaoSupport {
 		return pList;
 	}		
 	
-	public List<Provider> getProvidersBySiteLocation(String location) {
+	public List<Provider> getProvidersBySiteLocation(Integer siteId) {
 		List<Provider> pList = new ArrayList<Provider>();
 		Session sess = getSession();
 		try {
@@ -570,8 +570,8 @@ public class ProviderDao extends HibernateDaoSupport {
 					" from provider p " +
 					" inner join providersite ps on ps.provider_no = p.provider_no " +
 					" inner join site s on s.site_id = ps.site_id " +
-					" where  s.name = :sitename ") ;
-			q.setParameter("sitename", location);
+					" where  s.site_id = :siteId ") ;
+			q.setParameter("siteId", siteId);
 //			q.addScalar("provider_no", Hibernate.STRING);			
 			List providerNos = q.list();
 			for(Object no : providerNos) {

@@ -24,9 +24,8 @@
 
 --%>
 <%!
-//multisite starts =====================
+
 private	List<Site> sites;
-private boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
 
 private String getSiteHTML(String reason, List<Site> sites) {
 	 if (reason==null||reason.trim().length()==0)
@@ -36,11 +35,10 @@ private String getSiteHTML(String reason, List<Site> sites) {
 }
 %>
 <%
-if (bMultisites) {
-	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-	sites = siteDao.getAllSites();
-}
-//multisite ends =====================
+
+SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+sites = siteDao.getAllSites();
+
 %>
 <%
 
@@ -388,8 +386,7 @@ function refresh() {
                    if(scheduleRscheduleBean.getDateAvail(now) ) {
                       bgcolor = new StringBuffer("white"); //color for attendance
                       strHour = new StringBuffer(SxmlMisc.getXmlContent(scheduleRscheduleBean.getAvailHour(now), weekdaytag[now.get(Calendar.DAY_OF_WEEK)-1]));
-                      if (bMultisites)
-                    	  strReason.append(SxmlMisc.getXmlContent(scheduleRscheduleBean.getAvailHour(now), reasontag[now.get(Calendar.DAY_OF_WEEK)-1]));
+					  strReason.append(SxmlMisc.getXmlContent(scheduleRscheduleBean.getAvailHour(now), reasontag[now.get(Calendar.DAY_OF_WEEK)-1]));
                     }
                     aHScheduleHoliday = (HScheduleHoliday) scheduleHolidayBean.get(year+"-"+MyDateFormat.getDigitalXX(month)+"-"+MyDateFormat.getDigitalXX(dateGrid[i][j]));
                     if (aHScheduleHoliday!=null) {
@@ -410,7 +407,7 @@ function refresh() {
 			<font color="red"><%= dateGrid[i][j] %></font> <font size="-3"
 				color="blue"><%=strHolidayName.toString()%></font> <br>
 			<font size="-2">&nbsp;<%=strHour.toString()%> <br>
-			&nbsp;<%=bMultisites?getSiteHTML(strReason.toString(), sites):strReason.toString()%></font></a></td>
+			&nbsp;<%=getSiteHTML(strReason.toString(), sites)%></font></a></td>
 			<%
                   }
                 }

@@ -31,6 +31,7 @@
 <%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 
 <%@page import="org.oscarehr.eyeform.model.*"%>
+<%@page import="org.oscarehr.common.model.Clinic" %>
 <%@page import="org.oscarehr.eyeform.web.EyeformAction"%>
 <%@page import="java.util.List"%>
 <%@page import="org.oscarehr.common.model.DemographicContact"%>
@@ -487,7 +488,62 @@ jQuery(document).ready(function() {
 	var isNew = <%=isNew?"true":"false"%>;
 	if (isNew)
 		setCC();
+		
+	setSiteOnPageLoad();
 });
+</script>
+
+<script>
+	var clinics = new Object();
+	<c:forEach var="clinic" items="${clinics}">
+		clinics['<c:out value="${clinic.id}"/>'] = new Object();
+
+		<c:forEach var="s" items="${clinic.sites}">
+		
+			var data = new Object();
+			data[0] = '<c:out value="${s.name}"/>';
+			data[1] = '<c:out value="${s.bgColor}"/>';
+			
+			clinics['<c:out value="${clinic.id}"/>']['<c:out value="${s.id}"/>'] = data;
+		
+		</c:forEach>
+	</c:forEach>
+	
+	
+	function rebuildSiteDropdown(clinicId) {
+		var sites = clinics[clinicId];
+		
+		var $sel = jQuery("[name='cp.siteId']");
+		$sel.empty();
+		
+		$sel.append( jQuery('<option></option>').val('0').html('** Use Clinic Letterhead **').css('background-color', 'white') );
+		
+		for (var id in sites) {
+			$sel.append( jQuery('<option></option>').val(id).html(sites[id][0]).css('background-color', sites[id][1]) );
+		}
+	}
+	
+	function changeClinic(sel) {
+		var clinicId = sel.options[sel.selectedIndex].value;
+		
+		// Change contents of site dropdown
+		rebuildSiteDropdown(clinicId);
+		
+		var sel = document.getElementsByName("cp.siteId")[0];
+		changeSite(sel);
+	}
+	
+	/**
+	 * Call this on page load so that the default site gets set properly.
+	 */ 
+	function setSiteOnPageLoad() {
+		var sel = document.getElementsByName("cp.siteId")[0];
+		sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+	}
+	
+	function changeSite(sel) {
+		sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;	
+	}
 </script>
 
 </head>
@@ -501,7 +557,6 @@ jQuery(document).ready(function() {
 	<input type="hidden" name="famDoctor" value=""/>
 	<input type="hidden" name="apptno" value=""/>
 
-	<html:hidden property="cp.id"/>
 	<html:hidden property="cp.id"/>
 	<html:hidden property="cp.demographicNo"/>
 	<html:hidden property="cp.providerNo"/>
@@ -681,7 +736,6 @@ jQuery(document).ready(function() {
 				</tr>
 
 				<tr>
-				<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) { %>
 					<td>
 					<table style="background-color: #ddddff;" width="100%">
 						<tr>
@@ -697,31 +751,39 @@ jQuery(document).ready(function() {
 					<td>
 					<table style="background-color: #ddddff;" width="100%">
 						<tr>
+							<td class="tite4" width="10%">Clinic:</td>
+							<td class="tite4" width="60%">
+								<html:select property="cp.clinicNo" onchange="changeClinic(this);">
+								     <c:forEach var="clinic" items="${clinics}">
+								         <html:option value="${clinic.id}"><c:out value="${clinic.clinicName}"/></html:option>
+								     </c:forEach>
+							    </html:select>
+							</td>
+							
+							<!-- Set the selected clinic -->
+							<c:forEach var="clinic" items="${clinics}">
+								<c:if test="${eyeForm.map.cp.clinicNo == clinic.id}">
+									<c:set var="selectedClinic" value="${clinic}"/>
+								</c:if>
+							</c:forEach>
+							<c:if test="${empty selectedClinic}">
+								<c:set var="selectedClinic" value="${clinics[0]}"/>
+							</c:if>
+							
 							<td class="tite4" width="10%">Site:</td>
 							<td class="tite4" width="60%">
-								<html:select property="cp.siteId">
-								     <c:forEach var="site" items="${sites}">
-								         <html:option value="${site.id}"><c:out value="${site.name}"/></html:option>
-								     </c:forEach>
-							        </html:select><c:out value="${cp.siteId}"/>
+								<html:select property="cp.siteId" onchange="changeSite(this);">
+									<html:option value="0" style="background-color: white;"> ** Use Clinic Letterhead ** </html:option>
+								
+									<c:forEach var="site" items="${selectedClinic.sites}">
+										<html:option value="${site.id}" style="background-color: ${site.bgColor};"><c:out value="${site.name}"/></html:option>
+									</c:forEach>
+							    </html:select>
 							</td>
 						</tr>
 					</table>
 					</td>
-				<%  } else { %>
-					<td colspan="4">
-					<table style="background-color: #ddddff;" width="100%">
-						<tr>
-							<td class="tite4" width="10%">Greeting:</td>
-							<td class="tite4" width="60%"><html:select
-								property="cp.greeting">
-								<html:option value="1">standard consult report</html:option>
-								<html:option value="2">assessment report</html:option>
-							</html:select></td>
-						</tr>
-					</table>
-					</td>				
-				<%  }  %>
+
 				</tr>
 
 				<tr>

@@ -26,12 +26,20 @@ package org.oscarehr.common.model;
 
 import java.io.Serializable;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.PrePersist;
+import javax.persistence.OneToMany;
+import javax.persistence.JoinColumn;
+import javax.persistence.CascadeType;
+import javax.persistence.FetchType;
 
 /**
  *
@@ -66,6 +74,10 @@ public class Clinic extends AbstractModel<Integer> implements Serializable {
     private String clinicDelimPhone;
     @Column(name="clinic_delim_fax")
     private String clinicDelimFax;
+    
+    @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+    @JoinColumn(name="clinicNo", referencedColumnName="clinic_no")
+	private List<Site> sites = new ArrayList<Site>();
 
     public Integer getId() {
         return this.id;
@@ -170,6 +182,29 @@ public class Clinic extends AbstractModel<Integer> implements Serializable {
     public boolean isNew() {
 		return this.getId() == null || this.getId().intValue() <= 0;
 	}
+	
+	public List<Site> getSites() {
+		return sites;
+	}
+	
+	public void setSites(List<Site> sites) {
+		this.sites = sites;
+	}
+	
+	public void removeSite(Site s) {
+		this.sites.remove( s );
+	}
+	
+	public void addSite(Site s) {
+		this.sites.add( s );
+	}
+	
+	@PrePersist
+    public void prePersist() {
+        for ( Site s : sites ) {
+            s.setClinic(this);
+        }
+    }
 
     public String toString(){
        return "clinicName " +clinicName +

@@ -122,6 +122,15 @@ public final class ProviderPreferencesUIBean {
 		temp = StringUtils.trimToNull(request.getParameter("default_servicetype"));
 		if (temp != null) providerPreference.setDefaultServiceType(temp);
 		
+		temp = StringUtils.trimToNull(request.getParameter("default_bill_site"));
+		if (temp != null) {
+			try {
+				providerPreference.setBillingSiteDefault(Integer.parseInt(temp));
+			} catch (NumberFormatException e) {
+				MiscUtils.getLogger().error("Error",e);
+			}
+		}
+		
 		temp = StringUtils.trimToNull(request.getParameter("default_bill_provider"));
 		if (temp != null) {
 			// 'no' is the string representing 'none'

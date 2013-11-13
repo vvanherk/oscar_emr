@@ -152,7 +152,15 @@ public class JdbcBillingReviewImpl {
                                 }
                                 rs2.close();
 				
-				ch1Obj.setClinic(rs.getString("clinic"));
+				Integer siteNo = null;
+				if (rs.getString("site") != null) {
+					try {
+						siteNo = Integer.parseInt( rs.getString("site") );
+					} catch (Exception e) {
+						_logger.error("Unable to parse site number.", e);
+					}
+				}
+				ch1Obj.setSite(siteNo);
 				
 				retval.add(ch1Obj);
 			}
@@ -204,8 +212,16 @@ public class JdbcBillingReviewImpl {
 					ch1Obj.setProvider_ohip_no(rs.getString("provider_ohip_no"));
 					ch1Obj.setApptProvider_no(rs.getString("apptProvider_no"));
 					ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
-
-					ch1Obj.setClinic(rs.getString("clinic"));
+					
+					Integer siteNo = null;
+					if (rs.getString("site") != null) {
+						try {
+							siteNo = Integer.parseInt( rs.getString("site") );
+						} catch (Exception e) {
+							_logger.error("Unable to parse site number.", e);
+						}
+					}
+					ch1Obj.setSite(siteNo);
 
 					// ch1Obj.setTotal(rs.getString("total"));
 					ch1Obj.setPay_program(rs.getString("pay_program"));
@@ -282,7 +298,16 @@ public class JdbcBillingReviewImpl {
 				ch1Obj.setApptProvider_no(rs.getString("apptProvider_no"));
 				ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
 				
-				ch1Obj.setClinic(rs.getString("clinic"));
+				Integer siteNo = null;
+				if (rs.getString("site") != null) {
+					try {
+						siteNo = Integer.parseInt( rs.getString("site") );
+					} catch (Exception e) {
+						_logger.error("Unable to parse site number.", e);
+					}
+				}
+				ch1Obj.setSite(siteNo);
+				
 				ch1Obj.setAppointment_no(rs.getString("appointment_no"));
 				ch1Obj.setPay_program(rs.getString("pay_program"));
 				ch1Obj.setVisittype(rs.getString("visittype"));
@@ -401,8 +426,16 @@ public class JdbcBillingReviewImpl {
                                ch1Obj.setMan_review(rs.getString("man_review"));
 
                                ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
-
-                               ch1Obj.setClinic(rs.getString("clinic"));
+								
+								Integer siteNo = null;
+								if (rs.getString("site") != null) {
+									try {
+										siteNo = Integer.parseInt( rs.getString("site") );
+									} catch (Exception e) {
+										_logger.error("Unable to parse site number.", e);
+									}
+								}
+								ch1Obj.setSite(siteNo);
 
                                ch1Obj.setPay_program(rs.getString("pay_program"));
                                ch1Obj.setVisittype(rs.getString("visittype"));

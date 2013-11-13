@@ -860,6 +860,40 @@ public class EyeformAction extends DispatchAction {
 
 			request.setAttribute("providerName",providerDao.getProvider(cp.getProviderNo()).getFormattedName());
 
+			List<Clinic> clinics = clinicDao.findAll();
+			request.setAttribute("clinics", clinics);
+
+			List<Site> sites = siteDao.getActiveSitesByProviderNo((String) request.getSession().getAttribute("user"));
+			request.setAttribute("sites", sites);
+
+			Integer appt_no= cp.getAppointmentNo();
+			Site defaultSite = null;
+			if(cp.getSiteId() == null) {
+			  String location = null;
+			  if (appt_no != null) {
+				Appointment appt = appointmentDao.find(appt_no);
+				if (appt != null) {
+				    location = appt.getSite();
+					for (int i = 0; i < sites.size(); i++) {
+						Site s = sites.get(i);
+						if (s.getName().equals(location)) {
+							defaultSite = s;
+							cp.setSiteId(defaultSite.getSiteId());
+							break;
+						}
+					}
+			    }
+			  } 
+			} else {
+				for (int i = 0; i < sites.size(); i++) {
+					Site s = sites.get(i);
+					if (s.getId() == cp.getSiteId()) {
+						defaultSite = s;
+						break;
+					}
+				}					
+			}
+
 			DynaValidatorForm crForm = (DynaValidatorForm) form;
 			crForm.set("cp", cp);
 
@@ -1042,18 +1076,18 @@ public class EyeformAction extends DispatchAction {
 
 		public ActionForward saveConRequest(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 			log.info("saveConRequest");
-                        ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
+			ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
 
-                        DynaValidatorForm crForm = (DynaValidatorForm) form;
-                        EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
-                        EyeformConsultationReport consultReport = null;
-                        String id = request.getParameter("cp.id");
-                        if(id != null && id.length()>0) {
-                                consultReport = dao.find(Integer.parseInt(id));
-                        } else {
-                                consultReport = new EyeformConsultationReport();
-                        }
-                        BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
+			DynaValidatorForm crForm = (DynaValidatorForm) form;
+			EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
+			EyeformConsultationReport consultReport = null;
+			String id = request.getParameter("cp.id");
+			if(id != null && id.length()>0) {
+					consultReport = dao.find(Integer.parseInt(id));
+			} else {
+					consultReport = new EyeformConsultationReport();
+			}
+			BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
 
 			ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(cp.getReferralNo());
 			if (professionalSpecialist != null)
@@ -1061,12 +1095,12 @@ public class EyeformAction extends DispatchAction {
 
 			cp.setDate(new Date());
 
-			if(cp.getId() != null && cp.getId()>0) {
-				dao.merge(cp);
+			if(consultReport.getId() != null && consultReport.getId()>0) {
+				dao.merge(consultReport);
 			} else {
-				dao.persist(cp);
+				dao.persist(consultReport);
 			}
-			request.setAttribute("cpId", cp.getId().toString());
+			request.setAttribute("cpId", consultReport.getId().toString());
 			request.setAttribute("savedflag", "saved");
 			//return prepareConReport(mapping, form, request, response);
 			request.setAttribute("parentAjaxId", "conReport");
@@ -1118,20 +1152,20 @@ public class EyeformAction extends DispatchAction {
 
 		public ActionForward printConRequest(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 			log.debug("printConreport");
-                        ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
-                        DynaValidatorForm crForm = (DynaValidatorForm) form;
-                        EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
-                        Demographic demographic = demographicDao.getClientByDemographicNo(cp.getDemographicNo());
-                        request.setAttribute("demographic",demographic);
-                        Appointment appointment = this.appointmentDao.find(cp.getAppointmentNo());
-                        EyeformConsultationReport consultReport = null;
-                        String id = request.getParameter("cp.id");
-                        if(id != null && id.length()>0) {
-                                consultReport = dao.find(Integer.parseInt(id));
-                        } else {
-                                consultReport = new EyeformConsultationReport();
-                        }
-                        BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
+			ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
+			DynaValidatorForm crForm = (DynaValidatorForm) form;
+			EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
+			Demographic demographic = demographicDao.getClientByDemographicNo(cp.getDemographicNo());
+			request.setAttribute("demographic",demographic);
+			Appointment appointment = this.appointmentDao.find(cp.getAppointmentNo());
+			EyeformConsultationReport consultReport = null;
+			String id = request.getParameter("cp.id");
+			if(id != null && id.length()>0) {
+					consultReport = dao.find(Integer.parseInt(id));
+			} else {
+					consultReport = new EyeformConsultationReport();
+			}
+			BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
 
 			ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(cp.getReferralNo());
 
@@ -1189,64 +1223,55 @@ public class EyeformAction extends DispatchAction {
 				specialty = new String();
 			request.setAttribute("specialty", specialty);
 
-			Clinic clinic = clinicDao.getClinic();
+			//Clinic clinic = clinicDao.getClinic();
 			// prepare the satellite clinic address
-			OscarProperties props = OscarProperties.getInstance();
-			String sateliteFlag = "false";
+			//OscarProperties props = OscarProperties.getInstance();
+			//String sateliteFlag = "false";
 
-			if (IsPropertiesOn.isMultisitesEnable()) {
-				Integer appt_no= (Integer) crForm.get("apptNo");
-				String location = null;
-				if (appt_no != null) {
-					Appointment appt = appointmentDao.find(appt_no);
-					if (appt != null)
-						location = appt.getLocation();
-				}
-
-				List<Site> sites = siteDao.getActiveSitesByProviderNo(internalProvider.getProviderNo());
-
-				ArrayList<SatelliteClinic> clinicArr = new ArrayList<SatelliteClinic>();
-				Site defaultSite = null;
-				for (int i = 0; i < sites.size(); i++) {
-					Site s = sites.get(i);
-					SatelliteClinic sc = new SatelliteClinic();
-					sc.setClinicId(s.getSiteId());
-					sc.setClinicName(s.getName());
-					sc.setClinicAddress(s.getAddress());
-					sc.setClinicCity(s.getCity());
-					sc.setClinicProvince(s.getProvince());
-					sc.setClinicPostal(s.getPostal());
-					sc.setClinicPhone(s.getPhone());
-					sc.setClinicFax(s.getFax());
-					clinicArr.add(sc);
-					if (s.getName().equals(location))
-						defaultSite = s;
-				}
-
-				sateliteFlag = "true";
-				request.setAttribute("clinicArr", clinicArr);
-				if (defaultSite != null)
-					request.setAttribute("sateliteId", defaultSite.getSiteId().toString());
-
-			} else {
-				if (props.getProperty("clinicSatelliteName") != null) {
-					ArrayList<SatelliteClinic> clinicArr = getSateliteClinics(props);
-					if (clinicArr.size() > 0) {
-						sateliteFlag = "true";
-						request.setAttribute("clinicArr", clinicArr);
-						SatelliteClinic sc = clinicArr.get(0);
-						clinic.setClinicName(sc.getClinicName());
-						clinic.setClinicAddress(sc.getClinicAddress());
-						clinic.setClinicCity(sc.getClinicCity());
-						clinic.setClinicProvince(sc.getClinicProvince());
-						clinic.setClinicPostal(sc.getClinicPostal());
-						clinic.setClinicPhone(sc.getClinicPhone());
-						clinic.setClinicFax(sc.getClinicFax());
-					}
-				}
+			Clinic clinic = clinicDao.find(cp.getClinicNo());
+			Site site = siteDao.getById(cp.getSiteId());
+			
+			if (site != null) {
+				request.setAttribute("subHeaderName", site.getName());
+				
+				clinic.setClinicAddress(site.getAddress());
+				clinic.setClinicCity(site.getCity());
+				clinic.setClinicProvince(site.getProvince());
+				clinic.setClinicPostal(site.getPostal());
+				clinic.setClinicPhone(site.getPhone());
+				clinic.setClinicFax(site.getFax());
 			}
+			
+			
 
-			request.setAttribute("sateliteFlag", sateliteFlag);
+
+			//List<Site> sites = siteDao.getActiveSitesByProviderNo(internalProvider.getProviderNo());
+			//request.setAttribute("sites", sites);
+			
+			//ArrayList<SatelliteClinic> clinicArr = new ArrayList<SatelliteClinic>();
+			//Site defaultSite = null;
+			//for (Site s : sites) {
+			//	SatelliteClinic sc = new SatelliteClinic();
+			//	sc.setClinicId(s.getSiteId());
+			//	sc.setClinicName(s.getName());
+			//	sc.setClinicAddress(s.getAddress());
+			//	sc.setClinicCity(s.getCity());
+			//	sc.setClinicProvince(s.getProvince());
+			//	sc.setClinicPostal(s.getPostal());
+			//	sc.setClinicPhone(s.getPhone());
+			//	sc.setClinicFax(s.getFax());
+			//	clinicArr.add(sc);
+			//	if (s.getName().equals(location))
+			//		defaultSite = s;
+			//}
+
+			//sateliteFlag = "true";
+			//request.setAttribute("clinicArr", clinicArr);
+			//if (defaultSite != null)
+			//	request.setAttribute("sateliteId", defaultSite.getSiteId().toString());
+			
+
+			//request.setAttribute("sateliteFlag", sateliteFlag);
 			request.setAttribute("clinic", clinic);
 			request.setAttribute("appointDate", (appointment!=null?appointment.getAppointmentDate(): "") );
 

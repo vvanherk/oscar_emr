@@ -38,6 +38,7 @@
 
 		<form-bean name="siteForm" type="org.apache.struts.validator.DynaValidatorForm">
 			<form-property name="site" type="org.oscarehr.common.model.Site" />
+			<form-property name="clinics" type="java.util.List" />
 		</form-bean>
 		<form-bean name="billingreferralForm" type="org.apache.struts.validator.DynaValidatorForm">
 			<form-property name="search" type="java.lang.String" />

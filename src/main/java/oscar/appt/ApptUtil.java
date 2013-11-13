@@ -48,7 +48,7 @@ public class ApptUtil {
 		obj.setDemographic_no(request.getParameter("demographic_no"));
 		obj.setNotes(request.getParameter("notes"));
 		obj.setReason(request.getParameter("reason"));
-		obj.setLocation(request.getParameter("location"));
+		obj.setSite(request.getParameter("site"));
 		obj.setResources(request.getParameter("resources"));
 		obj.setType(request.getParameter("type"));
 		obj.setStyle(request.getParameter("style"));
@@ -64,44 +64,5 @@ public class ApptUtil {
 
 	public static ApptData getAppointmentFromSession(HttpServletRequest request) {
 		return (ApptData) request.getSession().getAttribute(SESSION_APPT_BEAN);
-	}
-
-	public static String getColorFromLocation(String site, String colo, String loca) {
-		String ret = "white";
-		String[] s = site.split("\\|");
-		String[] c = colo.split("\\|");
-		if(loca!=null) {
-			for (int i = 0; i < s.length; i++) {
-				if (s[i].startsWith(loca)) {
-					ret = c[i];
-					break;
-				}
-			}
-		}
-		return ret;
-	}
-	
-	public static String getColorFromLocation(List<Site> sites, String siteName) {
-		for (Site s:sites) {
-			if (s.getName().equals(siteName))
-				return s.getBgColor();
-		}
-		return "white";
-	}
-	
-	public static String getShortNameFromLocation(List<Site> sites, String siteName) {
-		for (Site s:sites) {
-			if (s.getName().equals(siteName))
-				return s.getShortName();
-		}
-		return "";
-	}
-	
-	public static Site getSiteFromName(List<Site> sites, String siteName) {
-		for (Site s:sites) {
-			if (s.getName().equals(siteName))
-				return s;
-		}
-		return null;
 	}
 }

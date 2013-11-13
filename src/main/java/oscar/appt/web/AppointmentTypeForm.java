@@ -30,7 +30,7 @@ public class AppointmentTypeForm  extends ActionForm {
     private String name;
     private String notes;
     private String reason;
-    private String location;
+    private String site;
     private String resources;    
     private int duration;
         
@@ -69,11 +69,11 @@ public class AppointmentTypeForm  extends ActionForm {
 		this.reason = reason;
 	}
 
-	public String getLocation() {
-		return location;
+	public String getSite() {
+		return site;
 	}
-	public void setLocation(String location) {
-		this.location = location;
+	public void setSite(String site) {
+		this.site = site;
 	}
 
 	public String getResources() {

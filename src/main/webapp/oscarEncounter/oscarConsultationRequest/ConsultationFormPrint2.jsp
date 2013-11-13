@@ -24,7 +24,6 @@
 
 --%>
 
-<%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -91,66 +90,32 @@
 	Vector vecAddressFax = null;
 	Vector vecAddressBillingNo = null;
     String defaultAddrName = null;
-	if (bMultisites) {
-    	vecAddressName = new Vector();
-        vecAddress = new Vector();
-        vecAddressPhone = new Vector();
-        vecAddressFax = new Vector();
-        vecAddressBillingNo = new Vector();
-        
-    		SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-      		List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-      		Site defaultSite = sites.get(0);
-      		for (Site s:sites) {
-                vecAddressName.add(s.getName());
-                vecAddress.add(s.getAddress() + ", " + s.getCity() + ", " + s.getProvince() + "  " + s.getPostal());
-                vecAddressPhone.add(s.getPhone());
-                vecAddressFax.add(s.getFax());      			
-     		}
-            // default address
-            if (defaultSite!=null) {
-	            clinic.setClinic_address(defaultSite.getAddress());
-	            clinic.setClinic_city(defaultSite.getCity());
-	            clinic.setClinic_province(defaultSite.getProvince());
-	            clinic.setClinic_postal(defaultSite.getPostal());
-	            clinic.setClinic_phone(defaultSite.getPhone());
-	            clinic.setClinic_fax(defaultSite.getFax());
-	            clinic.setClinic_name(defaultSite.getName());
-	            defaultAddrName=defaultSite.getName();
-            }
-    } else
-    if(props.getProperty("clinicSatelliteName") != null) {
-		vecAddressName = new Vector();
-		vecAddress = new Vector();
-		vecAddressPhone = new Vector();
-		vecAddressFax = new Vector();
-		vecAddressBillingNo = new Vector();
-		String[] temp0 = props.getProperty("clinicSatelliteName", "").split("\\|");
-		String[] temp1 = props.getProperty("clinicSatelliteAddress", "").split("\\|");
-		String[] temp2 = props.getProperty("clinicSatelliteCity", "").split("\\|");
-		String[] temp3 = props.getProperty("clinicSatelliteProvince", "").split("\\|");
-		String[] temp4 = props.getProperty("clinicSatellitePostal", "").split("\\|");
-		String[] temp5 = props.getProperty("clinicSatellitePhone", "").split("\\|");
-		String[] temp6 = props.getProperty("clinicSatelliteFax", "").split("\\|");
-		String[] temp7 = props.getProperty("clinicDocBillingNoList", "").split("\\|");
-		for(int i=0; i<temp0.length; i++) {
-			vecAddressName.add(temp0[i]);
-			vecAddress.add(temp1[i] + ", " + temp2[i] + ", " + temp3[i] + "  " + temp4[i]);
-			vecAddressPhone.add(temp5[i]);
-			vecAddressFax.add(temp6[i]);
-		}
-		for(int i=0; i<temp7.length; i++) {
-			vecAddressBillingNo.add(temp7[i]);
+	vecAddressName = new Vector();
+	vecAddress = new Vector();
+	vecAddressPhone = new Vector();
+	vecAddressFax = new Vector();
+	vecAddressBillingNo = new Vector();
+	
+		SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+		List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
+		Site defaultSite = sites.get(0);
+		for (Site s:sites) {
+			vecAddressName.add(s.getName());
+			vecAddress.add(s.getAddress() + ", " + s.getCity() + ", " + s.getProvince() + "  " + s.getPostal());
+			vecAddressPhone.add(s.getPhone());
+			vecAddressFax.add(s.getFax());      			
 		}
 		// default address
-		//clinic.setClinic_name();
-		clinic.setClinic_address(temp1[0]);
-		clinic.setClinic_city(temp2[0]);
-		clinic.setClinic_province(temp3[0]);
-		clinic.setClinic_postal(temp4[0]);
-		clinic.setClinic_phone(temp5[0]);
-		clinic.setClinic_fax(temp6[0]);
-	}
+		if (defaultSite!=null) {
+            clinic.setClinic_address(defaultSite.getAddress());
+            clinic.setClinic_city(defaultSite.getCity());
+            clinic.setClinic_province(defaultSite.getProvince());
+            clinic.setClinic_postal(defaultSite.getPostal());
+            clinic.setClinic_phone(defaultSite.getPhone());
+            clinic.setClinic_fax(defaultSite.getFax());
+            clinic.setClinic_name(defaultSite.getName());
+            defaultAddrName=defaultSite.getName();
+		}
 %>
 <html:base/>
 

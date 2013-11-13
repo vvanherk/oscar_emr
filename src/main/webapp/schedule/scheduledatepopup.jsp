@@ -47,7 +47,7 @@
  * Ontario, Canada 
 */
 --%>
-<%!  boolean bMultisites=org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
+
 <%!  String [] bgColors; %>
 
 <%@ page
@@ -155,41 +155,33 @@ function upCaseCtrl(ctrl) {
 			</tr>
 			<% 
           OscarProperties props = OscarProperties.getInstance();
-          boolean bMoreAddr = bMultisites
-						? true
-						: props.getProperty("scheduleSiteID", "").equals("") ? false : true;
-          String [] siteList;
-          if (bMultisites) {
-        		//multisite starts =====================	  
-        		  SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-        	      List<Site> sites = siteDao.getActiveSitesByProviderNo(request.getParameter("provider_no")); 
-        	      siteList = new String[sites.size()+1];
-        		  bgColors = new String[sites.size()+1];
-        	      for (int i=0; i<sites.size(); i++) {
-        	    	  siteList[i]=sites.get(i).getName();
-        			  bgColors[i]=sites.get(i).getBgColor();
-        	      }
-        	      siteList[sites.size()]="NONE";
-        		  bgColors[sites.size()]="white";
-        		//multisite ends =====================	 
-          } else {
-          	siteList = props.getProperty("scheduleSiteID", "").split("\\|");
-          }
           
-          if (bMoreAddr) {
+          String [] siteList;
+
+		  SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+		  List<Site> sites = siteDao.getActiveSitesByProviderNo(request.getParameter("provider_no")); 
+		  siteList = new String[sites.size()+1];
+		  bgColors = new String[sites.size()+1];
+		  for (int i=0; i<sites.size(); i++) {
+			  siteList[i]=sites.get(i).getName();
+			  bgColors[i]=sites.get(i).getBgColor();
+		  }
+		  siteList[sites.size()]="NONE";
+		  bgColors[sites.size()]="white";
+	  
           %>
+          
 			<tr>
 				<td>
 				<div align="right">Location:</div>
 				</td>
 				<td><select id="reason" name="reason" onchange='this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor'>
 					<% for(int i=0; i<siteList.length; i++) { %>
-					<option value="<%=siteList[i]%>" <%=(bMultisites? " style='background-color:"+bgColors[i]+"'" : "")%>
+					<option value="<%=siteList[i]%>" <%=" style='background-color:"+bgColors[i]+"'"%>
 						<%=strReason.equals(siteList[i])?"selected":""%>><b><%=siteList[i]%></b></option>
 					<% } %>
 				</select> </td>
 			</tr>
-		<% } %>
 			<!--  input type="hidden" name="reason" <%--=strReason--%> -->
 			<tr>
 				<td>
@@ -199,9 +191,9 @@ function upCaseCtrl(ctrl) {
 				<td><%=strCreator%></td>
 			</tr>
 		</table>
-<% 		if (bMultisites)
-			out.println("<script>var _r=document.getElementById('reason'); _r.style.backgroundColor=_r.options[_r.selectedIndex].style.backgroundColor;</script>");
-%>		
+		
+		<script>var _r=document.getElementById('reason'); _r.style.backgroundColor=_r.options[_r.selectedIndex].style.backgroundColor;</script>
+		
 		<table width="100%" border="0" cellspacing="0" cellpadding="0">
 			<tr>
 				<td>&nbsp;</td>

@@ -84,6 +84,8 @@ public class EyeformConsultationReport extends AbstractModel<Integer> {
 	@Transient
 	private String referralNo;
 	
+	private Integer clinicNo;
+	private Integer siteId;
 	
 	public EyeformConsultationReport() {
 		date = new Date();
@@ -351,6 +353,19 @@ public class EyeformConsultationReport extends AbstractModel<Integer> {
 		this.referralNo = referralNo;
 	}
 	
+	public Integer getClinicNo() {
+		return this.clinicNo;
+	}
+	public void setClinicNo(Integer clinicNo) {
+		this.clinicNo = clinicNo;
+	}
+	
+	public Integer getSiteId() {
+		return this.siteId;
+	}
+	public void setSiteId(Integer siteId) {
+		this.siteId = siteId;
+	}
 	
 	
 }

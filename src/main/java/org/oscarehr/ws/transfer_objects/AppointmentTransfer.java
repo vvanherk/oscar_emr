@@ -51,7 +51,7 @@ public final class AppointmentTransfer {
 	private int programId;
 	private String notes;
 	private String reason;
-	private String location;
+	private String site;
 	private String resources;
 	private String type;
 	private String style;
@@ -137,12 +137,12 @@ public final class AppointmentTransfer {
 		this.reason = reason;
 	}
 
-	public String getLocation() {
-		return (location);
+	public String getSite() {
+		return (site);
 	}
 
-	public void setLocation(String location) {
-		this.location = location;
+	public void setSite(String site) {
+		this.site = site;
 	}
 
 	public String getResources() {

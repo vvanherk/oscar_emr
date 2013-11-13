@@ -61,7 +61,7 @@
 				
 				// Save provider used for this bill in the session
 				String providerNo = request.getParameter("xml_provider");
-				providerNo = providerNo.substring(0, providerNo.indexOf("|"));
+				providerNo = providerNo;
 				session.setAttribute("previous_billing_provider", providerNo);
 				
 				// update appt and close the page

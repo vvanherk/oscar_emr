@@ -49,10 +49,6 @@ public class IsPropertiesOn {
 		return propertiesOn("ticklerplus");
 	}
 	
-	public static boolean isMultisitesEnable() {
-		return propertiesOn("multisites");
-	}
-
 	public static boolean isProviderFormalizeEnable() {
 		return propertiesOn("multioffice.formalize.provider.id");
 	}

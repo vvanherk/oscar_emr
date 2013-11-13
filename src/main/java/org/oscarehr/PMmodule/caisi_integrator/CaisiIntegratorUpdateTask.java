@@ -1130,7 +1130,7 @@ public class CaisiIntegratorUpdateTask extends TimerTask {
 			cachedAppointment.setCaisiProviderId(appointment.getProviderNo());
 			cachedAppointment.setCreateDatetime(MiscUtils.toCalendar(appointment.getCreateDateTime()));
 			cachedAppointment.setEndTime(MiscUtils.toCalendar(appointment.getEndTime()));
-			cachedAppointment.setLocation(appointment.getLocation());
+			cachedAppointment.setLocation(appointment.getSite());
 			cachedAppointment.setNotes(appointment.getNotes());
 			cachedAppointment.setReason(appointment.getReason());
 			cachedAppointment.setRemarks(appointment.getRemarks());

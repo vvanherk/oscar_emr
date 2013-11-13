@@ -42,13 +42,13 @@
 <%@page import="oscar.util.DateUtils"%>
 <%@page import="org.oscarehr.caisi_integrator.ws.DemographicWs"%>
 <%
-if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
-	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-	sites = siteDao.getAllActiveSites(); 
-	//get all sites bgColors
-	for (Site st : sites) {
-		siteBgColor.put(st.getName(), new String[]{st.getBgColor(), st.getShortName()});
-	}
+
+SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+sites = siteDao.getAllActiveSites(); 
+
+//get all sites bgColors
+for (Site st : sites) {
+	siteBgColor.put(st.getName(), new String[]{st.getBgColor(), st.getShortName()});
 }
 
   String curProvider_no = (String) session.getAttribute("user");
@@ -246,9 +246,7 @@ function popupPageNew(vheight,vwidth,varpage) {
 				</plugin:hideWhenCompExists>
 				<TH><b><bean:message key="demographic.demographicappthistory.msgComments" /></b></TH>
 				
-				<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) { %>
-					<TH width="5%">Location</TH>
-				<% } %>
+				<TH width="5%">Location</TH>
 				
 			</tr>
 			<%
@@ -359,11 +357,8 @@ function popupPageNew(vheight,vwidth,varpage) {
          }
       %>
       <td>&nbsp;<%=remarks%><% if(newline){%><br/>&nbsp;<%}%><%=comments%></td>
-      <% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) { 
-	     String[] sbc = siteBgColor.get(apptMainBean.getString(rs,"location")); 
-      %>      
+      <% String[] sbc = siteBgColor.get(apptMainBean.getString(rs,"location")); %>      
 	<td style='background-color:<%= sbc!=null ? sbc[0] : "white" %>'><%= sbc !=null ? sbc[1] : "" %></td>
-      <% } %>      
 
 </tr>
 <%

@@ -114,6 +114,13 @@ public final class RxRePrescribeAction extends DispatchAction {
 			logger.warn("Could not parse clinicNo: " + clinicNo);
 		}
 		
+		String siteId = request.getParameter("siteId");
+		try {
+			beanRX.setSiteId( Integer.parseInt(siteId) );
+		} catch (Exception e) {
+			logger.warn("Could not parse siteId: " + siteId);
+		}
+		
 
 		// RxDrugListForm frm = (RxDrugListForm) form;
 		String script_no = request.getParameter("scriptNo");

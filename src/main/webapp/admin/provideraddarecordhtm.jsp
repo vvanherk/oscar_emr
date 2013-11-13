@@ -156,9 +156,6 @@ function upCaseCtrl(ctrl) {
 		</td>
 	</tr>
 
-<%
-		if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
-	%>
 	<tr>
 		<td>
 		<div align="right"><bean:message key="admin.provider.sitesAssigned" /><font color="red">:</font></div>
@@ -175,9 +172,6 @@ for (int i=0; i<sites.size(); i++) {
 %>
 		</td>
 	</tr>
-<%
-	}
-%>
 
 	<tr>
 		<td align="right"><bean:message key="admin.provider.formType" /><font

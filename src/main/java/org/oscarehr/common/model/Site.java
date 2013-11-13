@@ -24,6 +24,7 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -31,6 +32,11 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+
+import org.oscarehr.common.dao.ClinicDAO;
+
+//import org.oscarehr.util.MiscUtils;
+import org.oscarehr.util.SpringUtils;
 
 @Entity
 @Table(name="site")
@@ -81,6 +87,10 @@ public class Site extends AbstractModel<Integer> implements java.io.Serializable
 	@Column(name="providerId_to")
 	private Integer providerIdTo;
 	private byte status;
+	
+	@ManyToOne
+    @JoinColumn(name="clinicNo", referencedColumnName="clinic_no")
+	private Clinic clinic;
 
 	/**
 	 *     <set name="providers" table="providersite" cascade="all" lazy="false" fetch="join" inverse="true">
@@ -103,6 +113,10 @@ public class Site extends AbstractModel<Integer> implements java.io.Serializable
 	private Set<Provider> providers;
 
 	public Site() {
+		// Set an empty clinic if the clinic is not set
+		if (clinic == null) {
+			clinic = new Clinic();
+		}
 	}
 
 	public Site(String name, String shortName, String bgColor, byte status) {
@@ -243,5 +257,13 @@ public class Site extends AbstractModel<Integer> implements java.io.Serializable
 
 	public void setProviders(Set<Provider> providers) {
 		this.providers = providers;
+	}
+	
+	public Clinic getClinic() {
+		return clinic;
+	}
+
+	public void setClinic(Clinic clinic) {
+		this.clinic = clinic;
 	}
 }

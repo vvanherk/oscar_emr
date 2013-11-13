@@ -17,7 +17,7 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 --%>
-<%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
+
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%@ page import="java.math.*, java.util.*, oscar.util.*"%>
 <%
@@ -82,171 +82,62 @@ if(request.getParameter("submit")!=null && request.getParameter("submit").equals
 	ArrayList<String> providers = new ArrayList<String>();
 	String htmlValue="";
 	
-	if (bMultisites) {
-		String dateRange = "";
-		String proOHIP=""; 
-		String specialty_code; 
-		String billinggroup_no;
-		String dateBegin = request.getParameter("xml_vdate");
-		String dateEnd = request.getParameter("xml_appointment_date");
-		if (dateEnd.compareTo("") == 0) dateEnd = request.getParameter("curDate");
-		if (dateBegin.compareTo("") == 0){
-			dateRange = " and billing_date <= '" + dateEnd + "'";
-		}else{
-			dateRange = " and billing_date >='" + dateBegin + "' and billing_date <='" + dateEnd + "'";
-		}
-		proObj = (new JdbcBillingPageUtil()).getProviderObj(pro);
-		
-		if (proObj.getOhipNo().length() != PROVIDER_BILLINGNO_LENGTH) 
-			errorMsg = "The provider's billing code is not correct!<br>";
-			
-		proOHIP = proObj.getOhipNo(); 
-		billinggroup_no= proObj.getBillingGroupNo();
-		specialty_code = proObj.getSpecialtyCode();
-
-		if (specialty_code.length() != PROVIDER_SPECIALTYCODE_LENGTH){
-			errorMsg += "The provider's specialty code is not correct!<br>";
-			specialty_code = "00"; 
-		}
-
-		if (billinggroup_no.length() != PROVIDER_GROUPNO_LENGTH){
-			errorMsg += "The provider's group no is not correct!<br>";
-			billinggroup_no = "0000";
-		} 
-
-		JdbcBillingCreateBillingFile dbObj = new JdbcBillingCreateBillingFile();
-		dbObj.setEFlag("0");
-		dbObj.setDateRange(dateRange);
-		dbObj.setProviderNo(pro);
-		BillingBatchHeaderData bhObj = new BillingBatchHeaderData();
-		//bhObj.setId(bid);
-		//bhObj.setDisk_id("" + rs.getInt("disk_id"));
-		//bhObj.setTransc_id(rs.getString("transc_id"));
-		//bhObj.setRec_id(rs.getString("rec_id"));
-		bhObj.setSpec_id("   ");
-		bhObj.setMoh_office(" ");
-		//bhObj.setBatch_id(rs.getString("batch_id"));
-		//bhObj.setOperator(rs.getString("operator"));
-		bhObj.setGroup_num(billinggroup_no);
-		bhObj.setProvider_reg_num(proOHIP);
-		bhObj.setSpecialty(specialty_code);
-		//bhObj.setH_count(rs.getString("h_count"));
-		//bhObj.setR_count(rs.getString("r_count"));
-		//bhObj.setT_count(rs.getString("t_count"));
-		//bhObj.setBatch_date(rs.getString("batch_date"));
-		
-		dbObj.setBatchHeaderObj(bhObj);	
-		dbObj.createSiteBillingFileStr("0", "(status='O' or status='W' or status='I')");
-		htmlValue = "<font color='red'>" + errorMsg + "</font>" + dbObj.getHtmlValue();
+	String dateRange = "";
+	String proOHIP=""; 
+	String specialty_code; 
+	String billinggroup_no;
+	String dateBegin = request.getParameter("xml_vdate");
+	String dateEnd = request.getParameter("xml_appointment_date");
+	if (dateEnd.compareTo("") == 0) dateEnd = request.getParameter("curDate");
+	if (dateBegin.compareTo("") == 0){
+		dateRange = " and billing_date <= '" + dateEnd + "'";
+	}else{
+		dateRange = " and billing_date >='" + dateBegin + "' and billing_date <='" + dateEnd + "'";
 	}
-	else {
-		if ("all".equals(pro)) {
-			BillingReviewPrep prep = new BillingReviewPrep();
-			List<String> providerStr = null;
-			if (isTeamBillingOnly || isTeamAccessPrivacy) {			
-				providerStr = prep.getTeamProviderBillingStr(user_no);
-			}
-			else if (isSiteAccessPrivacy) {
-				providerStr = prep.getSiteProviderBillingStr(user_no);
-			}
-			else {
-				providerStr = prep.getProviderBillingStr();
-			}
-			for (int i = 0; i < providerStr.size(); i++) {
-				providers.add((providerStr.get(i)).split("\\|")[0]);			
-			}
-		}
-		else {
-			providers.add(pro);
-		}
+	proObj = (new JdbcBillingPageUtil()).getProviderObj(pro);
+	
+	if (proObj.getOhipNo().length() != PROVIDER_BILLINGNO_LENGTH) 
+		errorMsg = "The provider's billing code is not correct!<br>";
 		
-		for (String provider : providers) {
-			errorMsg = "";
-			proObj = (new JdbcBillingPageUtil()).getProviderObj(provider);
-			
-			if (proObj.getOhipNo().length() != PROVIDER_BILLINGNO_LENGTH) 
-				errorMsg = "The provider's billing code is not correct!<br>";
-			
-			String proOHIP=""; 
-			String specialty_code; 
-			String billinggroup_no;
-			String dateRange = "";
-			
-			
-			String dateBegin = request.getParameter("xml_vdate");
-			String dateEnd = request.getParameter("xml_appointment_date");
-			if (dateEnd.compareTo("") == 0) dateEnd = request.getParameter("curDate");
-			if (dateBegin.compareTo("") == 0){
-				dateRange = " and billing_date <= '" + dateEnd + "'";
-			}else{
-				dateRange = " and billing_date >='" + dateBegin + "' and billing_date <='" + dateEnd + "'";
-			}
-			
-			proOHIP = proObj.getOhipNo(); 
-			billinggroup_no= proObj.getBillingGroupNo();
-			specialty_code = proObj.getSpecialtyCode();
-		
-			if (specialty_code.length() != PROVIDER_SPECIALTYCODE_LENGTH){
-				errorMsg += "The provider's specialty code is not correct!<br>";
-				specialty_code = "00"; 
-			}
-		
-			if (billinggroup_no.length() != PROVIDER_GROUPNO_LENGTH){
-				errorMsg += "The provider's group no is not correct!<br>";
-				billinggroup_no = "0000";
-			} 
-		
-			JdbcBillingCreateBillingFile dbObj = new JdbcBillingCreateBillingFile();
-			dbObj.setEFlag("0");
-			dbObj.setDateRange(dateRange);
-			dbObj.setProviderNo(provider);
-			BillingBatchHeaderData bhObj = new BillingBatchHeaderData();
-			bhObj.setSpec_id("   ");
-			bhObj.setMoh_office(" ");
-			bhObj.setGroup_num(billinggroup_no);
-			bhObj.setProvider_reg_num(proOHIP);
-			bhObj.setSpecialty(specialty_code);
-			dbObj.setBatchHeaderObj(bhObj);
-			dbObj.errorMsg += errorMsg;
-			
-			dbObj.createBillingFileStr("0", "(status='O' or status='W' or status='I')", true, null, summaryView);
-			if (dbObj.getRecordCount() > 0) {
-				recordCount += dbObj.getRecordCount();	
-				bigTotal = bigTotal.add(dbObj.getBigTotal());
-				htmlValue += dbObj.getHtmlValue();			
-			}			
-			errorCount += "".equals(dbObj.errorMsg) ? 0 : dbObj.errorMsg.split("<br>").length;
-			errorCount += "".equals(dbObj.errorFatalMsg) ? 0 : dbObj.errorFatalMsg.split("<br>").length;
-			dbObj.errorMsg = "";
-		}
-		
-		String billingTable = htmlValue;
-		htmlValue   = "<style type='text/css'><!-- .myGreen{  font-family: Arial, Helvetica, sans-serif;  font-size: 12px; font-style: normal;  line-height: normal;  font-weight: normal;  font-variant: normal;  text-transform: none;  color: #003366;  text-decoration: none; --></style>";
-		htmlValue  += "\n<table width='100%' border='0' cellspacing='0' cellpadding='2'>\n"
-					+ "<tr><td colspan='12' class='myGreen'></td></tr>";
-		if (summaryView) {
-			htmlValue += "\n<tr><td class='myGreen'>OHIP NO</td><td class='myGreen'>NUMBER OF RECORDS</td><td class='myGreen'>TOTAL BILLED</td><td class='myGreen' colspan='9'></td></tr>";
-		}
-		else {
-			htmlValue += "\n<tr><td class='myGreen'>OHIP NO</td><td class='myGreen'>ACCT NO</td>"
-					+ "<td width='25%' class='myGreen'>NAME</td><td class='myGreen'>RO</td><td class='myGreen'>DOB</td><td class='myGreen'>Sex</td><td class='myGreen'>HEALTH #</td>"
-					+ "<td class='myGreen'>BILLDATE</td><td class='myGreen'>CODE</td>"
-					+ "<td align='right' class='myGreen'>BILLED</td>"
-					+ "<td align='right' class='myGreen'>DX</td><td align='right' class='myGreen'>Comment</td></tr>";	
-		
-			
-						
-		}
-		htmlValue  += billingTable;
-		htmlValue  += "\n<tr><td colspan='12' class='myIvory'>&nbsp;</td></tr><tr><td colspan='4' class='myIvory'>" 
-			+ recordCount
-			+ " RECORDS PROCESSED, " 
-			+ errorCount 
-			+" ERROR"+ (errorCount > 1 ? "S" : "") + "</td><td colspan='8' class='myIvory'>TOTAL: "
-			+ bigTotal.toString()
-			+ "\n</td></tr>";
-		htmlValue  += "</table>";
+	proOHIP = proObj.getOhipNo(); 
+	billinggroup_no= proObj.getBillingGroupNo();
+	specialty_code = proObj.getSpecialtyCode();
+
+	if (specialty_code.length() != PROVIDER_SPECIALTYCODE_LENGTH){
+		errorMsg += "The provider's specialty code is not correct!<br>";
+		specialty_code = "00"; 
 	}
+
+	if (billinggroup_no.length() != PROVIDER_GROUPNO_LENGTH){
+		errorMsg += "The provider's group no is not correct!<br>";
+		billinggroup_no = "0000";
+	} 
+
+	JdbcBillingCreateBillingFile dbObj = new JdbcBillingCreateBillingFile();
+	dbObj.setEFlag("0");
+	dbObj.setDateRange(dateRange);
+	dbObj.setProviderNo(pro);
+	BillingBatchHeaderData bhObj = new BillingBatchHeaderData();
+	//bhObj.setId(bid);
+	//bhObj.setDisk_id("" + rs.getInt("disk_id"));
+	//bhObj.setTransc_id(rs.getString("transc_id"));
+	//bhObj.setRec_id(rs.getString("rec_id"));
+	bhObj.setSpec_id("   ");
+	bhObj.setMoh_office(" ");
+	//bhObj.setBatch_id(rs.getString("batch_id"));
+	//bhObj.setOperator(rs.getString("operator"));
+	bhObj.setGroup_num(billinggroup_no);
+	bhObj.setProvider_reg_num(proOHIP);
+	bhObj.setSpecialty(specialty_code);
+	//bhObj.setH_count(rs.getString("h_count"));
+	//bhObj.setR_count(rs.getString("r_count"));
+	//bhObj.setT_count(rs.getString("t_count"));
+	//bhObj.setBatch_date(rs.getString("batch_date"));
+	
+	dbObj.setBatchHeaderObj(bhObj);	
+	dbObj.createSiteBillingFileStr("0", "(status='O' or status='W' or status='I')");
+	htmlValue = "<font color='red'>" + errorMsg + "</font>" + dbObj.getHtmlValue();
+		
 	request.setAttribute("html",htmlValue);
 }
 %>
@@ -320,11 +211,7 @@ String xml_appointment_date = request.getParameter("xml_appointment_date")==null
 		<td width="220"><b><font face="Arial" size="2"> Select
 		Provider </font></b></td>
 		<td width="254"><select name="provider">
-			<% if (bMultisites) { %>
 			<option value="all">Select Providers</option>
-			<% } else { %>
-			<option value="all">All Providers</option>
-			<% } %>
 			<%
 		BillingReviewPrep prep = new BillingReviewPrep();
 			
@@ -354,14 +241,12 @@ String xml_appointment_date = request.getParameter("xml_appointment_date")==null
 		Center: </font></b> <input type="hidden" name="billcenter"
 			value="<%=billCenter%>"> <font face="Arial" size="2"><b><%=healthOffice%></b>
 		</font></td>
-		<% if (!bMultisites) { %>
 		<td width="220">
 			<b><font face="Arial" size="2"> 
 				<input type="checkbox" name="summaryView" id="summaryView" <%= summaryView ? "checked" : "" %> />		
 				<label for="summaryView">Summary View</label> 
 			</font></b>
 		</td>
-		<% } %>
 		<td width="277"><font color="#003366"> <input
 			type="hidden" name="monthCode" value="<%=monthCode%>"> <input
 			type="hidden" name="verCode" value="V03"> <input

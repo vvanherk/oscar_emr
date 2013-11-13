@@ -66,7 +66,6 @@
 </security:oscarSec>
 
 
-<%!  boolean bMultisites=org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 <%!  String [] bgColors; %>
 <%!  List<String> excludedSites = new ArrayList<String>(); %>
 <%
@@ -77,45 +76,35 @@
 
   OscarProperties props = OscarProperties.getInstance();
 
-  boolean bMoreAddr = bMultisites
-  						? true
-  						: (props.getProperty("scheduleSiteID", "").equals("") ? false : true);
   String [] addr;
 
-  if (bMultisites) {
-	//multisite starts =====================
-	  SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-      List<Site> sites = siteDao.getActiveSitesByProviderNo(request.getParameter("provider_no"));
-      List<Site> managerSites;
+  SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+  List<Site> sites = siteDao.getActiveSitesByProviderNo(request.getParameter("provider_no"));
+  List<Site> managerSites;
 
-	  if (isSiteAccessPrivacy) {
-		  // login user have site manager role
-		  managerSites = siteDao.getActiveSitesByProviderNo(CurProviderNo);
-		  //build excluded sites list for sites that not in current site manager
-		  for (Site site : sites) {
-			  if (!managerSites.contains(site)) {
-				  excludedSites.add(site.getName());
-			  }
+  if (isSiteAccessPrivacy) {
+	  // login user have site manager role
+	  managerSites = siteDao.getActiveSitesByProviderNo(CurProviderNo);
+	  //build excluded sites list for sites that not in current site manager
+	  for (Site site : sites) {
+		  if (!managerSites.contains(site)) {
+			  excludedSites.add(site.getName());
 		  }
-
 	  }
 
-	  //login user have admin role
-	  addr = new String[sites.size()+1];
-	  bgColors = new String[sites.size()+1];
-
-      for (int i=0; i<sites.size(); i++) {
-		  addr[i]=sites.get(i).getName();
-		  bgColors[i]=sites.get(i).getBgColor();
-      }
-	  addr[sites.size()]="NONE";
-	  bgColors[sites.size()]="white";
-
-
-	//multisite ends =====================
-  } else {
-  	  addr = props.getProperty("scheduleSiteID", "").split("\\|");
   }
+
+  //login user have admin role
+  addr = new String[sites.size()+1];
+  bgColors = new String[sites.size()+1];
+
+  for (int i=0; i<sites.size(); i++) {
+	  addr[i]=sites.get(i).getName();
+	  bgColors[i]=sites.get(i).getBgColor();
+  }
+  addr[sites.size()]="NONE";
+  bgColors[sites.size()]="white";
+
 
 %>
 <%
@@ -259,7 +248,7 @@ function addDataString() {
   if(document.schedule.checksun.checked) {
     str += "1 ";
     str1 += "<SUN>"+document.schedule.sunfrom1.value+"</SUN>";
-    <%=bMoreAddr? getJSstr("A7", "sunaddr1") : "" %>
+    <%=getJSstr("A7", "sunaddr1")%>
     //alert("<A7>"+document.schedule.sunaddr1[document.schedule.sunaddr1.selectedIndex].text+"</A7>");
   }
   if(document.schedule.checksun.unchecked) {
@@ -269,13 +258,13 @@ function addDataString() {
   if(document.schedule.checkmon.checked) {
     str += "2 ";
 	str1 += "<MON>"+document.schedule.monfrom1.value+"</MON>";
-    <%=bMoreAddr? getJSstr("A1", "monaddr1") : "" %>
+    <%=getJSstr("A1", "monaddr1")%>
   }
   if(document.schedule.checkmon.unchecked) {    str = str.replace("2 ","");  }
   if(document.schedule.checktue.checked) {
     str += "3 ";
 	str1 += "<TUE>"+document.schedule.tuefrom1.value+"</TUE>";
-    <%=bMoreAddr? getJSstr("A2", "tueaddr1") : "" %>
+    <%=getJSstr("A2", "tueaddr1")%>
   }
   if(document.schedule.checktue.unchecked) {
     str = str.replace("3 ","");
@@ -283,25 +272,25 @@ function addDataString() {
   if(document.schedule.checkwed.checked) {
     str += "4 ";
 	str1 += "<WED>"+document.schedule.wedfrom1.value+"</WED>";
-    <%=bMoreAddr? getJSstr("A3", "wedaddr1") : "" %>
+    <%=getJSstr("A3", "wedaddr1")%>
   }
   if(document.schedule.checkwed.unchecked) {    str = str.replace("4 ","");  }
   if(document.schedule.checkthu.checked) {
     str += "5 ";
 	str1 += "<THU>"+document.schedule.thufrom1.value+"</THU>";
-    <%=bMoreAddr? getJSstr("A4", "thuaddr1") : "" %>
+    <%=getJSstr("A4", "thuaddr1")%>
   }
   if(document.schedule.checkthu.unchecked) {    str = str.replace("5 ","");  }
   if(document.schedule.checkfri.checked) {
     str += "6 ";
 	str1 += "<FRI>"+document.schedule.frifrom1.value+"</FRI>";
-    <%=bMoreAddr? getJSstr("A5", "friaddr1") : "" %>
+    <%=getJSstr("A5", "friaddr1")%>
   }
   if(document.schedule.checkfri.unchecked) {    str = str.replace("6 ","");  }
   if(document.schedule.checksat.checked) {
     str += "7 ";
 	str1 += "<SAT>"+document.schedule.satfrom1.value+"</SAT>";
-    <%=bMoreAddr? getJSstr("A6", "sataddr1") : "" %>
+    <%=getJSstr("A6", "sataddr1")%>
   }
   if(document.schedule.checksat.unchecked) {    str = str.replace("7 ","");  }
 
@@ -320,7 +309,7 @@ function addDataStringB() {
   if(document.schedule.checksun2.checked) {
     strB += "1 ";
     str1 += "<SUN>"+document.schedule.sunfrom2.value+"</SUN>";
-    <%=bMoreAddr? getJSstr("A7", "sunaddr2") : "" %>
+    <%=getJSstr("A7", "sunaddr2")%>
   }
   if(document.schedule.checksun2.unchecked) {
     strB = strB.replace("1 ","");
@@ -329,13 +318,13 @@ function addDataStringB() {
   if(document.schedule.checkmon2.checked) {
     strB += "2 ";
 	str1 += "<MON>"+document.schedule.monfrom2.value+"</MON>";
-    <%=bMoreAddr? getJSstr("A1", "monaddr2") : "" %>
+    <%=getJSstr("A1", "monaddr2")%>
   }
   if(document.schedule.checkmon2.unchecked) {    strB = strB.replace("2 ","");  }
   if(document.schedule.checktue2.checked) {
     strB += "3 ";
 	str1 += "<TUE>"+document.schedule.tuefrom2.value+"</TUE>";
-    <%=bMoreAddr? getJSstr("A2", "tueaddr2") : "" %>
+    <%=getJSstr("A2", "tueaddr2")%>
   }
   if(document.schedule.checktue2.unchecked) {
     strB = strB.replace("3 ","");
@@ -343,25 +332,25 @@ function addDataStringB() {
   if(document.schedule.checkwed2.checked) {
     strB += "4 ";
 	str1 += "<WED>"+document.schedule.wedfrom2.value+"</WED>";
-    <%=bMoreAddr? getJSstr("A3", "wedaddr2") : "" %>
+    <%=getJSstr("A3", "wedaddr2")%>
   }
   if(document.schedule.checkwed2.unchecked) {    strB = strB.replace("4 ","");  }
   if(document.schedule.checkthu2.checked) {
     strB += "5 ";
 	str1 += "<THU>"+document.schedule.thufrom2.value+"</THU>";
-    <%=bMoreAddr? getJSstr("A4", "thuaddr2") : "" %>
+    <%=getJSstr("A4", "thuaddr2")%>
   }
   if(document.schedule.checkthu2.unchecked) {    strB = strB.replace("5 ","");  }
   if(document.schedule.checkfri2.checked) {
     strB += "6 ";
 	str1 += "<FRI>"+document.schedule.frifrom2.value+"</FRI>";
-    <%=bMoreAddr? getJSstr("A5", "friaddr2") : "" %>
+    <%=getJSstr("A5", "friaddr2")%>
   }
   if(document.schedule.checkfri2.unchecked) {    strB = strB.replace("6 ","");  }
   if(document.schedule.checksat2.checked) {
     strB += "7 ";
 	str1 += "<SAT>"+document.schedule.satfrom2.value+"</SAT>";
-    <%=bMoreAddr? getJSstr("A6", "sataddr2") : "" %>
+    <%=getJSstr("A6", "sataddr2")%>
   }
   if(document.schedule.checksat2.unchecked) {    strB = strB.replace("7 ","");  }
 
@@ -494,7 +483,6 @@ function addDataString1() {
             param3[i][j]=sthour.nextToken(); j++;
           }
 
-		  if(bMoreAddr) {
 			if(SxmlMisc.getXmlContent(availhour, ("<A"+(i==0?7:i)+">"),"</A"+(i==0?7:i)+">") != null) {
 		    	  sthour = new StringTokenizer(SxmlMisc.getXmlContent(availhour, ("<A"+(i==0?7:i)+">"),"</A"+(i==0?7:i)+">"), "^");
 		          j = 0;
@@ -502,7 +490,6 @@ function addDataString1() {
 	    	        param4[i][j]=sthour.nextToken(); j++;
 	        	  }
 			}
-		  }
 	  }
     }
   }
@@ -614,7 +601,7 @@ function tranbutton7_click() {
 								<td><font size="-1"> <input type="text"
 									name="sunfrom1" size="20" value="<%=param3[0][0]%>" readonly>
 								<input type="button" name="sunto1" value="<<" onclick="javascript:tranbutton1_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("sunaddr1", addr, param4[0][0]) : ""  %>
+								</font> <%=getSelectAddr("sunaddr1", addr, param4[0][0]) %>
 								</td>
 							</tr>
 							<tr>
@@ -625,7 +612,7 @@ function tranbutton7_click() {
 								<td><font size="-1"> <input type="text"
 									name="monfrom1" size="20" value="<%=param3[1][0]%>" readonly>
 								<input type="button" name="monto1" value="<<" onclick="javascript:tranbutton2_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("monaddr1", addr, param4[1][0]) : ""  %>
+								</font> <%=getSelectAddr("monaddr1", addr, param4[1][0]) %>
 								</td>
 							</tr>
 							<tr bgcolor="#CCFFCC">
@@ -636,7 +623,7 @@ function tranbutton7_click() {
 								<td><font size="-1"> <input type="text"
 									name="tuefrom1" size="20" value="<%=param3[2][0]%>" readonly>
 								<input type="button" name="tueto1" value="<<" onclick="javascript:tranbutton3_click();"  >
-								</font> <%=bMoreAddr? getSelectAddr("tueaddr1", addr, param4[2][0]) : ""  %>
+								</font> <%=getSelectAddr("tueaddr1", addr, param4[2][0]) %>
 								</td>
 							</tr>
 							<tr>
@@ -647,7 +634,7 @@ function tranbutton7_click() {
 								<td><font size="-1"> <input type="text"
 									name="wedfrom1" size="20" value="<%=param3[3][0]%>" readonly>
 								<input type="button" name="wedto1" value="<<" onclick="javascript:tranbutton4_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("wedaddr1", addr, param4[3][0]) : ""  %>
+								</font> <%=getSelectAddr("wedaddr1", addr, param4[3][0]) %>
 								</td>
 							</tr>
 							<tr bgcolor="#CCFFCC">
@@ -658,7 +645,7 @@ function tranbutton7_click() {
 								<td><font size="-1"> <input type="text"
 									name="thufrom1" size="20" value="<%=param3[4][0]%>" readonly>
 								<input type="button" name="thuto1" value="<<" onclick="javascript:tranbutton5_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("thuaddr1", addr, param4[4][0]) : ""  %>
+								</font> <%=getSelectAddr("thuaddr1", addr, param4[4][0]) %>
 								</td>
 							</tr>
 							<tr>
@@ -669,7 +656,7 @@ function tranbutton7_click() {
 								<td><font size="-1"> <input type="text"
 									name="frifrom1" size="20" value="<%=param3[5][0]%>" readonly>
 								<input type="button" name="frito1" value="<<" onclick="javascript:tranbutton6_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("friaddr1", addr, param4[5][0]) : ""  %>
+								</font> <%=getSelectAddr("friaddr1", addr, param4[5][0]) %>
 								</td>
 							</tr>
 							<tr bgcolor="#CCFFCC">
@@ -680,7 +667,7 @@ function tranbutton7_click() {
 								<td><font size="-1"> <input type="text"
 									name="satfrom1" size="20" value="<%=param3[6][0]%>" readonly>
 								<input type="button" name="satto1" value="<<" onclick="javascript:tranbutton7_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("sataddr1", addr, param4[6][0]) : ""  %>
+								</font> <%=getSelectAddr("sataddr1", addr, param4[6][0]) %>
 								</td>
 							</tr>
 							<%
@@ -712,14 +699,12 @@ function tranbutton7_click() {
           	j++;
           }
 
-		  if(bMoreAddr) {
-		      sthour = new StringTokenizer(SxmlMisc.getXmlContent(availhour, ("<A"+(i==0?7:i)+">"),"</A"+(i==0?7:i)+">"), "^");
-	          j = 0;
-			  while (sthour.hasMoreTokens() ) {
-	            param4[i][j]=sthour.nextToken();
-	            j++;
-	          }
-		  }
+	      sthour = new StringTokenizer(SxmlMisc.getXmlContent(availhour, ("<A"+(i==0?7:i)+">"),"</A"+(i==0?7:i)+">"), "^");
+          j = 0;
+		  while (sthour.hasMoreTokens() ) {
+            param4[i][j]=sthour.nextToken();
+            j++;
+          }
 	  }
     }
   //}
@@ -759,7 +744,7 @@ function tranbuttonb7_click() {
 								<td><font size="-1"> <input type="text"
 									name="sunfrom2" size="20" value="<%=param3[0][0]%>"> <input
 									type="button" name="sunto2" value="<<" onclick="javascript:tranbuttonb1_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("sunaddr2", addr, param4[0][0]) : ""  %>
+								</font> <%=getSelectAddr("sunaddr2", addr, param4[0][0]) %>
 								</td>
 							</tr>
 							<tr bgcolor="#E0FFFF">
@@ -770,7 +755,7 @@ function tranbuttonb7_click() {
 								<td><font size="-1"> <input type="text"
 									name="monfrom2" size="20" value="<%=param3[1][0]%>"> <input
 									type="button" name="monto2" value="<<" onclick="javascript:tranbuttonb2_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("monaddr2", addr, param4[1][0]) : ""  %>
+								</font> <%=getSelectAddr("monaddr2", addr, param4[1][0]) %>
 								</td>
 							</tr>
 							<tr bgcolor="#00C5CD">
@@ -781,7 +766,7 @@ function tranbuttonb7_click() {
 								<td><font size="-1"> <input type="text"
 									name="tuefrom2" size="20" value="<%=param3[2][0]%>"> <input
 									type="button" name="tueto2" value="<<" onclick="javascript:tranbuttonb3_click();"  >
-								</font> <%=bMoreAddr? getSelectAddr("tueaddr2", addr, param4[2][0]) : ""  %>
+								</font> <%=getSelectAddr("tueaddr2", addr, param4[2][0]) %>
 								</td>
 							</tr>
 							<tr bgcolor="#E0FFFF">
@@ -792,7 +777,7 @@ function tranbuttonb7_click() {
 								<td><font size="-1"> <input type="text"
 									name="wedfrom2" size="20" value="<%=param3[3][0]%>"> <input
 									type="button" name="wedto2" value="<<" onclick="javascript:tranbuttonb4_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("wedaddr2", addr, param4[3][0]) : ""  %>
+								</font> <%=getSelectAddr("wedaddr2", addr, param4[3][0]) %>
 								</td>
 							</tr>
 							<tr bgcolor="#00C5CD">
@@ -803,7 +788,7 @@ function tranbuttonb7_click() {
 								<td><font size="-1"> <input type="text"
 									name="thufrom2" size="20" value="<%=param3[4][0]%>"> <input
 									type="button" name="thuto2" value="<<" onclick="javascript:tranbuttonb5_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("thuaddr2", addr, param4[4][0]) : ""  %>
+								</font> <%=getSelectAddr("thuaddr2", addr, param4[4][0]) %>
 								</td>
 							</tr>
 							<tr bgcolor="#E0FFFF">
@@ -814,7 +799,7 @@ function tranbuttonb7_click() {
 								<td><font size="-1"> <input type="text"
 									name="frifrom2" size="20" value="<%=param3[5][0]%>"> <input
 									type="button" name="frito2" value="<<" onclick="javascript:tranbuttonb6_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("friaddr2", addr, param4[5][0]) : ""  %>
+								</font> <%=getSelectAddr("friaddr2", addr, param4[5][0]) %>
 								</td>
 							</tr>
 							<tr bgcolor="#00C5CD">
@@ -825,7 +810,7 @@ function tranbuttonb7_click() {
 								<td><font size="-1"> <input type="text"
 									name="satfrom2" size="20" value="<%=param3[6][0]%>"> <input
 									type="button" name="satto2" value="<<" onclick="javascript:tranbuttonb7_click();" >
-								</font> <%=bMoreAddr? getSelectAddr("sataddr2", addr, param4[6][0]) : ""  %>
+								</font> <%=getSelectAddr("sataddr2", addr, param4[6][0]) %>
 								</td>
 							</tr>
 							<% }
@@ -901,7 +886,7 @@ function tranbuttonb7_click() {
 <%! String getSelectAddr(String s, String [] site, String sel) {
 
 		boolean isExcludedSiteSelected = false;
-		if (bMultisites && excludedSites.contains(sel))
+		if (excludedSites.contains(sel))
 			isExcludedSiteSelected = true; //"; text-decoration:line-through;";
 
 		String ret = "<select name='" + s + "' "  + (isExcludedSiteSelected ? " disabled style='text-decoration:line-through;'  " : "")
@@ -922,12 +907,11 @@ function tranbuttonb7_click() {
 			}
 
 			if ((isExcludedSiteSelected) || (!excludedSites.contains(site[i]))) {
-				ret += "<option value='" + site[i] + "'" + t + (bMultisites? " style='background-color:"+bgColors[i] + "'": "") +">" + site[i] + "</option>";
+				ret += "<option value='" + site[i] + "'" + t + " style='background-color:"+bgColors[i] + "'>" + site[i] + "</option>";
 			}
 		}
 		ret += "</select>";
-		if (bMultisites)
-			ret += "<script>document.schedule."+s+".style.backgroundColor='"+bgColors[ind]+"';</script>";
+		ret += "<script>document.schedule."+s+".style.backgroundColor='"+bgColors[ind]+"';</script>";
 		if (isExcludedSiteSelected)
 			ret += "<script>document.schedule.check"+s.substring(0,3)+".disabled='true';</script>";
 		return ret;
