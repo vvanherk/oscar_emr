@@ -458,13 +458,6 @@ public class LabPDFCreator extends PdfPageEventHelper{
 								cell.setPhrase(new Phrase((obrFlag ? "   " : "") + obxName, lineFont));
 								table.addCell(cell);
 							}
-							if(handler.getMsgType().equals("PATHL7")) {
-								cell.setPhrase(new Phrase(handler.getOBXResult(j, k).replaceAll("<br\\s*/*>", "\n").replace("\t","\u00a0\u00a0\u00a0\u00a0"), lineFont));
-							} else {
-								cell.setPhrase(new Phrase(handler.getOBXResult(j, k).replaceAll("<br\\s*/*>", "\n"), lineFont));
-							}
-							cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
-							table.addCell(cell);
 
 							if (handler.getMsgType().equals("Spire") && handler.getOBXResult(j, k).length() > 20) {
 								cell.setPhrase(new Phrase(handler.getOBXResult(j, k).replaceAll("<br\\s*/*>", "\n"), lineFont));
@@ -474,9 +467,11 @@ public class LabPDFCreator extends PdfPageEventHelper{
 			                    table.setSplitLate(false);
 			                    //table.completeRow();
 			                } else {
-								cell.setPhrase(new Phrase(handler
-										.getOBXResult(j, k).replaceAll(
-												"<br\\s*/*>", "\n"), lineFont));
+								if(handler.getMsgType().equals("PATHL7")) {
+									cell.setPhrase(new Phrase(handler.getOBXResult(j, k).replaceAll("<br\\s*/*>", "\n").replace("\t","\u00a0\u00a0\u00a0\u00a0"), lineFont));
+								} else {
+									cell.setPhrase(new Phrase(handler.getOBXResult(j, k).replaceAll("<br\\s*/*>", "\n"), lineFont));
+								}
 								cell.setHorizontalAlignment(Element.ALIGN_RIGHT);
 								table.addCell(cell);
 								cell.setHorizontalAlignment(Element.ALIGN_CENTER);
