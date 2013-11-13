@@ -66,9 +66,9 @@ sliCodeHashMap.put( "HIP", bundle.getString("oscar.billing.CA.ON.billingON.OB.SL
 sliCodeHashMap.put( "HOP", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.HOP") );
 sliCodeHashMap.put( "HRP", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.HRP") );
 sliCodeHashMap.put( "IHF", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.IHF") );
-sliCodeHashMap.put( "OFF", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.OFF") );
+sliCodeHashMap.put( "PDF", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.PDF") );
 sliCodeHashMap.put( "OTN", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.OTN") );
-
+sliCodeHashMap.put( "OFF", bundle.getString("oscar.billing.CA.ON.billingON.OB.SLIcode.OFF") );
 
 ClinicLocationDao clinicLocationDao = (ClinicLocationDao) SpringUtils.getBean("clinicLocationDao"); 
 List<ClinicLocation> clinicLocations = clinicLocationDao.getAll();
