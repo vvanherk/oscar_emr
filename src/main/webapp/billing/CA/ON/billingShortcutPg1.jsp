@@ -1301,16 +1301,22 @@ else if (session.getAttribute("hospital_billing_previous_billing_dates")!=null)
 								<option value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
 							<%}%>
 							
-							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OFF") || sliCode.equals("OFF")) {%>
-								<option selected value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("PDF") || sliCode.equals("PDF")) {%>
+								<option selected value="PDF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.PDF" /></option>
 							<%} else { %>
-								<option value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+								<option value="PDF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.PDF" /></option>
 							<%}%>
 							
 							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OTN") || sliCode.equals("OTN")) {%>
 								<option selected value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
 							<%} else { %>
 								<option value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+							<%}%>
+							
+							<%if (SxmlMisc.getXmlContent(rs.getString("comments"),"xml_p_sli").trim().equals("OFF") || sliCode.equals("OFF")) {%>
+								<option selected value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+							<%} else { %>
+								<option value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
 							<%}%>
 							</select>
 				   		</td>

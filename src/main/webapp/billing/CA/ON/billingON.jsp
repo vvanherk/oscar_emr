@@ -1780,8 +1780,9 @@ function changeSite(sel) {
 								<option <%=(sliCode.equals("HOP") ? "selected" : "")%> value="HOP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HOP" /></option>
 								<option <%=(sliCode.equals("HRP") ? "selected" : "")%> value="HRP"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.HRP" /></option>
 								<option <%=(sliCode.equals("IHF") ? "selected" : "")%> value="IHF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.IHF" /></option>
-								<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
+								<option <%=(sliCode.equals("PDF") ? "selected" : "")%> value="PDF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.PDF" /></option>
 								<option <%=(sliCode.equals("OTN") ? "selected" : "")%> value="OTN"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OTN" /></option>
+								<option <%=(sliCode.equals("OFF") ? "selected" : "")%> value="OFF"><bean:message key="oscar.billing.CA.ON.billingON.OB.SLIcode.OFF" /></option>
                         </select> 
                     </td>
                 </tr>
