@@ -711,7 +711,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 				var dateString = date.toFormattedString();
 				if (dateString == "Unspecified")
 					dateString = "";
-				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + itemTime + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + dateString + "</strong> " + item.title + "</span></li>");
+				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + dateString + "</strong> " + item.title + "</span></li>");
 			}
 		}
 	}
