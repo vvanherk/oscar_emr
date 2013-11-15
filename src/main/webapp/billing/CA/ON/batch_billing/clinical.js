@@ -118,3 +118,19 @@ $('#prev_patient').on('click', function(){
 	set_selected(prev);
 });
 
+// Event listener for select-all invoices checkbox
+$("#select-all").on("click", function() {
+	
+	var $selectAllCheckbox = $(this);
+	var $invoiceCheckboxes = $("#invList_body tbody input[type=checkbox]");
+	
+	if ($selectAllCheckbox.prop("checked")) {		
+		$invoiceCheckboxes.prop("checked", true);
+	}
+	else {		
+		$invoiceCheckboxes.prop("checked", false);
+	}
+});
+
+
+

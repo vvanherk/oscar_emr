@@ -19,7 +19,7 @@ function set_selected(sel){
 	var id = $active_class.attr('id');
 	$active_class.css('font-weight', 'normal');
 	$active_class.removeClass('active');
-	if(selected.id > -1){ 	save_invoice_info(); }
+	if(selected.id > -1){ save_invoice_info(); }
 	selected = {'inv': null, 'row': null, 'id':-1};
 	
 	if($active_class.length === 0 || $active_class.attr('id') !== "row"+sel){
@@ -29,7 +29,7 @@ function set_selected(sel){
 		selected = {'inv': invoices[sel], 'row': $("#row"+sel)[0], 'id':sel};
 		load_invoice_info();
 	}
-	
+		
 	return selected;
 }
 
@@ -178,13 +178,13 @@ function insert_invoice(inv){
 	$new_row.attr("id", "row" + invoices.length);
 	
 	//ties row DOM object to expected functionality
-	$new_row.click(function(){
-		var id = $(this).attr("id").split('row')[1];
+	$new_row.on('click', 'td:not(.bc_apply)', function() {
+		var id = $new_row.attr("id").split('row')[1];
 		set_selected(id);
 	});
 	
 	//add to invoices array.
-	invoices.push(inv);		
+	invoices.push(inv);	
 }
 
 /* saves the selected invoice information from user input (fields)
@@ -219,6 +219,8 @@ function save_invoice_info(){
 	$("#items-space").children(".item").remove();
 	create_item_row();
 	
+	// Update Batch Total 
+	item_batchTotal();
 }
 
 /* loads the selected invoice information into user input fields
