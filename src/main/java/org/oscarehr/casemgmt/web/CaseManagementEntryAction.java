@@ -2659,7 +2659,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 	}
 
 	public ActionForward notehistory(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-		if (request.getSession().getAttribute("userrole") == null) return mapping.findForward("expired");
+		/*if (request.getSession().getAttribute("userrole") == null) return mapping.findForward("expired");
 
 		String demono = getDemographicNo(request);
 		request.setAttribute("demoName", getDemoName(demono));
@@ -2669,7 +2669,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		List<CaseManagementNote> history = caseManagementMgr.getHistory(noteid);
 		request.setAttribute("history", history);
 		ResourceBundle props = ResourceBundle.getBundle("oscarResources");
-		request.setAttribute("title", props.getString("oscarEncounter.noteHistory.title"));
+		request.setAttribute("title", props.getString("oscarEncounter.noteHistory.title"));      Commented out November 21, 2013 */ 
 		return mapping.findForward("showHistory");
 	}
 
@@ -2677,7 +2677,14 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		if (request.getSession().getAttribute("userrole") == null) return mapping.findForward("expired");
 
 		String demono = getDemographicNo(request);
-		request.setAttribute("demoName", getDemoName(demono));
+		DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
+		
+		Demographic demo = demographicDao.getDemographic(demono);
+		request.setAttribute("demoName", demo.getDisplayName());
+		request.setAttribute("demoAge", demo.getAge());
+		request.setAttribute("demoSex", demo.getSex());
+		request.setAttribute("demoDOB", demo.getBirthDayAsString());
+		
 		String issueIds = request.getParameter("issueIds");
 
 		List<CaseManagementNote> history = new ArrayList<CaseManagementNote>();
@@ -2695,8 +2702,9 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				} else current.add(new Boolean(true));
 			}
 		}
+		Collections.reverse(history);
 
-		request.setAttribute("history", history);
+		request.setAttribute("history",history);
 		request.setAttribute("current", current);
 
 		StringBuilder title = new StringBuilder();

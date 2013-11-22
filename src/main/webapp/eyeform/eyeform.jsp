@@ -311,7 +311,6 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				<div class="title">
 					Patient Log
 					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
-					<span class="uiBarBtn"><span class="text addBtn" id="addPatientLogBtn">+</span></span>
 				</div>
 				<div class="content">
 					<ul></ul>

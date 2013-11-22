@@ -517,6 +517,11 @@ function rs(n,u,w,h,x) {
   args="width="+w+",height="+h+",resizable=yes,scrollbars=yes,status=0,top=60,left=30";
   remote=window.open(u,n,args);
 }
+
+function popupPatientLog(vwidth,vheight) { //open Patient Log
+  rs("win"+demographicNo,"${ctx}/CaseManagementEntry.do?method=issuehistory&demographicNo="+demographicNo+"&issueIds=64",vwidth, vheight,"");
+}
+
 function referralScriptAttach2(elementName, name2) {
      var d = elementName;
      t0 = escape("document.forms[1].elements[\'"+d+"\'].value");
@@ -1040,6 +1045,9 @@ if(wLReadonly.equals("")){
 			<security:oscarSec roleName="<%=roleName$%>" objectName="_eChart"
 				rights="r" reverse="<%=false%>">
                     <special:SpecialEncounterTag moduleName="eyeform" reverse="true">
+                    <tr><td>
+					<a href="javascript: function myFunction() {return false; }" onclick='popupPatientLog(647, 600)'><bean:message key="oscarEncounter.eyeform.patientLog.title"/></a>
+					</td></tr>
                     <tr><td>
 					<a href="javascript: function myFunction() {return false; }" onClick="popupEChart(710, 1024,encURL);return false;" title="<bean:message key="demographic.demographiceditdemographic.btnEChart"/>">
 					<bean:message key="demographic.demographiceditdemographic.btnEChart" /></a>&nbsp;<a style="text-decoration: none;" href="javascript: function myFunction() {return false; }" onmouseover="return !showMenu('1', event);">+</a>

@@ -289,7 +289,7 @@ function isThisAppointment(apptNo) {
 	return false;
 }
 
-function getApopintmentClass(appointmentNo) {
+function getAppointmentClass(appointmentNo) {
 	if (isThisAppointment(appointmentNo))
 		return "thisVisit";
 	else if (appointmentNo == lastAppointmentNo)
@@ -865,7 +865,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 				lastImpressionSet = true;
 			}
 
-			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
 		}
 
 		impressionHistoryIssueId = jsonData.Issues[0].id;
@@ -873,7 +873,6 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		$(".historyList .item").click(function() {
 			popupPage(800, 1200, "Appointment Report", ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + $(this).attr("appointmentNo"));
 		});
-
 	} else if (boxNameId == "currentIssueHistory") {
 		var currentIssueItems = jsonData.Items;
 		if (jsonData.Items.length > 0 && !jsonData.Items[0].signed) {
@@ -896,7 +895,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 
-			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
 		}
 
 		currentPresentingIssueId = jsonData.Issues[0].id;
@@ -919,7 +918,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 
-			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
 		}
 		*/
 
@@ -942,19 +941,20 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 			
-			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\" note_id='" + item.id + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong><span class='noteContent'>" + item.note.replace( /\n/g, ' ' ) + "</span><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span></li>");
+			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\" note_id='" + item.id + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong><span class='noteContent'>" + item.note.replace( /\n/g, ' ' ) + "</span><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span></li>");
 		}
+		
+		if( boxNameId != "patientLog" ) {
+			$("#" + boxNameId + " .content ul li").click(function(e) {
+				e.stopPropagation();
+				editNote($(this));
+			});
 
-		$("#" + boxNameId + " .content ul li").click(function(e) {
-			e.stopPropagation();
-			editNote($(this));
-		});
-
-		$("#" + boxNameId + " .content ul li .archiveNoteBtn").click(function(e) {
-			e.stopPropagation();
-			archiveNote($(this).parent());
-		});
-
+			$("#" + boxNameId + " .content ul li .archiveNoteBtn").click(function(e) {
+				e.stopPropagation();
+				archiveNote($(this).parent());
+			});
+		}
 
 		if (initialLoad) {
 			if (boxNameId == "planHistory" || boxNameId == "diagnostics" || boxNameId == "patientLog" || boxNameId == "otherMeds" || boxNameId == "reminders" || boxNameId == "ocularHistory" || boxNameId == "familyMedicalOcularHistory" || boxNameId == "eyedrops") {
@@ -968,7 +968,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			}
 		}
 	}
-	if (initialLoad && boxNameId != "officeCommunication") {
+	if (initialLoad && boxNameId != "officeCommunication" && boxNameId != "patientLog") {
 		$("#" + boxNameId + " .addBtn, #" + boxNameId + " .content").click(function(e) {
 			e.stopPropagation();
 
@@ -1055,7 +1055,7 @@ function displayMeasurements(data, table) {
 			for (var i in va) {
 				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
-					vaStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getApopintmentClass(va[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					vaStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(va[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
 				}
 			}
 			vaStr += "<br />";
@@ -1071,7 +1071,7 @@ function displayMeasurements(data, table) {
 			for (var i in iop) {
 				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
-					iopStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getApopintmentClass(iop[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					iopStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(iop[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
 				}
 			}
 			iopStr += "<br />";
@@ -1087,7 +1087,7 @@ function displayMeasurements(data, table) {
 			for (var i in ar) {
 				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
-					arStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getApopintmentClass(ar[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					arStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(ar[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
 				}
 			}
 			arStr += "<br />";
