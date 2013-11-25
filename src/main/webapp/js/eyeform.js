@@ -2137,6 +2137,7 @@ $(document).ready(function() {
 		}
 	});
 
+
 	$("#uiSaveNewSpecsBtn").click(function() {
 		if (!transformDate($("#newSpecsBox input[name=specs.dateStr]")))
 			return false;

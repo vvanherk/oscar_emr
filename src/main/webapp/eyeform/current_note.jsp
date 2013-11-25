@@ -37,7 +37,7 @@
 				String demographicNo = request.getParameter("demographicNo");
 			%>         
 				
-<script>
+<script type="text/javascript">
 
 function setDischarge(){	
 	saveFlags();
@@ -69,7 +69,7 @@ function popupPageOne(varpage,name,height,width) {
 </script>
 
 <span style="float: left;">
-<script>
+<script type="text/javascript">
 function saveEyeformNoteNoGenerate() {
 	saveFlags();
 }
@@ -78,7 +78,6 @@ function saveEyeformNote() {
 	//alert("save function called for eyeform - " + savedNoteId);
 	//do the ajax call to save form values 
 	saveFlags();
-
 	var notetext = '';
 	//get consults/procedures/tests/checkboxes to generate text
 	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getNoteText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
@@ -97,13 +96,14 @@ function saveEyeformNote() {
         notetext += data;
        // if(data.length>0) {notetext+='\n';}
     }});
-
-	
-	var noteTa = document.getElementById('caseNote_note<%=request.getParameter("noteId") %>');
+	var noteTa;
+	if(document.getElementById('caseNote_note<%=request.getParameter("noteId") %>')!= null)
+		noteTa = document.getElementById('caseNote_note<%=request.getParameter("noteId") %>');
+	else
+		noteTa = document.getElementById('impressionAreaBox');
 	var noteTaVal = noteTa.value;
 	noteTaVal = noteTaVal + '\n' + notetext;
-	noteTa.value = noteTaVal;
-	
+	noteTa.value = noteTaVal;	
  }
 
 
@@ -111,7 +111,7 @@ function saveNoteAndSendTickler() {
 	//alert("save function called for eyeform - " + savedNoteId);
 	//do the ajax call to save form values 	
 	saveFlags();
-
+    
 	var notetext = '';
 	//get consults/procedures/tests/checkboxes to generate text
 	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
@@ -148,8 +148,6 @@ function saveFlags() {
 		success: function (){},
 		dataType: 'html'	
 	});
-	
-	
  }
 
 </script>
@@ -161,7 +159,7 @@ function saveFlags() {
 </style>
 
 <span note_addon="saveEyeformNoteNoGenerate"></span>
-<span><input type="button" onclick="popupPageOne('<c:out value="${ctx}"/>/eyeform/EyeformPlan.do?method=form&amp;followup.demographicNo=<%=demographicNo %>&amp;noteId=<%=noteId%>&amp;followup.appointmentNo=<%=aptNo%>','eyeFormPlan',600,1200);" value="Arrange Plan"/></span>
+<span><input class="uiBtn uiBtnInEyeForm" type="button" onclick="popupPageOne('<c:out value="${ctx}"/>/eyeform/EyeformPlan.do?method=form&amp;followup.demographicNo=<%=demographicNo %>&amp;noteId=<%=noteId%>&amp;followup.appointmentNo=<%=aptNo%>','eyeFormPlan',600,1200);" value="Arrange Plan"/></span>
 
 <table width="100%" class="plan">
 <tr>
@@ -233,10 +231,10 @@ function saveFlags() {
             <table>
            <tbody><tr>
            
-            <td nowrap="nowrap" width="40%">
+            <td nowrap="nowrap" width="100%">
             
-           <input tabindex="251" value="Generate Note" onclick="saveEyeformNote();return false;" id="stickler0" style="color: black;" type="button">			
-           &nbsp;
+           <input class="uiBtn uiBtnInEyeForm" tabindex="251" value="Generate Note" onclick="saveEyeformNote();return false;" id="stickler0" type="button">			
+           <!-- &nbsp;
            <b>Send tickler to:</b>
 
             
@@ -246,16 +244,16 @@ function saveFlags() {
 	        	<c:forEach var="item" items="${internalList}">
             		<option value="<c:out value="${item.providerNo}"/>"><c:out value="${item.formattedName}"/></option>
             	</c:forEach>           
-	        </select>
+	        </select> -->
        
 
     
            </td>
-           <td width="15%" nowrap="nowrap">            
-			<input tabindex="251" value="Send Tickler" onclick="saveNoteAndSendTickler();return false;" id="stickler" style="color: black;" type="button">
+           <!-- <td width="15%" nowrap="nowrap">            
+			<input class="uiBtn uiBtnInEyeForm" tabindex="251" value="Send Tickler" onclick="saveNoteAndSendTickler();return false;" id="stickler" type="button">
 			 
-            </td>
-            <td width="45%"></td>
+            </td> 
+            <td width="45%"></td> -->
             
             </tr>
             </tbody></table>
