@@ -5,8 +5,8 @@ body {
 }
 
 #leftBar {
-	width: 200px;
-	padding-right: 10px;
+	width: 19%;
+	padding-right: 8px;
 	position: relative;
 	float: left;
 	border-right: 1px solid #9D9D9D;
@@ -279,7 +279,9 @@ td {
 	vertical-align: top;
 	padding-right: 10px;
 }
-
+.measurementsTableLatest2 td{
+	padding-right: 1px;
+}
 .btn {
 	vertical-align: middle;
 }
@@ -359,6 +361,14 @@ td {
 }
 
 #measurementsTable {
+	position: absolute;
+	pading: 10px;
+	margin: 10px;
+	border: 1px solid black;
+	background: white;
+	z-index: 200;
+}
+measurementsTableLatest2 {
 	position: absolute;
 	pading: 10px;
 	margin: 10px;
@@ -521,7 +531,7 @@ td {
 }
 
 .measurementItem, .mainMeasurements em {
-	margin-right: 4px;
+	margin-right: 2px;
 }
 
 .openAddList {
@@ -728,6 +738,9 @@ td {
 .measurementsTable {
 	width: 100%;
 }
+.measurementsTableLatest2 {
+	width: 100%;
+}
 
 .selectedMeasurementsTable {
 	background-color: #EFEFEF;
@@ -738,13 +751,29 @@ td {
 	color: white;
 	cursor: pointer;
 }
-
-.measurementsTable .measurementsDate {
-	width: 20%;
+.measurementsTableLatest2:hover {
+	background-color: #656565;
+	color: white;
+	cursor: pointer;
 }
 
+.measurementsTable .measurementsDate {
+	width: 10%;
+	font: 8px;	
+}
+.measurementsTableLatest2 .measurementsDate {
+	width: 10%;
+	font: 8px;	
+}
+.measurementsTableNoShow {
+	display:none;
+}
+
+.measurementsTableLatest2 .measurementsDetail {
+	width: 90%;
+}
 .measurementsTable .measurementsDetail {
-	width: 80%;
+	width: 90%;
 }
 
 
@@ -870,4 +899,7 @@ td {
 
 .appointmentSelectBtn .appointmentShowTodayBtn:hover {
 	color: #375F85;
+}
+.uiBtnInEyeForm{
+	color: white;
 }
