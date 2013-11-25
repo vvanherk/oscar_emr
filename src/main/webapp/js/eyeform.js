@@ -837,8 +837,10 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 
 function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 	if (jsonData.Items.length > 0) {
-		if (boxNameId == "impressionHistory" || boxNameId == "currentIssueHistory")
+		if ( boxNameId == "currentIssueHistory")
 			$("#" + boxNameId + " .content").html("<div class='historyList'></div>");
+		else if (boxNameId == "impressionHistory")
+			$("#" + boxNameId + " .content").html("<table class='historyTable'><tbody></tbody></table>");
 		else if (boxNameId != "officeCommunication")
 			$("#" + boxNameId + " .content").html("<ul></ul>");
 	}
@@ -865,12 +867,12 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 				lastImpressionSet = true;
 			}
 
-			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#" + boxNameId + " .historyTable").children("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'><td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td><td style='width:62%'> " + item.note.replace( /\n[\[]/g, '</td><td>[') + "</td></tr>");
 		}
 
 		impressionHistoryIssueId = jsonData.Issues[0].id;
 
-		$(".historyList .item").click(function() {
+		$(".historyList .item, .historyTable tr").click(function() {
 			popupPage(800, 1200, "Appointment Report", ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + $(this).attr("appointmentNo"));
 		});
 	} else if (boxNameId == "currentIssueHistory") {
