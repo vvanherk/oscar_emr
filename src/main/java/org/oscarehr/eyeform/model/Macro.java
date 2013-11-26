@@ -54,6 +54,7 @@ public class Macro extends AbstractModel<Integer>{
 	private String billingVisitLocation;
 	private String billingCodes;
 	private String billingDxcode;
+	private boolean billingRefProv;
 	private String billingTotal;
 	private String billingComment;
 	private String billingBilltype;
@@ -172,6 +173,12 @@ public class Macro extends AbstractModel<Integer>{
 	}
 	public void setBillingDxcode(String billingDxcode) {
 		this.billingDxcode = billingDxcode;
+	}
+	public boolean getBillingRefProv() {
+		return billingRefProv;
+	}
+	public void setBillingRefProv(boolean billingRefProv) {
+		this.billingRefProv = billingRefProv;
 	}
 	public String getBillingTotal() {
 		return billingTotal;

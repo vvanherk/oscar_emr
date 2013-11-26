@@ -3149,8 +3149,11 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			mockReq.addParameter("demographic_name", demo.getLastName() + "," + demo.getFirstName());
 			mockReq.addParameter("sex", "F".equalsIgnoreCase(demo.getSex()) ? "2" : "1");
 			mockReq.addParameter("hc_type", demo.getHcType());
-			String referalNo = getRefNo(demo.getFamilyDoctor());
-			mockReq.addParameter("referralCode", referalNo);
+			if(macro.getBillingRefProv())
+			{
+				String referalNo = getRefNo(demo.getFamilyDoctor());
+				mockReq.addParameter("referralCode", referalNo);
+			}
 			mockReq.addParameter("xml_location", macro.getBillingVisitLocation()); // visit location
 			mockReq.addParameter("m_review", "N"); // manual review, always No
 			// as it's automated

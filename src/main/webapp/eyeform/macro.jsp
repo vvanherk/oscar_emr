@@ -221,6 +221,10 @@ function fixCheckboxes(form) {
 	<td>DX Code<br></td>
 	<td><html:text property="macro.billingDxcode" /></td>
 	</tr>
+	<tr>
+	<td></td>
+	<td><html:checkbox property="macro.billingRefProv" value="billingRefProv"/>Include Referral Provider</td>
+	</tr>
 	<tr><td width="150">Visit Type</td>
 	<td>
 					<html:select property="macro.billingVisitType" styleId="xml_visittype">
