@@ -522,7 +522,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				</tr>
 				<tr>
 					<th>Doctor's Name</th>
-					<td><select id="newSpecsProviderList" name="specs.doctor"></select></td>
+					<td><input type="text" name="specs.doctor" /></td>
 				</tr>
 				<tr>
 					<th>Specs Type</th>

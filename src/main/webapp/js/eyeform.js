@@ -2054,7 +2054,7 @@ $(document).ready(function() {
 		success: function(data) {
 			for (var p in data.providers) {
 
-				$("#newSpecsProviderList, #addProcedureProviderList, #planSendTicklerToList, #newTicklerRecipients, #followUp_doc").append("<option value='" + data.providers[p].providerNo + "'>" + data.providers[p].formattedName + "</option>");
+				$("#addProcedureProviderList, #planSendTicklerToList, #newTicklerRecipients, #followUp_doc").append("<option value='" + data.providers[p].providerNo + "'>" + data.providers[p].formattedName + "</option>");
 
 				if (data.providers[p].providerType=="doctor") {
 					$("#billProvider").append("<option value='" + data.providers[p].providerNo + "|" + data.providers[p].ohipNo + "' providerNo='" + data.providers[p].providerNo + "'>" + data.providers[p].formattedName + "</option>");

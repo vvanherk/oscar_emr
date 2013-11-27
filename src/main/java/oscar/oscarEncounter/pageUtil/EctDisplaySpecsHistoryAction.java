@@ -92,13 +92,7 @@ public class EctDisplaySpecsHistoryAction extends EctDisplayAction {
     	NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
     	item.setDate(sh.getDate());
 
-    	String title;
-    	
-    	if( StringUtils.isNumeric(sh.getDoctor())){
-			title = sh.getType() + " - " + providerDao.getProviderName(sh.getDoctor());
-		} else {
-			title = sh.getType() + " - " + sh.getDoctor();
-		}
+    	String title = sh.getType() + " - " + sh.getDoctor();
     	String itemHeader = StringUtils.maxLenString(title, MAX_LEN_TITLE, CROP_LEN_TITLE, ELLIPSES);
     	item.setTitle(itemHeader);
 
