@@ -10,7 +10,8 @@
 --%>
 
 <%@ include file="/casemgmt/taglibs.jsp" %>
-
+<%@ page
+	import="org.oscarehr.casemgmt.web.formbeans.CaseManagementEntryFormBean, org.oscarehr.common.model.Facility"%>
 <%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.util.LoggedInInfo, org.oscarehr.util.SpringUtils, oscar.OscarProperties, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment, org.oscarehr.util.MiscUtils, oscar.SxmlMisc, org.oscarehr.common.dao.ProfessionalSpecialistDao"  %>
 <%@ page import="org.oscarehr.PMmodule.model.Program" %>
 <%@ page import="org.oscarehr.PMmodule.dao.ProgramDao" %>
@@ -150,6 +151,12 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<div class="title">
 				Billing
 				<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>
+		<div class="smallBox boxTitleLink" id="measurements">
+			<div class="title">
+				measurements
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
@@ -360,14 +367,12 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 		</div>
 		
-		<div class="wideBox" id="measurements">
+		<div class="wideBox" id="measurements-addnew">
 			<div class="title">
 				Measurements
-				<span class="uiBarBtn"><span class="text smallerText" id="nextMeasurementsBtn">Next</span></span>
-				<span class="uiBarBtn"><span class="text smallerText" id="prevMeasurementsBtn">Previous</span></span>
-				<span class="uiBarBtn"><span class="text smallerText" id="showMeasurementsBtn">Modify</span></span>
 			</div>
-			<div class="content">
+			<div id="NewMeasurementContent">
+				<%@include file="/eyeform/exam.jsp" %>
 			</div>
 		</div>
 		
@@ -383,17 +388,14 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 		</div>
 		<div class="formBoxes">
-			<div class="halfBox" id="planHalfBox">
+			<div class="halfBox" style="width:50%;" id="planHalfBox">
 				<div class="title">
 					Plan
 				</div>
 				<div class="content" style="height: auto; font-size: 12px; overflow-x: hidden;">
-					<textarea style="width: 99%; height: 99%;" id="planBox"></textarea>
+					<div id="current_note_addon"></div>
 				</div>
-				<div class="explanation">
-					<strong>Sign, Save &amp; Exit</strong>: all users with the <strong>receptionist</strong> role will receive this message as a tickler.
-				</div>
-			</div>
+		    </div>
 			<div class="uiBtn billBtn floatRight" id="billBtn">Sign, Save &amp; Bill</div>
 			<div class="uiBtn saveSignExitBtn floatRight" id="saveSignExitBtn">Sign, Save &amp; Exit</div>
 			<div class="uiBtn saveBtn floatRight" id="saveBtn">Save &amp; Exit</div>
@@ -618,6 +620,27 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 
 	<script type="text/javascript">
 	var demographicName = "<%=d.getLastName().toUpperCase() %>, <%=d.getFirstName().toUpperCase() %>";
+	</script>
+	<%--Added the following code from noteIssueList.jsp for arrage plan function. --%>
+	<%
+	String ni_frmName = "caseManagementEntryForm" + d.getDemographicNo().toString();
+	CaseManagementEntryFormBean ni_cform = (CaseManagementEntryFormBean)session.getAttribute(ni_frmName);
+	
+	if (request.getParameter("caseManagementEntryForm") == null)
+	{
+		request.setAttribute("caseManagementEntryForm", ni_cform);
+	}
+	
+	long ni_savedId = 0;
+	if (ni_cform != null && ni_cform.getCaseNote() != null && ni_cform.getCaseNote().getId() != null)
+	{
+		ni_savedId = ni_cform.getCaseNote().getId();
+	}
+	%>
+	<script type="text/javascript">	
+		if(typeof messagesLoaded == 'function') {
+	 	     messagesLoaded('<%=ni_savedId%>');
+	    }
 	</script>
 </body>
 </html>

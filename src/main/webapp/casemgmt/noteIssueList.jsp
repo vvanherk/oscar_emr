@@ -511,7 +511,7 @@ if (ni_cform != null && ni_cform.getCaseNote() != null && ni_cform.getCaseNote()
 }
 %>
 
-<script type="test/javascript">
+<script type="text/javascript">
     if(typeof messagesLoaded == 'function') {
  	     messagesLoaded('<%=ni_savedId%>');
     }

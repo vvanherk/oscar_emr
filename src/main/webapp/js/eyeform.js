@@ -836,7 +836,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 }
 
 function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
-	if (jsonData.Items.length > 0) {
+	if (jsonData !=null && jsonData.Items.length > 0) {
 		if ( boxNameId == "currentIssueHistory")
 			$("#" + boxNameId + " .content").html("<div class='historyList'></div>");
 		else if (boxNameId == "impressionHistory")
@@ -875,6 +875,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		$(".historyList .item, .historyTable tr").click(function() {
 			popupPage(800, 1200, "Appointment Report", ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + $(this).attr("appointmentNo"));
 		});
+
 	} else if (boxNameId == "currentIssueHistory") {
 		var currentIssueItems = jsonData.Items;
 		if (jsonData.Items.length > 0 && !jsonData.Items[0].signed) {
@@ -945,18 +946,19 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			
 			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\" note_id='" + item.id + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong><span class='noteContent'>" + item.note.replace( /\n/g, ' ' ) + "</span><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span></li>");
 		}
-		
-		if( boxNameId != "patientLog" ) {
-			$("#" + boxNameId + " .content ul li").click(function(e) {
-				e.stopPropagation();
-				editNote($(this));
-			});
 
-			$("#" + boxNameId + " .content ul li .archiveNoteBtn").click(function(e) {
-				e.stopPropagation();
-				archiveNote($(this).parent());
-			});
-		}
+        if( boxNameId != "patientLog" ) {
+            $("#" + boxNameId + " .content ul li").click(function(e) {
+                e.stopPropagation();
+                editNote($(this));
+            });
+
+            $("#" + boxNameId + " .content ul li .archiveNoteBtn").click(function(e) {
+                e.stopPropagation();
+                archiveNote($(this).parent());
+            });            
+        }
+
 
 		if (initialLoad) {
 			if (boxNameId == "planHistory" || boxNameId == "diagnostics" || boxNameId == "patientLog" || boxNameId == "otherMeds" || boxNameId == "reminders" || boxNameId == "ocularHistory" || boxNameId == "familyMedicalOcularHistory" || boxNameId == "eyedrops") {
@@ -1023,16 +1025,16 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 }
 
 
-function displayMeasurements(data, table) {
+function displayMeasurements(data, table, timeshow) {
 	// Build the initial list of measurements to present
 	// VA, IOP, AR
-
-
+	//<tr><td class='measurementsDate'><strong>" + new Date(parseInt(timesToShow[t])).toFormattedString() + "</strong></td><td class='measurementsDetail' id='measurements_" + timesToShow[t] + "'></td></tr>
+	$(table).append("<tr><td colspan='4'><strong>" + new Date(timeshow).toFormattedString() + "</strong></td></tr>");
 	var vaPresent = false, iopPresent = false, arPresent = false;
 
 	for (var e in eyes) {
 		for (var i in va) {
-			if (!(typeof data[eyes[e] + "_" + i] == "undefined"))
+			if ( !(typeof data[eyes[e] + "_" + i] == "undefined"))
 				vaPresent = true;
 		}
 
@@ -1048,14 +1050,23 @@ function displayMeasurements(data, table) {
 	}
 
 	if (vaPresent || iopPresent || arPresent)
-		$(table).append("<tr />");
-
-	if (vaPresent) {
-		var vaStr = "<strong>VA</strong><br /> ";
+		$(table).append("<tr/>");
+	
+	if (arPresent||iopPresent||vaPresent) {
+		var vaStr = "<br />";
 		for (var e in eyes) {
 			vaStr += "<em>" + eyes[e].toUpperCase() + "</em> ";
+			vaStr += "<br />";
+		}
+
+		$(table).children().last().append("<td>" + vaStr + "</td>");
+	}
+
+	if (vaPresent) {
+		var vaStr="<strong>VA</strong><br /> ";
+		for (var e in eyes) {
 			for (var i in va) {
-				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
+				if (!(typeof data[eyes[e] + "_" + i] == "undefined")&&i.indexOf("ph_distance")==-1) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
 					vaStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(va[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
 				}
@@ -1069,9 +1080,8 @@ function displayMeasurements(data, table) {
 	if (iopPresent) {
 		var iopStr = "<strong>IOP</strong><br /> ";
 		for (var e in eyes) {
-			iopStr += "<em>" + eyes[e].toUpperCase() + "</em> ";
 			for (var i in iop) {
-				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
+				if (!(typeof data[eyes[e] + "_" + i] == "undefined") &&i.indexOf("iop_applanation")!=-1) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
 					iopStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(iop[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
 				}
@@ -1081,15 +1091,16 @@ function displayMeasurements(data, table) {
 
 		$(table).children().last().append("<td>" + iopStr + "</td>");
 	}
-
 	if (arPresent) {
 		var arStr = "<strong>AR</strong><br /> ";
 		for (var e in eyes) {
-			arStr += "<em>" + eyes[e].toUpperCase() + "</em> ";
+			var symbol =[ "-", "+", "x"];
+			var j=0;
 			for (var i in ar) {
 				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
-					arStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(ar[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					arStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(ar[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" +  symbol[j] +data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					j++;
 				}
 			}
 			arStr += "<br />";
@@ -1108,9 +1119,9 @@ function displayMeasurements(data, table) {
 		}
 	}
 
-	if (count > 0) {
-		$(table).append("<tr><td class='moreMeasurements' itemtime='" + newestDate + "'>+ " + count + " more</td></tr>");
-	}
+	/*if (count > 0) {
+		//$(table).append("<tr><td class='moreMeasurements' itemtime='" + newestDate + "'>+ " + count + " more</td></tr>");
+	}*/
 }
 
 function refreshBox(boxName, initialLoad) {
@@ -1237,7 +1248,7 @@ function saveMeasurements() {
 	$("#measurementsSavingMessage").show();
 
 	var postData = "";
-	$("#measurementsBox [measurement]").each(function() {
+	$("#NewMeasurementContent [measurement]").each(function() {
 		var className = $(this).attr("class");
 
 
@@ -1731,7 +1742,7 @@ function loadMeasurements() {
 		}
 		types += $(this).attr("measurement");
 	});
-
+	
 	$.ajax({
 		url:ctx+"/oscarEncounter/MeasurementData.do?demographicNo=" + demographicNo + "&types="+types+"&action=getMeasurementsGroupByDate&appointmentNo=" + appointmentNo + "&fresh=cpp_currentHis&json=true",
 		dataType: "json",
@@ -1771,13 +1782,29 @@ function loadMeasurements() {
 						timesToShow.push(times[t]);
 				}
 			}
-
+            var showAllMeasurements = false;
+            var i = 2;
+            var j = 0;
 			for (var t in timesToShow) {
-				$("#measurements .content").append("<table class='measurementsTable' measurementsTime='" + timesToShow[t] + "'><tr><td class='measurementsDate'><strong>" + new Date(parseInt(timesToShow[t])).toFormattedString() + "</strong></td><td class='measurementsDetail'><table id='measurements_" + timesToShow[t] + "'></table></td></tr></table>");
-				displayMeasurements(data[timesToShow[t]], $("#measurements_" + timesToShow[t]));
+				var showMeasurement = (j<2) || showAllMeasurements;
+				if(showMeasurement)
+					$("#measurements .content").append("<table class='measurementsTableLatest2' measurementsTime='" +  + timesToShow[t] + "' id='measurements_" + timesToShow[t] + "'></table>");
+     			else
+					$("#measurements .content").append("<table class='measurementsTable measurementsTableNoShow' measurementsTime='" +  + timesToShow[t] + "' id='measurements_" + timesToShow[t] + "'></table>");			
+				displayMeasurements(data[timesToShow[t]], $("#measurements_" + timesToShow[t]),parseInt(timesToShow[t]));
+				j=j+1;
 			}
+			
+			$("#measurements .content").append("<span id='showAllMeasurementBtn' class='uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
+				e.stopPropagation();
+			    $(this).parent().find("table").removeClass("measurementsTableNoShow");
+			    document.getElementById('showAllMeasurementBtn').remove();
+			});
 
 			$(".measurementsTable").click(function() {
+				showMeasurementsHistoryBox($(this).attr("measurementsTime"));
+			});
+			$(".measurementsTableLatest2").click(function() {
 				showMeasurementsHistoryBox($(this).attr("measurementsTime"));
 			});
 		}
@@ -2476,3 +2503,28 @@ $(document).ready(function() {
 
 
 });
+//Arrage plan  copy from eyeform2/cme.js
+function messagesLoaded(savedId){
+	   //alert('messagesLoaded() - savedNoteId=' + savedId); 
+	   var noteAddonUrl = ctx+"/eyeform/NoteData.do?method=getCurrentNoteData&demographicNo="+demographicNo+"&noteId="+savedId+"&appointmentNo="+appointmentNo;
+    jQuery.ajax({url:noteAddonUrl,dataType: "html",success: function(data) {
+			jQuery("#current_note_addon").html(data);
+    }});
+
+    jQuery("#displayResolvedIssues").hide();
+    jQuery("#displayUnresolvedIssues").hide();
+    jQuery("#newNoteImg").hide();
+    jQuery("#imgPrintEncounter").removeAttr('onclick');
+    jQuery("#imgPrintEncounter").live('click',function(e){
+ 	   e.preventDefault();
+ 	   location.href=ctx+'/eyeform/Eyeform.do?method=print&apptNos=' + appointmentNo;
+    });
+    jQuery("#assignIssueSection").html("<span>&nbsp;</span>");
+    jQuery("#caseNote_note"+savedId).css('height','10em');
+    
+    jQuery("#saveImg, #signSaveImg, #signVerifyImg, #signSaveBill").bind('click',function() {      	   
+    
+ 	   jQuery("#save_measurements").click();
+ 	   saveEyeformNoteNoGenerate();
+    });    
+}
