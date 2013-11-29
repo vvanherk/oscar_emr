@@ -3153,6 +3153,8 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			{
 				String referalNo = getRefNo(demo.getFamilyDoctor());
 				mockReq.addParameter("referralCode", referalNo);
+			} else {
+				mockReq.addParameter("referralCode", "");
 			}
 			mockReq.addParameter("xml_location", macro.getBillingVisitLocation()); // visit location
 			mockReq.addParameter("m_review", "N"); // manual review, always No
