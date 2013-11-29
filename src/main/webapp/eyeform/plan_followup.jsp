@@ -33,43 +33,34 @@
 	request.setAttribute("providers",providerDao.getActiveProvidersByType("doctor"));
 %>
 
-<div id="followup_<%=id%>">
+<div id="followup_<%=id%>" class="arrangePlanbox">
 					<input type="hidden" name="followup_<%=id%>.id" id="followup_<%=id%>.id" value=""/>
 					
-					<a href="#" onclick="deleteFollowUp(<%=id%>);">[Delete]</a>
+					<a class="col_del" href="#" onclick="deleteFollowUp(<%=id%>);">[Delete]</a>
 					
-					&nbsp;
-					
-		            <select name="followup_<%=id%>.type" id="followup_<%=id%>.type">
-		            	<option value="followup">Follow up</option>
-		            	<option value="consult">Consult</option>
-		            </select>
-	            	
-	            	&nbsp;
-	            		             
-		            <select name="followup_<%=id%>.followupProvider" id="followup_<%=id%>.followupProvider">
+					<select class="col_provider" name="followup_<%=id%>.followupProvider" id="followup_<%=id%>.Provider">
 		            	<c:forEach var="item" items="${providers}">
 		            		<option value="<c:out value="${item.providerNo}"/>"><c:out value="${item.formattedName}"/></option>
 		            	</c:forEach>            	
 					</select>
-				
-	            	&nbsp;
-	            			           
-		             <input type="text" name="followup_<%=id%>.timespan" id="followup_<%=id%>.timespan" size="4"/>		             
-		             <select name="followup_<%=id%>.timeframe" id="followup_<%=id%>.timeframe" >
+					
+		            <select class="col_type" name="followup_<%=id%>.type" id="followup_<%=id%>.type">
+		            	<option value="followup">Follow up</option>
+		            	<option value="consult">Consult</option>
+		            </select>   
+	            	           
+		             <input class="col_timefram1" type="text" name="followup_<%=id%>.timespan" id="followup_<%=id%>.timespan" size="4"/>		             
+		             <select class="col_timefram2" name="followup_<%=id%>.timeframe" id="followup_<%=id%>.timeframe" >
 		             	<option value="days">days</option>
 		            	<option value="weeks">weeks</option>
 		            	<option value="months">months</option>
 		            </select>
-	            	            	
-					&nbsp;
 					
-		            <select name="followup_<%=id%>.urgency" id="followup_<%=id%>.urgency">
+		            <select class="col_urgency" name="followup_<%=id%>.urgency" id="followup_<%=id%>.urgency">
 		             	<option value="routine">routine</option>
 		            	<option value="ASAP">ASAP</option>            	
 		            </select>
-	           
-	           		&nbsp;
-	           		Comment:
-	           		<input type="text" name="followup_<%=id%>.comment" id="followup_<%=id%>.comment" size="40"/>		
+	           		<span class="col_comment1">Comment:</span>
+	           		<input class="col_comment2" type="text" name="followup_<%=id%>.comment" id="followup_<%=id%>.comment" size="40"/>
+	           				
 </div>

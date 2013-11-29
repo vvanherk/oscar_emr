@@ -33,36 +33,35 @@
 	request.setAttribute("providers",providerDao.getActiveProviders());
 %>
 
-<div id="test_<%=id%>">
+<div class="arrangePlanbox" id="test_<%=id%>">
 
 				<input type="hidden" name="test_<%=id%>.id" value=""/>
 					
-				<a href="#" onclick="deleteTest(<%=id%>);">[Delete]</a>
+				<a class="col_del" href="#" onclick="deleteTest(<%=id%>);">[Delete]</a>
 				
-				&nbsp;
+				<select class="col_provider" name="test_<%=id%>.testProvider" id="test_<%=id%>.Provider">
+	            	<c:forEach var="item" items="${providers}">
+	            		<option value="<c:out value="${item.providerNo}"/>"><c:out value="${item.formattedName}"/></option>
+	            	</c:forEach>            	
+				</select>
 				
-
-				<select name="test_<%=id%>.eye">
+				<select class="col_type" name="test_<%=id%>.eye">
 					<option value="OU">OU</option>
 					<option value="OD">OD</option>
 					<option value="OS">OS</option>
 					<option value="n/a">n/a</option>			
 				</select>
-				
-				&nbsp;
-				Name:
-				<input type="text" name="test_<%=id%>.testname" size="30"/>
-			
-				&nbsp;				
-				<select name="test_<%=id%>.urgency">
+						
+				<input class="col_time" type="text" name="test_<%=id%>.testname" title="input Diagnostices name here" id="test_<%=id%>.diagnostices" placeholder="Diagnostices name"
+					 onfocus="if(this.value==''){this.style.color='#000'; this.value='';}"/>
+				 
+				<select class="col_urgency" name="test_<%=id%>.urgency" id="test_<%=id%>.urgency">
 					<option value="routine">routine</option>
 					<option value="ASAP">ASAP</option>
 					<option value="prior to next visit">PTNV</option>
 					<option value="same day next visit">SDNV</option>					
 				</select>
-				
-				&nbsp;
-				Comment:
-				<input type="text" name="test_<%=id%>.comment"/>	
+				<span class="col_comment1">Comment:</span>
+				<input class="col_comment2" type="text" name="test_<%=id%>.comment" id="test_<%=id%>.comment"/>	
 				
 </div>
