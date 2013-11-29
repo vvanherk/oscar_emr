@@ -1,18 +1,24 @@
 <%--
+
     Copyright (c) 2008-2012 Indivica Inc.
+
     This software is made available under the terms of the
     GNU General Public License, Version 2, 1991 (GPLv2).
     License details are available via "indivica.ca/gplv2"
     and "gnu.org/licenses/gpl-2.0.html".
+
 --%>
+
 <%@ include file="/casemgmt/taglibs.jsp" %>
-<%@ page import="org.oscarehr.casemgmt.web.formbeans.CaseManagementEntryFormBean, org.oscarehr.common.model.Facility"%>
+<%@ page
+	import="org.oscarehr.casemgmt.web.formbeans.CaseManagementEntryFormBean, org.oscarehr.common.model.Facility"%>
 <%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.util.LoggedInInfo, org.oscarehr.util.SpringUtils, oscar.OscarProperties, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment, org.oscarehr.util.MiscUtils, oscar.SxmlMisc, org.oscarehr.common.dao.ProfessionalSpecialistDao"  %>
 <%@ page import="org.oscarehr.PMmodule.model.Program" %>
 <%@ page import="org.oscarehr.PMmodule.dao.ProgramDao" %>
 <%
 String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
 OscarProperties properties = OscarProperties.getInstance();
+
 // This is here because the "case_program_id" session attribute is only set during the echart open routine.
 // It's required for CaseManagementManager.filterNotes.  Since all of our Eyeform customers use 10016, this works (for now).Not working!!!
 // Should get program id from program when name equals 'OSCAR'.
@@ -22,8 +28,10 @@ if(p != null)
 	request.getSession().setAttribute("case_program_id", String.valueOf(p.getId()));
 else
 	request.getSession().setAttribute("case_program_id", "0");  //not sure if it should be 0..
+
 String appointmentNo = "";
 String appointmentReason = "";
+
 OscarAppointmentDao appointmentDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
 try {
 	Appointment appointment = null;
@@ -32,6 +40,7 @@ try {
 	} else {
 		appointment = appointmentDao.findDemoAppointmentToday(Integer.parseInt(request.getParameter("demographic_no")));
 	}
+
 	if (appointment != null) {
 		appointmentNo = appointment.getId().toString();
 		appointmentReason = appointment.getReason();
@@ -39,13 +48,18 @@ try {
 } catch (Exception e) {
 	MiscUtils.getLogger().error("[eyeform] Couldn't get appointment data from database", e);
 }
+
 DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
 Demographic d = demographicDao.getDemographicById(Integer.parseInt(request.getParameter("demographic_no")));
+
 ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+
 String rdOhip = null;
 String rdName = null;
+
 try {
 	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+
 	rdOhip = SxmlMisc.getXmlContent(d.getFamilyDoctor(),"rdohip").trim();
 	rdName = professionalSpecialistDao.getByReferralNo(rdOhip).getFormattedName();
 } catch (Exception e) {
@@ -210,6 +224,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<span class="uiBarBtn"><span class="text masterRecBtn">M</span></span>
 			<span class="uiBarBtn"><span class="text eChartBtn">E</span></span>
 			<span class="uiBarBtn"><span class="text iViewsBtn">I-Views</span></span>
+
 		</div>
 		<div id="complaint">
 			<span class="title">Today's Concern</span>
@@ -351,13 +366,10 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				</div>
 			</div>
 		</div>
-	
+		
 		<div class="wideBox" id="measurements-addnew">
 			<div class="title">
 				Measurements
-				<span class="uiBarBtn"><span class="text smallerText" id="nextMeasurementsBtn">Next</span></span>
-				<span class="uiBarBtn"><span class="text smallerText" id="prevMeasurementsBtn">Previous</span></span>
-				<span class="uiBarBtn"><span class="text smallerText" id="showMeasurementsBtn">Modify</span></span>
 			</div>
 			<div id="NewMeasurementContent">
 				<%@include file="/eyeform/exam.jsp" %>
@@ -381,12 +393,9 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 					Plan
 				</div>
 				<div class="content" style="height: auto; font-size: 12px; overflow-x: hidden;">
-					<textarea style="width: 99%; height: 99%;" id="planBox"></textarea>
+					<div id="current_note_addon"></div>
 				</div>
-				<div class="explanation">
-					<strong>Sign, Save &amp; Exit</strong>: all users with the <strong>receptionist</strong> role will receive this message as a tickler.
-				</div>
-			</div>
+		    </div>
 			<div class="uiBtn billBtn floatRight" id="billBtn">Sign, Save &amp; Bill</div>
 			<div class="uiBtn saveSignExitBtn floatRight" id="saveSignExitBtn">Sign, Save &amp; Exit</div>
 			<div class="uiBtn saveBtn floatRight" id="saveBtn">Save &amp; Exit</div>
@@ -432,7 +441,9 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				</div>
 			</div>
 		</div>
+
 	</div>
+
 	<div id="measurementsBox" class="popoutBox measurementsBox" style="display: none;">
 		<div class="boxContent">
 			<div class="boxTitle">
@@ -447,6 +458,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 		</div>
 	</div>
+
 	<div id="newTicklerBox" class="popoutBox newTicklerBox" style="display: none;">
 		<div class="boxContent">
 			<div class="boxTitle">
@@ -475,8 +487,10 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				</tr>
 			</table>
 		</div>
+
 		<div class="arrow"></div>
 	</div>
+
 	<div class="popoutBox ticklerBox newTicklerBox openTicklerUiBox" style="display: none;">
 		<div class="boxContent">
 			<div class="fullBoxContent">
@@ -486,6 +500,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 		</div>
 		<div class="arrow" style="top: 20px;"></div>
 	</div>
+
 	<div class="popoutBox listBox" style="display: none;">
 		<div class="boxContent">
 			<div class="fullBoxContent">
@@ -493,6 +508,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 		</div>
 		<div class="arrow" style="top: 1px;"></div>
 	</div>
+
 	<div id="newSpecsBox" class="popoutBox newSpecsBox" style="display: none;">
 		<div class="boxContent">
 			<div class="boxTitle">
@@ -525,6 +541,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 							   <th width="18%">Add</th>
 							   <th width="18%">Prism</th>
 						   </tr>
+
 						   <tr>
 							   <th width="10%">OD</th>
 							   <td width="18%"><input type="text" value="" size="8" name="specs.odSph"></td>
@@ -533,6 +550,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 							   <td width="18%"><input type="text" value="" size="8" name="specs.odAdd"></td>
 							   <td width="18%"><input type="text" value="" size="8" name="specs.odPrism"></td>
 						   </tr>
+
 						   <tr>
 							   <th width="10%">OS</th>
 							   <td width="18%"><input type="text" value="" size="8" name="specs.osSph"></td>
@@ -550,8 +568,10 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				</tr>
 			</table>
 		</div>
+
 		<div class="arrow" style="top: 1px;"></div>
 	</div>
+
 	<div class="popoutBox newProcedureBox" id="newProcedureBox" style="display: none;">
 		<div class="boxContent">
 			<div class="boxTitle">
@@ -592,9 +612,12 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				</tr>
 			</table>
 		</div>
+
 		<div class="arrow" style="top: 1px;"></div>
 	</div>
+
 	<form name="caseManagementEntryForm"></form>
+
 	<script type="text/javascript">
 	var demographicName = "<%=d.getLastName().toUpperCase() %>, <%=d.getFirstName().toUpperCase() %>";
 	</script>
@@ -602,6 +625,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 	<%
 	String ni_frmName = "caseManagementEntryForm" + d.getDemographicNo().toString();
 	CaseManagementEntryFormBean ni_cform = (CaseManagementEntryFormBean)session.getAttribute(ni_frmName);
+	
 	if (request.getParameter("caseManagementEntryForm") == null)
 	{
 		request.setAttribute("caseManagementEntryForm", ni_cform);

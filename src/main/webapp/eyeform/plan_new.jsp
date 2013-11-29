@@ -37,7 +37,6 @@
 	<title></title>
 	<link rel="stylesheet" type="text/css" href='<html:rewrite page="/jsCalendar/skins/aqua/theme.css" />' />
 	<link rel="stylesheet" type="text/css" href="../css/plan_new.css" />
-	<script type="text/javascript" href="../js/plan_new.js"></script>
 
 	<link rel="stylesheet" type="text/css" media="all" href="<%=request.getContextPath()%>/share/calendar/calendar.css" title="win2k-cold-1" />
 	<script type="text/javascript" src="<%=request.getContextPath()%>/share/calendar/calendar.js"></script>

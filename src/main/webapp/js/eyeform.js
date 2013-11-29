@@ -452,6 +452,7 @@ function archiveNote(item) {
 				loadNoteBox(boxId, noteBoxes[boxId], false);
 			}
 		});
+
 	});
 }
 
@@ -2136,7 +2137,6 @@ $(document).ready(function() {
 			}
 		}
 	});
-
 
 	$("#uiSaveNewSpecsBtn").click(function() {
 		if (!transformDate($("#newSpecsBox input[name=specs.dateStr]")))
