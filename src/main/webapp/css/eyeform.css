@@ -175,6 +175,7 @@ body {
 #leftBar .smallBox {
 	width: 100%;
 	display: block;
+   padding:1px;
 }
 
 .highlight {
@@ -360,11 +361,9 @@ td {
 	border: 1px solid #656565;
 }
 
-.measurementsTable, .measurementsTableLatest2 {
-	position: absolute;
-	padding: 4px;
-	margin: 10px;
-	border: 1px solid black;
+.measurementsTable, .measurementsTableLatest2{
+	padding: 0px;
+	margin: 0px;
 	background: white;
 	z-index: 200;
 }
@@ -378,6 +377,7 @@ td {
 	border: 0;
 	border-bottom: 1px dashed black;
 	width: 100%;
+   padding:0px;
 }
 
 #complaintBox {
@@ -772,7 +772,7 @@ td {
     font-family: Verdana,Tahoma,Arial,sans-serif;
     font-size: 10px;
     height: 90%;
-    padding: 4px;
+    padding: 2px;
     resize: none;
     width: 98.75%;
 }
