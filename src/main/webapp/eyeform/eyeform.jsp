@@ -494,6 +494,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 	<div class="popoutBox ticklerBox newTicklerBox openTicklerUiBox" style="display: none;">
 		<div class="boxContent">
 			<div class="fullBoxContent">
+				<div class="uiBarBtn uiCloseBtn" id="closeTicklerUiBoxBtn"><span class="text">x</span></div>
 				<div class="messageContent"></div>
 				<div class="details"><strong>Date</strong> <span class="messageDate"></span> | <strong>From</strong> <span class="messageFrom"></span> | <strong>To</strong> <span class="messageTo"></span></div>
 			</div>

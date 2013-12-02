@@ -481,6 +481,15 @@ function displayTickler(value, element) {
 				$(box).css("display", "block");
 				$(element).addClass("openBox");
 				$(element).append(box);
+				
+				$("#closeTicklerUiBoxBtn").click(function(event) {
+					event.stopPropagation();
+					if ($("#newSpecsBox").css("display") == "block") {
+						closeAll();
+					} else {
+						closeAll();
+					}
+				});
 			}
 		});
 	})();
