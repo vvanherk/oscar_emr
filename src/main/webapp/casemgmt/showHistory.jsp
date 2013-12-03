@@ -26,10 +26,13 @@
 
 <%@ include file="/casemgmt/taglibs.jsp"%>
 <%@ page
-	import="org.springframework.web.context.*,org.springframework.web.context.support.*, org.oscarehr.PMmodule.service.ProviderManager, org.oscarehr.casemgmt.model.CaseManagementNote"%>
+	import="org.springframework.web.context.*,org.springframework.web.context.support.*, org.oscarehr.PMmodule.service.ProviderManager, org.oscarehr.util.SpringUtils, java.util.List" %>
+<%@ page
+	import="org.oscarehr.casemgmt.model.CaseManagementNoteExt, org.oscarehr.casemgmt.model.CaseManagementNote, org.oscarehr.casemgmt.dao.CaseManagementNoteDAO, org.oscarehr.casemgmt.dao.CaseManagementNoteExtDAO"%>
 <%
     WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
     ProviderManager pMgr = (ProviderManager)ctx.getBean("providerManager");
+    CaseManagementNoteExtDAO caseManagementNoteExtDao = (CaseManagementNoteExtDAO) SpringUtils.getBean("CaseManagementNoteExtDAO");
  %>
 <html>
 <head>
@@ -39,7 +42,7 @@
 	function addNote(){
 		$.ajax({
 			type: "POST",
-			url: "<%=request.getContextPath()%>/CaseManagementEntry.do?method=issueNoteSaveJson&demographic_no=<%=request.getParameter("demographicNo")%>&noteId=0&json=true&issue_id=<%=request.getParameter("issueI")%>",
+			url: "<%=request.getContextPath()%>/CaseManagementEntry.do?method=issueNoteSaveJson&demographic_no=<%=request.getParameter("demographicNo")%>&noteId=0&json=true&issue_id=<%=request.getParameter("issueIds")%>",
 			data: "value=" + $("#noteText").val() + "&issue_code=PatientLog&sign=true",
 			dataType: "json",
 			success: function(data) {
@@ -48,18 +51,6 @@
 		});
 	}
 	
-	function sendTickler(){
-		$.ajax({
-			type: "POST",
-			url: "<%=request.getContextPath()%>/CaseManagementEntry.do?method=issueNoteSaveJson&demographic_no=<%=request.getParameter("demographicNo")%>&noteId=0&json=true&issue_id=<%=request.getParameter("issueI")%>",
-			data: "value=" + $("#noteText").val() + "&issue_code=PatientLog&sign=true",
-			dataType: "json",
-			success: function(data) {
-				location.reload();
-			}
-		});
-	}
-
 </script>
 <link rel="stylesheet" type="text/css" href="<%=request.getContextPath() %>/css/eyeform.css" />
 <style>
@@ -96,7 +87,17 @@
 		</c:if>
 	</nested:notEmpty>
         <c:if test="${note.archived == true}">
-                <div style="color: #336633;">ARCHIVED</div>
+                <div style="color: #336633;">ARCHIVED: 
+                <%
+					CaseManagementNote n = (CaseManagementNote)note;
+					List<CaseManagementNoteExt> archiveNote = caseManagementNoteExtDao.getExtByNote(new Long(n.getId()));
+					CaseManagementNoteExt curr;
+					if(archiveNote != null && archiveNote.size() > 0){ 
+						curr = archiveNote.get(0);
+						out.println(curr.getValue());
+					}
+                %>
+                </div>
         </c:if>
         
         Documentation Date: <nested:write name="note"
@@ -116,4 +117,11 @@
 	</div>
 </nested:iterate>
 </body>
+<script>
+
+	if(<%=request.getParameter("issueIds")%> !== 64){
+		$("#newNote").css('display', 'none');
+	}
+
+</script>
 </html>
