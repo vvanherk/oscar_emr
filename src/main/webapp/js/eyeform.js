@@ -968,7 +968,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 				provName = item.provider.formattedName;
 				
 			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\" note_id='" + item.id + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong><span class='noteContent'>" + item.note.replace( /\n/g, ' ' ) + "</span></li>");
-			
+
 			if(boxNameId != "patientLog") { //changed to build list contents based on item properties.
 				var $currItem = $("#" + boxNameId + " .content ul").children().last();
 				
@@ -983,6 +983,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			}
 		
 		}
+
 
 		$("#" + boxNameId + " .content ul li .archiveNoteBtn").click(function(e) {
 			e.stopPropagation();
