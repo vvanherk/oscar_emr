@@ -208,7 +208,7 @@ public class PlanAction extends DispatchAction {
     			proc.setProcedureName(request.getParameter("procedure_"+x+".procedureName"));
     			proc.setLocation(request.getParameter("procedure_"+x+".location"));
     			proc.setUrgency(request.getParameter("procedure_"+x+".urgency"));
-    			proc.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
+    			proc.setProvider(request.getParameter("procedure_"+x+".Provider"));
     			if(proc.getId() == null)
     				procBookDao.persist(proc);
     			else
@@ -246,8 +246,7 @@ public class PlanAction extends DispatchAction {
     			test.setEye(request.getParameter("test_"+x+".eye"));
     			test.setTestname(request.getParameter("test_"+x+".testname"));
     			test.setUrgency(request.getParameter("test_"+x+".urgency"));
-
-    			test.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
+    			test.setProvider(request.getParameter("test_"+x+".Provider"));
     			if(test.getId() == null)
     				testBookDao.persist(test);
     			else
