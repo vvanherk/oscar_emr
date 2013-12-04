@@ -37,7 +37,7 @@ private String getSiteHTML(String scDate, String provider_no, List<Site> sites) 
 	Integer siteId = 0;
 	
 	try {
-		siteId = Integer.parseInt( reason );
+		siteId = Integer.parseInt( _loc );
 	} catch (Exception e) {
 		MiscUtils.getLogger().error("Unable to parse site number.", e);
 		return "";

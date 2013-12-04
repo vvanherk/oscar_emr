@@ -73,7 +73,7 @@
     available = aHScheduleDate.available.compareTo("1")==0?"checked":""  ;
     strHour = aHScheduleDate.hour;
     //strHour = "value='"+ aHScheduleDate.hour +"'";
-    siteIdAsString = aHScheduleDate.reason ;
+    siteIdAsString = aHScheduleDate.siteId ;
     strCreator= aHScheduleDate.creator;    
   }
   
@@ -174,7 +174,7 @@ function upCaseCtrl(ctrl) {
 				<td>
 				<div align="right">Location:</div>
 				</td>
-				<td><select id="reason" name="reason" onchange='this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor'>
+				<td><select id="site" name="site" onchange='this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor'>
 					<% 
 						for ( Site s : sites ) {
 							boolean match = false;
@@ -197,7 +197,7 @@ function upCaseCtrl(ctrl) {
 			</tr>
 		</table>
 		
-		<script>var _r=document.getElementById('reason'); _r.style.backgroundColor=_r.options[_r.selectedIndex].style.backgroundColor;</script>
+		<script>var _r=document.getElementById('site'); _r.style.backgroundColor=_r.options[_r.selectedIndex].style.backgroundColor;</script>
 		
 		<table width="100%" border="0" cellspacing="0" cellpadding="0">
 			<tr>
