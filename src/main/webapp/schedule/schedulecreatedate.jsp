@@ -28,10 +28,31 @@
 private	List<Site> sites;
 
 private String getSiteHTML(String reason, List<Site> sites) {
-	 if (reason==null||reason.trim().length()==0)
+	 if (reason==null || reason.trim().length()==0)
 		 return "";
-	 else
-		 return "<span style='background-color:"+ApptUtil.getColorFromLocation(sites, reason)+"'>"+ApptUtil.getShortNameFromLocation(sites, reason)+"</span>";
+	
+	Site selectedSite = null; 
+	Integer siteId = 0;
+	
+	try {
+		siteId = Integer.parseInt( reason );
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("Unable to parse site number.", e);
+		return "";
+	}
+	
+	for (Site s : sites) {
+		if (s.getId().equals(siteId)) {
+			selectedSite = s;
+			break;
+		}
+	}
+	
+	if (selectedSite != null)
+		return "<span style='background-color:"+selectedSite.getBgColor()+"'>"+selectedSite.getName()+"</span>";
+
+	return "";
+	 
 }
 %>
 <%
@@ -58,6 +79,7 @@ sites = siteDao.getAllSites();
 <jsp:useBean id="scheduleDateBean" class="java.util.Hashtable"	scope="session" />
 <jsp:useBean id="scheduleHolidayBean" class="java.util.Hashtable" scope="session" />
 <%@ page import="org.oscarehr.util.SpringUtils" %>
+<%@ page import="org.oscarehr.util.MiscUtils" %>
 <%@ page import="org.oscarehr.common.model.ScheduleDate" %>
 <%@ page import="org.oscarehr.common.dao.ScheduleDateDao" %>
 <%@ page import="org.oscarehr.common.model.RSchedule" %>
@@ -397,13 +419,13 @@ function refresh() {
                     if (aHScheduleDate!=null) {
                       bgcolor = new StringBuffer("gold");
                       if(aHScheduleDate.available.equals("0")) bgcolor = new StringBuffer("navy");
-                      strHour = new StringBuffer(aHScheduleDate.hour);
+                      strHour = new StringBuffer(aHScheduleDate.hour!=null?aHScheduleDate.hour:"");
                       strReason = new StringBuffer(aHScheduleDate.reason!=null?aHScheduleDate.reason:"");
                     }
 
             %>
 			<td bgcolor='<%=bgcolor.toString()%>'><a href="#"
-				onclick="popupPage(260,500,'scheduledatepopup.jsp?provider_no=<%=provider_no%>&year=<%=year%>&month=<%=month%>&day=<%=dateGrid[i][j]%>&bFistDisp=1')">
+				onclick="popupPage(260,500,'scheduledatepopup.jsp?provider_no=<%=provider_no%>&year=<%=year%>&month=<%=month%>&day=<%=dateGrid[i][j]%>&site=<%=strReason.toString()%>&bFistDisp=1')">
 			<font color="red"><%= dateGrid[i][j] %></font> <font size="-3"
 				color="blue"><%=strHolidayName.toString()%></font> <br>
 			<font size="-2">&nbsp;<%=strHour.toString()%> <br>

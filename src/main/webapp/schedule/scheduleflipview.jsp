@@ -33,7 +33,28 @@ private List<Site> sites;
 private String [] curScheduleMultisite;
 private String getSiteHTML(String scDate, String provider_no, List<Site> sites) {
 	 String _loc = jdbc.getLocationFromSchedule(scDate, provider_no);
-	 return "<span style='background-color:"+ApptUtil.getColorFromLocation(sites, _loc)+"'>"+ApptUtil.getShortNameFromLocation(sites, _loc)+"</span>";	
+	 
+	Integer siteId = 0;
+	
+	try {
+		siteId = Integer.parseInt( reason );
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("Unable to parse site number.", e);
+		return "";
+	}
+	
+	Site selectedSite = null; 
+	for (Site s : sites) {
+		if (s.getId().equals(siteId)) {
+			selectedSite = s;
+			break;
+		}
+	}
+	
+	if (selectedSite != null)
+		return "<span style='background-color:"+selectedSite.getBgColor()+"'>"+selectedSite.getName()+"</span>";	
+	
+	return "";
 }
 %>
 

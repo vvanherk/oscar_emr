@@ -53,6 +53,7 @@
 <%@ page
 	import="java.util.*, java.sql.*, oscar.*, java.text.*, java.lang.*"
 	errorPage="../appointment/errorpage.jsp"%>
+<%@ page import="org.oscarehr.util.MiscUtils" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <jsp:useBean id="scheduleMainBean" class="oscar.AppointmentMainBean"
@@ -63,15 +64,23 @@
   String year = request.getParameter("year");
   String month = MyDateFormat.getDigitalXX(Integer.parseInt(request.getParameter("month")));
   String day = MyDateFormat.getDigitalXX(Integer.parseInt(request.getParameter("day")));
+  String siteIdAsString = request.getParameter("site");
 
-  String available = "checked", strHour = "", strReason = "value=''", strCreator="Me";
+  String available = "checked", strHour = "", strCreator="Me";
   HScheduleDate aHScheduleDate= (HScheduleDate) scheduleDateBean.get(year+"-"+month+"-"+day);
+  Integer selectedSiteId = 0;
   if (aHScheduleDate!=null) {
     available = aHScheduleDate.available.compareTo("1")==0?"checked":""  ;
     strHour = aHScheduleDate.hour;
     //strHour = "value='"+ aHScheduleDate.hour +"'";
-    strReason = aHScheduleDate.reason ;
-    strCreator= aHScheduleDate.creator;
+    siteIdAsString = aHScheduleDate.reason ;
+    strCreator= aHScheduleDate.creator;    
+  }
+  
+  try {
+	selectedSiteId = Integer.parseInt( siteIdAsString );
+  } catch (Exception e) {
+    MiscUtils.getLogger().error("Unable to parse site number.", e);
   }
 
 %>
@@ -155,19 +164,9 @@ function upCaseCtrl(ctrl) {
 			</tr>
 			<% 
           OscarProperties props = OscarProperties.getInstance();
-          
-          String [] siteList;
 
 		  SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
 		  List<Site> sites = siteDao.getActiveSitesByProviderNo(request.getParameter("provider_no")); 
-		  siteList = new String[sites.size()+1];
-		  bgColors = new String[sites.size()+1];
-		  for (int i=0; i<sites.size(); i++) {
-			  siteList[i]=sites.get(i).getName();
-			  bgColors[i]=sites.get(i).getBgColor();
-		  }
-		  siteList[sites.size()]="NONE";
-		  bgColors[sites.size()]="white";
 	  
           %>
           
@@ -176,13 +175,19 @@ function upCaseCtrl(ctrl) {
 				<div align="right">Location:</div>
 				</td>
 				<td><select id="reason" name="reason" onchange='this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor'>
-					<% for(int i=0; i<siteList.length; i++) { %>
-					<option value="<%=siteList[i]%>" <%=" style='background-color:"+bgColors[i]+"'"%>
-						<%=strReason.equals(siteList[i])?"selected":""%>><b><%=siteList[i]%></b></option>
-					<% } %>
+					<% 
+						for ( Site s : sites ) {
+							boolean match = false;
+							if( selectedSiteId != null && s.getId().equals(selectedSiteId))
+								match = true;
+					%>
+						<option value="<%=s.getId()%>" <%=" style='background-color:"+s.getBgColor()+"'"%>
+						<%=match?"selected":""%>><b><%=s.getName()%></b></option>
+					<%
+					}
+					%>
 				</select> </td>
 			</tr>
-			<!--  input type="hidden" name="reason" <%--=strReason--%> -->
 			<tr>
 				<td>
 				<div align="right"><bean:message
