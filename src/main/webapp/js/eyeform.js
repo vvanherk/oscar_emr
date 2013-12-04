@@ -352,6 +352,8 @@ function editNote(item) {
 	$(item).find("input").attr("value", data);
 
 	$(item).unbind("click");
+	
+	$(item).find("input").click(function(e){ e.stopPropagation(); });
 
 	$(item).find("input").blur(function() {
 		$(this).parent().unbind("click");
@@ -1010,6 +1012,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 	if (initialLoad && boxNameId != "officeCommunication" && boxNameId != "patientLog") {
 		$("#" + boxNameId + " .addBtn, #" + boxNameId + " .content").click(function(e) {
 			e.stopPropagation();
+			$("#" + boxNameId).find(".updating").find("input").blur();
 
 			checkModify($("#newNoteText"));
 			$("#" + boxNameId + " .content ul").prepend("<li><input type='text' id='newNoteText' /></li>");
