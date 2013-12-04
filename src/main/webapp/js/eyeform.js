@@ -505,11 +505,7 @@ function displayTickler(value, element) {
 				
 				$("#closeTicklerUiBoxBtn").click(function(event) {
 					event.stopPropagation();
-					if ($("#newSpecsBox").css("display") == "block") {
-						closeAll();
-					} else {
-						closeAll();
-					}
+					closeAll();
 				});
 			}
 		});
