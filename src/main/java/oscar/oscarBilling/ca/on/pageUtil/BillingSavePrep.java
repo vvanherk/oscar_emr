@@ -29,6 +29,10 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.log4j.Logger;
 import org.oscarehr.util.MiscUtils;
 
+import org.oscarehr.util.SpringUtils;
+import org.oscarehr.PMmodule.dao.ProviderDao;
+import org.oscarehr.common.model.Provider;
+
 import oscar.oscarBilling.ca.on.data.BillingClaimHeader1Data;
 import oscar.oscarBilling.ca.on.data.BillingDataHlp;
 import oscar.oscarBilling.ca.on.data.BillingItemData;
@@ -155,7 +159,11 @@ public class BillingSavePrep {
 				: BillingDataHlp.CLAIMHEADER1_PAYEE);
 		claim1Header.setRef_num(val.getParameter("referralCode"));
 
-		claim1Header.setFacilty_num(val.getParameter("xml_location").substring(0, 4));
+		String xml_location = val.getParameter("xml_location");
+		if ( xml_location.indexOf("|") >= 0 )
+			xml_location = xml_location.substring(0, xml_location.indexOf("|")).trim();
+
+		claim1Header.setFacilty_num(xml_location);
 		claim1Header.setAdmission_date(val.getParameter("xml_vdate"));
 
 		claim1Header.setRef_lab_num("");
@@ -166,8 +174,8 @@ public class BillingSavePrep {
 		}
 
 		claim1Header.setDemographic_no(val.getParameter("demographic_no"));
-		claim1Header.setProviderNo(val.getParameter("xml_provider").substring(0,
-				val.getParameter("xml_provider").indexOf("|")));
+		String providerNo = val.getParameter("xml_provider");
+		claim1Header.setProviderNo( providerNo );
 
 		claim1Header.setBilling_date( UtilDateUtilities.getToday("yyyy-MM-dd") );
 		claim1Header.setBilling_time(val.getParameter("start_time"));
@@ -184,14 +192,25 @@ public class BillingSavePrep {
 		claim1Header.setStatus(getStatus(val.getParameter("submit"), val.getParameter("xml_billtype")));
 		claim1Header.setComment(val.getParameter("comment") != null ? val.getParameter("comment") : "");
 		claim1Header.setVisittype(val.getParameter("xml_visittype").substring(0, 2));
-		claim1Header.setProvider_ohip_no(val.getParameter("xml_provider").substring(
-				val.getParameter("xml_provider").indexOf("|") + 1));
+		
+		ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
+		Provider p = providerDao.getProvider( providerNo );
+		claim1Header.setProvider_ohip_no( p.getOhipNo() );
+		
 		claim1Header.setProvider_rma_no("");
 		claim1Header.setApptProvider_no(val.getParameter("apptProvider_no"));
 		claim1Header.setAsstProvider_no("");
 		claim1Header.setCreator((String) val.getSession().getAttribute("user"));
-
-		claim1Header.setClinic(val.getParameter("site"));
+		
+		Integer siteNo = null;
+		if (val.getParameter("site") != null) {
+			try {
+				siteNo = Integer.parseInt( val.getParameter("site") );
+			} catch (Exception e) {
+				_logger.error("Unable to parse site number.", e);
+			}
+		}
+		claim1Header.setSite(siteNo);
 
 		return claim1Header;
 	}
@@ -238,7 +257,11 @@ public class BillingSavePrep {
 				: BillingDataHlp.CLAIMHEADER1_PAYEE);
 		claim1Header.setRef_num(val.getParameter("referralCode"));
 
-		claim1Header.setFacilty_num(val.getParameter("xml_location").substring(0, 4));
+		String xml_location = val.getParameter("xml_location");
+		if ( xml_location.indexOf("|") >= 0 )
+			xml_location = xml_location.substring(0, xml_location.indexOf("|")).trim();
+
+		claim1Header.setFacilty_num(xml_location);
 		claim1Header.setAdmission_date(val.getParameter("xml_vdate"));
 
 		claim1Header.setRef_lab_num("");
@@ -308,7 +331,7 @@ public class BillingSavePrep {
 		valsMap.put("demographic_no",val.getParameter("demographic_no"));
 		valsMap.put("billTo",val.getParameter("billto"));
 		valsMap.put("remitTo",val.getParameter("remitto"));
-        valsMap.put("clinicNo",val.getParameter("clinicNo"));
+        valsMap.put("siteNo",val.getParameter("siteNo"));
         valsMap.put("total",val.getParameter("gstBilledTotal"));
         if (val.getParameter("submit").equalsIgnoreCase("Settle & Print Invoice")) {
           valsMap.put("payment", valsMap.get("total"));

@@ -27,9 +27,11 @@
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%!
-//multisite starts =====================
+
 private	List<Site> sites; 
-private boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
+
+private List<Clinic> clinics = new ArrayList<Clinic>();
+private String selectedClinic = null;
 
 private List<Site> curUserSites = new ArrayList<Site>();
 private String [] curScheduleMultisite;
@@ -45,7 +47,7 @@ private String getSiteHTML(String reason, List<Site> sites) {
 	 else 
 		 return "<span style='background-color:"+ApptUtil.getColorFromLocation(sites, reason)+"'>"+ApptUtil.getShortNameFromLocation(sites, reason)+"</span>";	
 }
-//multisite ends =====================
+
 %>
 
 <!--oscarMessenger Code block -->
@@ -125,7 +127,7 @@ if (org.oscarehr.common.IsPropertiesOn.isCaisiEnable() && org.oscarehr.common.Is
   int NameMaxLen = 15;
 %>
 <%
-//multisite starts =====================
+
 	boolean isSiteAccessPrivacy=false;
 	boolean isTeamAccessPrivacy=false; 
 %>
@@ -137,54 +139,63 @@ if (org.oscarehr.common.IsPropertiesOn.isCaisiEnable() && org.oscarehr.common.Is
 </security:oscarSec>
 
 <% 
-if (bMultisites) {
-	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-	sites = siteDao.getAllActiveSites(); 
-	
-	String requestSite = request.getParameter("site") ;
-	if (requestSite!=null) 
-	{
-		requestSite = (requestSite.equals("none") ? null : requestSite);
-		session.setAttribute("site_selected", requestSite );
-	}
-	selectedSite = (requestSite == null ? (String)session.getAttribute("site_selected") : requestSite) ;
-	selectedSiteBgColor = (selectedSite != null ? siteBgColor.get(selectedSite) : null);
-	
-	if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
-		//user has Access Privacy, set user provider and group list
-		String siteManagerProviderNo = (String) session.getAttribute("user");
-		curUserSites = siteDao.getActiveSitesByProviderNo(siteManagerProviderNo);
-		if (selectedSite==null) {
-			siteProviderNos = siteDao.getProviderNoBySiteManagerProviderNo(siteManagerProviderNo);
-			siteGroups = siteDao.getGroupBySiteManagerProviderNo(siteManagerProviderNo);
-		}
-	}
-	else {
-		//get all active site as user site list
-		curUserSites = sites;
-	}
-	
-	for (Site s : curUserSites) {
-		CurrentSiteMap.put(s.getName(),"Y");
-	}
-	
-	CurrentSiteMap.put("NONE", "Y"); // added by vic for the reason that some provider could work in multiple clinics in same day, when the schedule template will set the default location to NONE.
+ClinicDAO clinicDao = (ClinicDAO)WebApplicationContextUtils.getWebApplicationContext(application).getBean("clinicDAO");
 
-	// a site has been seleceted
-	if (selectedSite != null) {
-		//get site provider list
-		siteProviderNos = siteDao.getProviderNoBySiteLocation(selectedSite);
-		siteGroups = siteDao.getGroupBySiteLocation(selectedSite);
-	}
-	
-	//get all sites bgColors
-	for (Site st : sites) {
-		siteBgColor.put(st.getName(),st.getBgColor());
-	}
-	
+// TODO: access privacy for clinics
+clinics = clinicDao.findAll();
 
+SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+sites = siteDao.getAllActiveSites(); 
+
+String requestClinic = request.getParameter("clinic") ;
+if (requestClinic != null) 
+{
+	requestClinic = (requestClinic.equals("none") ? null : requestClinic);
+	session.setAttribute("clinic_selected", requestClinic );
 }
-//multisite ends =======================
+selectedClinic = (requestClinic == null ? (String)session.getAttribute("clinic_selected") : requestClinic) ;
+
+String requestSite = request.getParameter("site") ;
+if (requestSite!=null) 
+{
+	requestSite = (requestSite.equals("none") ? null : requestSite);
+	session.setAttribute("site_selected", requestSite );
+}
+selectedSite = (requestSite == null ? (String)session.getAttribute("site_selected") : requestSite) ;
+selectedSiteBgColor = (selectedSite != null ? siteBgColor.get(selectedSite) : null);
+
+if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
+	//user has Access Privacy, set user provider and group list
+	String siteManagerProviderNo = (String) session.getAttribute("user");
+	curUserSites = siteDao.getActiveSitesByProviderNo(siteManagerProviderNo);
+	if (selectedSite==null) {
+		siteProviderNos = siteDao.getProviderNoBySiteManagerProviderNo(siteManagerProviderNo);
+		siteGroups = siteDao.getGroupBySiteManagerProviderNo(siteManagerProviderNo);
+	}
+}
+else {
+	//get all active site as user site list
+	curUserSites = sites;
+}
+
+for (Site s : curUserSites) {
+	CurrentSiteMap.put(s.getName(),"Y");
+}
+
+CurrentSiteMap.put("NONE", "Y"); // added by vic for the reason that some provider could work in multiple clinics in same day, when the schedule template will set the default location to NONE.
+
+// a site has been seleceted
+if (selectedSite != null) {
+	//get site provider list
+	siteProviderNos = siteDao.getProviderNoBySiteLocation(selectedSite);
+	siteGroups = siteDao.getGroupBySiteLocation(selectedSite);
+}
+
+//get all sites bgColors
+for (Site st : sites) {
+	siteBgColor.put(st.getName(),st.getBgColor());
+}
+
 %>
 <%@ page import="oscar.dao.*" %>
 <%@ page
@@ -279,6 +290,8 @@ if (bMultisites) {
 
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.oscarehr.common.model.Site"%>
+<%@page import="org.oscarehr.common.dao.ClinicDAO"%>
+<%@page import="org.oscarehr.common.model.Clinic"%>
 <%@page import="oscar.appt.JdbcApptImpl"%>
 <%@page import="oscar.appt.ApptUtil"%><html:html locale="true">
 <head>
@@ -634,7 +647,7 @@ function refreshTabAlerts(id) {
 <%
 	resultList = oscarSuperManager.find("providerDao", "searchmygroupno", new Object[] {});
 	for (Map group : resultList) {
-		if (!bMultisites || siteGroups == null || siteGroups.size() == 0 || siteGroups.contains(group.get("mygroup_no"))) {  		
+		if (siteGroups == null || siteGroups.size() == 0 || siteGroups.contains(group.get("mygroup_no"))) {  		
 %>
 					<option value="<%="_grp_"+group.get("mygroup_no")%>" <%=(providerview.indexOf("_grp_") != -1 && mygroupno.equals(group.get("mygroup_no")))?"selected":""%> <%= (selectedSiteBgColor != null ? "style=\"color:"+selectedSiteBgColor+"\"" : "") %>>
 						<bean:message key="provider.appointmentprovideradminmonth.formGRP" />: <%=group.get("mygroup_no")%>
@@ -645,7 +658,7 @@ function refreshTabAlerts(id) {
 	
 	resultList = oscarSuperManager.find("providerDao", "searchprovider", new Object[] {});
 	for (Map provider : resultList) {
-		if (!bMultisites || siteProviderNos  == null || siteProviderNos.size() == 0 || siteProviderNos.contains(provider.get("provider_no"))) { 
+		if (siteProviderNos  == null || siteProviderNos.size() == 0 || siteProviderNos.contains(provider.get("provider_no"))) { 
 			providerOptions.add((String)provider.get("provider_no"));
 			providerNameBean.setDef(String.valueOf(provider.get("provider_no")), provider.get("last_name")+","+provider.get("first_name"));
 %>
@@ -673,9 +686,12 @@ function refreshTabAlerts(id) {
 %>
 
 				</select>
-				<space style="padding-left:30px"/>
- <%if (bMultisites) { %>		
+				<space style="padding-left:30px"/>	
 	   <script>
+			function changeClinic(sel) {
+				
+			}
+			
 			function changeSite(sel) {
 				sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
 				var siteName = sel.options[sel.selectedIndex].value;
@@ -693,18 +709,27 @@ function refreshTabAlerts(id) {
 			}
       </script>
       
-    	<select id="site" name="site" onchange="changeSite(this)" style="background-color: <%=( selectedSite == null || siteBgColor.get(selectedSite) == null ? "#FFFFFF" : siteBgColor.get(selectedSite))%>">
-    		<option value="none" style="background-color:white">---all clinic---</option>
+		<select id="clinic" name="clinic" onchange="changeClinic(this)">
+    		<option value="none">---All Clinics---</option>
     	<%
-    	for (int i=0; i<curUserSites.size(); i++) {
+    	for ( Clinic c : clinics) {
     	%>
-    		<option value="<%= curUserSites.get(i).getName() %>" style="background-color:<%= curUserSites.get(i).getBgColor() %>" 
-    				<%=(curUserSites.get(i).getName().equals(selectedSite)) ? " selected " : "" %> >
-    			<%= curUserSites.get(i).getName() %>
+    		<option value="<%=c.getId()%>" <%=(c.getId().toString().equals(selectedClinic)) ? " selected " : "" %> >
+    			<%= c.getClinicName() %>
     		</option>
     	<% } %>
     	</select>
-<%} %>    	
+      
+    	<select id="site" name="site" onchange="changeSite(this)" style="background-color: <%=( selectedSite == null || siteBgColor.get(selectedSite) == null ? "#FFFFFF" : siteBgColor.get(selectedSite))%>">
+    		<option value="none" style="background-color:white">---All Sites---</option>
+    	<%
+    	for (Site s : curUserSites) {
+    	%>
+    		<option value="<%=s.getId()%>" style="background-color:<%= s.getBgColor() %>" <%=(s.getId().toString().equals(selectedSite)) ? " selected " : "" %> >
+    			<%=s.getName()%>
+    		</option>
+    	<% } %>
+    	</select>	
 				<space style="padding-left:30px"/>
 	
 				</td>
@@ -803,14 +828,10 @@ function refreshTabAlerts(id) {
     	%>
     <br>
 	<%
-    	if (bMultisites && CurrentSiteMap.get(date.get("reason")) != null && ( selectedSite == null || "NONE".equals(date.get("reason")) || selectedSite.equals(date.get("reason")))) {
+    	if (CurrentSiteMap.get(date.get("reason")) != null && ( selectedSite == null || "NONE".equals(date.get("reason")) || selectedSite.equals(date.get("reason")))) {
 %> 
-<% if (bMultisites) { out.print(getSiteHTML((String)date.get("reason"), sites)); } %>
-					
-<% if (!bMultisites) { %>	
-					
-						<span class='datepreason'><%=date.get("reason") %></span>
-<% } %>
+<% out.print(getSiteHTML((String)date.get("reason"), sites)); %>
+
 <%  } 
 %>	
 <span class='datepname'>&nbsp;<%=providerNameBean.getShortDef(String.valueOf(date.get("provider_no")),"",NameMaxLen )%></span><span

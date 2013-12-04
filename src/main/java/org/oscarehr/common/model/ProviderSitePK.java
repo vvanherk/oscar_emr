@@ -74,6 +74,7 @@ public class ProviderSitePK implements java.io.Serializable  {
 	public boolean equals(Object o) {
 		try {
 			ProviderSitePK o1 = (ProviderSitePK) o;
+			// Is '==' really what we want here?  Do we want to compare the String pointers or the String contents?
 			return ((providerNo == o1.providerNo) && (siteId == o1.siteId));
 		} catch (RuntimeException e) {
 			return (false);

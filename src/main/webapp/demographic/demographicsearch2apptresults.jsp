@@ -205,7 +205,7 @@ function searchAll() {
 		<input type="hidden" name="appointment_date" value="<%=request.getParameter("appointment_date")%>">
 		<input type="hidden" name="notes" value="<%=request.getParameter("notes")%>">
 		<input type="hidden" name="reason" value="<%=request.getParameter("reason")%>">
-		<input type="hidden" name="location" value="<%=request.getParameter("location")%>">
+		<input type="hidden" name="site" value="<%=request.getParameter("site")%>">
 		<input type="hidden" name="resources" value="<%=request.getParameter("resources")%>">
 		<input type="hidden" name="type" value="<%=request.getParameter("type")%>">
 		<input type="hidden" name="style" value="<%=request.getParameter("style")%>">
@@ -456,7 +456,7 @@ function addNameCaisi(demographic_no,lastname,firstname,chartno,messageID) {
   		params.put("appointment_date", request.getParameter("appointment_date"));  		
   		params.put("notes", request.getParameter("notes"));
   		params.put("reason", request.getParameter("reason"));
-  		params.put("location", request.getParameter("location"));
+  		params.put("site", request.getParameter("site"));
   		params.put("resources", request.getParameter("resources"));
   		params.put("apptType", request.getParameter("type"));
   		params.put("style", request.getParameter("style"));
@@ -473,7 +473,7 @@ function addNameCaisi(demographic_no,lastname,firstname,chartno,messageID) {
 	<caisi:isModuleLoad moduleName="caisi" reverse="true">
 	<bean:message key="demographic.search.noResultsWereFound" />
     <div class="createNew">
-	 <a href="../demographic/demographicaddarecordhtm.jsp?fromAppt=1&originalPage=<%=request.getParameter("originalPage")%>&keyword=<%=request.getParameter("keyword")%>&notes=<%=request.getParameter("notes")%>&appointment_date=<%=request.getParameter("appointment_date")%>&year=<%=request.getParameter("year")%>&month=<%=request.getParameter("month")%>&day=<%=request.getParameter("day")%>&start_time=<%=request.getParameter("start_time")%>&end_time=<%=request.getParameter("end_time")%>&duration=<%=request.getParameter("duration")%>&bFirstDisp=false&provider_no=<%=request.getParameter("provider_no")%>&notes=<%=request.getParameter("notes")%>&reason=<%=request.getParameter("reason")%>&location=<%=request.getParameter("location")%>&resources=<%=request.getParameter("resources")%>&type=<%=request.getParameter("type")%>&style=<%=request.getParameter("style")%>&billing=<%=request.getParameter("billing")%>&status=<%=request.getParameter("status")%>&createdatetime=<%=request.getParameter("createdatetime")%>&creator=<%=request.getParameter("creator")%>&remarks=<%=request.getParameter("remarks")%>">
+	 <a href="../demographic/demographicaddarecordhtm.jsp?fromAppt=1&originalPage=<%=request.getParameter("originalPage")%>&keyword=<%=request.getParameter("keyword")%>&notes=<%=request.getParameter("notes")%>&appointment_date=<%=request.getParameter("appointment_date")%>&year=<%=request.getParameter("year")%>&month=<%=request.getParameter("month")%>&day=<%=request.getParameter("day")%>&start_time=<%=request.getParameter("start_time")%>&end_time=<%=request.getParameter("end_time")%>&duration=<%=request.getParameter("duration")%>&bFirstDisp=false&provider_no=<%=request.getParameter("provider_no")%>&notes=<%=request.getParameter("notes")%>&reason=<%=request.getParameter("reason")%>&site=<%=request.getParameter("site")%>&resources=<%=request.getParameter("resources")%>&type=<%=request.getParameter("type")%>&style=<%=request.getParameter("style")%>&billing=<%=request.getParameter("billing")%>&status=<%=request.getParameter("status")%>&createdatetime=<%=request.getParameter("createdatetime")%>&creator=<%=request.getParameter("creator")%>&remarks=<%=request.getParameter("remarks")%>">
 
 	<bean:message key="demographic.search.btnCreateNew" />
 	</a>

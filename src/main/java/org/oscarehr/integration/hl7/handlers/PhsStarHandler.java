@@ -320,7 +320,7 @@ public class PhsStarHandler extends BasePhsStarHandler {
 		appt.setDemographicNo(demographicNo);
 		appt.setStartTime(getApptStartDate());
 		appt.setEndTime(getApptEndDate());
-		appt.setLocation(getApptLocation());
+		appt.setSite(getApptLocation());
 		appt.setName(demographic.getFormattedName());
 		appt.setProviderNo(provider.getProviderNo());
 		appt.setType(getApptType());
@@ -457,7 +457,7 @@ public class PhsStarHandler extends BasePhsStarHandler {
 		appt.setAppointmentDate(getApptStartDate());
 		appt.setStartTime(getApptStartDate());
 		appt.setEndTime(getApptEndDate());
-		appt.setLocation(getApptLocation());
+		appt.setSite(getApptLocation());
 		appt.setType(getApptType());
 		appt.setReason(getApptReason());
 

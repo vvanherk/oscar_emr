@@ -107,13 +107,15 @@
 			if (ctlHtmlGetValues != null && ctlHtmlGetValues.equalsIgnoreCase("yes") && ctlBillForm != null)
 				curBillForm = ctlBillForm;
 			
-			String provider_no;
-            if( apptProvider_no.equalsIgnoreCase("none") ) {
-                     provider_no = user_no;
- 			}
-			else {
+			String provider_no = null;
+            if( user_no != null ) {
+                provider_no = user_no;
+ 			} else if (apptProvider_no != null && !apptProvider_no.equalsIgnoreCase("none")) {
      			provider_no = apptProvider_no;
- 			}
+ 			} else {
+				// Something bad is happening
+				MiscUtils.getLogger().error("Unable to get valid provider_no on billing page.");
+			}
 
 
             //check for management fee code eligibility
@@ -306,6 +308,24 @@
             }
             String dxCode = getDefaultValue(paraName, vecHistD, "diagnostic_code");
 
+			// Site
+			paraName = request.getParameter("site");
+			
+			String defaultSite = null;
+			if (preference != null) {					
+				defaultSite = preference.getBillingSiteDefault().toString();
+			}
+			
+			if (defaultSite != null)
+				paraName = (paraName == null || paraName.length() == 0? defaultSite : paraName);
+			String site = getDefaultValue(paraName, vecHist, "defaultSite");
+			if(!"".equals(site)) {
+				defaultSite = site;
+			} else {
+				defaultSite = defaultSite==null? "":defaultSite;
+			}
+			
+
 			//provider
 			paraName = request.getParameter("xml_provider");
 			if(paraName != null && paraName.indexOf("|")!=-1)
@@ -321,8 +341,9 @@
 			}
 			
 			if (defaultProvider != null)
-			paraName = (paraName == null || paraName.length() == 0? defaultProvider : paraName);
+				paraName = (paraName == null || paraName.length() == 0? defaultProvider : paraName);
 			String xml_provider = getDefaultValue(paraName, vecHist, "defaultProvider");
+
 			if(!"".equals(xml_provider)) {
 			defaultProvider = xml_provider;
 			} else {
@@ -557,6 +578,8 @@
 
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.oscarehr.common.model.Site"%>
+<%@page import="org.oscarehr.common.dao.ClinicDAO"%>
+<%@page import="org.oscarehr.common.model.Clinic"%>
 <%@page import="org.oscarehr.common.model.Provider"%>
 <%@page import="org.apache.commons.lang.StringUtils"%>
 <%@page import="org.oscarehr.util.MiscUtils"%>
@@ -1087,12 +1110,12 @@ anyValueMap['sli_code'] 		= "";
 %>
 		defaults = new Object();
 		defaults['id']						= <%=billingDefault.getId()%>;
-		defaults['provider_no']				= <%=billingDefault.getproviderNo()%>;
+		defaults['provider_no']				= "<%=billingDefault.getproviderNo()%>";
 		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
 		defaults['location_id']				= "<%=billingDefault.getLocationId()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";
 		defaults['billing_form']			= "<%=billingDefault.getBillingFormServiceType()%>";
-		defaults['billing_form_name']           = "<%=billingServiceHashMap.get( billingDefault.getBillingFormServiceType().trim() )%>";
+		defaults['billing_form_name']       = "<%=billingServiceHashMap.get( billingDefault.getBillingFormServiceType().trim() )%>";
 		defaults['priority']				= "<%=billingDefault.getPriority()%>";
 
 		billingDefaults.push( defaults );
@@ -1114,12 +1137,7 @@ var currentBillingDefault = null;
 		
 		var values = new Object();
 		
-		var toIndex = providerElem.value.indexOf("|");
-		if (toIndex < 0)
-			toIndex = providerElem.value.length;            
-		
-		values['provider_no']   = providerElem.value.substring(0, toIndex).trim();
-			
+		values['provider_no']   = providerElem.value.trim();
 
 		var fromIndex = locationElem.value.indexOf("|");
 		if (fromIndex < 0)
@@ -1127,7 +1145,7 @@ var currentBillingDefault = null;
 		else
 			fromIndex++;
 			
-		toIndex = locationElem.value.substring(fromIndex, locationElem.value.length).indexOf("|");
+		var toIndex = locationElem.value.substring(fromIndex, locationElem.value.length).indexOf("|");
 		if (toIndex < 0)
 			toIndex = 2;
 		else
@@ -1150,7 +1168,7 @@ var currentBillingDefault = null;
 	 */
 	function onBillingDefaultsDropdownChange(element) {
 		var currentValues = getParsedDropdownValues();
-			
+		
 		var provider_no		= currentValues['provider_no'];
 		var visit_type_no	= currentValues['visit_type_no'];
 		var location_id		= currentValues['location_id'];
@@ -1315,6 +1333,8 @@ var currentBillingDefault = null;
 
 <script>
 jQuery(document).ready(function() {
+	setSiteOnPageLoad();
+	
 	// if no default was set, establish a 'default' default
 	if (currentBillingDefault == null) {
 		var currentValues = getParsedDropdownValues();
@@ -1607,90 +1627,176 @@ jQuery(document).ready(function() {
 				    <td nowrap width="30%" align="center"><b>Billing Physician</b></td>
 				    <td width="20%">
 
-<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable())
-{ // multisite start ==========================================
-        	SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
-          	List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
+<%
+       	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+       	List<Clinic> clinics = clinicDao.findAll();
 
       %>
-      <script>
+		<script>
 var _providers = [];
-<%	for (int i=0; i<sites.size(); i++) { %>
-	_providers["<%= sites.get(i).getName() %>"]="<% Iterator<Provider> iter = sites.get(i).getProviders().iterator();
-	while (iter.hasNext()) {
-		Provider p=iter.next();
-	
-		if ("1".equals(p.getStatus()) && StringUtils.isNotBlank(p.getOhipNo())) {
-	%><option value='<%= p.getProviderNo() %>|<%= p.getOhipNo() %>' ><%= p.getLastName() %>, <%= p.getFirstName() %></option><% }} %>";
-<% } %>
-function changeSite(sel) {
-	sel.form.xml_provider.innerHTML=sel.value=="none"?"":_providers[sel.value];
-	sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
-}
-      </script>
-      	<select id="site" name="site" onchange="changeSite(this)" style="width:140px">
-      		<option value="none" style="background-color:white">---select clinic---</option>
-      	<%
-      	String selectedSite = request.getParameter("site");
-      	String xmlp = null;
-      	if (selectedSite==null) {
-      		rs = dbObj.searchDBRecord("select a.location loc, a.provider_no pno, p.ohip_no ohip from appointment a left join provider p  on a.provider_no=p.provider_no where a.appointment_no="+appt_no);
-      		if (rs.next()) {
-      			selectedSite = rs.getString("loc");
-      			xmlp = rs.getString("pno")+"|"+rs.getString("ohip");
-      		}
-      	}
-      	for (int i=0; i<sites.size(); i++) {
-      	%>
-      		<option value="<%= sites.get(i).getName() %>" style="background-color:<%= sites.get(i).getBgColor() %>"
-      			 <%=sites.get(i).getName().toString().equals(selectedSite)?"selected":"" %>><%= sites.get(i).getName() %></option>
-      	<% } %>
-      	</select>
-      	<select id="xml_provider" name="xml_provider" style="width:140px"></select>
-      	<script>
-     	changeSite(document.getElementById("site"));
-      	document.getElementById("xml_provider").value='<%=request.getParameter("xml_provider")==null?xmlp:request.getParameter("xml_provider")%>';
-      	</script>
-<% // multisite end ==========================================
-} else {
-%>				    
-				    
-					<select name="xml_provider" onChange="onBillingDefaultsDropdownChange(this);">
 <%
-            String[] tmp;
-            if (vecProvider.size() == 1) {
-		propT = (Properties) vecProvider.get(0);
-                tmp = propT.getProperty("proOHIP","").split("\\|");
+for (Clinic c : clinics) {
+	for (Site s : c.getSites()) {
+	%>
+		_providers["<%=s.getId()%>"] = new Object();
+	<%
+		Set<Provider> providers = s.getProviders();
+		for ( Provider p : providers ) {	
+			if ("1".equals(p.getStatus()) && StringUtils.isNotBlank(p.getOhipNo())) {
+	%>
+				_providers["<%=s.getId()%>"]["<%=p.getProviderNo()%>"] = '<%=p.getFormattedName()%>';
+	<%		}
+		}
+	%>
+	<%
+	}
+}
+%>
 
-                %>
-					    <option value="<%=propT.getProperty("proOHIP")%>"
-						    <%=providerview.equals(tmp[0].trim())?"selected":""%>>
-						<b><%=propT.getProperty("last_name")%>,
-						    <%=propT.getProperty("first_name")%></b>
-					    </option>
-<%	    } else { %>
-					    <option value="000000" <%=providerview.equals("000000")?"selected":""%>>
-						<b>Select Provider</b>
-					    </option>
-<%	        for (int i = 0; i < vecProvider.size(); i++) {
-				propT = (Properties) vecProvider.get(i);
-				String proOHIP = propT.getProperty("proOHIP","").substring(0,propT.getProperty("proOHIP","").indexOf("|"));
+var clinics = new Object();
+<%
+// We will create an object mapping clinics to sites
+for ( Clinic c : clinics) {
+%>
+	clinics['<%=c.getId()%>'] = new Object();
+<%	
+	List<Site> sites = c.getSites();
+	for (Site s : sites) {
+	%>
+		var data = new Object();
+		data[0] = '<%=s.getName()%>';
+		data[1] = '<%=s.getBgColor()%>';
+		
+		clinics['<%=c.getId()%>']['<%=s.getId()%>'] = data;
+	<%
+	}
+}
+%>
+
+function rebuildSiteDropdown(clinicId) {
+	var sites = clinics[clinicId];
+	
+	var $sel = jQuery("[name='site']");
+	$sel.empty();
+	
+	//$sel.append( jQuery('<option></option>').val('0').html('** Use Clinic Letterhead **').css('background-color', 'white') );
+	
+	for (var id in sites) {
+		$sel.append( jQuery('<option></option>').val(id).html(sites[id][0]).css('background-color', sites[id][1]) );
+	}
+}
+
+function changeClinic(sel) {
+	var clinicId = sel.options[sel.selectedIndex].value;
+	
+	// Change contents of site dropdown
+	rebuildSiteDropdown(clinicId);
+
+	var sel = document.getElementById("site");
+	changeSite(sel);
+}
+
+/**
+ * Call this on page load so that the default site gets set properly.
+ */ 
+function setSiteOnPageLoad() {
+	var sel = document.getElementById("site");
+	changeSite(sel);//sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+}
+
+function changeSite(sel) {
+	var $providerDropDown = jQuery(sel.form.xml_provider);
+	$providerDropDown.find('option').remove();
+	
+	var providers = _providers[ sel.value ];
+	for ( var i in providers ) {
+		$providerDropDown.append( "<option value='" + i + "'> " + providers[i] + " </option>" );
+	}
+	
+	sel.style.backgroundColor = sel.options[sel.selectedIndex].style.backgroundColor;
+	
+	onBillingDefaultsDropdownChange( sel.form.xml_provider );
+}
+		</script>
+		
+		<select id="clinic" name="clinic" onchange="changeClinic(this);" style="width:140px">
+			<%
+			String sessionClinicId = (String) session.getAttribute("clinic_id");
+			if (sessionClinicId == null)
+				sessionClinicId = "";
+			Clinic selectedClinic = null;
+			boolean clinicMatch = false;
+			
+			for ( Clinic clinic : clinics) {
+				if (sessionClinicId.equals("" + clinic.getId())) {
+					selectedClinic = clinic;
+					clinicMatch = true;
+				}
+			%>
+				<option <%=clinicMatch? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+			<%
+			}
+			%>
+			</select>
+			<br>
+			<%
+			if (selectedClinic == null) {
+				selectedClinic = clinics.get(0);
+			}
+			%>
+		
+      	<select id="site" name="site" onchange="changeSite(this)" style="width:140px">
+	      	
+	      <%
+	      	if (defaultSite == null || defaultSite.length() == 0 || defaultSite.equals("0")) {
+	      		rs = dbObj.searchDBRecord("select s.site_id, a.site loc, a.provider_no pno, p.ohip_no ohip from appointment a left join provider p  on a.provider_no=p.provider_no left join site s on a.site = s.site_id where a.appointment_no="+appt_no);
+	      		if (rs.next()) {
+	      			defaultSite = rs.getString("site_id");
+	      			defaultProvider = rs.getString("pno");
+	      		}
+	      	}
+      	
+	      	boolean siteMatched = false;
+	      	Site selectedSite = null;
+	      	if (selectedClinic != null) {
+		      	for (Site s : selectedClinic.getSites()) {
+					siteMatched = s.getId().toString().equals(defaultSite);
+					if (siteMatched)
+						selectedSite = s;
+	      %>
+		      		<option value="<%=s.getId()%>" style="background-color:<%=s.getBgColor() %>"
+						<%=siteMatched?"selected":"" %>><%=s.getName() %>
+					</option>
+		  <%
+				} 
+			}
+		  %>
+      	</select>
+      	
+      	<select id="xml_provider" name="xml_provider" style="width:140px" onChange="onBillingDefaultsDropdownChange(this);">
+<%
+		if (selectedSite != null) {
+			Set<Provider> providers = selectedSite.getProviders();
+%>
+			<option value="000000" <%=providerview.equals("000000")?"selected":""%>>
+				<b>Select Provider</b>
+			</option>
+<%
+			for (Provider p : providers) {
 				String selected = "";
-				if ( defaultProvider.equals(proOHIP) ) {
+				if ( defaultProvider.equals(p.getProviderNo()) ) {
 					selected = "selected";
-				} else if ( defaultProvider.length() == 0 && providerview.equals(proOHIP) ) {
+				} else if ( defaultProvider.length() == 0 && providerview.equals(p.getProviderNo()) ) {
 					selected = "selected";
 				}
-				//MiscUtils.getLogger().info("OUT: " + propT.getProperty("proOHIP") + " | " + defaultProvider);
 %>
-					    <option value="<%=propT.getProperty("proOHIP")%>"
-							<%=selected%>><b><%=propT.getProperty("last_name")%>,
-						<%=propT.getProperty("first_name")%></b></option>
-<%		}
-	    }
+				<option value="<%=p.getProviderNo()%>"<%=selected%>>
+					<b><%=p.getFormattedName()%></b>
+				</option>
+<%			}
+		}
 %>
-					</select>
-<% } %>
+		</select>
 
 				    </td>
 				    <td nowrap width="30%" align="center"><b>Assig. Phys.</b></td>
@@ -1816,32 +1922,6 @@ function changeSite(sel) {
 
 				    </td>
 				</tr>
-<% if (!org.oscarehr.common.IsPropertiesOn.isMultisitesEnable())
-{
-    OscarProperties props = OscarProperties.getInstance();
-    boolean bMoreAddr = props.getProperty("scheduleSiteID", "").equals("") ? false : true;
-    if(bMoreAddr) {
-	BillingSiteIdPrep sitePrep = new BillingSiteIdPrep();
-	String [] siteList = sitePrep.getSiteList();
-	String strServDate = request.getParameter("appointment_date")!=null? request.getParameter("appointment_date"):strToday;
-	String thisSite = (new JdbcApptImpl()).getLocationFromSchedule(strServDate, apptProvider_no);
-	String suggestSite = sitePrep.getSuggestSite(siteList, thisSite, strServDate, apptProvider_no );
-%>
-				<tr>
-				    <td align="right">Site</td>
-				    <td colspan="3">
-					<select name="siteId">
-<%	for(int i=0; i<siteList.length; i++) { %>
-					    <option value="<%=siteList[i]%>" <%=suggestSite.equals(siteList[i])?"selected":""%>>
-						<b><%=siteList[i]%></b>
-					    </option>
-<%	} %>
-					</select>
-				    </td>
-				</tr>
-<%  }
-}
-%>
 
 			</table>
 		    </td>

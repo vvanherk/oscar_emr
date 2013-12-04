@@ -74,7 +74,7 @@
             param[4]=request.getParameter("keyword");
 	        param[5]=request.getParameter("notes");
 	        param[6]=request.getParameter("reason");
-    	    param[7]=request.getParameter("location");
+    	    param[7]=request.getParameter("site");
 	        param[8]=request.getParameter("resources");
 	        param[9]=request.getParameter("type");
     	    param[10]=request.getParameter("style");
@@ -156,7 +156,7 @@
                         paramu[4]=request.getParameter("keyword");
                         paramu[5]=request.getParameter("notes");
                         paramu[6]=request.getParameter("reason");
-                        paramu[7]=request.getParameter("location");
+                        paramu[7]=request.getParameter("site");
                         paramu[8]=request.getParameter("resources");
                         paramu[9]=request.getParameter("type");
                         paramu[10]=request.getParameter("style");

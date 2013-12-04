@@ -33,7 +33,7 @@
                 <property name="program_id" />
                 <property name="notes" />
                 <property name="reason" />
-                <property name="location" />
+                <property name="site" />
                 <property name="resources" />
                 <property name="type" />
                 <property name="style" />

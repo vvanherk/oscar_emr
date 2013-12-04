@@ -78,6 +78,63 @@ response.setDateHeader("Expires",10);
 <%@ page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%
 	DemographicCustDao demographicCustDao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
+	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+	ClinicDAO clinicDao = (ClinicDAO)WebApplicationContextUtils.getWebApplicationContext(application).getBean("clinicDAO");
+	List<Clinic> clinics = clinicDao.getClinicsForProvider( curProvider_no );
+	List<Site> sites = siteDao.getActiveSitesByProviderNo( curProvider_no );
+	
+	if (clinics.size() == 0) {
+	%>
+		<script>window.alert('Sorry, the chosen provider does not belong to any active sites.')</script>
+	<%
+		return;
+	}
+	
+	// Remove sites that the provider does not belong to
+	for (Clinic c : clinics) {
+		List<Site> tempSites = new ArrayList<Site>();
+		for (Site s : c.getSites()) {
+			if (sites.contains(s))
+				tempSites.add(s);
+		}
+		c.setSites(tempSites);
+	}
+	
+	String clinicIdAsString = request.getParameter("clinic_id");
+	Integer clinicId = 0;
+	if (clinicIdAsString != null) {
+		try {
+			clinicId = Integer.parseInt( clinicIdAsString );
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Unable to parse clinic id.", e);
+		}
+	}
+	
+	String siteIdAsString = request.getParameter("site_id");
+	Integer siteId = 0;
+	if (siteIdAsString != null) {
+		try {
+			siteId = Integer.parseInt( siteIdAsString );
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Unable to parse site id.", e);
+		}
+	}
+	
+	Clinic selectedClinic = null;
+	Site selectedSite = null;
+	
+	if (siteId != null)
+		selectedSite = siteDao.find( siteId );
+	if (selectedSite != null) {
+		selectedClinic = selectedSite.getClinic();
+	} else {
+		selectedClinic = clinicDao.find( clinicId );
+		
+		if (selectedClinic == null)
+			selectedClinic = clinics.get(0);
+		if (selectedClinic != null)
+			selectedSite = selectedClinic.getSites().get(0);
+	}
 %>
 
 <%
@@ -92,8 +149,12 @@ response.setDateHeader("Expires",10);
   AppointmentStatusMgr apptStatusMgr = (AppointmentStatusMgr)webApplicationContext.getBean("AppointmentStatusMgr");
   List allStatus = apptStatusMgr.getAllActiveStatus();
 %>
+<%@page import="org.oscarehr.common.dao.ClinicDAO"%>
+<%@page import="org.oscarehr.common.model.Clinic"%>
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
-<%@page import="org.oscarehr.common.model.Site"%><html:html locale="true">
+<%@page import="org.oscarehr.common.model.Site"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
+<html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
 <script type="text/javascript" src="<%= request.getContextPath() %>/share/javascript/Oscar.js"></script>
@@ -107,7 +168,68 @@ response.setDateHeader("Expires",10);
 <script type="text/javascript" src="<%=request.getContextPath()%>/js/jquery.js"></script>
    <script>
      jQuery.noConflict();
+     
+		jQuery(document).ready(function() {
+			setSiteOnPageLoad();
+		});
    </script>
+
+<script>
+var clinics = new Object();
+<%
+// We will create an object mapping clinics to sites
+for ( Clinic c : clinics) {
+%>
+	clinics['<%=c.getId()%>'] = new Object();
+<%	
+	for (Site s : c.getSites()) {
+	%>
+		var data = new Object();
+		data[0] = '<%=s.getName()%>';
+		data[1] = '<%=s.getBgColor()%>';
+		
+		clinics['<%=c.getId()%>']['<%=s.getId()%>'] = data;
+	<%
+	}
+}
+%>
+
+function rebuildSiteDropdown(clinicId) {
+	var sites = clinics[clinicId];
+	
+	var $sel = jQuery("[name='site']");
+	$sel.empty();
+	
+	//$sel.append( jQuery('<option></option>').val('0').html('** Use Clinic Letterhead **').css('background-color', 'white') );
+	
+	for (var id in sites) {
+		$sel.append( jQuery('<option></option>').val(id).html(sites[id][0]).css('background-color', sites[id][1]) );
+	}
+}
+
+function changeClinic(sel) {
+	var clinicId = sel.options[sel.selectedIndex].value;
+	
+	// Change contents of site dropdown
+	rebuildSiteDropdown(clinicId);
+
+	var sel = document.getElementById("site");
+	changeSite(sel);
+}
+
+/**
+ * Call this on page load so that the default site gets set properly.
+ */ 
+function setSiteOnPageLoad() {
+	var sel = document.getElementById("site");
+	changeSite(sel);//sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+}
+
+function changeSite(sel) {	
+	sel.style.backgroundColor = sel.options[sel.selectedIndex].style.backgroundColor;
+}
+</script>
+
 <oscar:customInterface section="addappt"/>
 <script type="text/javascript">
 
@@ -253,7 +375,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
         document.forms[0].demographic_no.value = "<%=apptObj.getDemographic_no()%>";
         document.forms[0].reason.value = "<%=StringEscapeUtils.escapeJavaScript(apptObj.getReason()) %>";
         document.forms[0].notes.value = "<%=StringEscapeUtils.escapeJavaScript(apptObj.getNotes()) %>";
-        //document.forms[0].location.value = "<%=apptObj.getLocation()%>";
+        //document.forms[0].location.value = "<%=apptObj.getSite()%>";
         document.forms[0].resources.value = "<%=apptObj.getResources()%>";
         document.forms[0].type.value = "<%=apptObj.getType()%>";
         if('<%=apptObj.getUrgency()%>' == 'critical') {
@@ -282,7 +404,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
 		  document.forms['ADDAPPT'].notes.value = notesSel;
 		  document.forms['ADDAPPT'].duration.value = durSel;
 		  document.forms['ADDAPPT'].resources.value = resSel;
-		  var loc = document.forms['ADDAPPT'].location;
+		  var loc = document.forms['ADDAPPT'].site;
 		  if(loc.nodeName == 'SELECT') {
 		          for(c = 0;c < loc.length;c++) {
 		                  if(loc.options[c].innerHTML == locSel) {
@@ -292,7 +414,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
 		                  }
 		          }
 		  } else if (loc.nodeName == "INPUT") {
-			  document.forms['ADDAPPT'].location.value = locSel;
+			  document.forms['ADDAPPT'].site.value = locSel;
 		  }
 	}
 
@@ -598,25 +720,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
                     VALUE='<%=request.getParameter("start_time")%>' WIDTH="25"
                     HEIGHT="20" border="0" onChange="checkTimeTypeIn(this)">
             </div>
-            <div class="space">&nbsp;</div>
-
-            <%
-				    // multisites start ==================
-				    boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
-				    SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-				    List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-				    // multisites end ==================
-
-				    boolean bMoreAddr = bMultisites? true : props.getProperty("scheduleSiteID", "").equals("") ? false : true;
-				    String tempLoc = "";
-				    if(bFirstDisp && bMoreAddr) {
-				            tempLoc = (new JdbcApptImpl()).getLocationFromSchedule(dateString2, curProvider_no);
-				    }
-				    String loc = bFirstDisp?tempLoc:request.getParameter("location");
-				    String colo = bMultisites
-				                                        ? ApptUtil.getColorFromLocation(sites, loc)
-				                                        : bMoreAddr? ApptUtil.getColorFromLocation(props.getProperty("scheduleSiteID", ""), props.getProperty("scheduleSiteColor", ""),loc) : "white";
-			%>                                    
+            <div class="space">&nbsp;</div>                              
 					<div class="input" style="text-align: right;"> <INPUT TYPE="button" NAME="typeButton" VALUE="<bean:message key="Appointment.formType"/>" onClick="openTypePopup()"> </div>
 
             <div class="input">
@@ -704,22 +808,16 @@ function pasteAppt(multipleSameDayGroupAppt) {
         </li>
         <% } %>
         <li class="row weak">
-            <div class="label"><bean:message key="Appointment.formLocation" />:</div>
+            <div class="label"><bean:message key="Appointment.formClinic" />:</div>
 
             <div class="input">
-		<% // multisites start ==================
-		if (bMultisites) { %>
-		                <select tabindex="4" name="location" style="background-color: <%=colo%>" onchange='this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor'>
-		                <% for (Site s:sites) { %>
-		                        <option value="<%=s.getName()%>" style="background-color: <%=s.getBgColor()%>" <%=s.getName().equals(loc)?"selected":"" %>><%=s.getName()%></option>
-		                <% } %>
-		                </select>
-		<% } else {
-			// multisites end ==================
-		%>
-		                <input type="TEXT" name="location" tabindex="4" value="<%=loc==null?"":loc%>" width="25" height="20" border="0" hspace="2">
-		<% } %>
+                <select tabindex="4" id="clinic" name="clinic" onchange='changeClinic(this);'>
+                <% for (Clinic c : clinics) { %>
+                        <option value="<%=c.getId()%>" <%=c.getId().equals(selectedClinic.getId())?"selected":"" %>><%=c.getClinicName()%></option>
+                <% } %>
+                </select>
             </div>
+            
             <div class="space">&nbsp;</div>
             <div class="label"><bean:message key="Appointment.formResources" />:</div>
             <div class="input">
@@ -730,12 +828,16 @@ function pasteAppt(multipleSameDayGroupAppt) {
             </div>
         </li>
         <li class="row weak">
-            <div class="label"><bean:message key="Appointment.formCreator" />:</div>
+			<div class="label"><bean:message key="Appointment.formSite" />:</div>
+
             <div class="input">
-                <INPUT TYPE="TEXT" NAME="user_id" readonly
-                    VALUE='<%=bFirstDisp?(StringEscapeUtils.escapeHtml(userlastname)+", "+StringEscapeUtils.escapeHtml(userfirstname)):request.getParameter("user_id").equals("")?"Unknown":request.getParameter("user_id")%>'
-                    WIDTH="25" HEIGHT="20" border="0" hspace="2">
+                <select tabindex="4" id="site" name="site" onchange='changeSite(this);'>
+                <% for (Site s : selectedClinic.getSites()) { %>
+                        <option value="<%=s.getId()%>" style="background-color: <%=s.getBgColor()%>" <%=s.getId().equals(selectedSite.getId())?"selected":"" %>><%=s.getName()%></option>
+                <% } %>
+                </select>
             </div>
+            
             <div class="space">&nbsp;</div>
             <div class="label"><bean:message key="Appointment.formDateTime" />:</div>
             <div class="input">
@@ -753,7 +855,21 @@ function pasteAppt(multipleSameDayGroupAppt) {
             </div>
         </li>
         <li class="row weak">
-            <% String emailReminder = pros.getProperty("emailApptReminder");
+			<div class="label"><bean:message key="Appointment.formCreator" />:</div>
+            <div class="input">
+                <INPUT TYPE="TEXT" NAME="user_id" readonly
+                    VALUE='<%=bFirstDisp?(StringEscapeUtils.escapeHtml(userlastname)+", "+StringEscapeUtils.escapeHtml(userfirstname)):request.getParameter("user_id").equals("")?"Unknown":request.getParameter("user_id")%>'
+                    WIDTH="25" HEIGHT="20" border="0" hspace="2">
+            </div>
+
+            <div class="space">&nbsp;</div>
+            <div class="label"><bean:message key="Appointment.formCritical" />:</div>
+            <div class="input">
+            	<input type="checkbox" name="urgency" value="critical"/>
+            </div>
+        </li>
+        <li class="row weak">
+			<% String emailReminder = pros.getProperty("emailApptReminder");
                if ((emailReminder != null) && emailReminder.equalsIgnoreCase("yes")) { %>
                     <div class="label"><bean:message key="Appointment.formEmailReminder" />:</div>
                     <div class="input"><input type="checkbox" name="emailPt" value="email reminder"></div>
@@ -761,12 +877,9 @@ function pasteAppt(multipleSameDayGroupAppt) {
                     <div class="label"></div>
                     <div class="input"></div>
 	     <%  }%>
-
-            <div class="space">&nbsp;</div>
-            <div class="label"><bean:message key="Appointment.formCritical" />:</div>
-            <div class="input">
-            	<input type="checkbox" name="urgency" value="critical"/>
-            </div>
+	     
+			<div class="label"></div>
+            <div class="input"></div>
         </li>
     </ul>
 </div>
@@ -986,7 +1099,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
 
 </body>
 <script type="text/javascript">
-var loc = document.forms['ADDAPPT'].location;
+var loc = document.forms['ADDAPPT'].site;
 if(loc.nodeName.toUpperCase() == 'SELECT') loc.style.backgroundColor=loc.options[loc.selectedIndex].style.backgroundColor;
 </script>
 </html:html>

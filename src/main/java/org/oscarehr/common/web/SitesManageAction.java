@@ -20,6 +20,9 @@ package org.oscarehr.common.web;
 
 import java.util.List;
 
+import org.apache.log4j.Logger;
+import org.oscarehr.util.MiscUtils;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -33,10 +36,15 @@ import org.apache.struts.action.ActionMessages;
 import org.apache.struts.actions.DispatchAction;
 import org.oscarehr.common.dao.SiteDao;
 import org.oscarehr.common.model.Site;
+import org.oscarehr.common.dao.ClinicDAO;
+import org.oscarehr.common.model.Clinic;
 
 public class SitesManageAction extends DispatchAction {
 
     private SiteDao siteDao;
+    private ClinicDAO clinicDao;
+
+	Logger logger = MiscUtils.getLogger();
 
     @Override
     protected ActionForward unspecified(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
@@ -45,8 +53,9 @@ public class SitesManageAction extends DispatchAction {
 
     public ActionForward view(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
         List<Site> sites = siteDao.getAllSites();
-
+		
         request.setAttribute("sites", sites);
+        
         return mapping.findForward("list");
     }
 
@@ -54,12 +63,15 @@ public class SitesManageAction extends DispatchAction {
     	DynaBean lazyForm = (DynaBean) form;
 
     	Site s = new Site();
+    	List<Clinic> clinics = clinicDao.findAll();
+    	
     	lazyForm.set("site", s);
+    	request.setAttribute("clinics", clinics);
 
         return mapping.findForward("details");
     }
 
-    public ActionForward save(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+    public ActionForward save(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
     	DynaBean lazyForm = (DynaBean) form;
 
     	Site s = (Site) lazyForm.get("site");
@@ -76,6 +88,11 @@ public class SitesManageAction extends DispatchAction {
     		this.saveErrors(request, errors);
     	}
 
+    	String clinicId = request.getParameter("site.clinic.id");
+    	Clinic clinic = clinicDao.find( Integer.parseInt(clinicId) );
+
+    	s.setClinic(clinic);
+
     	if (this.getErrors(request).size()>0)
     		return mapping.findForward("details");
 
@@ -91,12 +108,20 @@ public class SitesManageAction extends DispatchAction {
     	String siteId = request.getParameter("siteId");
         Site s = siteDao.getById(new Integer(siteId));
 
+		List<Clinic> clinics = clinicDao.findAll();
+
         lazyForm.set("site", s);
+        request.setAttribute("clinics", clinics);
+        
         return mapping.findForward("details");
     }
 
 	public void setSiteDao(SiteDao siteDao) {
 		this.siteDao = siteDao;
+	}
+	
+	public void setClinicDao(ClinicDAO clinicDao) {
+		this.clinicDao = clinicDao;
 	}
 
 

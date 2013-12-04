@@ -73,7 +73,7 @@ public class JdbcBillingClaimImpl {
 				+ val.paid + "'," + "'" + val.status + "'," + "'" + StringEscapeUtils.escapeSql(val.comment) + "',"
 				+ "'" + val.visittype + "'," + "'" + val.provider_ohip_no + "'," + "'" + val.provider_rma_no + "',"
 				+ "'" + val.apptProvider_no + "'," + "'" + val.asstProvider_no + "'," + "'" + val.creator + "', \\N, "
-				+ (val.clinic==null?"null":"'"+val.clinic+"'")+" )";
+				+ (val.site==null?"null":"'"+val.site+"'")+" )";
 
 		_logger.info("addOneClaimHeaderRecord(sql = " + sql + ")");
 		retval = dbObj.saveBillingRecord(sql);
@@ -113,7 +113,7 @@ public class JdbcBillingClaimImpl {
 
 	public boolean add3rdBillExt(Map<String,String>mVal, int id) {
 		boolean retval = true;
-		String[] temp = { "billTo", "remitTo", "total", "payment", "refund", "provider_no", "gst", "payDate", "payMethod", "clinicNo"};
+		String[] temp = { "billTo", "remitTo", "total", "payment", "refund", "provider_no", "gst", "payDate", "payMethod", "siteNo"};
 		String demoNo = mVal.get("demographic_no");
 		String dateTime = UtilDateUtilities.getToday("yyyy-MM-dd HH:mm:ss");
                 mVal.put("payDate", dateTime);

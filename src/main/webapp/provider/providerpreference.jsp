@@ -41,6 +41,8 @@
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ page import="java.util.*,java.text.*,java.sql.*,java.net.*" errorPage="errorpage.jsp" %>
 <%@ page import="oscar.OscarProperties" %>
+<%@page import="org.oscarehr.common.dao.SiteDao"%>
+<%@page import="org.oscarehr.common.model.Site"%>
 <%@ page import="org.oscarehr.common.dao.UserPropertyDAO"%>
 <%@ page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@ page import="org.oscarehr.PMmodule.dao.ProviderDao"%>
@@ -532,7 +534,50 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 
 		<INPUT TYPE="hidden" NAME="color_template" VALUE='deepblue'>
 
+<%
+SiteDao siteDao = (SiteDao) SpringUtils.getBean("siteDao");
+List<Site> siteList = siteDao.getAllActiveSites();
+%>
+<script>
+var siteProvidersMap = new Object();
 
+<%
+for (Site s : siteList) {
+%>
+	siteProvidersMap['<%=s.getName()%>'] = new Object();
+	
+	<%
+	Set<Provider> providers = s.getProviders();
+	for ( Provider p : providers ) {
+		if (p.getOhipNo() != null && p.getOhipNo().length() > 0) {
+	%>
+		siteProvidersMap['<%=s.getName()%>']['<%=p.getProviderNo()%>'] = "<%=p.getFormattedName()%>";
+	<%
+		}
+	}
+	%>
+<% 
+}
+%>
+
+function changeDefaultBillingSite(elem) {
+	var $dropDown = jQuery("[name='default_bill_site']");
+	var $option = $dropDown.find("option:selected");
+	
+	var providers = siteProvidersMap[ $option.text().trim() ];
+	
+	var $dropDownDefaultBillProviders = jQuery("[name='default_bill_provider']");
+	
+	$dropDownDefaultBillProviders.find('option').remove();
+	$dropDownDefaultBillProviders.append('<option value="no">-- None --</option>');
+	
+	if (providers) {
+		for ( var id in providers ) {
+			$dropDownDefaultBillProviders.append('<option value="' + id + '">' + providers[id] + '</option>');
+		}
+	}
+}
+</script>
 <table width="100%" BGCOLOR="eeeeee">
 
 <caisi:isModuleLoad moduleName="NEW_CME_SWITCH">
@@ -579,11 +624,35 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 		
 		<label><bean:message key="provider.labelGeneralBillingDefaults"/></label>
 		<div class="container">
+			
+			
+			<label for="default_bill_site">Default Site:</label>
+		  <select name="default_bill_site" onchange="changeDefaultBillingSite(this);">
+				<%
+					String billingSite = providerPreference.getBillingSiteDefault().toString();
+				%>
+		      <option value="no" <%=billingSite.length()==0?"selected":""%>>-- None --</option>
+						    <%
+						    for (Site s : siteList) {
+						    %>
+								<option value="<%=s.getId()%>"
+									<%=billingSite.startsWith(s.getId().toString())?"selected":""%>><%=s.getName()%>
+								</option>
+							<% 
+							}
+							%>
+		  </select>
+		  <br>
+			
 			<%
-		  ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
-		  List<Provider> providerList = providerDao.getActiveProviders();
+		  Set<Provider> providerList = new HashSet<Provider>();
+		  
+		  for (Site s : siteList) {
+			  if ( billingSite.startsWith(s.getId().toString()) ) {
+				  providerList = s.getProviders();
+			  }
+		  }
 		  %>
-	
 			<label for="default_bill_provider">Default Provider:</label>
 		  <select name="default_bill_provider">
 				<%
@@ -592,11 +661,13 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 		      <option value="no" <%=billingProvider.length()==0?"selected":""%>>-- None --</option>
 						    <%
 						    for (Provider p : providerList) {
+								if (p.getOhipNo() != null && p.getOhipNo().length() > 0) {
 						    %>
 								<option value="<%=p.getProviderNo()%>"
 									<%=billingProvider.startsWith(p.getProviderNo())?"selected":""%>><%=p.getFormattedName()%>
 								</option>
-							<% 
+							<%
+								}
 							} 
 							%>
 		  </select>

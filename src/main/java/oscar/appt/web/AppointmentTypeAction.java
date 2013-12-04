@@ -99,7 +99,7 @@ public class AppointmentTypeAction extends OscarAction  {
 		    			formBean.setId(dbBean.getId());
 		    			formBean.setName(dbBean.getName());
 		    			formBean.setDuration(dbBean.getDuration());
-		    			formBean.setLocation(dbBean.getLocation());
+		    			formBean.setSite(dbBean.getSite());
 		    			formBean.setNotes(dbBean.getNotes());
 		    			formBean.setReason(dbBean.getReason());
 		    			formBean.setResources(dbBean.getResources());
@@ -114,7 +114,7 @@ public class AppointmentTypeAction extends OscarAction  {
 		    			AppointmentType bean = new AppointmentType();
 		    			bean.setName(formBean.getName());
 		    			bean.setDuration(formBean.getDuration());
-		    			bean.setLocation(formBean.getLocation());
+		    			bean.setSite(formBean.getSite());
 		    			bean.setNotes(formBean.getNotes());
 		    			bean.setReason(formBean.getReason());
 		    			bean.setResources(formBean.getResources());
@@ -124,7 +124,7 @@ public class AppointmentTypeAction extends OscarAction  {
 		    			if(bean != null) {
 		    				bean.setName(formBean.getName());
 		    				bean.setDuration(formBean.getDuration());
-		    				bean.setLocation(formBean.getLocation());
+		    				bean.setSite(formBean.getSite());
 		    				bean.setNotes(formBean.getNotes());
 		    				bean.setReason(formBean.getReason());
 		    				bean.setResources(formBean.getResources());
@@ -142,15 +142,13 @@ public class AppointmentTypeAction extends OscarAction  {
 
 		    }
 		  	
-		    if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
-		    	List<LabelValueBean> locations = new ArrayList<LabelValueBean>();
-				SiteDao siteDao = (SiteDao) SpringUtils.getBean("siteDao");
-				List<Site> sites = siteDao.getAllActiveSites();
-				for(Site site : sites) {
-					locations.add(new LabelValueBean(site.getName(), Integer.toString(site.getSiteId())));
-				}
-				request.setAttribute("locationsList", locations);
-		    }
+	    	List<LabelValueBean> siteLabels = new ArrayList<LabelValueBean>();
+			SiteDao siteDao = (SiteDao) SpringUtils.getBean("siteDao");
+			List<Site> sites = siteDao.getAllActiveSites();
+			for(Site site : sites) {
+				siteLabels.add(new LabelValueBean(site.getName(), Integer.toString(site.getSiteId())));
+			}
+			request.setAttribute("sitesList", siteLabels);
 	        
 	        return mapping.findForward("success");
 	   }

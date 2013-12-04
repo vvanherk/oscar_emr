@@ -88,17 +88,17 @@ public class JdbcApptImpl {
 		return retval;
 	}
 
-	// priority = c, reason = location
+	// priority = c
 	private String getLocationFromSpec(String apptDate, String provider_no, String priority) {
 		String retval = "";
-		String sql = "select reason from scheduledate where sdate='" + apptDate + "' and provider_no='" + provider_no
+		String sql = "select siteId from scheduledate where sdate='" + apptDate + "' and provider_no='" + provider_no
 				+ "' and priority='" + priority + "'";
 		// _logger.info("getLocationFromSpec(sql = " + sql + ")");
 
 		ResultSet rs = dbObj.searchDBRecord(sql);
 		try {
 			while (rs.next()) {
-				retval = oscar.Misc.getString(rs,"reason");
+				retval = oscar.Misc.getString(rs,"siteId");
 			}
 		} catch (SQLException e) {
 			_logger.error("getLocationFromSpec(sql = " + sql + ")");

@@ -27,22 +27,40 @@
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
 <%!
-//multisite starts =====================
-private boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();	
+
 private JdbcApptImpl jdbc = new JdbcApptImpl();
 private List<Site> sites;
 private String [] curScheduleMultisite;
 private String getSiteHTML(String scDate, String provider_no, List<Site> sites) {
-	 if (!bMultisites) return "";
 	 String _loc = jdbc.getLocationFromSchedule(scDate, provider_no);
-	 return "<span style='background-color:"+ApptUtil.getColorFromLocation(sites, _loc)+"'>"+ApptUtil.getShortNameFromLocation(sites, _loc)+"</span>";	
+	 
+	Integer siteId = 0;
+	
+	try {
+		siteId = Integer.parseInt( _loc );
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("Unable to parse site number.", e);
+		return "";
+	}
+	
+	Site selectedSite = null; 
+	for (Site s : sites) {
+		if (s.getId().equals(siteId)) {
+			selectedSite = s;
+			break;
+		}
+	}
+	
+	if (selectedSite != null)
+		return "<span style='background-color:"+selectedSite.getBgColor()+"'>"+selectedSite.getName()+"</span>";	
+	
+	return "";
 }
 %>
-<% if (bMultisites) {
+
 SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
 sites = siteDao.getAllSites(); 
-}
-//multisite ends =======================
+
 %>
 
 <%
@@ -150,16 +168,14 @@ function t(s1,s2,s3,s4,s5,s6) {
 	style="text-decoration: none; color: #000000">Day Page</a></div>
 <table width="100%" border="1" cellspacing="0" cellpadding="0">
 	<tr align="center" bgcolor="#CCCCFF">
-<% if (bMultisites) out.print("<td>Site</td>"); %>	
+		<td>Site</td>
 		<td width="15%" nowrap><a
 			href="scheduleflipview.jsp?originalpage=<%=request.getParameter("originalpage")%>&provider_no=<%=curProvider_no%>&startDate=<%=lastMonth.get(Calendar.YEAR)+"-"+(lastMonth.get(Calendar.MONTH)+1)+"-"+lastMonth.get(Calendar.DATE)%>"
 			title="<bean:message key="schedule.scheduleflipview.msgLastMonth"/>"
 			border='0'><img src="../images/previous.gif"></a> <select
 			name="provider_no" onChange="selectprovider(this)">
 			<%
-  ResultSet rsdemo = bMultisites
-  						? flipviewMainBean.queryResults(new String[]{curProvider_no, curProvider_no}, "searchmyteamprovider")
-  						: flipviewMainBean.queryResults(mygroupno, "searchmygroupprovider");
+  ResultSet rsdemo = flipviewMainBean.queryResults(new String[]{curProvider_no, curProvider_no}, "searchmyteamprovider");
   while (rsdemo.next()) { 
 %>
 			<option value="<%=rsdemo.getString("provider_no")%>"
@@ -258,7 +274,7 @@ function t(s1,s2,s3,s4,s5,s6) {
     appointmentTime.add(appointmentTime.MINUTE, -1);
 %>
 	<tr align="center" bgcolor="<%=bgcolor%>">
-<% if (bMultisites) out.print("<td align='right'>"+getSiteHTML(strTempDate, curProvider_no, sites)+"</td>"); %>			
+	<td align='right'><%=getSiteHTML(strTempDate, curProvider_no, sites)%></td>
 		<td align="right" nowrap><a
 			href="<%=request.getParameter("originalpage")%>?year=<%=cal.get(Calendar.YEAR)%>&month=<%=cal.get(Calendar.MONTH)+1%>&day=<%=cal.get(Calendar.DATE)%>&view=0&displaymode=day&dboperation=searchappointmentday"><%=outform.format(inform.parse(strTempDate) )%>&nbsp;</a></td>
 		<%

@@ -53,7 +53,7 @@ public class JdbcBillingCorrection {
 				+ ch1Obj.getProvider_rma_no() + "'," + " apptProvider_no='" + ch1Obj.getApptProvider_no() + "',"
 				+ " asstProvider_no='" + ch1Obj.getAsstProvider_no() + "'," + " creator='" + ch1Obj.getCreator()
 
-				+ "', clinic=" + (ch1Obj.getClinic()==null?"null":"'"+ch1Obj.getClinic()+"'")
+				+ "', site=" + (ch1Obj.getSite()==null?"null":"'"+ch1Obj.getSite()+"'")
 
 				+ " where id=" + ch1Obj.getId();
 		_logger.info("updateBillingClaimHeader(sql = " + sql + ")");
@@ -76,7 +76,7 @@ public class JdbcBillingCorrection {
 				+ StringEscapeUtils.escapeSql(val.demographic_name) + "|" + val.sex + "|" + val.province + "|"
 				+ val.billing_date + "|" + val.billing_time + "|" + val.total + "|" + val.paid + "|" + val.status + "|"
 				+ StringEscapeUtils.escapeSql( val.comment ) + "|" + val.visittype + "|" + val.provider_ohip_no + "|" + val.apptProvider_no + "|"
-				+ val.asstProvider_no + "|" + val.creator + "|" + val.clinic + "', '" + val.update_datetime + "')";
+				+ val.asstProvider_no + "|" + val.creator + "|" + val.site + "', '" + val.update_datetime + "')";
 		_logger.info("addRepoBatchHeader(sql = " + sql + ")");
 		retval = dbObj.saveBillingRecord(sql);
 
@@ -214,7 +214,6 @@ public class JdbcBillingCorrection {
 				ch1Obj.setRef_lab_num(rs.getString("ref_lab_num"));
 				ch1Obj.setMan_review(rs.getString("man_review"));
 				ch1Obj.setLocation(rs.getString("location"));
-				ch1Obj.setClinic(rs.getString("clinic"));
 
 				ch1Obj.setDemographic_no(rs.getString("demographic_no"));
 				ch1Obj.setProviderNo(rs.getString("provider_no"));
@@ -237,7 +236,15 @@ public class JdbcBillingCorrection {
 				ch1Obj.setCreator(rs.getString("creator"));			
 				ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
 
-				ch1Obj.setClinic(rs.getString("clinic"));
+				Integer siteNo = null;
+				if (rs.getString("site") != null) {
+					try {
+						siteNo = Integer.parseInt( rs.getString("site") );
+					} catch (Exception e) {
+						_logger.error("Unable to parse site number.", e);
+					}
+				}
+				ch1Obj.setSite(siteNo);
 								
 				obj.add(ch1Obj);
 			}

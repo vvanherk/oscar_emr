@@ -179,15 +179,13 @@ DBPreparedHandler dbObj = new DBPreparedHandler();
   providerDao.saveProvider(p);
   isOk=true;
 
-if (isOk && org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
-	String[] sites = request.getParameterValues("sites");
-	if (sites!=null)
-		for (int i=0; i<sites.length; i++) {
-			ProviderSite ps = new ProviderSite();
-        	ps.setId(new ProviderSitePK(p.getProviderNo(),Integer.parseInt(sites[i])));
-        	providerSiteDao.persist(ps);
-		}
-}
+  String[] sites = request.getParameterValues("sites");
+  if (sites!=null)
+	for (int i=0; i<sites.length; i++) {
+		ProviderSite ps = new ProviderSite();
+		ps.setId(new ProviderSitePK(p.getProviderNo(),Integer.parseInt(sites[i])));
+		providerSiteDao.persist(ps);
+	}
 
 
 if (isOk) {

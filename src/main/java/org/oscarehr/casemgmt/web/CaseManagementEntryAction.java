@@ -3215,7 +3215,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			else
 				mockReq.addParameter("xml_vdate", "");
 			mockReq.addParameter("apptProvider_no", appt == null ? "" : appt.getProviderNo());
-			mockReq.addParameter("xml_provider", provider.getProviderNo() + "|" + provider.getOhipNo());
+			mockReq.addParameter("xml_provider", provider.getProviderNo());
 			mockReq.getSession().setAttribute("user", LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
 
 			BillingSavePrep bObj = new BillingSavePrep();

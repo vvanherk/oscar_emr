@@ -165,21 +165,21 @@
             							<td > <TEXTAREA NAME="notes"  COLS="40" ROWS="2" border="0" hspace="2"><bean:write name="AppointmentTypeForm" property="notes"/></TEXTAREA> </td> 
           							</tr> 
           							<tr valign="middle" BGCOLOR="#EEEEFF" > 
-            							<td align="right"> <font face="arial">Location:</font> </td>
+            							<td align="right"> <font face="arial">Site:</font> </td>
             							<td>
-            							  <logic:notEmpty name="locationsList"> 
-											<html:select property="location" >
-												<html:option value="0">Select Location</html:option>
-												<logic:iterate id="location" name="locationsList">
-												    <bean:define id="locValue" ><bean:write name='location' property='label'/></bean:define>
+            							  <logic:notEmpty name="sitesList"> 
+											<html:select property="site" >
+												<html:option value="0">Select Site</html:option>
+												<logic:iterate id="site" name="sitesList">
+												    <bean:define id="locValue" ><bean:write name='site' property='label'/></bean:define>
 													<html:option value="<%= locValue %>">
-														<bean:write name="location" property="label"/>
+														<bean:write name="site" property="label"/>
 													</html:option>	
 												</logic:iterate>
 											</html:select>
 										  </logic:notEmpty>
-										  <logic:empty name="locationsList">
-            								<INPUT TYPE="TEXT" NAME="location" VALUE="<bean:write name="AppointmentTypeForm" property="location"/>" WIDTH="30" HEIGHT="20" border="0" hspace="2" maxlength="30" > 
+										  <logic:empty name="sitesList">
+            								<INPUT TYPE="TEXT" NAME="site" VALUE="<bean:write name="AppointmentTypeForm" property="site"/>" WIDTH="30" HEIGHT="20" border="0" hspace="2" maxlength="30" > 
 										  </logic:empty>
 										</td>	
             							<td > <div align="right"><font face="arial">Resources:</font></div></td> 
@@ -222,7 +222,6 @@
             </th>
           </tr>
 <% 
-boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
 List<AppointmentType> types = new ArrayList<AppointmentType>();
 AppointmentTypeDao dao = (AppointmentTypeDao) SpringUtils.getBean("appointmentTypeDao");
 types = dao.listAll();
@@ -248,7 +247,7 @@ types = dao.listAll();
               <%= type.getNotes() %>
             </th>
             <th nowrap>
-              <%= type.getLocation() %>
+              <%= type.getSite() %>
             </th>
             <th nowrap>
               <%= type.getResources() %>

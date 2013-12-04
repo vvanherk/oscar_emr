@@ -101,7 +101,7 @@ public class BillingONCHeader1 extends AbstractModel<Integer> implements Seriali
 	@Column(name = "timestamp1", insertable = false, updatable = false)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date timestamp;
-	private String clinic = null;
+	private Integer site = null;
 
 	public BillingONCHeader1() {}
 
@@ -114,7 +114,7 @@ public class BillingONCHeader1 extends AbstractModel<Integer> implements Seriali
 			Date billingDate, Date billingTime, Integer total, Integer paid,
 			String status, String comment, String visitType,
 			String providerOhipNo, String providerRmaNo, String apptProviderNo,
-			String asstProviderNo, String creator, Date timestamp, String clinic) {
+			String asstProviderNo, String creator, Date timestamp, Integer site) {
 		super();
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd");
 		this.headerId = headerId;
@@ -150,7 +150,7 @@ public class BillingONCHeader1 extends AbstractModel<Integer> implements Seriali
 		this.asstProviderNo = asstProviderNo;
 		this.creator = creator;
 		this.timestamp = timestamp;
-		this.clinic = clinic;
+		this.site = site;
 	}
 
 
@@ -422,12 +422,12 @@ public class BillingONCHeader1 extends AbstractModel<Integer> implements Seriali
 		return timestamp;
 	}
 
-	public String getClinic() {
-		return clinic;
+	public Integer getSite() {
+		return site;
 	}
 
-	public void setClinic(String clinic) {
-		this.clinic = clinic;
+	public void setSite(Integer site) {
+		this.site = site;
 	}
 
 	public boolean equals(Object o) {

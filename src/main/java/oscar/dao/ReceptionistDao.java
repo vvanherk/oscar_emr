@@ -62,7 +62,7 @@ public class ReceptionistDao extends OscarSuperDao {
 		    {"search_mygroup", "select mygroup_no from mygroup where mygroup_no like ? group by mygroup_no order by mygroup_no"},
 
 			{"search_scheduleholiday", "select * from scheduleholiday where sdate > ?" },
-			{"search_scheduledate_datep", "select * from scheduledate where sdate between ? and ? order by sdate, reason" },
+			{"search_scheduledate_datep", "select * from scheduledate where sdate between ? and ? order by sdate, siteId" },
 			{"search_scheduledate_singlep", "select * from scheduledate where sdate between ? and ? and provider_no=? order by sdate" },
 			{"search_scheduledate_single", "select * from scheduledate where sdate=? and provider_no=?" },
 

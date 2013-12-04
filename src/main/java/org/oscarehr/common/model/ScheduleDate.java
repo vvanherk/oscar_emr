@@ -51,7 +51,7 @@ public class ScheduleDate extends AbstractModel<Integer>{
 	private String providerNo;
 	private char available;
 	private char priority;
-	private String reason;
+	private Integer siteId;
 	private String hour;
 	private String creator;
 	private char status;
@@ -92,12 +92,12 @@ public class ScheduleDate extends AbstractModel<Integer>{
     	this.priority = priority;
     }
 
-	public String getReason() {
-    	return reason;
+	public Integer getSite() {
+    	return siteId;
     }
 
-	public void setReason(String reason) {
-    	this.reason = reason;
+	public void setSite(Integer siteId) {
+    	this.siteId = siteId;
     }
 
 	public String getHour() {

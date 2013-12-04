@@ -35,7 +35,7 @@ String invNo = request.getParameter("billingNo");
 Billing3rdPartPrep privateObj = new Billing3rdPartPrep();
 Properties propClinic = privateObj.getLocalClinicAddr();
 Properties prop3rdPart = privateObj.get3rdPartBillProp(invNo);
-String clinicNO = (String) prop3rdPart.getProperty("clinicNo","");
+String siteNoExt = (String) prop3rdPart.getProperty("siteNo","");
 Properties prop3rdPayMethod = privateObj.get3rdPayMethod();
 Properties propGst = privateObj.getGst(invNo);
 //int gstFlag = 0;
@@ -48,7 +48,7 @@ List aL = billObj.getBillingRecordObj(invNo);
 BillingClaimHeader1Data ch1Obj = (BillingClaimHeader1Data) aL.get(0);
 
 String serviceDate = ch1Obj.getBilling_date();
-String clinicname = (String)ch1Obj.getClinic();
+Integer siteNo = (Integer)ch1Obj.getSite();
 
 // Find the first billing item
 for (Object item : aL) {
@@ -58,26 +58,33 @@ for (Object item : aL) {
 	}
 }
 
-// If clinic name is set in billing_on_cheader1 table, use it. CLinic name will be set when multisite turn on.
+
 String clinicInfo = null;
+
 SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-Site s = ApptUtil.getSiteFromName(sites, clinicname);
-if ( s!=null)
-	clinicInfo = "<b>" + s.getName()+"</b><br />"+s.getAddress()+"<br />"+s.getCity()+", "+s.getProvince()+" "+s.getPostal()+"<br />Tel: "+s.getPhone()+"<br />Fax: "+s.getFax();
+Site s = siteDao.find( siteNo );
+Clinic c = s.getClinic();
+
+clinicInfo = "<b>" + c.getClinicName() + "</b> <br> <b>" + s.getName()+"</b><br />"+s.getAddress()+"<br />"+s.getCity()+", "+s.getProvince()+" "+s.getPostal()+"<br />Tel: "+s.getPhone()+"<br />Fax: "+s.getFax();
+
 //If no clinic name in billing_on_cheader1 table, check clinic_no in billing_on_ext
-if ( clinicNO != null)
+// Note: I don't think we need this any more - commenting out
+/*
+if ( siteNoExt != null)
 {	
 	//For clinic letter, nothing for provider and "Remit to" part.
 	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
-	Clinic clinic = clinicDao.find(Integer.parseInt(clinicNO));
-	if( clinic != null )
-		clinicInfo = "<b>" + clinic.getClinicName() + "</b><br />" 
-		+ clinic.getClinicAddress() + "<br />"
-		+ clinic.getClinicCity()+", " + clinic.getClinicProvince()+" " 
-		+ clinic.getClinicPostal()+"<br />Tel: "
-		+ clinic.getClinicPhone()+"<br />Fax: "+ clinic.getClinicFax();
+	s = siteDao.find( siteNo );
+	c = s.getClinic();
+	
+	clinicInfo = "<b>" + c.getClinicName() + "</b><br />" 
+		+ "<b>" + s.getName() + "</b><br>"
+		+ s.getAddress() + "<br />"
+		+ s.getCity()+", " + s.getProvince()+" " 
+		+ s.getPostal()+"<br />Tel: "
+		+ s.getPhone()+"<br />Fax: "+ s.getFax();
 }
+*/
 
 DemographicDao demoDAO = (DemographicDao)SpringUtils.getBean("demographicDao");
 Demographic demo = demoDAO.getDemographic(ch1Obj.getDemographic_no());

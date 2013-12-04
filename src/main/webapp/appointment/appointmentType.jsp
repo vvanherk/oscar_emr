@@ -36,7 +36,7 @@ var names = '';
 <%   for(int j = 0;j < types.size(); j++) { %>
 		dur = dur + '<%= types.get(j).getDuration() %>'+'^';
 		reason = reason + '<%= types.get(j).getReason() %>'+'^';
-		loc = loc + '<%= types.get(j).getLocation() %>'+'^';
+		loc = loc + '<%= types.get(j).getSite() %>'+'^';
 		notes = notes + '<%= types.get(j).getNotes() %>'+'^';
 		resources = resources + '<%= types.get(j).getResources() %>'+'^';
 		names = names + '<%= types.get(j).getName() %>'+'^';
@@ -50,7 +50,7 @@ var names = '';
 	
 	var typeSel = '';
 	var reasonSel = '';
-	var locSel = '';
+	var siteSel = '';
 	var durSel = 15;
 	var notesSel = '';
 	var resSel = '';
@@ -60,7 +60,7 @@ function getFields(idx) {
 		typeSel = document.getElementById('durId').innerHTML = nameArray[idx-1];
 		durSel = document.getElementById('durId').innerHTML = durArray[idx-1];
 		reasonSel = document.getElementById('reasonId').innerHTML = reasonArray[idx-1];
-		locSel = document.getElementById('locId').innerHTML = locArray[idx-1];
+		siteSel = document.getElementById('siteId').innerHTML = locArray[idx-1];
 		notesSel = document.getElementById('notesId').innerHTML = notesArray[idx-1];
 		resSel = document.getElementById('resId').innerHTML = resArray[idx-1];
 	}	
@@ -80,7 +80,7 @@ function getFields(idx) {
 <%   } %>
 			</select>
 		</td>
-		<td><input type="button" name="Select" value="Select" onclick="window.opener.setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel); window.close()">
+		<td><input type="button" name="Select" value="Select" onclick="window.opener.setType(typeSel,reasonSel,siteSel,durSel,notesSel,resSel); window.close()">
 	</tr>
 	<tr>
 		<td>Duration</td>
@@ -91,8 +91,8 @@ function getFields(idx) {
 		<td colspan="2"><span id="reasonId"/></td>
 	</tr>
 	<tr>
-		<td>Location</td>
-		<td colspan="2"><span id="locId"/></td>
+		<td>Site</td>
+		<td colspan="2"><span id="siteId"/></td>
 	</tr>
 	<tr>
 		<td>Notes</td>

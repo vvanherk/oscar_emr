@@ -60,7 +60,8 @@
 			int rowReCount = 0;
 			ResultSet rslocation = null;
 			ResultSet rsPatient = null;
-
+			
+			Appointment appointment = null;
 			%>
 
 <%@ page import="java.math.*,java.util.*,java.sql.*,oscar.*,java.net.*"
@@ -69,15 +70,23 @@
 <%@ page import="oscar.oscarBilling.ca.on.data.*"%>
 <%@ page import="oscar.oscarBilling.ca.on.pageUtil.*"%>
 <%@page import="org.oscarehr.util.SpringUtils"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%@page import="org.oscarehr.common.model.ClinicNbr"%>
 <%@page import="org.oscarehr.common.dao.ClinicNbrDao"%>
 <%@page import="org.oscarehr.common.dao.OscarAppointmentDao"%>
 <%@page import="org.oscarehr.common.model.Appointment"%>
+<%@page import="org.oscarehr.common.dao.SiteDao"%>
+<%@page import="org.oscarehr.common.model.Site"%>
+<%@page import="org.oscarehr.common.model.Clinic"%>
+<%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
 
 <%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
 <%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
 <%
 	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
+	
+	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+	List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
 %>
 
 <%GregorianCalendar now = new GregorianCalendar();
@@ -237,6 +246,16 @@ function popupPage(vheight,vwidth,varpage) {
 						if (recordObj.size() > 1) {
 							BillingItemData billingItemData = (BillingItemData) recordObj.get(1);
 							AppointmentDate = billingItemData.getService_date();
+						}
+						
+						OscarAppointmentDao oscarAppointmentDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
+						if ( ch1Obj.getAppointment_no() != null && !ch1Obj.getAppointment_no().equals("0")) {
+							try {
+								int apptNo = Integer.parseInt( ch1Obj.getAppointment_no() );
+								appointment = oscarAppointmentDao.getAppointment( apptNo );
+							} catch (Exception e) {
+								MiscUtils.getLogger().error("Error", e);
+							}
 						}
 
 						UpdateDate = ch1Obj.getUpdate_datetime(); //.substring(0,10);
@@ -482,8 +501,57 @@ if(bFlag) {
 
 				%>
 		</select></td>
-		<td width="46%"><b><bean:message
-			key="billing.billingCorrection.formBillingPhysician" />: </b> <select
+		
+		<td width="46%">
+		<b><bean:message key="billing.billingCorrection.formBillingPhysician" />: </b><br>
+
+
+<%
+Integer curSite = null;
+if ( ch1Obj.getSite() != null ) {
+	curSite = ch1Obj.getSite();
+}
+
+String curSiteAsString = request.getParameter("site");
+if (curSiteAsString != null) {
+	try {
+		curSite = Integer.parseInt( curSiteAsString );
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("Unable to parse site number.", e);
+	}
+}
+
+boolean siteMatched = false;
+Site selectedSite = null;
+Clinic selectedClinic = null;
+
+if (curSite != null)
+	selectedSite = siteDao.find( curSite );
+if (selectedSite != null) {
+	selectedClinic = selectedSite.getClinic();
+}
+
+// Only print the site stuff if we are dealing with clinic billing
+if (appointment != null) {
+	String siteValue = "";
+%>
+		
+	<%
+	if (selectedClinic != null) {	
+	%>
+		<input id="clinic" name="clinic" disabled value="<%=selectedClinic.getClinicName()%>" style="font-size: 80%; color: black;">  
+	<%
+	}
+	
+	if (selectedSite != null) {
+	%>
+		<input id="site" name="site" disabled value="<%=selectedSite.getName()%>" style="background-color:<%=selectedSite.getBgColor()%>; font-size: 80%; color: black;"> 
+	<%
+	}
+}
+%>
+      	
+		<select
 			style="font-size: 80%;" name="provider_no">
 			<option value=""><bean:message
 				key="billing.billingCorrection.msgSelectProvider" /></option>

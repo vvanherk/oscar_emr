@@ -152,7 +152,7 @@ public class RscheduleBean {
     } 
     return val;
   }
-  public String getSiteAvail(GregorianCalendar aDate) { 
+  public Integer getSiteAvail(GregorianCalendar aDate) { 
 	  	String val = "";
 	    if(provider_no!="") {
 	      int j = aDate.get(Calendar.DAY_OF_WEEK)-1;
@@ -163,7 +163,7 @@ public class RscheduleBean {
 	  		  } else val = SxmlMisc.getXmlContent(avail_hourB, ("<"+sitedaytag[i]+">"),"</"+sitedaytag[i]+">") ; 
 	  	  } else val = SxmlMisc.getXmlContent(avail_hour, ("<"+sitedaytag[i]+">"),"</"+sitedaytag[i]+">") ; 
 	    } 
-	    return val;
+	    return Integer.parseInt(val);
 	  }
   public String getDateAvailHour(String aDate) { 
     return (getDateAvailHour(new GregorianCalendar(MyDateFormat.getYearFromStandardDate(aDate), MyDateFormat.getMonthFromStandardDate(aDate)-1,MyDateFormat.getDayFromStandardDate(aDate))));

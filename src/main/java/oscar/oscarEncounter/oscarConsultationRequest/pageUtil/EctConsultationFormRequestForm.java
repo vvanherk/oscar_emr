@@ -92,7 +92,7 @@ public final class EctConsultationFormRequestForm extends ActionForm {
 	String urgency;
 	
 	//multi-site
-	String siteName;
+	Integer siteNo;
 
 	private String signatureImg;
 	private String patientFirstName;
@@ -539,15 +539,15 @@ public final class EctConsultationFormRequestForm extends ActionForm {
     public void setFollowUpDate(String followUpDate) {
         this.followUpDate = followUpDate;
     }
-	public String getSiteName() {
-    	if (siteName == null) {
-	    	siteName = new String();
+	public Integer getSiteNo() {
+    	if (siteNo == null) {
+	    	siteNo = new Integer(0);
 		}
-      	return siteName;
+      	return siteNo;
   	}
   
-  	public void setSiteName(String str) {
-	  	this.siteName = str;
+  	public void setSiteNo(Integer siteNo) {
+	  	this.siteNo = siteNo;
   	}
 
 	public String getSignatureImg() {

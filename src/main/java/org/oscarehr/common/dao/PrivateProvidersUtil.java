@@ -47,7 +47,8 @@ public class PrivateProvidersUtil {
 
 	public List getPrivateProvidersData(Boolean isMultisite, Boolean isTeamAccessPrivacy, 
 			Boolean isSiteAccessPrivacy, 
-			String providerNo, String selectedSite, 
+			String providerNo, 
+			Integer selectedSiteId, 
 			boolean isNoGroupsForDoctors) {
 		List<Object> ret = new ArrayList<Object>();
 		ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
@@ -76,15 +77,15 @@ public class PrivateProvidersUtil {
 
 			if(isDoctor) { //no groups
 				if(isSiteAccessPrivacy) {
-					if (selectedSite != null) {
-						siteProviders = providerDao.getProvidersBySiteLocation(selectedSite);
+					if (selectedSiteId != null) {
+						siteProviders = providerDao.getProvidersBySiteLocation(selectedSiteId);
 					} else {
 						siteProviders = providerDao.getSiteProvidersByProviderNo(providerNo);
 					}
 					curUserSites = siteDao.getActiveSitesByProviderNo(providerNo);
 				} else {
-					if (selectedSite != null) {
-						siteProviders = providerDao.getProvidersBySiteLocation(selectedSite);
+					if (selectedSiteId != null) {
+						siteProviders = providerDao.getProvidersBySiteLocation(selectedSiteId);
 					} else {
 						siteProviders = providerDao.getProvidersForAllSites();
 					}	
@@ -92,18 +93,18 @@ public class PrivateProvidersUtil {
 				}
 			} else { //providers and groups
 				if(isSiteAccessPrivacy) {
-					if (selectedSite != null) {
-						siteProviders = providerDao.getProvidersBySiteLocation(selectedSite);
-						siteGroups = siteDao.getGroupBySiteLocation(selectedSite);
+					if (selectedSiteId != null) {
+						siteProviders = providerDao.getProvidersBySiteLocation(selectedSiteId);
+						siteGroups = siteDao.getGroupBySiteLocation(selectedSiteId);
 					} else {
 						siteProviders = providerDao.getSiteProvidersByProviderNo(providerNo);
 						siteGroups = siteDao.getGroupsBySiteProviderNo(providerNo);
 					}
 					curUserSites = siteDao.getActiveSitesByProviderNo(providerNo);
 				} else {
-					if (selectedSite != null) {
-						siteProviders = providerDao.getProvidersBySiteLocation(selectedSite);
-						siteGroups = siteDao.getGroupBySiteLocation(selectedSite);
+					if (selectedSiteId != null) {
+						siteProviders = providerDao.getProvidersBySiteLocation(selectedSiteId);
+						siteGroups = siteDao.getGroupBySiteLocation(selectedSiteId);
 					} else {
 						siteProviders = providerDao.getProvidersForAllSites();
 						siteGroups = siteDao.getGroupsForAllSites();					
@@ -353,10 +354,10 @@ public class PrivateProvidersUtil {
 // used by appointmentprovideradminday, appointmentprovideradminmonth pages		
 		public List getPrivateProviders(boolean isMultisite, boolean isTeamAccessPrivacy, 
 				boolean isSiteAccessPrivacy, 
-				String providerNo, String selectedSite, 
+				String providerNo, Integer selectedSiteId, 
 				boolean isNoGroupsForDoctors) {
 			return getPrivateProvidersData(isMultisite, isTeamAccessPrivacy, 
-					isSiteAccessPrivacy, providerNo, selectedSite, isNoGroupsForDoctors);
+					isSiteAccessPrivacy, providerNo, selectedSiteId, isNoGroupsForDoctors);
 		}
 		
 		

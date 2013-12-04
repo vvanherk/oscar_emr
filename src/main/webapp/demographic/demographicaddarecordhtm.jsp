@@ -457,7 +457,7 @@ function autoFillHin(){
 <input type="hidden" name="appointment_date" value="<%=request.getParameter("appointment_date")%>">
 <input type="hidden" name="notes" value="<%=request.getParameter("notes")%>">
 <input type="hidden" name="reason" value="<%=request.getParameter("reason")%>">
-<input type="hidden" name="location" value="<%=request.getParameter("location")%>">
+<input type="hidden" name="site" value="<%=request.getParameter("site")%>">
 <input type="hidden" name="resources" value="<%=request.getParameter("resources")%>">
 <input type="hidden" name="type" value="<%=request.getParameter("type")%>">
 <input type="hidden" name="style" value="<%=request.getParameter("style")%>">

@@ -44,7 +44,6 @@
     
     boolean isSiteAccessPrivacy=false;
     boolean isTeamAccessPrivacy=false; 
-    boolean bMultisites=org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
     List<String> mgrSite = new ArrayList<String>();
 %>
 <security:oscarSec objectName="_site_access_privacy" roleName="<%=roleName$%>" rights="r" reverse="false">
@@ -78,18 +77,16 @@ if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
 	//multi-site office , save all bgcolor to Hashmap
 	HashMap<String,String> siteBgColor = new HashMap<String,String>();
 	HashMap<String,String> siteShortName = new HashMap<String,String>();
-	if (bMultisites) {
-    	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-    	
-    	List<Site> sites = siteDao.getAllSites();
-    	for (Site st : sites) {
-    		siteBgColor.put(st.getName(),st.getBgColor());
-    		siteShortName.put(st.getName(),st.getShortName());
-    	}
-    	List<Site> providerSites = siteDao.getActiveSitesByProviderNo(curProvider_no);
-    	for (Site st : providerSites) {
-    		mgrSite.add(st.getName());
-    	}
+	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+	
+	List<Site> sites = siteDao.getAllSites();
+	for (Site st : sites) {
+		siteBgColor.put(st.getId().toString(),st.getBgColor());
+		siteShortName.put(st.getId().toString(),st.getShortName());
+	}
+	List<Site> providerSites = siteDao.getActiveSitesByProviderNo(curProvider_no);
+	for (Site st : providerSites) {
+		mgrSite.add(st.getName());
 	}
 %>
 
@@ -346,14 +343,12 @@ function setOrder(val){
                                    <a href=# onclick="setOrder('9'); return false;">
                                        <bean:message key="oscarEncounter.oscarConsultationRequest.ViewConsultationRequests.msgFollowUpDate"/>
                                    </a>
-                                </th>
- 			    <% if (bMultisites) { %>                                
+                                </th>                       
                                 <th align="left" class="VCRheads">
                                    <a href=# onclick="setOrder('10'); return false;">
                                    <bean:message key="oscarEncounter.oscarConsultationRequest.ViewConsultationRequests.msgSiteName"/>
                                    </a>
                                 </th>            
-                            <%} %>                                   
                             </tr>
                         <%                                                        
                             oscar.oscarEncounter.oscarConsultationRequest.pageUtil.EctViewConsultationRequestsUtil theRequests;                            
@@ -389,17 +384,15 @@ function setOrder(val){
                             String sendTo = theRequests.teams.elementAt(i);
                             String specialist = theRequests.vSpecialist.elementAt(i);
                             String followUpDate = theRequests.followUpDate.elementAt(i);
-                            String siteName = ""; 
-                            if (bMultisites) {
-                            	siteName = (String) theRequests.siteName.elementAt(i);
-                            }
+                            Integer siteNo = 0; 
+							siteNo = (Integer) theRequests.siteNo.elementAt(i);
                             if(status.equals("1") && dateGreaterThan(date, Calendar.WEEK_OF_YEAR, -1)){
                                 tickerList.add(demo);
                             }
                             
                             //multisites. skip record if not belong to same site
                             if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
-                             	if(!mgrSite.contains(siteName))  continue;
+                             	if(!mgrSite.contains(siteNo.toString()))  continue;
                              }	
                             overdue = false;
                                                                                                                 
@@ -490,11 +483,9 @@ function setOrder(val){
                                     </a>
 
                                 </td>
-                                <% if (bMultisites) { %>   
-                                <td bgcolor="<%=(siteBgColor.get(siteName)==null || siteBgColor.get(siteName).length()== 0 ? "#FFFFFF" : siteBgColor.get(siteName))%>">
-                                    <%=siteShortName.get(siteName)%>
+                                <td bgcolor="<%=(siteBgColor.get(siteNo.toString())==null || siteBgColor.get(siteNo.toString()).length()== 0 ? "#FFFFFF" : siteBgColor.get(siteNo.toString()))%>">
+                                    <%=siteShortName.get(siteNo.toString())%>
                                 </td>                      
-                                <%} %>          
                             </tr>
                         <%}%>
                         </table>

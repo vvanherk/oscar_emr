@@ -36,7 +36,7 @@ public class BillingClaimHeader1Data {
 	String ref_lab_num;
 	String man_review;
 	String location;
-	String clinic;
+	Integer site;
 
 	String demographic_no;
 	String provider_no;
@@ -63,13 +63,13 @@ public class BillingClaimHeader1Data {
 	String asstProvider_no;
 	String creator;
 	String update_datetime;
-
-	public String getClinic() {
-		return clinic;
+	
+	public Integer getSite() {
+		return site;
 	}
 
-	public void setClinic(String clinic) {
-		this.clinic = clinic;
+	public void setSite(Integer site) {
+		this.site = site;
 	}
 
 	public String getAcc_num() {

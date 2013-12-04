@@ -17,7 +17,6 @@
  * Yi Li
  */
 -->
-<%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%
@@ -86,12 +85,10 @@ if("unbilled".equals(action)) {
     
     rs = dbObj.searchDBRecord(sql);
     while (rs.next()) {
-    	if (bMultisites) {
-    		// skip record if location does not match the selected site, blank location always gets displayed for backward-compatibility
-    		String location = rs.getString("location");
-    		if (StringUtils.isNotBlank(location) && !location.equals(request.getParameter("site"))) 
-    			continue; 
-    	}
+		// skip record if location does not match the selected site, blank location always gets displayed for backward-compatibility
+		String location = rs.getString("location");
+		if (StringUtils.isNotBlank(location) && !location.equals(request.getParameter("site"))) 
+			continue; 
 
     	prop = new Properties();
         prop.setProperty("SERVICE DATE", rs.getString("appointment_date"));
@@ -121,12 +118,10 @@ if("billed".equals(action)) {
             + " order by billing_date , billing_time ";
     rs = dbObj.searchDBRecord(sql);
     while (rs.next()) {
-    	if (bMultisites) {
-    		// skip record if clinic is not match the selected site, blank clinic always gets displayed for backward compatible
-    		String clinic = rs.getString("clinic");
-    		if (StringUtils.isNotBlank(clinic) && !clinic.equals(request.getParameter("site"))) 
-    			continue; 
-    	}
+		// skip record if clinic is not match the selected site, blank clinic always gets displayed for backward compatible
+		String clinic = rs.getString("clinic");
+		if (StringUtils.isNotBlank(clinic) && !clinic.equals(request.getParameter("site"))) 
+			continue; 
     	
         prop = new Properties();
         prop.setProperty("SERVICE DATE", rs.getString("billing_date"));
@@ -411,19 +406,19 @@ function calToday(field) {
 	<input type="radio" name="reportAction" value="unpaid" <%="unpaid".equals(action)? "checked" : "" %>>Unpaid -->
 		</font></td>
 		<td width="20%" align="right" nowrap><b>Provider </b></font> 
-<% if (bMultisites) 
-{ // multisite start ==========================================
-        	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-          	List<Site> sites = siteDao.getActiveSitesByProviderNo(user_no); 
-          	// now get all report providers
-          	ResultSet rslocal = isTeamBillingOnly
-				?apptMainBean.queryResults(new String[]{"billingreport", user_no, user_no }, "search_reportteam")
-				:apptMainBean.queryResults("billingreport", "search_reportprovider");
-          	HashSet<String> reporters=new HashSet<String>();
-          	while (rslocal.next()) {
-          		reporters.add(rslocal.getString("provider_no"));
-          	}
-      %> 
+
+<%
+		SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+		List<Site> sites = siteDao.getActiveSitesByProviderNo(user_no); 
+		// now get all report providers
+		ResultSet rslocal = isTeamBillingOnly
+			?apptMainBean.queryResults(new String[]{"billingreport", user_no, user_no }, "search_reportteam")
+			:apptMainBean.queryResults("billingreport", "search_reportprovider");
+		HashSet<String> reporters=new HashSet<String>();
+		while (rslocal.next()) {
+			reporters.add(rslocal.getString("provider_no"));
+		}
+%> 
       <script>
 var _providers = [];
 <%	for (int i=0; i<sites.size(); i++) { %>
@@ -453,35 +448,8 @@ function changeSite(sel) {
      	changeSite(document.getElementById("site"));
       	document.getElementById("providerview").value='<%=request.getParameter("providerview")%>';     	
       	</script>
-<% } // multisite end ==========================================
-} else {
-%>
-		<select
-			name="providerview">
-			<% 
-String proFirst="";
-String proLast="";
-String proOHIP="";
-String specialty_code; 
-String billinggroup_no;
-int Count = 0;
+<% }
 
-ResultSet rslocal = isTeamBillingOnly
-?apptMainBean.queryResults(new String[]{"billingreport", user_no, user_no }, "search_reportteam")
-:apptMainBean.queryResults("billingreport", "search_reportprovider");
-while(rslocal.next()){
-	proFirst = rslocal.getString("first_name");
-	proLast = rslocal.getString("last_name");
-	proOHIP = rslocal.getString("provider_no"); 
-%>
-			<option value="<%=proOHIP%>"
-				<%=providerview.equals(proOHIP)?"selected":""%>><%=proLast%>,
-			<%=proFirst%></option>
-			<%
-}      
-%>
-		</select>
-<% } %>
 		
 		
 		</td>

@@ -32,7 +32,7 @@ public class ApptData {
 	String demographic_no;
 	String notes;
 	String reason;
-	String location;
+	String site;
 	String resources;
 	String type;
 	String style;
@@ -104,12 +104,12 @@ public class ApptData {
 		this.end_time = end_time;
 	}
 
-	public String getLocation() {
-		return location;
+	public String getSite() {
+		return site;
 	}
 
-	public void setLocation(String location) {
-		this.location = location;
+	public void setSite(String site) {
+		this.site = site;
 	}
 
 	public String getName() {

@@ -269,6 +269,7 @@
 	</bean>
 	<bean name="/admin/ManageSites" class="org.oscarehr.common.web.SitesManageAction" singleton="false">
 		<property name="siteDao" ref="siteDao" />
+		<property name="clinicDao" ref="clinicDAO" />
 	</bean>
 
 	<bean name="/billing/CA/ON/BatchBill" class="org.oscarehr.billing.CA.ON.web.BatchBillAction" singleton="false">
