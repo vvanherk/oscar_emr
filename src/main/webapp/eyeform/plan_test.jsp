@@ -39,7 +39,7 @@
 					
 				<a class="col_del" href="#" onclick="deleteTest(<%=id%>);">[Delete]</a>
 				
-				<select class="col_provider" name="test_<%=id%>.testProvider" id="test_<%=id%>.Provider">
+				<select class="col_provider" name="test_<%=id%>.Provider" id="test_<%=id%>.Provider">
 	            	<c:forEach var="item" items="${providers}">
 	            		<option value="<c:out value="${item.providerNo}"/>"><c:out value="${item.formattedName}"/></option>
 	            	</c:forEach>            	

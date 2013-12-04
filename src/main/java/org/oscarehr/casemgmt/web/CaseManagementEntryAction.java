@@ -54,6 +54,8 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONSerializer;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -561,6 +563,34 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		officeCommunicationDao.update( oc );
 		return null;
 	}
+	
+	public ActionForward signSavedNotes(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		
+		JSONArray issues = (JSONArray) JSONSerializer.toJSON(request.getParameter("issues"));
+		
+		for(int i =0; i < issues.size(); i++)
+		{
+			JSONObject currIssue = (JSONObject) JSONSerializer.toJSON(issues.getString(i));
+			
+			MockHttpServletRequest mockReq = new MockHttpServletRequest();
+			
+			logger.info("Added issue Change and archive booleans ");
+			
+			mockReq.setSession(request.getSession());
+			mockReq.addParameter("appointment_no",request.getParameter("appointment_no"));
+			mockReq.addParameter("demographic_no",request.getParameter("demographic_no"));
+			mockReq.addParameter("sign", "true");
+			
+			mockReq.addParameter("value", currIssue.getString("value"));
+			mockReq.addParameter("issue_id", currIssue.getString("issue_id"));
+			mockReq.addParameter("noteId", currIssue.getString("noteId"));
+
+			
+			ActionForward temp = issueNoteSaveJson(mapping, form, mockReq, response);
+		}
+		
+		return null;
+	}
 
 	public ActionForward issueNoteSaveJson(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String strNote = request.getParameter("value");
@@ -611,8 +641,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 			note.setRevision(Integer.parseInt(note.getRevision())+1 + "");
 
-			if (archived != null && archived.equalsIgnoreCase("true"))
-				note.setArchived(true);
+			if (archived != null && archived.equalsIgnoreCase("true")){	note.setArchived(true);	}
 			
 			if (demographicNo == null)
 				demographicNo = note.getDemographic_no();
@@ -740,6 +769,18 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 		String savedStr = caseManagementMgr.saveNote(cpp, note, providerNo, null, null, null);
 		addNewNoteLink(note.getId());
+		
+		String aN = request.getParameter("archiveNote");
+		if(aN != null && !aN.equals("") ){
+			CaseManagementNoteExt archiveNote = new CaseManagementNoteExt();
+			CaseManagementNote newNote = caseManagementMgr.getMostRecentNote(note.getUuid());
+			
+			archiveNote.setNoteId(newNote.getId());
+			archiveNote.setKeyVal(CaseManagementNoteExt.ARCHIVENOTE);
+			archiveNote.setValue(aN);
+			
+			caseManagementNoteExtDao.save(archiveNote);
+		}
 
 
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -749,7 +790,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 		return null;
 	}
-
+	
 	public ActionForward issueNoteSave(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String strNote = request.getParameter("value");
 		String appointmentNo = request.getParameter("appointmentNo");
@@ -2703,6 +2744,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			}
 		}
 		Collections.reverse(history);
+		Collections.reverse(current);
 
 		request.setAttribute("history",history);
 		request.setAttribute("current", current);

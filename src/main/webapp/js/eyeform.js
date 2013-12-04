@@ -389,7 +389,7 @@ function saveEditNote(item) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo,
-			data: "value=" + data + "&noteId=" + noteId + "&sign=true",
+			data: "value=" + data + "&noteId=" + noteId + "&sign=false",
 			dataType: "json",
 			success: function(data) {
 				if (typeof console != "undefined")
@@ -419,19 +419,40 @@ function saveEditNote(item) {
 function archiveNote(item) {
 	var noteId = $(item).attr("note_id");
 	var boxId = $(item).parent().parent().parent().attr("id");
+	var $archiveNoteBtn = $(item).find(".archiveNoteBtn");
+	
+	closeAll();
+	
+	$(".archiveBox").css("display", "block");
+	$(".archiveBox").css("top", ($(window).height()/2-275) + "px");
+	$(".archiveBox").css("left", ($(window).width()/2-100) + "px");
+	
+	$(".archiveBox").children("[name=note_id]").val(noteId);
+	$("#newArchiveText").focus();
 
-	if (typeof console != "undefined")
-		console.log("Archiving " + noteId);
-	$(item).hide();
+	$("#closeArchiveBoxBtn").click(function(){	
+		$(".archiveBox").css("display", "none");
+		$(".archiveBox").children("input").val();	
+	});
+	
+	$("#uiBoxArchiveBtn").click(function(){
+		var archiveNote = encodeURIComponent($("#newArchiveText").val());
+		
+		if (typeof console != "undefined")
+			console.log("Archiving " + noteId);
+		$(item).hide();
+		$(".archiveBox").css("display", "none");
+		
+		$.ajax({
+			type: "POST",
+			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson",
+			data: "value=" + $(item).children(".noteContent").html() + "&archiveNote=" + archiveNote + "&noteId=" + noteId + "&archived=true",
+			dataType: "json",
+			success: function(data) {
+				loadNoteBox(boxId, noteBoxes[boxId], false);
+			}
+		});
 
-	$.ajax({
-		type: "POST",
-		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson",
-		data: "noteId=" + noteId + "&archived=true",
-		dataType: "json",
-		success: function(data) {
-			loadNoteBox(boxId, noteBoxes[boxId], false);
-		}
 	});
 }
 
@@ -651,6 +672,8 @@ function closeAll() {
 	$(".openTickler").remove();
 
 	$("#newTicklerBox").css("display", "none");
+	
+	$("#newArchiveBox").css("display", "none");
 
 	$("#newSpecsBox").css("display", "none");
 
@@ -952,22 +975,29 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			var provName = "";
 			if (item.provider)
 				provName = item.provider.formattedName;
-			
-			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\" note_id='" + item.id + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong><span class='noteContent'>" + item.note.replace( /\n/g, ' ' ) + "</span><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span></li>");
+				
+			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\" note_id='" + item.id + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong><span class='noteContent'>" + item.note.replace( /\n/g, ' ' ) + "</span></li>");
+
+			if(boxNameId != "patientLog") { //changed to build list contents based on item properties.
+				var $currItem = $("#" + boxNameId + " .content ul").children().last();
+				
+				$currItem.append("<span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span>");
+				if( !item.signed ) {
+					$currItem.addClass("unSigned");
+					$currItem.click(function(e) {
+						e.stopPropagation();
+						editNote($(this));
+					});
+				}
+			}
+		
 		}
 
-        if( boxNameId != "patientLog" ) {
-            $("#" + boxNameId + " .content ul li").click(function(e) {
-                e.stopPropagation();
-                editNote($(this));
-            });
 
-            $("#" + boxNameId + " .content ul li .archiveNoteBtn").click(function(e) {
-                e.stopPropagation();
-                archiveNote($(this).parent());
-            });            
-        }
-
+		$("#" + boxNameId + " .content ul li .archiveNoteBtn").click(function(e) {
+			e.stopPropagation();
+			archiveNote($(this).parent());
+		});
 
 		if (initialLoad) {
 			if (boxNameId == "planHistory" || boxNameId == "diagnostics" || boxNameId == "patientLog" || boxNameId == "otherMeds" || boxNameId == "reminders" || boxNameId == "ocularHistory" || boxNameId == "familyMedicalOcularHistory" || boxNameId == "eyedrops") {
@@ -1002,7 +1032,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 						$.ajax({
 							type: "POST",
 							url: address,
-							data: "value=" + value + "&issue_code=" + noteBoxes[$(parent).parent().parent().parent().attr('id')] + "&sign=true",
+							data: "value=" + value + "&issue_code=" + noteBoxes[$(parent).parent().parent().parent().attr('id')] + "&sign=false",
 							dataType: "json",
 							success: function(data) {
 								$("#" + boxNameId + " .content ul").children().remove();
@@ -1180,6 +1210,25 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 	$("#billBtn").css("display", "none");
 
 	$(".loaderImg").css("display", "inline");
+	
+	if(signAndExit){
+		var unSignedNotes = [];
+		
+		$(".unSigned").each(function(){
+			unSignedNotes.push({
+				"value": encodeURIComponent($(this).find(".noteContent").html()),
+				"issue_id": $(this).closest(".boxTitleLink").attr("id"), 
+				"noteId": $(this).attr("note_id")
+			});
+		});
+		
+		$.ajax({
+			type: "POST",
+			url: ctx + "/CaseManagementEntry.do?method=signSavedNotes&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
+			data: "issues=" + JSON.stringify(unSignedNotes),
+			dataType: "json"
+		});
+	}
 
 	$.ajax({
 		type: "POST",

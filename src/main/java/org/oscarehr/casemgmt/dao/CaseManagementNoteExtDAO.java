@@ -47,12 +47,20 @@ public class CaseManagementNoteExtDAO extends HibernateDaoSupport {
 	    return this.getHibernateTemplate().find(hql, noteId);
 	}
 
-	public List getExtByKeyVal(String keyVal) {
+	public List<CaseManagementNoteExt> getExtByKeyVal(String keyVal) {
 	    String hql = "from CaseManagementNoteExt cExt where cExt.keyVal = ?";
 	    return this.getHibernateTemplate().find(hql, keyVal);
+	}	
+	
+	public CaseManagementNoteExt getExtByKeyValNote(String keyVal, int noteId) {
+		String[] param = {keyVal, "%"+noteId+"%"};
+	    String hql = "from CaseManagementNoteExt cExt where cExt.keyVal = ? and cExt.noteId = ? order by cExt.id desc";
+		List<CaseManagementNoteExt> tmp = this.getHibernateTemplate().find(hql, param);
+		if (tmp == null) return null;
+	    return tmp.get(0);
 	}
 
-	public List getExtByValue(String keyVal, String value) {
+	public List<CaseManagementNoteExt> getExtByValue(String keyVal, String value) {
 	    String[] param = {keyVal, "%"+value+"%"};
 	    String hql = "from CaseManagementNoteExt cExt where cExt.keyVal = ? and cExt.value like ?";
 	    return this.getHibernateTemplate().find(hql, param);

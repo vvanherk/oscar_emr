@@ -501,6 +501,26 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 		</div>
 		<div class="arrow" style="top: 20px;"></div>
 	</div>
+	
+	<div id="newArchiveBox" class="popoutBox archiveBox" style="display: none;">
+		<div class="boxContent">
+			<div class="boxTitle">
+				<span class="addEditSpecsTitle">Add Archive Note</span>
+				<div class="uiBarBtn uiCloseBtn" id="closeArchiveBoxBtn"><span class="text">x</span></div>
+			</div>
+			<input type="hidden" name="note_id" value="" />
+			<table>
+					<tr>
+					<th>Message</th>
+					<td><textarea rows=10 cols=40 id="newArchiveText" name="message"></textarea>
+				</tr>
+				<tr>
+								<td></td>
+					<td><div class="uiBtn" id="uiBoxArchiveBtn">Archive</div><span class="loaderImg"><img src="<%=request.getContextPath()%>/images/DMSLoader.gif" /></span></td>
+				</tr>
+			</table>
+		</div>
+	</div>
 
 	<div class="popoutBox listBox" style="display: none;">
 		<div class="boxContent">

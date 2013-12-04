@@ -134,6 +134,7 @@ jQuery(document).ready(function() {
 				var num = jQuery("#procedure_num").val();
 				setInput(num,'procedure','id','<%=proc.getId()%>');
 				setSelect(num,'procedure','urgency','<%=proc.getUrgency()%>');
+				setSelect(num,'procedure','Provider','<%=proc.getProvider()%>');
 				setSelect(num,'procedure','eye','<%=proc.getEye()%>');
 				setInput(num,'procedure','procedureName','<%=proc.getProcedureName()%>');
 				setInput(num,'procedure','location','<%=proc.getLocation()%>');
@@ -148,6 +149,7 @@ jQuery(document).ready(function() {
 				addTest();
 				var num = jQuery("#test_num").val();
 				setInput(num,'test','id','<%=test.getId()%>');
+				setSelect(num,'test','Provider','<%=test.getProvider()%>');
 				setSelect(num,'test','eye','<%=test.getEye()%>');
 				setInput(num,'test','testname','<%=test.getTestname()%>');
 				setSelect(num,'test','urgency','<%=test.getUrgency()%>');
@@ -243,7 +245,7 @@ function sendTickler()
 <a href="#" onclick="addTest();">[Add]</a>
 <br/>
 <br/>
-	<input type="submit" value="Submit" onclick="test()"/>
+	<input type="submit" value="Submit" />
 	&nbsp;&nbsp;
 	<input type="button" name="cancel" value="Cancel" onclick="window.close()" />
 
