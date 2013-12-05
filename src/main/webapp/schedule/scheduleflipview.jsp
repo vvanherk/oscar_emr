@@ -26,6 +26,7 @@
 
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
+<%@ page import="org.oscarehr.util.MiscUtils" %>
 <%!
 
 private JdbcApptImpl jdbc = new JdbcApptImpl();
@@ -58,6 +59,7 @@ private String getSiteHTML(String scDate, String provider_no, List<Site> sites) 
 }
 %>
 
+<%
 SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
 sites = siteDao.getAllSites(); 
 
