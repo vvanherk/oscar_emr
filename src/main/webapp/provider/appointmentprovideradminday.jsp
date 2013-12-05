@@ -1783,8 +1783,7 @@ for(nProvider=0;nProvider<numProvider;nProvider++) {
 						}
 					}
 					
-					MiscUtils.getLogger().info("DATA: " + appointment.getId() + " | " + siteId + " | " + noSite + " | " + inSite + " | " + inClinic);
-					if (noSite || inSite || inClinic) {
+					if ((noSite && inClinic) || inSite) {
 %>
 						<td class="appt" bgcolor='<%=as.getBgColor()%>' rowspan="<%=iRows%>" nowrap>
 <%
@@ -1794,7 +1793,7 @@ for(nProvider=0;nProvider<numProvider;nProvider++) {
 <%
 						}
 %>
-						<!-- multisites : add colour-coded to the "location" value of that appointment. -->
+						<!-- multisites : add colour-coded to the "site" value of that appointment. -->
 						<span title="<%=site.getName()%>" style="background-color:<%=site.getBgColor()%>;">&nbsp;</span>|
 		
 <%
