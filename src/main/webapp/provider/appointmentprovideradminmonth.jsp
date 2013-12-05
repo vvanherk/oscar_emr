@@ -25,27 +25,27 @@
 --%>
 
 <%@page import="org.oscarehr.util.SessionConstants"%>
+<%@ page import="org.oscarehr.common.model.Provider" %>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
+<%@ page import="org.oscarehr.util.MiscUtils" %>
+
 <%!
-
-private	List<Site> sites; 
-
-private List<Clinic> clinics = new ArrayList<Clinic>();
-private String selectedClinic = null;
-
-private List<Site> curUserSites = new ArrayList<Site>();
-private String [] curScheduleMultisite;
-private List<String> siteProviderNos = new ArrayList<String>();
-private List<String> siteGroups = new ArrayList<String>();
-private String selectedSite = null;
-private String selectedSiteBgColor = null;
-private HashMap<String,String> siteBgColor = new HashMap<String,String>();
-private HashMap<String,String> CurrentSiteMap = new HashMap<String,String>();
-private String getSiteHTML(String reason, List<Site> sites) {
-	 if (reason==null||reason.trim().length()==0) 
+private String getSiteHTML(Integer siteId, List<Site> sites) {
+	 if (siteId==null) 
 		 return "";
-	 else 
-		 return "<span style='background-color:"+ApptUtil.getColorFromLocation(sites, reason)+"'>"+ApptUtil.getShortNameFromLocation(sites, reason)+"</span>";	
+	
+	Site selectedSite = null; 
+	for (Site s : sites) {
+		if (s.getId().equals(siteId)) {
+			selectedSite = s;
+			break;
+		}
+	}
+	
+	if (selectedSite != null)	 
+		return "<span style='background-color:"+selectedSite.getBgColor()+"'>"+selectedSite.getName()+"</span>";	
+	
+	return "";
 }
 
 %>
@@ -138,34 +138,80 @@ if (org.oscarehr.common.IsPropertiesOn.isCaisiEnable() && org.oscarehr.common.Is
 	<%isTeamAccessPrivacy=true; %>
 </security:oscarSec>
 
-<% 
+<%
+List<Clinic> clinics = new ArrayList<Clinic>();
+List<Site> availableSites = new ArrayList<Site>();
+List<Site> curUserSites = new ArrayList<Site>();
+
+String selectedClinicAsString = null;
+Clinic selectedClinic = null;
+String selectedSiteAsString = null;
+Site selectedSite = null;
+
+List<String> siteProviderNos = new ArrayList<String>();
+List<String> siteGroups = new ArrayList<String>();
+
 ClinicDAO clinicDao = (ClinicDAO)WebApplicationContextUtils.getWebApplicationContext(application).getBean("clinicDAO");
+SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
 
 // TODO: access privacy for clinics
 clinics = clinicDao.findAll();
 
-SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-sites = siteDao.getAllActiveSites(); 
-
-String requestClinic = request.getParameter("clinic") ;
-if (requestClinic != null) 
-{
-	requestClinic = (requestClinic.equals("none") ? null : requestClinic);
-	session.setAttribute("clinic_selected", requestClinic );
+// Set clinic and site session values
+String selected_clinic = (String) request.getParameter("clinic") ;
+if (selected_clinic != null) {
+	session.setAttribute("clinic_selected", (selected_clinic.equals("none") ? null : selected_clinic) );	    
 }
-selectedClinic = (requestClinic == null ? (String)session.getAttribute("clinic_selected") : requestClinic) ;
 
-String requestSite = request.getParameter("site") ;
-if (requestSite!=null) 
-{
-	requestSite = (requestSite.equals("none") ? null : requestSite);
-	session.setAttribute("site_selected", requestSite );
+String selected_site = (String) request.getParameter("site") ;
+if (selected_site != null) {
+	session.setAttribute("site_selected", (selected_site.equals("none") ? null : selected_site) );	    
 }
-selectedSite = (requestSite == null ? (String)session.getAttribute("site_selected") : requestSite) ;
-selectedSiteBgColor = (selectedSite != null ? siteBgColor.get(selectedSite) : null);
+
+// Parse clinic and site session values
+selectedClinicAsString = (String)session.getAttribute("clinic_selected");
+try {
+	selectedClinic = clinicDao.find( Integer.parseInt( selectedClinicAsString ) );
+} catch (Exception e) {
+	selectedClinic = null;
+}
+
+if (selectedClinic != null ) {	
+	availableSites = selectedClinic.getSites();
+} else {
+	for ( Clinic c : clinics) {
+		for ( Site s : c.getSites() ) {
+			if (!availableSites.contains( s ))
+				availableSites.add( s );
+		}
+		
+	}
+}
+
+selectedSiteAsString = (String)session.getAttribute("site_selected");
+try {
+	selectedSite = siteDao.getById( Integer.parseInt( selectedSiteAsString ) );
+} catch (Exception e) {
+	selectedSite = null;
+}
+
+if (selectedSite != null) {
+	//get site provider list
+	siteProviderNos = siteDao.getProviderNoBySiteLocation(selectedSite.getId());
+	siteGroups = siteDao.getGroupBySiteLocation(selectedSite.getId());
+} else if (selectedClinic != null) {
+	for (Site s : availableSites) {
+		Set<Provider> providers = s.getProviders();
+		for (Provider p : providers) {
+			siteProviderNos.add(p.getProviderNo());
+		}
+	}
+
+	// TODO: fix site groups...?  Not sure how this works yet...
+	//siteGroups = siteDao.getGroupByClinic(selectedClinic);
+}
 
 if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
-	//user has Access Privacy, set user provider and group list
 	String siteManagerProviderNo = (String) session.getAttribute("user");
 	curUserSites = siteDao.getActiveSitesByProviderNo(siteManagerProviderNo);
 	if (selectedSite==null) {
@@ -174,27 +220,9 @@ if (isSiteAccessPrivacy || isTeamAccessPrivacy) {
 	}
 }
 else {
-	//get all active site as user site list
-	curUserSites = sites;
+	curUserSites = availableSites;
 }
 
-for (Site s : curUserSites) {
-	CurrentSiteMap.put(s.getName(),"Y");
-}
-
-CurrentSiteMap.put("NONE", "Y"); // added by vic for the reason that some provider could work in multiple clinics in same day, when the schedule template will set the default location to NONE.
-
-// a site has been seleceted
-if (selectedSite != null) {
-	//get site provider list
-	siteProviderNos = siteDao.getProviderNoBySiteLocation(selectedSite);
-	siteGroups = siteDao.getGroupBySiteLocation(selectedSite);
-}
-
-//get all sites bgColors
-for (Site st : sites) {
-	siteBgColor.put(st.getName(),st.getBgColor());
-}
 
 %>
 <%@ page import="oscar.dao.*" %>
@@ -634,7 +662,7 @@ function refreshTabAlerts(id) {
 		providerNameBean.setDef(String.valueOf(provider.get("provider_no")), provider.get("last_name")+","+provider.get("first_name"));	
 		providerOptions.add((String)provider.get("provider_no"));
 %>
-					<option value="<%=provider.get("provider_no")%>" <%=providerview.equals(provider.get("provider_no"))?"selected":""%> <%= (selectedSiteBgColor != null ? "style=\"color:"+selectedSiteBgColor+"\"" : "") %> >
+					<option value="<%=provider.get("provider_no")%>" <%=providerview.equals(provider.get("provider_no"))?"selected":""%> <%= (selectedSite != null ? "style=\"color:"+selectedSite.getBgColor()+"\"" : "") %> >
 						<%=providerNameBean.getShortDef(String.valueOf(provider.get("provider_no")), "", NameMaxLen)%>
 						</option>
 <%
@@ -649,7 +677,7 @@ function refreshTabAlerts(id) {
 	for (Map group : resultList) {
 		if (siteGroups == null || siteGroups.size() == 0 || siteGroups.contains(group.get("mygroup_no"))) {  		
 %>
-					<option value="<%="_grp_"+group.get("mygroup_no")%>" <%=(providerview.indexOf("_grp_") != -1 && mygroupno.equals(group.get("mygroup_no")))?"selected":""%> <%= (selectedSiteBgColor != null ? "style=\"color:"+selectedSiteBgColor+"\"" : "") %>>
+					<option value="<%="_grp_"+group.get("mygroup_no")%>" <%=(providerview.indexOf("_grp_") != -1 && mygroupno.equals(group.get("mygroup_no")))?"selected":""%> <%= (selectedSite != null ? "style=\"color:"+selectedSite.getBgColor()+"\"" : "") %>>
 						<bean:message key="provider.appointmentprovideradminmonth.formGRP" />: <%=group.get("mygroup_no")%>
 					</option>
 <%
@@ -662,7 +690,7 @@ function refreshTabAlerts(id) {
 			providerOptions.add((String)provider.get("provider_no"));
 			providerNameBean.setDef(String.valueOf(provider.get("provider_no")), provider.get("last_name")+","+provider.get("first_name"));
 %>
-					<option value="<%=provider.get("provider_no")%>" <%=providerview.equals(provider.get("provider_no"))?"selected":""%> <%= (selectedSiteBgColor != null ? "style=\"color:"+selectedSiteBgColor+"\"" : "") %>>
+					<option value="<%=provider.get("provider_no")%>" <%=providerview.equals(provider.get("provider_no"))?"selected":""%> <%= (selectedSite != null ? "style=\"color:"+selectedSite.getBgColor()+"\"" : "") %>>
 						<%=providerNameBean.getShortDef(String.valueOf(provider.get("provider_no")), "", NameMaxLen)%>
 					</option>
 <%
@@ -688,25 +716,68 @@ function refreshTabAlerts(id) {
 				</select>
 				<space style="padding-left:30px"/>	
 	   <script>
-			function changeClinic(sel) {
-				
+			var clinics = new Object();
+		<%
+		// We will create an object mapping clinics to sites
+		for ( Clinic c : clinics) {
+		%>
+			clinics['<%=c.getId()%>'] = new Object();
+		<%	
+			List<Site> sites = c.getSites();
+			for (Site s : sites) {
+			%>
+				clinics['<%=c.getId()%>']['<%=s.getId()%>'] = true;
+			<%
 			}
+		}
+		%>
+		
+		function changeClinic(sel) {
+			var clinicId = sel.options[sel.selectedIndex].value;
+			var newGroupNo = "<%=(mygroupno == null ? ".default" : mygroupno)%>";
+			var providerview = "<%=providerview%>";			
 			
-			function changeSite(sel) {
-				sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
-				var siteName = sel.options[sel.selectedIndex].value;
-				var newGroupNo = "<%=(mygroupno == null ? "all" : mygroupno)%>";
-				var providerview = "<%=providerview%>" ;
-				if(providerview.indexOf("_grp_")!=-1 ) 
-        		{				
-        		
-        			window.open("providercontrol.jsp?year=<%=year%>&month=<%=month%>&day=1&view=<%=view==0?"0":("1&curProvider="+request.getParameter("curProvider")+"&curProviderName="+request.getParameter("curProviderName") )%>&displaymode=month&dboperation=searchappointmentmonth" + "&site=" + siteName +"&mygroup_no="+newGroupNo,"_self");	
-	            }
-	            else
-		        {
-					window.open("providercontrol.jsp?year=<%=year%>&month=<%=month%>&day=1&view=<%=view==0?"0":("1&curProvider="+request.getParameter("curProvider")+"&curProviderName="+request.getParameter("curProviderName") )%>&displaymode=month&dboperation=searchappointmentmonth" + "&site=" + siteName + "&providerview=" + providerview,"_self");
-		        }
-			}
+			var selectedSiteId = "none";
+			// We want to set the site id if that site belongs to the newly selected clinic
+			if (<%=selectedSite != null%> && clinics[clinicId] && clinics[clinicId]['<%=(selectedSite != null? selectedSite.getId() : "")%>'])
+				selectedSiteId = "<%=(selectedSite != null? selectedSite.getId() : "")%>";
+			
+	        if (providerview.indexOf("_grp_")!=-1 )  {
+				//popupPage(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&new_tickler_warning_window=<%=newticklerwarningwindow%>&default_pmm=<%=default_pmm%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&mygroup_no="+newGroupNo+"&clinic="+clinicId+"&site="+selectedSiteId);
+				window.open("providercontrol.jsp?year=<%=year%>&month=<%=month%>&day=1&view=<%=view==0?"0":("1&curProvider="+request.getParameter("curProvider")+"&curProviderName="+request.getParameter("curProviderName") )%>&displaymode=month&dboperation=searchappointmentmonth" + "&clinic="+clinicId+"&site=" + selectedSiteId +"&mygroup_no="+newGroupNo,"_self");
+	        } else {
+				//popupPage(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&mygroup_no="+newGroupNo+"&clinic="+clinicId+"&site="+selectedSiteId);
+				window.open("providercontrol.jsp?year=<%=year%>&month=<%=month%>&day=1&view=<%=view==0?"0":("1&curProvider="+request.getParameter("curProvider")+"&curProviderName="+request.getParameter("curProviderName") )%>&displaymode=month&dboperation=searchappointmentmonth" + "&clinic="+clinicId+"&site=" + selectedSiteId + "&providerview=" + providerview,"_self");
+	        }
+		}
+		
+		function changeToSiteWithId(siteId) {
+			var newGroupNo = "<%=(mygroupno == null ? "all" : mygroupno)%>";
+			var providerview = "<%=providerview%>";
+			
+	        if (providerview.indexOf("_grp_")!=-1 )  {
+				//popupPage(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&new_tickler_warning_window=<%=newticklerwarningwindow%>&default_pmm=<%=default_pmm%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&mygroup_no="+newGroupNo+"&site="+siteId);
+				window.open("providercontrol.jsp?year=<%=year%>&month=<%=month%>&day=1&view=<%=view==0?"0":("1&curProvider="+request.getParameter("curProvider")+"&curProviderName="+request.getParameter("curProviderName") )%>&displaymode=month&dboperation=searchappointmentmonth" + "&site=" + siteId +"&mygroup_no="+newGroupNo,"_self");
+	        } else {
+				//popupPage(10,10, "providercontrol.jsp?provider_no=<%=curUser_no%>&start_hour=<%=startHour%>&end_hour=<%=endHour%>&every_min=<%=everyMin%>&color_template=deepblue&dboperation=updatepreference&displaymode=updatepreference&mygroup_no="+newGroupNo+"&site="+siteId);
+				window.open("providercontrol.jsp?year=<%=year%>&month=<%=month%>&day=1&view=<%=view==0?"0":("1&curProvider="+request.getParameter("curProvider")+"&curProviderName="+request.getParameter("curProviderName") )%>&displaymode=month&dboperation=searchappointmentmonth" + "&site=" + siteId + "&providerview=" + providerview,"_self");
+	        }
+		}
+		
+		/**
+		 * Call this on page load so that the default site gets set properly.
+		 */ 
+		function setSiteOnPageLoad() {
+			var sel = document.getElementById("site");
+			sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+		}
+		
+		function changeSite(sel) {
+			sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+			var siteId = sel.options[sel.selectedIndex].value;
+			
+			changeToSiteWithId( siteId );
+		}
       </script>
       
 		<select id="clinic" name="clinic" onchange="changeClinic(this)">
@@ -714,18 +785,18 @@ function refreshTabAlerts(id) {
     	<%
     	for ( Clinic c : clinics) {
     	%>
-    		<option value="<%=c.getId()%>" <%=(c.getId().toString().equals(selectedClinic)) ? " selected " : "" %> >
+    		<option value="<%=c.getId()%>" <%=(selectedClinic != null && c.getId().equals(selectedClinic.getId())) ? " selected " : "" %> >
     			<%= c.getClinicName() %>
     		</option>
     	<% } %>
     	</select>
       
-    	<select id="site" name="site" onchange="changeSite(this)" style="background-color: <%=( selectedSite == null || siteBgColor.get(selectedSite) == null ? "#FFFFFF" : siteBgColor.get(selectedSite))%>">
+    	<select id="site" name="site" onchange="changeSite(this)" style="background-color: <%=( selectedSite == null ? "#FFFFFF" : selectedSite.getBgColor())%>">
     		<option value="none" style="background-color:white">---All Sites---</option>
     	<%
     	for (Site s : curUserSites) {
     	%>
-    		<option value="<%=s.getId()%>" style="background-color:<%= s.getBgColor() %>" <%=(s.getId().toString().equals(selectedSite)) ? " selected " : "" %> >
+    		<option value="<%=s.getId()%>" style="background-color:<%= s.getBgColor() %>" <%=(selectedSite != null && s.getId().equals(selectedSite.getId())) ? " selected " : "" %> >
     			<%=s.getName()%>
     		</option>
     	<% } %>
@@ -778,11 +849,12 @@ function refreshTabAlerts(id) {
     if(providerview.equals("all") || providerview.startsWith("_grp_",0)) {
 	      param[0] = year+"-"+month+"-"+"1";
 	      param[1] = cal.get(Calendar.YEAR)+"-"+(cal.get(Calendar.MONTH)+1)+"-"+"1";
-		  if (selectedSite == null) {  
+	      if (selectedClinic == null && selectedSite == null) {  
 		      resultList = oscarSuperManager.find("providerDao", "search_scheduledate_datep", param);
-	    	}
-	    	else	{
-	    	  resultList = oscarSuperManager.find("providerDao", "site_search_scheduledate_datep", new String[]{param[0], param[1], selectedSite});	
+			} else if (selectedSite == null) {
+		      resultList = oscarSuperManager.find("providerDao", "clinic_search_scheduledate_datep", new String[]{param[0], param[1], selectedClinic.getId().toString()});
+			} else {
+	    	  resultList = oscarSuperManager.find("providerDao", "site_search_scheduledate_datep", new String[]{param[0], param[1], selectedSite.getId().toString()});	
 	      }
     } else {
       String[] param1 = new String[3];
@@ -792,58 +864,76 @@ function refreshTabAlerts(id) {
       resultList = oscarSuperManager.find("providerDao", "search_scheduledate_singlep", param1);
     }
 
-              Iterator<Map<String,Object>> it = resultList.iterator();
-              Map date = null;
-              for (int i=0; i<dateGrid.length; i++) {
-                out.println("</tr>");
-                for (int j=0; j<7; j++) {
-                  if(dateGrid[i][j]==0) out.println("<td></td>");
-                  else {
-                    bgcolor = new StringBuffer("ivory"); //default color for absence
-                    strHour = new StringBuffer();
-                    strReason = new StringBuffer();
-                    strHolidayName = new StringBuffer();
-                    aHScheduleHoliday = (HScheduleHoliday) scheduleHolidayBean.get(year+"-"+MyDateFormat.getDigitalXX(month)+"-"+MyDateFormat.getDigitalXX(dateGrid[i][j]));
-                    if (aHScheduleHoliday!=null) {
-                      bgcolor = new StringBuffer("pink");
-                      strHolidayName = new StringBuffer(aHScheduleHoliday.holiday_name) ;
-                    }
-                 
-            %>
-					<td nowrap bgcolor="<%=bgcolor.toString()%>" valign="top"><a
-						href='providercontrol.jsp?year=<%=year%>&month=<%=MyDateFormat.getDigitalXX(month)%>&day=<%=MyDateFormat.getDigitalXX(dateGrid[i][j])%>&view=<%=view==0?"0":("1&curProvider="+request.getParameter("curProvider")+"&curProviderName="+request.getParameter("curProviderName"))%>&displaymode=day&dboperation=searchappointmentday'>
-					<span class='date'>&nbsp;<%=dateGrid[i][j] %> </span> <font
-						size="-2" color="blue"><%=strHolidayName.toString()%></font> <%
-  while (bFistEntry?it.hasNext():true) { 
-    date = bFistEntry?it.next():date;
-    String _scheduleDate = year+"-"+MyDateFormat.getDigitalXX(month)+"-"+MyDateFormat.getDigitalXX(dateGrid[i][j]);    
-    if(!String.valueOf(date.get("sdate")).equals(_scheduleDate) ) {
-      bFistEntry = false;
-      break;
-    } else {
-      bFistEntry = true;
-      if(String.valueOf(date.get("available")).equals("0")) continue;
-    }
-    if(isTeamOnly || !providerview.startsWith("_grp_",0) || myGrpBean.containsKey(String.valueOf(date.get("provider_no"))) ) {
-    	%>
-    <br>
-	<%
-    	if (CurrentSiteMap.get(date.get("reason")) != null && ( selectedSite == null || "NONE".equals(date.get("reason")) || selectedSite.equals(date.get("reason")))) {
-%> 
-<% out.print(getSiteHTML((String)date.get("reason"), sites)); %>
-
-<%  } 
-%>	
-<span class='datepname'>&nbsp;<%=providerNameBean.getShortDef(String.valueOf(date.get("provider_no")),"",NameMaxLen )%></span><span
-						class='datephour'><%=date.get("hour") %></span>
-<%   } } %>
-					</a></font></td>
-					<%
-                  }
-                }
-                out.println("</tr>");
-              }
-            %>
+	Iterator<Map<String,Object>> it = resultList.iterator();
+	Map date = null;
+	for (int i=0; i<dateGrid.length; i++) {
+		out.println("</tr>");
+		for (int j=0; j < 7; j++) {
+			if ( dateGrid[i][j] == 0 ) {
+				out.println("<td></td>");
+			} else {
+				bgcolor = new StringBuffer("ivory"); //default color for absence
+				strHour = new StringBuffer();
+				strReason = new StringBuffer();
+				strHolidayName = new StringBuffer();
+				aHScheduleHoliday = (HScheduleHoliday) scheduleHolidayBean.get(year+"-"+MyDateFormat.getDigitalXX(month)+"-"+MyDateFormat.getDigitalXX(dateGrid[i][j]));
+				if ( aHScheduleHoliday != null ) {
+					bgcolor = new StringBuffer("pink");
+					strHolidayName = new StringBuffer(aHScheduleHoliday.holiday_name);
+				}
+				
+%>
+				<td nowrap bgcolor="<%=bgcolor.toString()%>" valign="top">
+					<a href='providercontrol.jsp?year=<%=year%>&month=<%=MyDateFormat.getDigitalXX(month)%>&day=<%=MyDateFormat.getDigitalXX(dateGrid[i][j])%>&view=<%=view==0?"0":("1&curProvider="+request.getParameter("curProvider")+"&curProviderName="+request.getParameter("curProviderName"))%>&displaymode=day&dboperation=searchappointmentday'>
+					<span class='date'> &nbsp;<%=dateGrid[i][j]%> </span>
+					<font size="-2" color="blue"><%=strHolidayName.toString()%></font>
+<%
+				while (bFistEntry?it.hasNext():true) {
+					date = bFistEntry?it.next():date;
+					String _scheduleDate = year+"-"+MyDateFormat.getDigitalXX(month)+"-"+MyDateFormat.getDigitalXX(dateGrid[i][j]);    
+					
+					if ( !String.valueOf(date.get("sdate")).equals(_scheduleDate) ) {
+						bFistEntry = false;
+						break;
+					} else {
+						bFistEntry = true;
+						if (String.valueOf(date.get("available")).equals("0"))
+							continue;
+					}
+					
+					if(isTeamOnly || !providerview.startsWith("_grp_",0) || myGrpBean.containsKey(String.valueOf(date.get("provider_no"))) ) {
+%>
+						<br>
+<%
+						Integer siteId = (Integer) date.get("siteId");
+						if (siteId == null)
+							siteId = 0;
+						
+						boolean isInCurrentUserSites = false;
+						for ( Site s : curUserSites ) {
+							if (siteId.equals(s.getId())) {
+								isInCurrentUserSites = true;
+								break;
+							}
+						}
+						
+						if (isInCurrentUserSites && ( selectedSite == null || siteId == 0 || selectedSite.getId().equals(siteId))) {
+%>
+							<%=getSiteHTML(siteId, availableSites)%>
+							<span class='datepname'> &nbsp;<%=providerNameBean.getShortDef(String.valueOf(date.get("provider_no")),"",NameMaxLen )%> </span>
+							<span class='datephour'> <%=date.get("hour") %> </span>
+<%
+						}
+					}
+				}
+%>
+				</a></font></td>
+<%
+			}
+		}
+		out.println("</tr>");
+	}
+%>
 
 				</table>
 				<!--last month & next month -->

@@ -62,22 +62,14 @@ List<Clinic> clinics = new ArrayList<Clinic>();
 List<Site> availableSites = new ArrayList<Site>();
 List<Site> curUserSites = new ArrayList<Site>();
 
-
-
 String selectedClinicAsString = null;
 Clinic selectedClinic = null;
 String selectedSiteAsString = null;
 Site selectedSite = null;
 
-JdbcApptImpl jdbc = new JdbcApptImpl();
-
 List<String> siteProviderNos = new ArrayList<String>();
 List<String> siteGroups = new ArrayList<String>();
-HashMap<String,String> siteBgColor = new HashMap<String,String>();
-HashMap<String,String> CurrentSiteMap = new HashMap<String,String>();
-%>
 
-<%
 ClinicDAO clinicDao = (ClinicDAO)WebApplicationContextUtils.getWebApplicationContext(application).getBean("clinicDAO");
 SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
 
@@ -137,14 +129,6 @@ else {
 	curUserSites = availableSites;
 }
 
-for (Site s : curUserSites) {
-	CurrentSiteMap.put(s.getId().toString(), "Y");
-}
-
-//get all sites bgColors
-for (Site s : availableSites) {
-	siteBgColor.put(s.getId().toString(), s.getBgColor());
-}
 %>
 
 <!-- add by caisi -->
@@ -419,7 +403,6 @@ if (apptDate.before(minDate)) {
 <%@page import="oscar.util.*"%>
 <%@page import="oscar.oscarDB.*"%>
 
-<%@page import="oscar.appt.JdbcApptImpl"%>
 <%@page import="oscar.appt.ApptUtil"%>
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.oscarehr.common.model.Site"%>
@@ -1347,7 +1330,7 @@ if (curProvider_no[provIndex].equals(provNum)) { %>
 	<% } %>
 	</select>
   
-	<select id="site" name="site" onchange="changeSite(this)" style="background-color: <%=( selectedSite == null || siteBgColor.get(selectedSite) == null ? "#FFFFFF" : siteBgColor.get(selectedSite.getId()))%>">
+	<select id="site" name="site" onchange="changeSite(this)" style="background-color: <%=( selectedSite == null ? "#FFFFFF" : selectedSite.getBgColor())%>">
 		<option value="none" style="background-color:white">---All Sites---</option>
 	<%
 	
@@ -1630,17 +1613,17 @@ for(nProvider=0;nProvider<numProvider;nProvider++) {
 			// select * from appointment where CONVERT(status USING latin1) COLLATE latin1_general_cs !='D' and provider_no=? and appointment_date=? and program_id=? order by start_time
 			OscarAppointmentDao appointmentDao = (OscarAppointmentDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("oscarAppointmentDao");
 			
-			List<String> siteIdList = new ArrayList<String>();
+			List<Integer> siteIdList = new ArrayList<Integer>();
 			if (selectedClinic != null) {
 				for( Site s : selectedClinic.getSites() ) {
-					siteIdList.add( s.getId().toString() );
+					siteIdList.add( s.getId() );
 				}
 			} else if (selectedSite != null) {
-				siteIdList.add( selectedSite.getId().toString() );
+				siteIdList.add( selectedSite.getId() );
 			} else {
 				for( Clinic c : clinics ) {
 					for (Site s : c.getSites()) {
-						siteIdList.add( s.getId().toString() );
+						siteIdList.add( s.getId() );
 					}
 				}
 				
@@ -1703,9 +1686,7 @@ for(nProvider=0;nProvider<numProvider;nProvider++) {
 					StringBuilder nameSb = new StringBuilder();
 					if ((demographic_no != 0)&& (demographicDao != null)) {
 						Demographic demo = demographicDao.getDemographic(String.valueOf(demographic_no));
-						nameSb.append(demo.getLastName())
-						.append(",")
-						.append(demo.getFirstName());
+						nameSb.append(demo.getLastName()).append(",").append(demo.getFirstName());
 					} else {
 						nameSb.append(appointment.getName());
 					}
@@ -1774,21 +1755,29 @@ for(nProvider=0;nProvider<numProvider;nProvider++) {
 					String reason = appointment.getReason().trim();
 					String notes = appointment.getNotes().trim();
 					String status = appointment.getStatus().trim();
-					String siteId = appointment.getSite().trim();
+					Integer siteId = appointment.getSite();
 					String urgency = appointment.getUrgency();
 					String apptType = appointment.getType();
 					
 					bFirstTimeRs=true;
 					as.setApptStatus(status);
-		
+					
+					boolean isInCurrentUserSites = false;
+					for ( Site s : curUserSites ) {
+						if (siteId.equals(s.getId())) {
+							isInCurrentUserSites = true;
+							break;
+						}
+					}
+					
 					 //multi-site. if a site have been selected, only display appointment in that site
-					boolean noSite = (selectedSite == null && (siteId == null || siteId.equals("") || siteId.equalsIgnoreCase("null") || CurrentSiteMap.get(siteId) != null));
-					boolean inSite = (selectedSite != null && siteId.equals(selectedSite.getId().toString()));
+					boolean noSite = (selectedSite == null && (siteId == null || siteId == 0 || isInCurrentUserSites));
+					boolean inSite = (selectedSite != null && siteId.equals(selectedSite.getId()));
 					boolean inClinic = false;
 					Site site = null;
 					
 					for ( Site s : availableSites ) {
-						if (siteId.equals(s.getId().toString())) {
+						if (siteId.equals(s.getId())) {
 							inClinic = true;
 							site = s;
 						}

@@ -260,9 +260,9 @@ if("unbilled".equals(action)) {
 		if (apt.getDemographicNo() == 0 )
 			continue;
 		
-		// skip record if location does not match the selected site, blank location always gets displayed for backward-compatibility
-		String location = apt.getSite();
-		if (StringUtils.isNotBlank(location) && !location.equals(request.getParameter("site"))) 
+		// skip record if site does not match the selected site, site with id 0 always gets displayed for backward-compatibility
+		Integer siteId = apt.getSite();
+		if (siteId != 0 && !siteId.toString().equals(request.getParameter("site"))) 
 			continue; 
     	
     	Demographic demo = demographicDao.getDemographic( "" + apt.getDemographicNo() );

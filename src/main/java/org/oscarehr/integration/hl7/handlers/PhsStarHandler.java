@@ -312,6 +312,14 @@ public class PhsStarHandler extends BasePhsStarHandler {
 			logger.error("Unable to match provider..cannot make appointment - " + getApptPractitionerNo());
 			throw new HL7Exception ("Unable to match provider..cannot make appointment - " + getApptPractitionerNo());
 		}
+		
+		Integer siteId = 0;
+		try {
+			siteId = Integer.parseInt( getApptLocation() );
+		} catch (Exception e) {
+			logger.error("Unable to parse site number.", e);
+		}
+		
 		//create appt
 		Appointment appt = new Appointment();
 		appt.setAppointmentDate(getApptStartDate());
@@ -320,7 +328,7 @@ public class PhsStarHandler extends BasePhsStarHandler {
 		appt.setDemographicNo(demographicNo);
 		appt.setStartTime(getApptStartDate());
 		appt.setEndTime(getApptEndDate());
-		appt.setSite(getApptLocation());
+		appt.setSite(siteId);
 		appt.setName(demographic.getFormattedName());
 		appt.setProviderNo(provider.getProviderNo());
 		appt.setType(getApptType());
@@ -452,12 +460,19 @@ public class PhsStarHandler extends BasePhsStarHandler {
 			logger.error("Unable to match provider..cannot make appointment - " + getApptPractitionerNo());
 			throw new HL7Exception ("Unable to match provider..cannot make appointment - " + getApptPractitionerNo());
 		}
+		
+		Integer siteId = 0;
+		try {
+			siteId = Integer.parseInt( getApptLocation() );
+		} catch (Exception e) {
+			logger.error("Unable to parse site number.", e);
+		}
 
 		appt.setProviderNo(provider.getProviderNo());
 		appt.setAppointmentDate(getApptStartDate());
 		appt.setStartTime(getApptStartDate());
 		appt.setEndTime(getApptEndDate());
-		appt.setSite(getApptLocation());
+		appt.setSite(siteId);
 		appt.setType(getApptType());
 		appt.setReason(getApptReason());
 

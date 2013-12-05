@@ -326,7 +326,7 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 		return rs;
 	}
 	
-	public List<Appointment> findByProviderDayAndProgramAndSites(String providerNo, Date date, Integer programId, List<String> siteIdList) {
+	public List<Appointment> findByProviderDayAndProgramAndSites(String providerNo, Date date, Integer programId, List<Integer> siteIdList) {
 		String sql = "SELECT a FROM Appointment a WHERE a.providerNo=:providerNo and a.appointmentDate = :appointmentDate and a.programId=:programId and site in (:siteIdList) and a.status!='D'";
 		
 		Query query = entityManager.createQuery(sql);

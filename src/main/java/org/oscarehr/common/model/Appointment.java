@@ -78,7 +78,7 @@ public class Appointment extends AbstractModel<Integer> implements Serializable 
 
 	private String notes;
 	private String reason;
-	private String site;
+	private Integer site;
 	private String resources;
 	private String type;
 	private String style;
@@ -180,11 +180,11 @@ public class Appointment extends AbstractModel<Integer> implements Serializable 
 		this.reason = reason;
 	}
 
-	public String getSite() {
+	public Integer getSite() {
 		return site;
 	}
 
-	public void setSite(String site) {
+	public void setSite(Integer site) {
 		this.site = site;
 	}
 

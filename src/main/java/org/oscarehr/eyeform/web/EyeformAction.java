@@ -869,14 +869,14 @@ public class EyeformAction extends DispatchAction {
 			Integer appt_no= cp.getAppointmentNo();
 			Site defaultSite = null;
 			if(cp.getSiteId() == null) {
-			  String location = null;
+			  Integer siteId = null;
 			  if (appt_no != null) {
 				Appointment appt = appointmentDao.find(appt_no);
 				if (appt != null) {
-				    location = appt.getSite();
+				    siteId = appt.getSite();
 					for (int i = 0; i < sites.size(); i++) {
 						Site s = sites.get(i);
-						if (s.getName().equals(location)) {
+						if (s.getId().equals(siteId)) {
 							defaultSite = s;
 							cp.setSiteId(defaultSite.getSiteId());
 							break;
