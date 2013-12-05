@@ -452,7 +452,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				<div class="uiBarBtn nextMeasurementsBoxBtn" style="display: none;"><span class="text">Next</span></div>
 				<div class="uiBarBtn prevMeasurementsBoxBtn" style="display: none;"><span class="text">Previous</span></div>
 			</div>
-			<div class="explanation" style="display: none;">The following measurements were recorded on <span class="measurementsTime"></span>. To modify, close this box and click "Modify" on the measurements box.</div>
+			<div class="explanation" style="display: none;">The following measurements were recorded on <span class="measurementsTime">.</span>
 			<div class="measurementsContent">
 				<%@include file="/eyeform/exam.jsp" %>
 			</div>
