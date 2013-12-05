@@ -1174,10 +1174,10 @@ public class EyeformAction extends DispatchAction {
 			if(cp.getDate()==null){
 				cp.setDate(new Date());
 			}
-			if(cp.getId() != null && cp.getId()>0) {
-				dao.merge(cp);
+			if(consultReport.getId() != null && consultReport.getId()>0) {
+				dao.merge(consultReport);
 			} else {
-				dao.persist(cp);
+				dao.persist(consultReport);
 			}
 
 			cp.setCc(divycc(cp.getCc()));
