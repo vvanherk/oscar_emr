@@ -352,6 +352,8 @@ function editNote(item) {
 	$(item).find("input").attr("value", data);
 
 	$(item).unbind("click");
+	
+	$(item).find("input").click(function(e){ e.stopPropagation(); });
 
 	$(item).find("input").blur(function() {
 		$(this).parent().unbind("click");
@@ -1010,6 +1012,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 	if (initialLoad && boxNameId != "officeCommunication" && boxNameId != "patientLog") {
 		$("#" + boxNameId + " .addBtn, #" + boxNameId + " .content").click(function(e) {
 			e.stopPropagation();
+			$("#" + boxNameId).find(".updating").find("input").blur();
 
 			checkModify($("#newNoteText"));
 			$("#" + boxNameId + " .content ul").prepend("<li><input type='text' id='newNoteText' /></li>");
@@ -1129,12 +1132,14 @@ function displayMeasurements(data, table, timeshow) {
 	if (arPresent) {
 		var arStr = "<strong>AR</strong><br /> ";
 		for (var e in eyes) {
-			var symbol =[ "-", "+", "x"];
 			var j=0;
 			for (var i in ar) {
 				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
-					arStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(ar[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" +  symbol[j] +data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					arStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(ar[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">";
+               if(j==2)
+                  arStr += "X" ;
+               arStr += data[eyes[e] + "_" + i].dataField + "</abbr></span>";
 					j++;
 				}
 			}
@@ -1735,6 +1740,7 @@ function showMeasurementsHistoryBox(time) {
 
 	$(tmpMeasurementsBox).find(".explanation").css("display", "block");
 	$(tmpMeasurementsBox).find(".measurementsTime").text(new Date(parseInt(time)).toFormattedString());
+   $(tmpMeasurementsBox).find("#save_measurements").css("display", "none");
 
 	$(tmpMeasurementsBox).draggable({
 		handle: "div.boxTitle",
