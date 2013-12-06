@@ -222,22 +222,10 @@ public class SiteDao extends AbstractDao<Site> {
 	}
 
 	public String getSiteNameByAppointmentNo(String appointmentNo) {
-		Query query = entityManager.createNativeQuery("select site from appointment where appointment_no = :appointmentno");
-		query.setParameter("appointmentno", appointmentNo);
-
-		@SuppressWarnings("unchecked")
-        Integer siteId = (Integer) query.getSingleResult();
-        
-        if (siteId != null && siteId != 0) {
-			query = this.entityManager.createQuery("select s from Site s where s.siteId=?");
-			query.setParameter(1, siteId);
-
-			@SuppressWarnings("unchecked")
-	        Site s = (Site) query.getSingleResult();
-	
-			if (s != null)
-				return s.getName();
-		}
+		Site s = getSiteByAppointmentNo(appointmentNo);
+		
+		if (s != null)
+			return s.getName();
 		
 		return "";
 	}
