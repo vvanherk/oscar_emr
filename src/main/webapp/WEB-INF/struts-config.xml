@@ -2140,6 +2140,7 @@
 			<forward name="windowClose" path="/casemgmt/close.jsp" />
 			<forward name="historyview" path="/casemgmt/historyview.jsp" />
 			<forward name="showHistory" path="/casemgmt/showHistory.jsp" />
+			<forward name="offCommHist" path="/casemgmt/officeCommHist.jsp" />
 			<forward name="issueAutoCompletion" path="/casemgmt/IssueList.jsp" />
 			<forward name="issueList_ajax" path="/casemgmt/noteIssueList.jsp" />
 			<forward name="expired" path="/casemgmt/expired.jsp" />

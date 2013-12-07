@@ -287,6 +287,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<div class="smallBox boxTitleLink" id="officeCommunication">
 				<div class="title">
 					Office Communication
+					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
 				</div>
 				<div class="content" style="overflow: hidden;">
 					<textarea style="width: 100%; height: 99%;" id="officeCommunicationAreaBox"></textarea>

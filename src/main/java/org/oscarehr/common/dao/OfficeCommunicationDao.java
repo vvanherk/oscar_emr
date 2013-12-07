@@ -67,6 +67,18 @@ public class OfficeCommunicationDao extends AbstractDao<OfficeCommunication>{
 		return results;
 	}
 	
+	public List<OfficeCommunication> getByDemographicNo(Integer demographicNo) {
+		if (demographicNo == null)
+			return null;
+		
+		Query query = entityManager.createQuery("select oc from OfficeCommunication oc where oc.demographicNo = :demographicNo order by oc.createDate desc");
+		query.setParameter("demographicNo", demographicNo);
+		
+		List<OfficeCommunication> results = query.getResultList();
+		
+		return results;
+	}
+	
 	public OfficeCommunication getByAppointmentNoAndDate(Integer appointmentNo, Date date) {
 		if (appointmentNo == null || date == null)
 			return null;

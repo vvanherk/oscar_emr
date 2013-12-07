@@ -2699,19 +2699,26 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		} else return mapping.findForward("view");
 	}
 
-	public ActionForward notehistory(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-		/*if (request.getSession().getAttribute("userrole") == null) return mapping.findForward("expired");
-
+	public ActionForward offCommHist(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+		if (request.getSession().getAttribute("userrole") == null) return mapping.findForward("expired");
+		
+		OfficeCommunicationDao officeCommunicationDao = (OfficeCommunicationDao) SpringUtils.getBean("officeCommunicationDao");
+		
 		String demono = getDemographicNo(request);
-		request.setAttribute("demoName", getDemoName(demono));
-
-		String noteid = request.getParameter("noteId");
-
-		List<CaseManagementNote> history = caseManagementMgr.getHistory(noteid);
-		request.setAttribute("history", history);
-		ResourceBundle props = ResourceBundle.getBundle("oscarResources");
-		request.setAttribute("title", props.getString("oscarEncounter.noteHistory.title"));      Commented out November 21, 2013 */ 
-		return mapping.findForward("showHistory");
+		DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
+		
+		Demographic demo = demographicDao.getDemographic(demono);
+		request.setAttribute("demoName", demo.getDisplayName());
+		request.setAttribute("demoAge", demo.getAge());
+		request.setAttribute("demoSex", demo.getSex());
+		request.setAttribute("demoDOB", demo.getBirthDayAsString());
+		
+		List<OfficeCommunication> history = officeCommunicationDao.getByDemographicNo(Integer.parseInt(demono));
+		
+		Collections.reverse(history);
+		request.setAttribute("history",history);
+		
+		return mapping.findForward("offCommHist");
 	}
 
 	public ActionForward issuehistory(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
