@@ -547,7 +547,7 @@ public class EyeformAction extends DispatchAction {
 
 					for(String customCppIssue:customCppIssues) {
 						Issue issue = issueDao.findIssueByCode(customCppIssue);
-						if(issue != null) {
+						if(issue != null && !issue.getCode().equals("PatientLog") ) {
 							printCppItem(printer,issue.getDescription(),customCppIssue,demographic.getDemographicNo(), appointmentNo, true);
 						}
 					}
