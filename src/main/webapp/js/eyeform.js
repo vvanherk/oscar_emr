@@ -1186,7 +1186,7 @@ function refreshBox(boxName, initialLoad) {
 }
 
 
-function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
+function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {	
 	var value = $("#impressionAreaBox").val();
 	var currentPresentingValue = $("#currentIssueAreaBox").val();
 	var officeCommunicationValue = $("#officeCommunicationAreaBox").val();
@@ -1216,25 +1216,6 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 	$("#billBtn").css("display", "none");
 
 	$(".loaderImg").css("display", "inline");
-	
-	if(signAndExit){
-		var unSignedNotes = [];
-		
-		$(".unSigned").each(function(){
-			unSignedNotes.push({
-				"value": encodeURIComponent($(this).find(".noteContent").html()),
-				"issue_id": $(this).closest(".boxTitleLink").attr("id"), 
-				"noteId": $(this).attr("note_id")
-			});
-		});
-		
-		$.ajax({
-			type: "POST",
-			url: ctx + "/CaseManagementEntry.do?method=signSavedNotes&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
-			data: "issues=" + JSON.stringify(unSignedNotes),
-			dataType: "json"
-		});
-	}
 
 	$.ajax({
 		type: "POST",
@@ -1278,9 +1259,29 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		}
 	});
 
-
+	// sign all unsigned notes.
 	// Send the plan text to all receptionists
 	if (signAndExit) {
+		
+		$(".updating").find("input").blur(); 		//save all current notes
+		
+		var unSignedNotes = [];
+		
+		$(".unSigned").each(function(){
+			unSignedNotes.push({
+				"value": encodeURIComponent($(this).find(".noteContent").html()),
+				"issue_id": $(this).closest(".boxTitleLink").attr("id"), 
+				"noteId": $(this).attr("note_id")
+			});
+		});
+		
+		$.ajax({
+			type: "POST",
+			url: ctx + "/CaseManagementEntry.do?method=signSavedNotes&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
+			data: "issues=" + JSON.stringify(unSignedNotes),
+			dataType: "json"
+		});
+		
 		$.ajax({
 			type: "POST",
 			url: ctx + "/eyeform/Util.do?method=sendPlan",
