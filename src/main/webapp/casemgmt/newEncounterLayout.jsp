@@ -127,6 +127,34 @@ var Colour = {
 	episode: '<%=Colour.getInstance().episode%>',
 	pregancies: '<%=Colour.getInstance().episode%>'
 };
+
+function saveMeasurements() {
+	jQuery("#measurementsSavingMessage").show();
+
+	var postData = "";
+	jQuery("#NewMeasurementContent [measurement]").each(function() {
+		var className = jQuery(this).attr("class");
+
+
+		if(className == 'examfieldwhite') {
+			if(postData.length > 0) {
+				postData += "&";
+			}
+			var name = jQuery(this).attr("measurement");
+			var value = encodeURIComponent(jQuery(this).val());
+			var data = name + "=" + value;
+			postData += data;
+		}
+	});
+	jQuery.ajax({
+		type: 'POST',
+		url: ctx+"/oscarEncounter/MeasurementData.do?action=saveValues&demographicNo=" + demographicNo + "&appointmentNo=" + appointmentNo,
+		data: postData,
+		error: function(){
+			alert("An error occured while trying to save measurement data.");
+		}
+	});
+}
 </script>
 
   <!--js code for newCaseManagementView.jsp -->
