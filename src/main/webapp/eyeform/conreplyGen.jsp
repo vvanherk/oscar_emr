@@ -955,14 +955,14 @@ jQuery(document).ready(function() {
 				<tr>
 					<td colspan="2" align="right">
 					<nested:equal property="isRefOnline" value="true">
-						<input type="button" value="print review"
+						<input type="button" value="Print Preview"
 							onclick="if (confirmPrint()) if (checkform())printsubmit();else return false;">
 					</nested:equal> 
 					<nested:notEqual property="isRefOnline" value="true">
-						<input type="button" value="print review"
+						<input type="button" value="Print Preview"
 							onclick="if (checkform())printsubmit();else return false;">
 					</nested:notEqual>
-					<input type="button" value="save and close"
+					<input type="button" value="Save and Close"
 						onclick="if (checkform())savesubmit();else return false;">
 					</td>
 				</tr>
