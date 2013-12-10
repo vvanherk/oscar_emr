@@ -87,10 +87,10 @@ displayServiceUtil.estSpecialist();
 
 	List<Site> availableSites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
 
-	if (appNo != "") {
+	if (appNo.length() > 0) {
 		Site s = siteDao.getSiteByAppointmentNo(appNo);
 		if (s != null)
-		defaultSiteNo = s.getId();
+			defaultSiteNo = s.getId();
 	}
 	
 	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
@@ -110,6 +110,7 @@ displayServiceUtil.estSpecialist();
 
 		RxProviderData rx = new RxProviderData();
 		List<Provider> prList = rx.getAllProviders();
+		
 		Provider thisProvider = rx.getProvider(providerNo);
 		
 		EctConsultationFormRequestUtil consultUtil = new EctConsultationFormRequestUtil();
@@ -941,9 +942,9 @@ for (Provider p : prList) {
 		%>
 	 providerData['<%=prov_no%>'] = new Object(); //{};
 
-	providerData['<%=prov_no%>'].address = "<%=p.getFullAddress() %>";
-	providerData['<%=prov_no%>'].phone = "<%=p.getClinicPhone().trim() %>";
-	providerData['<%=prov_no%>'].fax = "<%=p.getClinicFax().trim() %>";
+	providerData['<%=prov_no%>'].address = "<%=(p.getFullAddress() != null ? p.getFullAddress().trim() : "") %>";
+	providerData['<%=prov_no%>'].phone = "<%=(p.getClinicPhone() != null ? p.getClinicPhone().trim() : "") %>";
+	providerData['<%=prov_no%>'].fax = "<%=(p.getClinicFax() != null ? p.getClinicFax().trim() : "") %>";
 
 <%	}
 }
@@ -1144,7 +1145,6 @@ function updateFaxButton() {
 			EctViewRequestAction.fillFormValues(thisForm, new Integer(requestId));
                 thisForm.setSiteNo(consultUtil.siteNo);
                 defaultSiteNo = consultUtil.siteNo;
-
 		}
 		else if (segmentId != null)
 		{
@@ -1170,8 +1170,9 @@ function updateFaxButton() {
 				{
 					thisForm.setCurrentMedications(RxInfo.getCurrentMedication(demo));
 				}
-
-				team = consultUtil.getProviderTeam(consultUtil.mrp);
+				
+				if (consultUtil.mrp != null && consultUtil.mrp.length() > 0)
+					team = consultUtil.getProviderTeam(consultUtil.mrp);
 			}
 
 			thisForm.setStatus("1");
@@ -1735,9 +1736,6 @@ function updateFaxButton() {
 						            <%  for ( Site s : availableSites ) {
 							                String te = s.getId().toString();
 							                String bg = s.getBgColor();
-							                // TODO: change this to compare against a site id, not site long name
-							                //if (te.equals(defaultSiteNo.toString()))
-											//	defaultSiteId = siteIds.get(i);
 						            %>
 						                    <html:option value="<%=te%>" style='<%="background-color: "+bg%>'> <%=s.getName()%> </html:option>
 						            <%  }%>
