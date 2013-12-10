@@ -44,6 +44,8 @@
 <%@ page import="oscar.appt.status.service.AppointmentStatusMgr"%>
 <%@ page import="oscar.appt.status.model.AppointmentStatus"%>
 <%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.util.SpringUtils"%>
+<%@ page import="org.oscarehr.common.dao.OscarAppointmentDao"%>
+<%@ page import="org.oscarehr.common.model.Appointment"%>
 <%@ page import="oscar.oscarEncounter.data.EctFormData"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
@@ -60,8 +62,21 @@
 <%
 	DemographicCustDao demographicCustDao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
 	org.oscarehr.PMmodule.dao.ProviderDao providerDao = SpringUtils.getBean(ProviderDao.class);
-%>
-<%
+	
+	OscarAppointmentDao oscarAppointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
+	Integer appointmentNo = 0;
+	Appointment appointment = null;
+	try {
+		appointmentNo = Integer.parseInt( appointment_no );
+		appointment = oscarAppointmentDao.getAppointment( appointmentNo );
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("Unable to parse appointment number.", e);
+		%>
+		<script>window.alert('The appointment number is not valid.')</script>
+		<%
+		return;
+	}
+	
   ApptData apptObj = ApptUtil.getAppointmentFromSession(request);
 
   oscar.OscarProperties pros = oscar.OscarProperties.getInstance();
@@ -103,6 +118,8 @@
 		} catch (Exception e) {
 			MiscUtils.getLogger().error("Unable to parse site id.", e);
 		}
+	} else {
+		siteId = appointment.getSite();
 	}
 	
 	Clinic selectedClinic = null;
