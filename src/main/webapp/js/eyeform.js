@@ -891,13 +891,24 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			var provName = "";
 			if (item.provider)
 				provName = item.provider.formattedName;
+				
+			var signProvName = "";
+			if (item.signing_provider)
+				signProvName = item.signing_provider.formattedName;
 
 			if (!lastImpressionSet) {
 				lastImpression = item.note;
 				lastImpressionSet = true;
 			}
 
-			$("#" + boxNameId + " .historyTable").children("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'><td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td><td style='width:62%'> " + item.note.replace( /\n[\[]/g, '</td><td>[') + "</td></tr>");
+			$("#" + boxNameId + " .historyTable").children("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'></tr>");
+			$("#" + boxNameId + " .historyTable").children("tbody").children("tr").append("<td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td>");
+			if(item.note.match(/\n[\[]/g) !== null){
+				$("#" + boxNameId + " .historyTable").children("tbody").children("tr").append("<td style='width:62%'> " + item.note.replace( /\n[\[]/g, '</td><td>[') + "</td>");
+			}
+			else{
+				$("#" + boxNameId + " .historyTable").children("tbody").children("tr").append("<td style='width:62%'> " + item.note+ '</td><td>[Signed by ' + signProvName + "]</td>");
+			}
 		}
 
 		impressionHistoryIssueId = jsonData.Issues[0].id;

@@ -60,6 +60,7 @@ public class CaseManagementNote extends BaseObject {
 	private String reporter_program_team;
 	private String history;
 	private Provider provider;
+	private Provider signing_provider;
 	private Set<CaseManagementIssue> issues = new HashSet<CaseManagementIssue>();
 	private Set<Object> extend = new HashSet<Object>();
 	private List<Provider> editors = new ArrayList<Provider>();
@@ -109,6 +110,7 @@ public class CaseManagementNote extends BaseObject {
 		map.put("reporter_caisi_team", reporter_program_team);
 		map.put("history", history);
 		map.put("provider", provider);
+		map.put("signing_provider", signing_provider);
 		map.put("editors", editors);
 		map.put("role_name", roleName);
 		map.put("program_name", programName);
@@ -269,6 +271,14 @@ public class CaseManagementNote extends BaseObject {
 	public void setProvider(Provider provider) {
 		this.provider = provider;
 	}
+	
+	public Provider getSigning_provider() {
+		return signing_provider;
+	}
+
+	public void setSigning_provider(Provider signing_provider) {
+		this.signing_provider = signing_provider;
+	}
 
 	/**
 	 * deprecated too inefficient and too many dependencies use CaseManagementIssueNotesDao
@@ -378,6 +388,20 @@ public class CaseManagementNote extends BaseObject {
 		return getProvider().getFullName();
 	}
 
+	public String getSigning_providerName() {
+		if (getSigning_provider() == null) {
+			return "DELETED";
+		}
+		return getSigning_provider().getFormattedName();
+	}
+
+	public String getSigning_providerNameFirstLast() {
+		if (getSigning_provider() == null) {
+			return "DELETED";
+		}
+		return getSigning_provider().getFullName();
+	}
+
 	public static Comparator<CaseManagementNote> getProviderComparator() {
 		return new Comparator<CaseManagementNote>() {
 			public int compare(CaseManagementNote note1, CaseManagementNote note2) {
@@ -386,6 +410,19 @@ public class CaseManagementNote extends BaseObject {
 				}
 
 				return note1.getProviderName().compareTo(note2.getProviderName());
+			}
+		};
+
+	}
+
+	public static Comparator<CaseManagementNote> getSigning_providerComparator() {
+		return new Comparator<CaseManagementNote>() {
+			public int compare(CaseManagementNote note1, CaseManagementNote note2) {
+				if (note1 == null || note2 == null) {
+					return 0;
+				}
+
+				return note1.getSigning_providerName().compareTo(note2.getSigning_providerName());
 			}
 		};
 
