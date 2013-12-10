@@ -1010,7 +1010,7 @@ body {
                                                 <div style="height: 100px; overflow: auto; background-color: #DCDCDC; border: thin solid green; display: none;" id="reprint">
                                                 
 													<%
-													if (clinics != null && clinics.size() > 1) {
+													if (clinics != null && clinics.size() > 0) {
 													%>
 														<div style="float: left; width: 24%; padding-left: 20px;">
 														
