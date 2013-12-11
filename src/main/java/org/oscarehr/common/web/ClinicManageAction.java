@@ -39,6 +39,7 @@ import org.apache.struts.action.DynaActionForm;
 import org.apache.struts.actions.DispatchAction;
 import org.oscarehr.common.dao.ClinicDAO;
 import org.oscarehr.common.model.Clinic;
+import org.oscarehr.common.model.Site;
 import org.oscarehr.util.MiscUtils;
 
 public class ClinicManageAction extends DispatchAction {
@@ -102,6 +103,10 @@ public class ClinicManageAction extends DispatchAction {
         	clinic.setId(Integer.parseInt(request.getParameter("clinic.id")));
         }
 		
+		// Need to set the sites for the clinic object
+		Clinic oldClinic = clinicDAO.find( clinic.getId() );
+		clinic.setSites( oldClinic.getSites() );
+        	
         clinicDAO.save(clinic);
         
         // Set the clinicNo so the 'view' action can load it properly

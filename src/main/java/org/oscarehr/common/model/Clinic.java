@@ -29,6 +29,8 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.oscarehr.util.MiscUtils;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -201,6 +203,7 @@ public class Clinic extends AbstractModel<Integer> implements Serializable {
 	
 	@PrePersist
     public void prePersist() {
+		// TODO: Get the @PrePersist annotation to work...
         for ( Site s : sites ) {
             s.setClinic(this);
         }

@@ -44,40 +44,6 @@ public class SiteDao extends AbstractDao<Site> {
 	}
 
 	public void save(Site s) {
-		boolean isUpdate = s.getSiteId() != null && s.getSiteId() > 0;
-		if (isUpdate) {
-			Site old = find(s.getSiteId());
-			if (!old.getName().equals(s.getName())) {
-				// site name changed, need to update all references as it serves as PK
-				// so we need to update the tables that references to the site
-
-				// This is very bad - we don't want the site NAME as a PK, we want the site id as the PK
-				// TODO: Fix all these areas where OSCAR uses site name as PK
-				/*
-				Query query = entityManager.createNativeQuery("update rschedule set avail_hour = replace(avail_hour, :oldname, :newname) ");
-				query.setParameter("oldname", ">"+old.getName()+"<");
-				query.setParameter("newname", ">"+s.getName()+"<");
-				query.executeUpdate();
-
-				query = entityManager.createNativeQuery("update scheduledate set reason = :newname where reason = :oldname");
-				query.setParameter("oldname", old.getName());
-				query.setParameter("newname", s.getName());
-				query.executeUpdate();
-
-				query = entityManager.createNativeQuery("update appointment set location = :newname where location = :oldname");
-				query.setParameter("oldname", old.getName());
-				query.setParameter("newname", s.getName());
-				query.executeUpdate();
-
-				query = entityManager.createNativeQuery("update billing_on_cheader1 set clinic = :newname where clinic = :oldname");
-				query.setParameter("oldname", old.getName());
-				query.setParameter("newname", s.getName());
-				query.executeUpdate();
-				*/
-
-			}
-		}
-
 		merge(s);
 	}
 

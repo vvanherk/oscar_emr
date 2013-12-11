@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import javax.persistence.Query;
 
 import org.oscarehr.common.model.Clinic;
+import org.oscarehr.common.dao.SiteDao;
 import org.oscarehr.common.model.Site;
 import org.oscarehr.util.SpringUtils;
 import org.springframework.stereotype.Repository;
@@ -102,12 +103,8 @@ public class ClinicDAO extends AbstractDao<Clinic> {
 	}
 
 
-    public void save(Clinic clinic) {		
-        //if(!clinic.isNew()) {
-        	merge(clinic);
-        //} else {
-        //	persist(clinic);
-        //}
+    public void save(Clinic clinic) {
+        merge(clinic);
     }
 
 	public void delete(Clinic clinic) {
