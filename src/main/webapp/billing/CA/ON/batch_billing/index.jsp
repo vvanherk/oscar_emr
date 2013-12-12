@@ -151,7 +151,7 @@ String user_no = (String) session.getAttribute("user");
 		List<ClinicLocation> clList = clinicLocationDao.findByClinicNo(1);
 		for(int i=0; i < clList.size(); i++){	
 			ClinicLocation curr = clList.get(i);
-			int clLocNo = Integer.parseInt(curr.getClinicLocationNo());
+			String clLocNo = curr.getClinicLocationNo();
 			clinicSelectionList += "<option value='"+ clLocNo +"'>";
 			clinicSelectionList += curr.getClinicLocationName();
 			clinicSelectionList += "</option>";	
