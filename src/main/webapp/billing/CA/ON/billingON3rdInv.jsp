@@ -29,13 +29,14 @@
 <%@page errorPage="errorpage.jsp" import="java.util.*,java.math.*,java.net.*,java.sql.*,oscar.util.*,oscar.*,oscar.appt.*"%>
 <%@ page import="org.oscarehr.common.dao.ClinicDAO" %>
 <%@ page import="org.oscarehr.common.model.Clinic" %>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 
 <%
 String invNo = request.getParameter("billingNo");
 Billing3rdPartPrep privateObj = new Billing3rdPartPrep();
 Properties propClinic = privateObj.getLocalClinicAddr();
 Properties prop3rdPart = privateObj.get3rdPartBillProp(invNo);
-String clinicNO = (String) prop3rdPart.getProperty("clinicNo","");
+String clinicNoAsString = (String) prop3rdPart.getProperty("clinicNo","");
 Properties prop3rdPayMethod = privateObj.get3rdPayMethod();
 Properties propGst = privateObj.getGst(invNo);
 //int gstFlag = 0;
@@ -66,11 +67,19 @@ Site s = ApptUtil.getSiteFromName(sites, clinicname);
 if ( s!=null)
 	clinicInfo = "<b>" + s.getName()+"</b><br />"+s.getAddress()+"<br />"+s.getCity()+", "+s.getProvince()+" "+s.getPostal()+"<br />Tel: "+s.getPhone()+"<br />Fax: "+s.getFax();
 //If no clinic name in billing_on_cheader1 table, check clinic_no in billing_on_ext
-if ( clinicNO != null)
+if ( clinicNoAsString != null && clinicNoAsString.length() > 0)
 {	
 	//For clinic letter, nothing for provider and "Remit to" part.
 	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
-	Clinic clinic = clinicDao.find(Integer.parseInt(clinicNO));
+	
+	Integer clinicNo = 0;
+	try {
+		clinicNo = Integer.parseInt(clinicNoAsString);
+	} catch (Exception e) {
+		MiscUtils.getLogger().warn("Unable to parse clinic number.");
+	}
+	Clinic clinic = clinicDao.find( clinicNo );
+	
 	if( clinic != null )
 		clinicInfo = "<b>" + clinic.getClinicName() + "</b><br />" 
 		+ clinic.getClinicAddress() + "<br />"
