@@ -32,9 +32,9 @@ $('#hospital #invList tbody').children('#row0').trigger('click');
 $('#admission_date input').on('blur', function(){
 	var tar = $(contentID + " #items-space :eq(0)").find("#from-date input");
 	tar.val($('#admission_date input').val());
-});
+}); */
 
- 
+/* 
 $('#demo-name-search').typeahead({
 	source: function(query, process){
 		return $.get('getDemographic.jsp', 

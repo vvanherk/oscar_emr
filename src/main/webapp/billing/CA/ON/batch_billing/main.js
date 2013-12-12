@@ -94,13 +94,13 @@ function invoice_detail_map($invFields, action){
 	$.each($invFields.find('input'), function(i, fieldData){
 		switch($(fieldData).attr('id')){ //preserves input/jsobject mapping
 			case 'demo-name-search':
-				action(fieldData, "demo.name");
+				action(fieldData, "name");
 				break;
 			case 'demo-hin-search':
-				action(fieldData, "demo.health_card");
+				action(fieldData, "health_card");
 				break;
 			case 'demo-dob-search':
-				action(fieldData, "demo.dob");
+				action(fieldData, "dob");
 				break;
 			case 'service_date':
 				action(fieldData, "date");
@@ -204,10 +204,9 @@ function save_invoice_info(){
 			selected.inv.items[temp[1]][temp[2]] = $(fieldData).val();
 		}
 		else{
-			selected.inv[id] = $(fieldData).val();
+			selected.inv[id] = $(fieldData).val();			
 		}
 		$(fieldData).val("");
-
 	});
 	
 	selected.inv.update_inv_total();
@@ -258,7 +257,13 @@ function load_invoice_info(){
 					}
 					$("#manualCHK").change();
 				}
-				$(fieldData).val(selected.inv[id]);
+				
+				if (id === "name" || id === "health_card" || id === "dob") {
+					$(fieldData).val(selected.inv.demo[id]);
+				}
+				else {
+					$(fieldData).val(selected.inv[id]);
+				}
 			}
 		}
 	});
