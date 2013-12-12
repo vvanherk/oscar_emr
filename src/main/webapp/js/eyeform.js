@@ -1198,6 +1198,7 @@ function refreshBox(boxName, initialLoad) {
 
 
 function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {	
+   saveMeasurements();
 	var value = $("#impressionAreaBox").val();
 	var currentPresentingValue = $("#currentIssueAreaBox").val();
 	var officeCommunicationValue = $("#officeCommunicationAreaBox").val();
