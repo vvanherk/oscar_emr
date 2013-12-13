@@ -105,7 +105,9 @@ public class ClinicManageAction extends DispatchAction {
 		
 		// Need to set the sites for the clinic object
 		Clinic oldClinic = clinicDAO.find( clinic.getId() );
-		clinic.setSites( oldClinic.getSites() );
+		
+		if (oldClinic != null)
+			clinic.setSites( oldClinic.getSites() );
         	
         clinicDAO.save(clinic);
         
