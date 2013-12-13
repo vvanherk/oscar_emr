@@ -100,7 +100,7 @@ String user_no = (String) session.getAttribute("user");
     	<script type="text/javascript" src="../../js/jquery-1.9.1.js"></script>
         <script type="text/javascript" src="../../js/bootstrap.js"></script>
 	<script type="text/javascript" src="add-ons.js"></script>
-	<script type="text/javascript" src="main.js"></script>
+	<script type="text/javascript" src="ON/batch_billing/batch_billing.js"></script>
 	<script type="text/javascript" src="ON/batch_billing/objects.js"></script>
 
 	<script>
