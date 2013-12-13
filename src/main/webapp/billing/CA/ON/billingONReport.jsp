@@ -29,7 +29,7 @@ String providerview = request.getParameter("providerview")==null?"all":request.g
 OscarProperties props = OscarProperties.getInstance();
 if(props.getProperty("isNewONbilling", "").equals("true")) {
 %>
-<script> window.location.href = "batch_billing/index.jsp"; </script>
+<script> window.location.href = "../index.jsp"; </script>
 <% } %>
 
 

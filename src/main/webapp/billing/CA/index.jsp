@@ -90,18 +90,18 @@ String user_no = (String) session.getAttribute("user");
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-        <link rel="stylesheet" type="text/css" href="css/bootstrap.css" />
+        <link rel="stylesheet" type="text/css" href="../../css/bootstrap.css" />
 	<link rel="stylesheet" type="text/css" href="bootstrap-responsive.css" />
 	<link rel="stylesheet" href="add-ons.css"/>
 	<link rel="stylesheet" href="main.css"/>
 		
         <title>OSCAR Billing</title>
 
-    	<script type="text/javascript" src="js/jquery-1.9.1.js"></script>
-        <script type="text/javascript" src="js/bootstrap.js"></script>
+    	<script type="text/javascript" src="../../js/jquery-1.9.1.js"></script>
+        <script type="text/javascript" src="../../js/bootstrap.js"></script>
 	<script type="text/javascript" src="add-ons.js"></script>
 	<script type="text/javascript" src="main.js"></script>
-	<script type="text/javascript" src="objects.js"></script>
+	<script type="text/javascript" src="ON/batch_billing/objects.js"></script>
 
 	<script>
 	
@@ -210,22 +210,26 @@ String user_no = (String) session.getAttribute("user");
 		});
 		
 		if(contentID === "#workbench"){
-			$(contentID).load("wbforms.jsp #main");
+			$(contentID).load("ON/work_bench/forms.jsp #main");
+		}else if (contentID === "#register"){
+			$(contentID).load("ON/cash_register/forms.jsp #register", function(){
+				$.getScript("ON/cash_register/" + contentID.slice(1) +".js");
+			});
 		} else {
-			$(contentID).load("forms.jsp " + contentID,{ 
+			$(contentID).load("ON/batch_billing/forms.jsp " + contentID,{ 
 				'providers': "<%=providerSelectionList%>",
 				'locations': "<%=clinicSelectionList%>",
 				'superCodes': "<%= superCodeSelectionList %>",
 				'rDoctors' : "<%= pSpecSelectionList %>",
 				'sliCodes' : "<%= sliCodeSelectionList %>"
 			},	function(){
-				$.getScript(contentID.slice(1) +".js");
+				$.getScript("ON/batch_billing/" + contentID.slice(1) +".js");
 			});
 		}
 		
 		$('#billingNav a[href="'+ contentID + '"]').tab("show");
 	});
-
+	
 	</script>
 
     </head>
