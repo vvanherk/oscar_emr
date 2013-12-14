@@ -4,21 +4,19 @@
 
 initialize_billing();
 
-$("#b_provider_val").on('change', function(){
+$("#b_provider").on('blur', function(){
 	var sel = $("#b_provider_val").val();
 	if(sel){
 		$('#group_no').val(providers[sel].group);
 		fill_combobox( $('#provider'), $("#b_provider").val());
 		$(' #billing-center').val(providers[sel].b_ctr);
-	}/*else {		//val == "" does not trigger change.
+		$('#provider').focus();
+	}else {		//val == "" does not trigger change.
 		$('#group_no').val("0000");
 		clear_combobox( $('#provider'));
 		$(' #billing-center').val("Hamilton");
-	}*/
-});
-
-$("#b_provider_val").on('blur', function(){
-	$('#provider').focus();
+		$('#b_provider').focus();
+	}
 });
 
 $("#create-list").on('click', function(){	//Creates list based off appointments

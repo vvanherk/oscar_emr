@@ -6,16 +6,16 @@ initialize_billing();
 insert_invoice(new invoice);
 set_selected(0);
 
-$("#b_provider_val").on('change', function(){
+$("#b_provider").on('blur', function(){
 	var sel = $("#b_provider_val").val();
 	if(sel){
 		$('#group_no').val(providers[sel].group);
 		$(' #billing-center').val(providers[sel].b_ctr);
-	}/*else {		//val == "" does not trigger change.
+	}else {		//val == "" does not trigger change.
 		$('#group_no').val("0000");
 		clear_combobox( $('#provider'));
 		$(' #billing-center').val("Hamilton");
-	}*/
+	}
 });
 
 //autofill the comboboxes
