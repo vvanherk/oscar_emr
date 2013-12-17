@@ -90,3 +90,17 @@ $('#prev_patient').on('click', function(){
 	set_selected(prev);
 });
 
+// Event listener for select-all invoices checkbox. 
+$("#select-all").on("click", function() {
+	
+	var $selectAllCheckbox = $(this);
+	var $invoiceCheckboxes = $("#invList_body td.bc_apply input[type=checkbox]");
+	
+	select_all_invoices($selectAllCheckbox, $invoiceCheckboxes);
+});
+
+// Event listener for Clear button.
+$("#clear").on("click", function() {
+	delete_checked_invoices_items();
+});
+

@@ -218,8 +218,8 @@ function save_invoice_info(){
 	$("#items-space").children(".item").remove();
 	create_item_row();
 	
-	// Update Batch Total 
-	item_batchTotal();
+	// Update batch total. 
+	batch_total();
 }
 
 /* loads the selected invoice information into user input fields
@@ -355,15 +355,60 @@ function item_total(){
 	$('#invoice-items #total')[0].innerHTML =  parseFloat(tot).toFixed(2);
 }
 
-function item_batchTotal(){
-	var $totals = $('#invList_body tbody tr td.amount');
+// Calculates batch total.
+function batch_total() {
+	var $totals = $('#invList_body tr td.amount');
 	var total = 0;	
-	$.each($totals, function(i, x){
-		if($(x).html() !== ""){
+	$.each($totals, function(i, x) {
+		if ($(x).html() !== "") {
 			total = parseFloat(total) + parseFloat($(x).html());
 		}
 	});
 	$('#batch-total-amt').val(parseFloat(total).toFixed(2));
+}
+
+// Checks or unchecks all invoice checkboxes.
+function select_all_invoices($selectAllCheckbox, $invoiceCheckboxes) {
+
+	if ($selectAllCheckbox.prop("checked")) {		
+		$invoiceCheckboxes.prop("checked", true);
+	}
+	else {		
+		$invoiceCheckboxes.prop("checked", false);
+	}	
+}
+
+// Deletes all billing items from checked invoices.
+function delete_checked_invoices_items() {
+	
+	var $invoiceCheckboxes = $("#invList_body td.bc_apply input[type=checkbox]");
+	var selectedRowId = selected.id;
+	
+	$invoiceCheckboxes.each(function() {
+		
+		if ($(this).prop("checked")) {		
+			
+			var checkedRowId = $(this).closest('tr').attr('id').split('row')[1];
+			var checkedInvoice = invoices[checkedRowId];
+								
+			checkedInvoice.items.length = 0;
+			checkedInvoice.inv_amount = "0.00";
+			
+			// Set checked invoice amount to $0.00 in invoices table.		
+			$("#invList_body #row" + checkedRowId + " td.amount")[0].innerHTML = "0.00";
+	
+			// Update batch total. 
+			batch_total();
+			
+			if (checkedRowId == selectedRowId) {
+				// Reset the invoice details area back to blank with one item.
+				$("#items-space").children(".item").remove();
+				create_item_row();
+				// Set billing items total to $0.00.
+				$('#invoice-items #total')[0].innerHTML = "0.00";
+			}						
+		}
+	});
 }
 
 // ************************************************************************* LEGACY CODE

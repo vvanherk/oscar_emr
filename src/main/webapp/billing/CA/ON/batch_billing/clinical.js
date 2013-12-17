@@ -116,18 +116,18 @@ $('#prev_patient').on('click', function(){
 	set_selected(prev);
 });
 
-// Event listener for select-all invoices checkbox
+// Event listener for select-all invoices checkbox. 
 $("#select-all").on("click", function() {
 	
 	var $selectAllCheckbox = $(this);
-	var $invoiceCheckboxes = $("#invList_body tbody input[type=checkbox]");
+	var $invoiceCheckboxes = $("#invList_body td.bc_apply input[type=checkbox]");
 	
-	if ($selectAllCheckbox.prop("checked")) {		
-		$invoiceCheckboxes.prop("checked", true);
-	}
-	else {		
-		$invoiceCheckboxes.prop("checked", false);
-	}
+	select_all_invoices($selectAllCheckbox, $invoiceCheckboxes);
+});
+
+// Event listener for Clear button.
+$("#clear").on("click", function() {		
+	delete_checked_invoices_items();
 });
 
 

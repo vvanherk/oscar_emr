@@ -40,6 +40,7 @@
 						<div class="span1"></div>
 						<div><label for="supercode"> Super Code </label><select id="supercode" class="input-medium combobox"><%= superCodeSelectionList %></select></div>
 						<div><button id="scApply" type="submit" class="btn"> Apply </button></div>
+						<div><button id="clear" type="submit" class="btn"> Clear </button></div>
 					</div>
 				</div>
 			</div>
@@ -166,6 +167,7 @@
 				<div class="span12 formrow" style="margin-left:500px"> 			<!-- for pages with 2 rows -->
 					<div><label for="supercode"> Super Code </label><select id="supercode" class="input-medium combobox"><%= superCodeSelectionList %></select></div>
 					<div><button id="scApply" type="submit" class="btn"> Apply </button></div>
+					<div><button id="clear" type="submit" class="btn"> Clear </button></div>
 				</div>
 			</div>
 			<div class="span2 billing-form-layout batch-total">
