@@ -894,12 +894,12 @@ public class SpireHandler implements MessageHandler {
      * an error will be thrown (but not before it tries to parse the secondary id for reports).
      * 
      * If we are unable to find the HNA_ACCN key, we search for the id for HNA_CEACCN (which is the unique id for Spire lab reports).
-     * This id is thought to be 7 characters in length (waiting on confirmation from Chrystelle at Cerner).  If this id is found but is
-     * not 7 characters in length, an error will be thrown.
+     * This id is up to 100 characters in length, and can contain characters and numbers.  If this id is found but is
+     * not greater than 0 or equal to or less than 100 characters in length, an error will be thrown.
+     * 
+     * If an id of '0' is found for any spire unique id, it is ignored.
      * 
      * Note that all errors are caught locally in this method, and an error is printed to the log.
-     * 
-     * TODO: We will need to parse the new report type coming out of Cerner/Spire, which puts the unique id in OBR-3 instead of OBR-20.
      * 
      * @return The unique Accession number if available, otherwise returns an empty string
      */ 
@@ -914,7 +914,7 @@ public class SpireHandler implements MessageHandler {
 			String errorMsg = "";
 			
 			// See if there is an HNA_ACCN identifier
-			if (name != null && id != null && name.equals("HNA_ACCN")) {
+			if (name != null && id != null && !id.equals("0") && name.equals("HNA_ACCN")) {
 				uniqueAccn = name + id;
 			}
 			else {
@@ -927,13 +927,15 @@ public class SpireHandler implements MessageHandler {
 					errorMsg += messageAsString + "\n";
 				}
 				else if (accnIndex2 > 18) {
-					uniqueAccn = "HNA_ACCN" + messageAsString.substring(accnIndex2-18, accnIndex2);
+					String idTemp = messageAsString.substring(accnIndex2-18, accnIndex2);
+					if ( !idTemp.equals("0") )
+						uniqueAccn = "HNA_ACCN" + idTemp;
 				}
 			}
 			
 			// If there is no HNA_ACCN, try HNA_CEACCN
 			if (uniqueAccn.length() == 0) {
-				if (name != null && id != null && name.equals("HNA_CEACCN")) {
+				if (name != null && id != null && !id.equals("0") && name.equals("HNA_CEACCN")) {
 					uniqueAccn = name + id;
 				}
 				else {
@@ -964,40 +966,19 @@ public class SpireHandler implements MessageHandler {
 							errorMsg += messageAsString + "\n";
 						}
 						else {
-							uniqueAccn = "HNA_CEACCN" + tempString;
+							if ( !tempString.equals("0") )
+								uniqueAccn = "HNA_CEACCN" + tempString;
 						}
 					}
 				}
 			}
-			
-			// If there is no HNA_ACCN, check for HNA_CEACCN
-			/*
-			if (uniqueAccn.length() == 0) {
-				if (name != null && id != null && name.equals("HNA_CEACCN")) {
-					uniqueAccn = name + id;
-				}
-				else {
-					String messageAsString = originalMessage;
-					int accnIndex2 = indexOf(Pattern.compile("\\^HNA_CEACCN(\\||~)"), messageAsString);
-					
-					// The HNA_CEACCN id is always 7 characters in length
-					if ( accnIndex2 > 7 && messageAsString.charAt(accnIndex2-8) != '~' && messageAsString.charAt(accnIndex2-8) != '|' ) {
-						errorMsg += "Spire HNA_CEACCN id is not in the expected format (accnIndex2: " + accnIndex2 + "):\n";
-						errorMsg += messageAsString + "\n";
-					}
-					else if (accnIndex2 > 7) {
-						uniqueAccn = "HNA_CEACCN" + messageAsString.substring(accnIndex2-7, accnIndex2);
-					}
-				}
-			}
-			*/
 			
 			// If there is no HNA_ACCN, try HNAM_CEREF
 			if (uniqueAccn.length() == 0) {
 				name = terser.get("/.OBR-3-2");
 				id = terser.get("/.OBR-3-1");
 				
-				if (name != null && id != null && name.equals("HNAM_CEREF")) {
+				if (name != null && id != null && !id.equals("0") && name.equals("HNAM_CEREF")) {
 					uniqueAccn = name + id;
 				}
 				else {
@@ -1028,7 +1009,8 @@ public class SpireHandler implements MessageHandler {
 							errorMsg += messageAsString + "\n";
 						}
 						else {
-							uniqueAccn = "HNAM_CEREF" + tempString;
+							if ( !tempString.equals("0") )
+								uniqueAccn = "HNAM_CEREF" + tempString;
 						}
 					}
 				}
