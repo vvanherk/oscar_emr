@@ -405,6 +405,25 @@ public class MessageUploaderTest extends TestFixtures {
 				0
 			)
 		);
+		
+		spireTestData.add(
+			new SpireLabTestData(
+				"spire",
+				"Spire",
+				"Q188473623",
+				"HNAM_CEREF11049578",
+				"MSH|^~\\&|OCF|SBGHC-KI|XENOS|GBHS-OS|20131211053040||MDM^R01|Q188473623|P|2.3\n" +
+				"PID|1||332223^^^GBHS-OS||VEDANTTEST^ANEG||19850503|Female|||^^^Ontario^O1O1O1^Canada^^^Grey, Blue Mountains, T,|Grey, Blue Mountains, T,|(000)000-0519^Home||English|Married||3600321^^^GBHS-OS^FIN NBR\n" +
+				"PV1|1|Outpt.|Lab Oncology-OS^^^GBHS-OS^^Ambulatory(s)^GBHS-OS||||00154^Harada^Glenn^K|||||||||||Outpt.|2010110003213^^^^Visit Id|Self Pay|||||||||||||||||||GBHS-OS||Active|||20101107085238||||||2010110003213\n" +
+				"ORC|RE||11049578^HNAM_CEREF~928937463^HNAM_EVENTID||||||20131211053040\n" + 
+				"OBR|1||11049578^HNAM_CEREF~928937463^HNAM_EVENTID|Emergency Note^Emergency Note^^^Emergency Note|||20130905150900|20130905150900||||||||||||0^HNA_CEACCN||20131211053040||MDOC|Auth (Verified)\n" +
+				"ZDS|Perform|00123^Hillbacht^Damien^T^^^^^GBHS-OS^^^^DOCNBR|20130905154700|Completed\n" + 
+				"ZDS|Transcribe||20131211063040|Completed\n" + 
+				"ZDS|Sign|00123^Hillbacht^Damien^T^^^^^GBHS-OS^^^^DOCNBR||Completed\n" + 
+				"OBX|1|FT|Emergency Note^Emergency Note||Report Text Here||||||Auth (Verified)|||20131211112039\n",
+				0
+			)
+		);
 	}
 
 
