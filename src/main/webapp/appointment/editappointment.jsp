@@ -77,6 +77,19 @@
 		return;
 	}
 	
+	// Error check curProvider_no
+	if (curProvider_no == null || curProvider_no.length() == 0) {
+		if (appointment != null) {
+			curProvider_no = appointment.getProviderNo();
+		} else {
+			%>
+				<script>window.alert('Sorry, the appointment you are trying to edit is not associated with any provider.  Please contact your system administrator.')</script>
+			<%
+			return;
+		}
+			
+	}
+	
   ApptData apptObj = ApptUtil.getAppointmentFromSession(request);
 
   oscar.OscarProperties pros = oscar.OscarProperties.getInstance();
