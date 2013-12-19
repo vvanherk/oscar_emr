@@ -139,5 +139,23 @@ table td{
 	overflow-y:scroll;
 }
 
+/* for collapsible menu like seen in workbench*/
 
+.leftnav{
+	width:190px; 
+	height: 100%;
+	float:left; 
+	background-color: white;
+}
+
+.leftnav .navtitle{
+	text-align: center;
+	font-size: 1.2em;
+}
+
+.rightbody{
+	position: absolute;
+	left: 200px;
+	width: 820px;
+}
 
