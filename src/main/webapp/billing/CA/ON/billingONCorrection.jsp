@@ -931,7 +931,7 @@ function changeClinic(sel) {
  */ 
 function setSiteOnPageLoad() {
 	var sel = document.getElementById("site");
-	changeSite(sel);//sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+	sel.style.backgroundColor = sel.options[sel.selectedIndex].style.backgroundColor; //changeSite(sel);
 }
 
 function changeSite(sel) {
