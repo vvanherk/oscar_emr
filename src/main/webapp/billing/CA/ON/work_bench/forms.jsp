@@ -7,13 +7,12 @@
 %>
 
 <html><head>
-	<link rel="stylesheet" type="text/css" href="main.css">
 </head><body>
 
-	<div class="workbench" id="main" style="width: 100%;">
+	<div class="workbench" id="dashboard" style="width: 100%;">
 		<div class="leftnav">
 			<ul class="nav nav-tabs nav-stacked">
-			  <li class="navtitle"><a href="#">OHIP WORKFLOW</a></li>
+			  <li class="navtitle"><a href="#" style="padding:20px">OHIP WORKFLOW</a></li>
 			  <li class="active"><a href="#">In Progress <span class="badge"> 10 </span></a></li>
 			  <li><a href="#">Ready to Send <span class="badge"> 10 </span></a></li>
 			  <li><a href="#">Waiting Acknowledgement <span class="badge"> 10 </span></a></li>

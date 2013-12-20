@@ -148,6 +148,10 @@ table td{
 	background-color: white;
 }
 
+.leftnav a{
+	padding: 5px;
+}
+
 .leftnav .navtitle{
 	text-align: center;
 	font-size: 1.2em;
