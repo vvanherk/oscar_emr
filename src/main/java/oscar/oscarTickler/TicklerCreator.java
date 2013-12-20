@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
+import org.oscarehr.util.LoggedInInfo;
 import org.oscarehr.util.MiscUtils;
 
 import oscar.oscarDB.DBHandler;
@@ -48,9 +49,10 @@ public class TicklerCreator {
     if (!ticklerExists(demoNo, message)) {
       SimpleDateFormat fmt = new SimpleDateFormat("yyyy-MM-dd");
       String nowDate = fmt.format(new java.util.Date());
+      String creator = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
       String sql = "insert into tickler (demographic_no, message, status, update_date, service_date, creator, priority, task_assigned_to) " +
           " values(" + demoNo + " ,'" + message + "','A',now(),'" + nowDate +
-          "','" + provNo + "','4','" + provNo + "')";
+          "','" + creator + "','4','" + provNo + "')";
       
       try {
         

@@ -349,7 +349,7 @@ if("billed".equals(action)) {
 		//if (status.equals("D") || status.equals("S") || status.equals("B"))
 		//	continue;
 		
-		String clinic = bill.getClinic();
+		String clinic = bill.getSite().toString();
 		// skip record if clinic is not match the selected site, blank clinic always gets displayed for backward compatible
 		if (StringUtils.isNotBlank(clinic) && !clinic.equals(request.getParameter("site"))) 
 			continue; 
@@ -582,7 +582,7 @@ function changeSite(sel) {
      	changeSite(document.getElementById("site"));
       	document.getElementById("providerview").value='<%=request.getParameter("providerview")%>';     	
       	</script>
-<% }
+<% } %>
 
 	</td>
 
