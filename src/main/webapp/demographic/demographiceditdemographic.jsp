@@ -72,9 +72,12 @@
 <%@ page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
 <%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
+<%@page import="org.oscarehr.casemgmt.model.Issue" %>
+<%@page import="org.oscarehr.casemgmt.dao.IssueDAO" %>
 <%@page import="org.oscarehr.common.model.DemographicCust" %>
 <%@page import="org.oscarehr.common.dao.DemographicCustDao" %>
 <%
+	IssueDAO issueDao = (IssueDAO)SpringUtils.getBean("IssueDAO");
 	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
 	DemographicCustDao demographicCustDao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
 %>
@@ -519,7 +522,11 @@ function rs(n,u,w,h,x) {
 }
 
 function popupPatientLog(vwidth,vheight) { //open Patient Log
-  rs("win"+demographicNo,"${ctx}/CaseManagementEntry.do?method=issuehistory&demographicNo="+demographicNo+"&issueIds=64",vwidth, vheight,"");
+<%
+	List<Issue> issueMatches = issueDao.findIssueBySearch("PatientLog");
+	Long patientLogId = issueMatches.get(0).getId();
+%>	
+	rs("win"+demographicNo,"${ctx}/CaseManagementEntry.do?method=issuehistory&demographicNo="+demographicNo+"&issueIds=<%= patientLogId %>",vwidth, vheight,"");
 }
 
 function referralScriptAttach2(elementName, name2) {
