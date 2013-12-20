@@ -119,7 +119,7 @@ public class JdbcBillingReviewImpl {
 		String temp = demoNo + " " + providerNo + " " + statusType + " " + startDate + " " + endDate + " " + billType;
 		temp = temp.trim().startsWith("and") ? temp.trim().substring(3) : temp;
 		String sql = "select id,pay_program,billing_on_cheader1.demographic_no,demographic_name,billing_date,billing_time,status,"
-				+ "provider_no,provider_ohip_no, apptProvider_no,timestamp1,total,paid,clinic, service_date" + 
+				+ "provider_no,provider_ohip_no, apptProvider_no,timestamp1,total,paid,site, service_date" + 
 				"FROM billing_on_cheader1 ch1 LEFT JOIN billing_on_item bi ON ch1.id=bi.ch1_id " +
 				"WHERE " + temp + " and bi.status!='D' " +
 				" ORDER BY bi.service_date, demographic_name, bi.service_code, total, paid";
@@ -183,7 +183,7 @@ public class JdbcBillingReviewImpl {
 		temp = temp.trim().startsWith("and") ? temp.trim().substring(3) : temp;
 
 		String sql = "SELECT ch1.id,pay_program,demographic_no,demographic_name,billing_date,billing_time," +
-				"ch1.status,provider_no,provider_ohip_no,apptProvider_no,timestamp1,total,paid,clinic," +
+				"ch1.status,provider_no,provider_ohip_no,apptProvider_no,timestamp1,total,paid,site," +
 				"bi.fee, bi.service_code, bi.service_date, bi.dx " +
 				"FROM billing_on_cheader1 ch1 LEFT JOIN billing_on_item bi ON ch1.id=bi.ch1_id " +
 				"WHERE " + temp + serviceCodes + " and bi.status!='D' " +
