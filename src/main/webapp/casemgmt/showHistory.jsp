@@ -77,6 +77,14 @@
 		<input type="button" onclick="document.getElementById('newNote').style.display='none';window.print();document.getElementById('newNote').style.display='block'" value="Print" >
 	</form>
 </div>
+
+<script>
+
+	if("<nested:write name="title" />" !== "Patient Log History"){
+		$("#newNote").css('display', 'none');
+	}
+
+</script>
 <nested:iterate indexId="idx" id="note" name="history">
 	<div
 		style="width: 99%; background-color: #EFEFEF; font-size: 12px; border-left: thin groove #000000; border-bottom: thin groove #000000; border-right: thin groove #000000;">
@@ -117,11 +125,4 @@
 	</div>
 </nested:iterate>
 </body>
-<script>
-
-	if(<%=request.getParameter("issueIds")%> !== 64){
-		$("#newNote").css('display', 'none');
-	}
-
-</script>
 </html>
