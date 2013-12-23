@@ -163,6 +163,11 @@ function getTicklerText(id){
 	var text = "";
 	if(id.indexOf("followup_")==0){
 		text += "consult:";
+
+		// If the element doesn't exist, we return null
+		if ( !document.getElementById(id+".type") )
+			return null;
+
 	    if(document.getElementById(id+".type").value == "followup")
 		   text = "f/u:";
 	}
@@ -187,6 +192,12 @@ function getTicklerText(id){
 			   document.getElementById(id+".diagnostices").value !='' && 
 			   document.getElementById(id+".diagnostices").value != null)
 				text += " " + document.getElementById(id+".diagnostices").value;
+	console.log(id+'.urgency');
+
+	// If the element doesn't exist, we return null
+	if ( !document.getElementById(id+'.urgency') )
+		return null;
+
     text += " " + document.getElementById(id+'.urgency').options[document.getElementById(id+'.urgency').selectedIndex].innerHTML;
 	text += " " + document.getElementById(id+".comment").value;
 	return text;
@@ -203,17 +214,21 @@ function sendTickler()
      for(var i=1; i<=sendList[item][1]; i++){
         var id = sendList[item][0] + i;
         var text= getTicklerText(id);
-        var ticklerRecip = document.getElementById(id+'.Provider');        
-        jQuery.ajax({
-           url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+<%=request.getParameter("followup.appointmentNo")%>+"&text="+text+"&recip=" + ticklerRecip.value +"&demographicNo=<%=request.getParameter("followup.demographicNo")%>",
-           async:false,
-           success: function(data){		        
-            },
-           error: function(data) {
-               errorCount = errorCount+1 ;
-               errorText  += '\n\n' + ticklerRecip[ticklerRecip.selectedIndex].text;
-            }
-         });
+        
+        // Only submit if we were able to find tickler text
+        if (text) {
+	        var ticklerRecip = document.getElementById(id+'.Provider');        
+	        jQuery.ajax({
+	           url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+<%=request.getParameter("followup.appointmentNo")%>+"&text="+text+"&recip=" + ticklerRecip.value +"&demographicNo=<%=request.getParameter("followup.demographicNo")%>",
+	           async:false,
+	           success: function(data){		        
+	            },
+	           error: function(data) {
+	               errorCount = errorCount+1 ;
+	               errorText  += '\n\n' + ticklerRecip[ticklerRecip.selectedIndex].text;
+	            }
+	         });
+		 }
      }
      if(errorCount > 0 )
      { 
@@ -222,9 +237,14 @@ function sendTickler()
      }
      
   }
+  
+  // Update the tickler box for the EyeForm
+  setTimeout( function() { try { opener.refreshBox('tickler', false); } catch(err) {} }, 0 );
+  
   return true;
 }
 </script>
+
 </head>
 <body>
 <center><b>Arrange Plan</b></center>

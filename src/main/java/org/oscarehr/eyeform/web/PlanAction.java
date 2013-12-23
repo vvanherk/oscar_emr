@@ -258,8 +258,10 @@ public class PlanAction extends DispatchAction {
     	ids = request.getParameterValues("test.delete");
     	if(ids != null) {
     		for(String id:ids) {
-    			int testId = Integer.parseInt(id);
-    			testBookDao.remove(testId);
+				if(id.length()>0) {
+					int testId = Integer.parseInt(id);
+					testBookDao.remove(testId);
+				}
     		}
     	}
 
