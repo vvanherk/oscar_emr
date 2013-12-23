@@ -1014,7 +1014,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		});
 
 		if (initialLoad) {
-			if (boxNameId == "planHistory" || boxNameId == "diagnostics" || boxNameId == "patientLog" || boxNameId == "otherMeds" || boxNameId == "reminders" || boxNameId == "ocularHistory" || boxNameId == "familyMedicalOcularHistory" || boxNameId == "eyedrops") {
+			if (boxNameId == "planHistory" || boxNameId == "diagnostics" || boxNameId == "patientLog" || boxNameId == "otherMeds" || boxNameId == "medicalOcularHistory" || boxNameId == "reminders" || boxNameId == "ocularHistory" || boxNameId == "familyMedicalOcularHistory" || boxNameId == "eyedrops") {
 				$("#" + boxNameId + " .title").click(function(e) {
 					e.stopPropagation();
 					var rnd = Math.round(Math.random() * 1000);
