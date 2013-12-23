@@ -198,15 +198,30 @@ function sendTickler()
             ["procedure_",document.getElementById('procedure_num').value],
             ["test_",document.getElementById('test_num').value]];
   for(var item in sendList){
-	  for(var i=1; i<=sendList[item][1]; i++){
-		  var id = sendList[item][0] + i;
-		  var text= getTicklerText(id);
-		  var ticklerRecip = document.getElementById(id+'.Provider');
-		  jQuery.ajax({ url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+<%=request.getParameter("followup.appointmentNo")%>+"&text="+text+"&recip=" + ticklerRecip.value +"&demographicNo=<%=request.getParameter("followup.demographicNo")%>", async:false, success: function(data){		        
-		    }});
-	  }
+     var errorCount = 0;
+     var errorText = 'There was an error when sending tickler to ';
+     for(var i=1; i<=sendList[item][1]; i++){
+        var id = sendList[item][0] + i;
+        var text= getTicklerText(id);
+        var ticklerRecip = document.getElementById(id+'.Provider');        
+        jQuery.ajax({
+           url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+<%=request.getParameter("followup.appointmentNo")%>+"&text="+text+"&recip=" + ticklerRecip.value +"&demographicNo=<%=request.getParameter("followup.demographicNo")%>",
+           async:false,
+           success: function(data){		        
+            },
+           error: function(data) {
+               errorCount = errorCount+1 ;
+               errorText  += '\n\n' + ticklerRecip[ticklerRecip.selectedIndex].text;
+            }
+         });
+     }
+     if(errorCount > 0 )
+     { 
+        errorText += '.\n\n Click OK to continue.';
+        alert(errorText);
+     }
+     
   }
-  alert('plan saved and tickler sent.');
   return true;
 }
 </script>
