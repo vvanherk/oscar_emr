@@ -18,7 +18,7 @@ public class IViewsDownloadFileAction extends DownloadAction
 	{
         response.setHeader("Content-disposition", "attachment; filename=iview.bat");
    
-		String contentType = "text/plain";
+		String contentType = "application/bat";
 		
 		String demographicNo = request.getParameter("demographicNo");
 		
