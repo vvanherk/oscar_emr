@@ -259,7 +259,7 @@ var procedureItems = ["procedure_eye", "procedure_procedure", "procedure_locatio
 var diagnosticsItems = ["diagnostics_eye", "diagnostics_name", "diagnostics_urgency", "diagnostics_comment"];
 
 
-var savedImpression = false, savedCurrentPresenting = false, savedOfficeCommunication = false, sendPlanTickler = false, savedPlan = false;
+var savedImpression = false, savedCurrentPresenting = false, savedOfficeCommunication = false, sendPlanTickler = false;
 var saveInterval;
 var billingArgs;
 
@@ -1211,7 +1211,6 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 	savedCurrentPresenting = false;
 	savedOfficeCommunication = false;
 	sendPlanTickler = false;
-	savedPlan = false;
 	savedForm = false;
 
 	if (typeof issueNoteId == "undefined")
@@ -1304,19 +1303,6 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 			}
 		});
 	}
-
-	// Save the plan
-	$.ajax({
-		type: "POST",
-		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
-		data: "value=" + encodeURIComponent(planValue) + "&issue_code=eyeformPlan"
-			+ (signAndExit ? "&sign=true" : "")
-			+ (!isNaN(planNoteId) ? "&noteId=" + planNoteId : "&noteId=0"),
-		dataType: "json",
-		success: function(data) {
-			savedPlan = true;
-		}
-	});
 	
 	saveInterval = setInterval(function () { afterSave(fn, signAndExit, bill, closeForm); }, 1000);
 }
@@ -1350,8 +1336,8 @@ function saveMeasurements() {
 }
 
 function afterSave(callback, signAndExit, bill, closeForm) {
-	if ((!signAndExit && savedImpression && savedPlan) ||
-			(signAndExit && savedImpression && savedPlan && sendPlanTickler)) {
+	if ((!signAndExit && savedImpression) ||
+			(signAndExit && savedImpression && sendPlanTickler)) {
 
 		if (closeForm || (signAndExit && !bill)) {
 			window.opener.location.reload(true);
@@ -1360,7 +1346,6 @@ function afterSave(callback, signAndExit, bill, closeForm) {
 		}
 
 		savedImpression = false;
-		savedPlan = false;
 		sendPlanTickler = false;
 		savedForm = true;
 
