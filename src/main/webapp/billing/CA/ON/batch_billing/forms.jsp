@@ -12,7 +12,7 @@
 <div id="clinical">
 	<section id="batch-details">
 		<div class="row-fluid">
-			<div class="span10 billing-form-layout batch-info">
+			<div class="billing-form-layout batch-info" style="width: 850px;">
 				<div class="span12"> 			<!-- for pages with 2 rows -->
 					<div><label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= providerSelectionList %></select></div>
 					<div><label for="group_no"> Group # </label><input type="text" class="input-mini uneditable-input" placeholder="00000" id="group_no" name="group_no" readonly="true"></div>
@@ -25,18 +25,18 @@
 						<div id="fdate" class="search-input datepicker">
 							<label for="from-date"> From Date </label>
 							<div id="from-date" class="input-append">
-								<input id="from-dt" name="from" data-format="yyyy-MM-dd" type="text" class="input-small" placeholder="YYYY-MM-DD"></input>
+								<input id="from-dt" name="from" data-format="yyyy-MM-dd" type="text" style="width:90px"" placeholder="YYYY-MM-DD"></input>
 								<span class="add-on"><i data-time-icon="icon-time" data-date-icon="icon-calendar"></i></span>
 							</div>
 						</div>						
 						<div id="tdate" class="search-input datepicker">
 							<label for="to-date"> To Date </label>
 							<div id="to-date" class="input-append">
-								<input id="to-dt" name="to" data-format="yyyy-MM-dd" type="text" class="input-small"placeholder="YYYY-MM-DD"></input>
+								<input id="to-dt" name="to" data-format="yyyy-MM-dd" type="text" style="width:90px"placeholder="YYYY-MM-DD"></input>
 								<span class="add-on"><i data-time-icon="icon-time" data-date-icon="icon-calendar"></i></span>
 							</div>
 						</div>
-						<div><button id="create-list" type="submit" class="btn"> Create List </button></div>
+						<div><button id="create-list" type="submit" class="btn"> Show List </button></div>
 						<div class="span1"></div>
 						<div><label for="supercode"> Super Code </label><select id="supercode" class="input-medium combobox"><%= superCodeSelectionList %></select></div>
 						<div><button id="scApply" type="submit" class="btn"> Apply </button></div>
@@ -44,11 +44,11 @@
 					</div>
 				</div>
 			</div>
-			<div class="span2 billing-form-layout batch-total">
+			<div class="billing-form-layout batch-total">
 				<form id="batch-total-form">
 					<button id="save-batch" class="btn"> Save Billing </button>
 					<label for="batch-total-amt"> Batch Total </label>
-					<input id="batch-total-amt" type="text" class="input-small uneditable-input" placeholder="$0.00">
+					<input id="batch-total-amt" type="text" class="input-mini uneditable-input" placeholder="$0.00">
 				</form>
 			</div>
 		</div>
@@ -162,9 +162,8 @@
 					<div><label for="group_no"> Group # </label><input type="text" class="input-mini uneditable-input" placeholder="00000" id="group_no"></div>
 					<div><label for="location"> Location </label><select id="location" name="loc" class="input-small combobox"><%= clinicSelectionList %></select></div>
 					<div><label for="billing-center"> Billing Center </label><input type="text" class="input-medium uneditable-input" placeholder="Hamilton" id="billing-center"></div>
-					<div><button id="hold" type="submit" class="btn"> Show Hold </button></div>
 				</div>
-				<div class="span12 formrow" style="margin-left:500px"> 			<!-- for pages with 2 rows -->
+				<div class="span12 formrow" style="margin-left:450px"> 			<!-- for pages with 2 rows -->
 					<div><label for="supercode"> Super Code </label><select id="supercode" class="input-medium combobox"><%= superCodeSelectionList %></select></div>
 					<div><button id="scApply" type="submit" class="btn"> Apply </button></div>
 					<div><button id="clear" type="submit" class="btn"> Clear </button></div>
@@ -298,11 +297,14 @@
 				<div class="span12"> 			<!-- for pages with 2 rows -->
 					<div><label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= providerSelectionList %></select></div>
 					<div><label for="group_no"> Group # </label><input type="text" class="input-mini uneditable-input" placeholder="00000" id="group_no" name="group_no" readonly="true"></div>
-					<div><label for="provider"> Provider </label><select id="provider" name="prov" class="input-mini combobox"><%= providerSelectionList %></select></div>
 					<div><label for="billing-type"> Billing Type </label><select id="billing-type" name="btype" class="input-mini combobox"><option value="d1">OHIP</option></select></div>
 					<div><label for="location"> Location </label><select id="location" name="loc" class="input-small combobox"><%= clinicSelectionList %></select></div>
 					<div><label for="billing-center"> Billing Center </label><input type="text" class="input-mini uneditable-input" placeholder="Hamilton" id="billing-center" name="bcenter" readonly="true"></div>
-					<div><button id="hold" type="submit" class="btn"> Show Hold </button></div>
+				</div>
+				<div class="span12 formrow" style="margin-left:450px"> 			<!-- for pages with 2 rows -->
+					<div><label for="supercode"> Super Code </label><select id="supercode" class="input-medium combobox"><%= superCodeSelectionList %></select></div>
+					<div><button id="scApply" type="submit" class="btn"> Apply </button></div>
+					<div><button id="clear" type="submit" class="btn"> Clear </button></div>
 				</div>
 			</div>
 			<div class="span2 billing-form-layout batch-total">
@@ -379,17 +381,18 @@
 					<div class="span6">
 						<div class="row-fluid">
 							<div class="span4 offset1"> From </div>
-							<div class="span1" style="position:relative; left:-15px"> Days </div>
+							<div class="span1" style="position:relative; left:-25px"> Days </div>
 							<div class="span2" style="position:relative; left:-10px"> Code </div>
-							<div class="span4"> Description </div>
+							<div class="span4" style="position:relative; left:-10px"> Description </div>
 					    </div>
 					</div>
 					<div class="span6" style="margin:0px">
 						<div class="row-fluid" style="padding:0px">
-							<div class="span2"> Amount </div>
-							<div class="span1" style="position:relative; left:-10px"> Units </div>
-							<div class="span2"> Percent</div>
-							<div class="span2"> Total </div>
+							<div class="span1" style="position:relative; left:-25px"> Dx </div>
+							<div class="span2" style="position:relative; left:-15px"> Amount </div>
+							<div class="span1" style="position:relative; left:-15px"> Units </div>
+							<div class="span2" style="position:relative; left:-10px"> Percent</div>
+							<div class="span2" style="position:relative; left:-10px"> Total </div>
 					    </div>
 					</div>
 				</div>
@@ -414,6 +417,7 @@
 					     <div class="span4"> <input type="text" class="input-80" id="description"> </div>
 					</div>
 					<div class="span6" style="margin:0px">
+						 <div class="span1" style="position:relative; left:-10px"> <input type='text' class="input-100" id="dx"> </div>
 					     <div class="span2"> <input type="text" class="input-80" id="amount" readonly="true"> </div>
 					     <div class="span1" style="position:relative; left:-3px"> <input type="text" class="input-80" id="units"> </div>
 					     <div class="span2"> <input type="text" class="input-80" id="percent" readonly="true"></div>

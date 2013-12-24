@@ -101,7 +101,7 @@
 						<div class="no-label" style="width: 75px;"><label for="b_notes">Bill Notes:</label></div>
 						<div class="span11 no-label" style="margin-left:0px"><input class="input-100" type="text" id="b_notes"></div>
 					</div>
-					<div id="invoice-items" class="span12" style="margin-left:0px; margin-top:30px; width:800px;">
+					<div id="invoice-items" class="span12" style="margin-left:0px; margin-top:30px; width:750px;">
 						<div id="items-header" class="row-fluid" style="font-size:1.1em; margin-left:10px">
 							<div class="span7">
 								<div class="row-fluid">
@@ -149,7 +149,7 @@
 							</div>
 						</div>
 						<span id="items-space"> </span>
-						<div id="items-footer" class="span4 offset8" style="margin-top:20px">
+						<div id="items-footer" class="span5 offset7" style="margin-top:20px">
 							<button type="button" class="btn">Hold</button>
 							<button type="button" class="btn">EBM History</button>
 							<button type="button" class="btn">Submit</button>

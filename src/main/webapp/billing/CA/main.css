@@ -55,7 +55,7 @@ label{
 
 .batch-total {
 	text-align: right;
-	margin-top: 20px;
+	margin-top: 10px;
 	padding-right: 10px;
 }
 
@@ -164,7 +164,8 @@ li .badge{
 .rightbody{
 	position: absolute;
 	left: 200px;
-	width: 820px;
+	width: 775px;
+	overflow-x: hidden;
 }
 
 #detail div{
