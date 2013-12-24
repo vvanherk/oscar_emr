@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.Query;
+import javax.persistence.NonUniqueResultException;
 
 import org.oscarehr.common.model.ProviderSite;
 import org.oscarehr.common.model.Site;
@@ -171,7 +172,16 @@ public class SiteDao extends AbstractDao<Site> {
 		query.setParameter("appointmentno", appointmentNo);
 
 		@SuppressWarnings("unchecked")
-        Integer siteId = (Integer) query.getSingleResult();
+        List<Integer> siteIds = query.getResultList();
+        
+        Integer siteId = null;
+        
+        // Error check our results
+        if (siteIds.size() > 1) {
+			throw new NonUniqueResultException("More than one appointment with appointment number " + appointmentNo + " was found.");
+		} else if (siteIds.size() > 0) {
+			siteId = siteIds.get(0);
+		}
         
         if (siteId != null && siteId != 0) {
 			query = this.entityManager.createQuery("select s from Site s where s.siteId=?");
