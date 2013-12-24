@@ -325,47 +325,6 @@ function clear_combobox($tar){	//does not work should use the above + ""
 	$btn.trigger('click');	//toggle the toggle
 };
 
-/* Sends off batch information to be saved into OSCAR database.
- *  */
-function batch_save(contentID, batchInfo){
-	save_invoice_info();
-	$.ajax({
-		type: "POST",
-		dataType: "html",
-		url: "batch-save.jsp",
-		data:{
-			invoicesType: contentID,
-			invoicesData: JSON.stringify(invoices),
-			batchData: JSON.stringify(batchInfo)
-		}
-	}).done(function(msg){
-		alert(msg.trim());
-		location.reload();
-	});
-}
-
-function item_total(){
-	var $totals = $('#invoice-items .item').find('#l_total');
-	var tot = 0;
-	$.each($totals, function(i, x){
-		if($(x).val() !== ""){
-			tot = parseFloat(tot) + parseFloat($(x).val());
-		}
-	});
-	$('#invoice-items #total')[0].innerHTML =  parseFloat(tot).toFixed(2);
-}
-
-// Calculates batch total.
-function batch_total() {
-	var $totals = $('#invList_body tr td.amount');
-	var total = 0;	
-	$.each($totals, function(i, x) {
-		if ($(x).html() !== "") {
-			total = parseFloat(total) + parseFloat($(x).html());
-		}
-	});
-	$('#batch-total-amt').val(parseFloat(total).toFixed(2));
-}
 
 // Checks or unchecks all invoice checkboxes.
 function select_all_invoices($selectAllCheckbox, $invoiceCheckboxes) {

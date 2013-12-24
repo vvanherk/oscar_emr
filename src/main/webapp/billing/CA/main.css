@@ -157,9 +157,24 @@ table td{
 	font-size: 1.2em;
 }
 
+li .badge{
+	float: right;
+}
+
 .rightbody{
 	position: absolute;
 	left: 200px;
 	width: 820px;
+}
+
+#detail div{
+	background-color: #EEEEEE;
+	height:130px;
+	margin-top:10px
+}
+
+#detail div table{
+	width: 100%;
+	margin: 0px
 }
 
