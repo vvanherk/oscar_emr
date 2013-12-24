@@ -549,6 +549,7 @@ td {
 
 .highlightTime {
 	background-color: yellow;
+    cursor: pointer;
 }
 
 #highlightSlider {
