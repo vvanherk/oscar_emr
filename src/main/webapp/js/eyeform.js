@@ -378,16 +378,18 @@ function editNote(item) {
 }
 
 function saveEditNote(item) {
-	$(item).removeClass("updating");
+	var $item = $(item);
+	
+	$item.removeClass("updating");
 
 	var data = encodeURIComponent($(item).find("input").val());
 	var noteId = $(item).attr("note_id");
 
-	$(item).html("<strong><abbr /></strong><span class='noteContent' /><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span>");
-	$(item).find("abbr").attr("title", $(item).attr("dateData"));
-	$(item).find("abbr").text($(item).attr("date"));
+	$item.html("<strong><abbr /></strong><span class='noteContent' /><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span>");
+	$item.find("abbr").attr("title", $item.attr("dateData"));
+	$item.find("abbr").text($item.attr("date"));
 
-	if ($(item).attr("noteData") != data) {
+	if ($item.attr("noteData") != data) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo,
@@ -396,21 +398,27 @@ function saveEditNote(item) {
 			success: function(data) {
 				if (typeof console != "undefined")
 					console.log("Saved " + data.id);
+
+				var date = new Date();
+				$item.find("abbr").html(date.toFormattedString());
+			},
+			error: function(data) {
+				alert("Unable to save note!");
 			}
 		});
-		$(item).find("span.noteContent").text( unescape(data) );
-		$(item).addClass("thisVisit");
+		$item.find("span.noteContent").text( unescape(data) );
+		$item.addClass("thisVisit");
 
 	} else {
-		$(item).find("span.noteContent").text( unescape($(item).attr("noteData")) );
+		$item.find("span.noteContent").text( unescape($item.attr("noteData")) );
 	}
 
-	$(item).click(function(e) {
+	$item.click(function(e) {
 		editNote($(this));
 		e.stopPropagation();
 	});
 
-	$(item).find(".archiveNoteBtn").click(function(e) {
+	$item.find(".archiveNoteBtn").click(function(e) {
 		if (typeof console != "undefined")
 			console.log("Archive Btn Clicked");
 		e.stopPropagation();
