@@ -1701,7 +1701,7 @@ function changeClinic(sel) {
  */ 
 function setSiteOnPageLoad() {
 	var sel = document.getElementById("site");
-	changeSite(sel);//sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+	sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor; // changeSite(sel);
 }
 
 function changeSite(sel) {
@@ -1728,9 +1728,9 @@ function changeSite(sel) {
 			boolean clinicMatch = false;
 			
 			for ( Clinic clinic : clinics) {
-				if (sessionClinicId.equals("" + clinic.getId())) {
+				clinicMatch = sessionClinicId.equals("" + clinic.getId());
+				if (clinicMatch) {
 					selectedClinic = clinic;
-					clinicMatch = true;
 				}
 			%>
 				<option <%=clinicMatch? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
