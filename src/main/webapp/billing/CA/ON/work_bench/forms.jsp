@@ -46,15 +46,15 @@
 					</tr>
 				</thead>
 				</table>
-				<div id="invList_body_container" class="bodycontainer scrollable" style="height:150px">
+				<div id="invList_body_container" class="bodycontainer scrollable" style="height:300px">
 					<table id="invList_body" class="table table-hover table-striped table-condensed table-scrollable">
 						<tbody>
 							<td style="text-align: center"> No items: Please choose query attributes above</td>
 						</tbody>
 					</table>
 				</div>
-				<div id="detail-trigger" class="condense" style="background-color: #DDDDDD; text-align: center; padding:5px"> Less Detail <i class="icon-chevron-down"></i> </div>
-				<div id="detail" class="row-fluid" style="height:150px; background-color: #EEEEEE;">
+				<div id="detail-trigger" style="background-color: #DDDDDD; text-align: center; padding:5px"> More Detail <i class="icon-chevron-up"></i> </div>
+				<div id="detail" class="row-fluid" style="height:150px; background-color: #EEEEEE; display: none;">
 					<div class="span5 bodycontainer scrollable" style="margin-left: 75px;">
 						<table>
 							<tr><th colspan="2"><b><u>Summary</u></b></th></tr>
@@ -78,8 +78,8 @@
 					<div id="invoice-status" class="span8">
 						<div class="span12">
 							<div class="datepicker" style="width: 150px">
-								<label for="admission_date"> Admission date:</label>
-								<div id="admission_date" class="input-append">
+								<label for="service_date"> Service date:</label>
+								<div id="service_date" class="input-append">
 									<input data-format="yyyy-MM-dd" type="text" placeholder="YYYY-MM-DD" style="width:60%">
 									<span class="add-on">
 										<i data-time-icon="icon-time" data-date-icon="icon-calendar">
@@ -110,23 +110,25 @@
 						<div class="span11 no-label" style="margin-left:0px"><input class="input-100" type="text" id="b_notes"></div>
 					</div>
 					<div id="invoice-items" class="span12" style="margin-left:0px; margin-top:30px; width:750px;">
-						<div id="items-header" class="row-fluid" style="font-size:1.1em; margin-left:10px">
-							<div class="span7">
-								<div class="row-fluid">
-									<div class="span4 offset1" style="position:relative; left:-15px"> From </div>
-									<div class="span1" style="position:relative; left:-20px"> Days </div>
-									<div class="span2" style="position:relative; left:-15px"> Code </div>
-									<div class="span4" style="position:relative; left:-15px"> Description </div>
-								</div>
-							</div>
-							<div class="span5" style="margin:0px">
-								<div class="row-fluid" style="padding:0px">
-									<div class="span2" style="position:relative; left:-25px"> Amount </div>
-									<div class="span2" style="position:relative; left:-10px"> Units </div>
-									<div class="span2" style="position:relative; left:-15px"> Percent</div>
-									<div class="span2" style="position:relative; left:-15px"> Total </div>
-								</div>
-							</div>
+						<div id="items-header" class="row-fluid" style="margin-left:55px; font-size:1.1em">
+							<div class="span1"> Code </div>
+							<div class="span3"> Description </div>
+							<div class="span1"> Dx </div>
+							<div class="span1"> Amount </div>
+							<div class="span1"> Units </div>
+							<div class="span1"> Percent</div>
+							<div class="span1"> Total </div>
+						</div>
+						<div id="items-master" class="tablerow row-fluid invisible span12" style="margin-left:10px; position: absolute; width:800px;">
+							<div class="span1" style="width: 30px"> <button class="btn" id="delete_item"><span class="icon-trash"></span></button> </div>
+							<div class="span1"> <input type="text" class="input-100" id="b_code"> </div>
+							<div class="span3"> <input type="text" class="input-100" id="description"> </div>
+							<div class="span1"> <input type='text' class="input-100" id="dx"> </div>
+							<div class="span1"> <input type="text" class="input-100" id="amount" readonly="true"> </div>
+							<div class="span1"> <input type="text" class="input-100" id="units"></div>
+							<div class="span1"> <input type="text" class="input-100" id="percent" readonly="true">	</div>
+							<div class="span1"> <input type='text' class="input-100" id="l_total"> </div>
+							<div class="span1"> <button class="btn" id="add_item"><span class="icon-plus"></span></button> </div>
 						</div>
 						<div id="items-master" class="tablerow row-fluid invisible" style="margin-left:25px; position: absolute;">
 							<div class="span7">
