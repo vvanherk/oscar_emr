@@ -1,4 +1,9 @@
 /**
+ * Copyright (c) 2013-2014 Prylynx Corporation
+ *
+ * This software is made available under the terms of the
+ * GNU General Public License, Version 2, 1991 (GPLv2).
+ * License details are available via "gnu.org/licenses/gpl-2.0.html".
  * =========================================================
  * Batch Billing Javascript Add-ons
  * 			* bootstrap-combobox.js v1.14
