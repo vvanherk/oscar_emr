@@ -7,6 +7,7 @@
  */
 
 <%
+	String billableProviderSelectionList = request.getParameter("billableProviders");
 	String providerSelectionList = request.getParameter("providers");
 	String clinicSelectionList = request.getParameter("locations");
 	String superCodeSelectionList = request.getParameter("superCodes");
@@ -29,7 +30,7 @@
 			</ul>
 		</div>
 		<div class="panel panel-default rightbody">
-			<div id="options" class="panel-heading"> <label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= providerSelectionList %></select></div>
+			<div id="options" class="panel-heading"> <label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= billableProviderSelectionList %></select></div>
 			<div id="batch-invoices" class="panel-body" style="padding:0px">
 				<table class="table table-striped table-hover table-condensed table-header" id="invList_header">
 				<thead>
@@ -53,7 +54,7 @@
 						</tbody>
 					</table>
 				</div>
-				<div id="detail-trigger" style="background-color: #DDDDDD; text-align: center; padding:5px"> More Detail <i class="icon-chevron-up"></i> </div>
+				<div id="detail-trigger" style="background-color: #DDDDDD; text-align: center; padding:5px"> Less Detail <i class="icon-chevron-down"></i> </div>
 				<div id="detail" class="row-fluid" style="height:150px; background-color: #EEEEEE; display: none;">
 					<div class="span5 bodycontainer scrollable" style="margin-left: 75px;">
 						<table>

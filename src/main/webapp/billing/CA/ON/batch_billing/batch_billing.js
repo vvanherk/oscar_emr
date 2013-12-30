@@ -110,7 +110,10 @@ function invoice_detail_map($invFields, action){
 			case 'demo-dob-search':
 				action(fieldData, "dob");
 				break;
-			case 'service_date':
+			case 'ser_date':
+				action(fieldData, "date");
+				break;
+			case 'adm_date':
 				action(fieldData, "date");
 				break;
 			case 'invStatus':
@@ -133,6 +136,18 @@ function invoice_detail_map($invFields, action){
 				break;
 			case 'b_notes':
 				action( fieldData, "notes");
+				break;
+			case 'from':
+				if($(fieldData).closest(".item").length > 0){
+					var id = $(fieldData).closest(".item").attr('id').split('item')[1];
+					action(fieldData, "item."+ id +".from");
+				}
+				break;
+			case 'days':
+				if($(fieldData).closest(".item").length > 0){
+					var id = $(fieldData).closest(".item").attr('id').split('item')[1];
+					action(fieldData, "item."+ id +".days");
+				}
 				break;
 			case 'b_code':
 				if($(fieldData).closest(".item").length > 0){
@@ -201,33 +216,35 @@ function insert_invoice(inv){
  * */
 function save_invoice_info(){
 	
-	//reads fields and updates the appropriate invoice property(indicated using selected_id)
-	invoice_detail_map($('#invoice-detail'), function(fieldData, id){
-		var temp = id.split('.');
-		if(temp[0] === "item"){	//if this is an item, find item and save that
-			while(selected.inv.items.length < parseInt(temp[1]) + 1)
-			{	
-				selected.inv.items.push(new item());
+	if(selected.inv != null){
+		//reads fields and updates the appropriate invoice property(indicated using selected_id)
+		invoice_detail_map($('#invoice-detail'), function(fieldData, id){
+			var temp = id.split('.');
+			if(temp[0] === "item"){	//if this is an item, find item and save that
+				while(selected.inv.items.length < parseInt(temp[1]) + 1)
+				{	
+					selected.inv.items.push(new item());
+				}
+				selected.inv.items[temp[1]][temp[2]] = $(fieldData).val();
 			}
-			selected.inv.items[temp[1]][temp[2]] = $(fieldData).val();
-		}
-		else{
-			selected.inv[id] = $(fieldData).val();			
-		}
-		$(fieldData).val("");
-	});
-	
-	selected.inv.update_inv_total();
-	
-	//update the table to reflect invoice changes.
-	update_table_row(selected.inv, $("#invList_body tbody").children("#row"+selected.id)[0]);
-	
-	//resets the invoice details area back to blank with one item
-	$("#items-space").children(".item").remove();
-	create_item_row();
-	
-	// Update batch total. 
-	batch_total();
+			else{
+				selected.inv[id] = $(fieldData).val();			
+			}
+			$(fieldData).val("");
+		});
+		
+		selected.inv.update_inv_total();
+		
+		//update the table to reflect invoice changes.
+		update_table_row(selected.inv, $("#invList_body tbody").children("#row"+selected.id)[0]);
+		
+		//resets the invoice details area back to blank with one item
+		$("#items-space").children(".item").remove();
+		create_item_row();
+		
+		// Update batch total. 
+		batch_total();
+	}
 }
 
 /* loads the selected invoice information into user input fields

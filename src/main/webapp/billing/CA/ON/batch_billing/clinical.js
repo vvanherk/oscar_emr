@@ -57,9 +57,9 @@ $("#create-list").on('click', function(){	//Creates list based off appointments
 			insert_invoice(newInvoice);	//runs the invoice through insert function
 		});
 		set_selected(response.length-1);	//select first item
+		fill_combobox($('#rdoctor'), selected.inv.rdoctor);
 		$('#invStatus').focus();	//choose what item to focus on next.
 	});
-	
 	$('#item0 #b_code').focus();
 
 });

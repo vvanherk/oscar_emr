@@ -1,12 +1,10 @@
-/**
- * Copyright (c) 2013-2014 Prylynx Corporation
- *
- * This software is made available under the terms of the
- * GNU General Public License, Version 2, 1991 (GPLv2).
- * License details are available via "gnu.org/licenses/gpl-2.0.html".
- */
-
-
+<%--
+  Copyright (c) 2013-2014 Prylynx Corporation
+ 
+  This software is made available under the terms of the
+  GNU General Public License, Version 2, 1991 (GPLv2).
+  License details are available via "gnu.org/licenses/gpl-2.0.html".
+--%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@page import="java.util.List, java.util.Set, java.util.Collections, java.util.Comparator, java.util.Date, java.util.Calendar, java.text.SimpleDateFormat, java.util.HashSet, java.util.ArrayList" %>
 <%@page import="javax.validation.Validator, javax.validation.Validation, javax.validation.ValidationException, javax.validation.ConstraintViolation, javax.validation.ConstraintViolationException" %>
@@ -43,9 +41,10 @@
 
 	Provider provider = providerDao.getProvider(batch.optString("b_provider"));
 	
+	
 	for(int i = 0; i < invoices.size(); i++){
 		
-		Date service_date = new SimpleDateFormat("yyyy/MM/dd").parse(batch.optString("billDate"));
+		Date service_date = new SimpleDateFormat("yyyy/MM/dd").parse(batch.optString("billDate")); //wrong.
 		
 		JSONObject newInvoiceData = invoices.getJSONObject(i);
 		JSONArray newInvItemsData = newInvoiceData.getJSONArray("items");
@@ -99,7 +98,7 @@
 		} else if(newInvoiceData.optString("status").equals("Hold")){
 			newInvoice.setStatus("Z");								//new Status Code! HATE ME
 		}
-		newInvoice.setRef_num(newInvoiceData.optString("rdocNum"));
+		if(!newInvoiceData.optString("rdocNum").equals("0")){	newInvoice.setRef_num(newInvoiceData.optString("rdocNum")); }
 		newInvoice.setComment1(newInvoiceData.optString("notes"));
 		newInvoice.setMan_review( (!newInvoiceData.optString("manual").equals("") ? "Y" : "") );
 		if(newInvoiceData.optString("btype").equals("OHIP")){

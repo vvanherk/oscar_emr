@@ -34,7 +34,7 @@ $('#save-batch').click( function(){
 	batch["billTime"] = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 	batch["location"] = $("#location_val").val();
 	
-	batch_save("offsite", batch); //hoping contentID is universal
+	batch_save("hospital", batch); //hoping contentID is universal
 	return false;			
 });
 
@@ -55,8 +55,9 @@ $('#demo-name-search').typeahead({
 		selected.inv.demo = new demographic(demoList[d]);
 		selected.inv.rdoctor = demoList[d].rdoctor;
 		selected.inv.rdocNum = demoList[d].rdocNum;
-		save_invoice_info();
-		load_invoice_info();
+		if(selected.inv.rdoctor != ""){	fill_combobox($('#rdoctor'), selected.inv.rdoctor); }
+		if(selected.inv.sli == ""){	fill_combobox($('#location'), "First"); }
+		update_table_row(selected.inv, selected.row);
 		return demo;
 	}
 });
@@ -77,7 +78,7 @@ $('#manualCHK').change(function(){
 $('#next_patient').on('click', function(){ 
 	var next = parseInt(selected.id) - 1;
 	if(next < 0){ 
-		next = $('#invList_body tbody tr').length -1; 
+		insert_invoice(new invoice()); 
 	}
 	set_selected(next); 
 });
@@ -99,38 +100,7 @@ $("#select-all").on("click", function() {
 	select_all_invoices($selectAllCheckbox, $invoiceCheckboxes);
 });
 
-/////////////////////////
-	
-/*
 $('#admission_date input').on('blur', function(){
-	var tar = $(contentID + " #items-space :eq(0)").find("#from-date input");
+	var tar = $("#items-space :eq(0)").find("#from-date input");
 	tar.val($('#admission_date input').val());
-}); */
-
-/* 
-$('#demo-name-search').typeahead({
-	source: function(query, process){
-		return $.get('getDemographic.jsp', 
-			{source: "code", query: query}, 
-			function(data){
-				temp = JSON.parse(data);
-				$.each(temp, function( i, x){
-					patList[x.name]=x;
-				} );
-				return process(Object.keys(patList));
-			});
-		},
-	items:5,
-	updater: function(item){
-		$('#demo-hin-search').val(patList[item].health_card);
-		$('#demo-dob-search').val(patList[item].dob);
-
-		invoices[contentID.slice(1)][selected_id].demo = new demographic(patList[item]);
-		var row = $(contentID + ' #invList').find('#row' + selected_id);
-		row.children('.patient-name').html(item);
-		row.children('.health-card-number').html(patList[item].health_card);
-		row.children('.date-of-birth').html(patList[item].dob);
-
-		return item;
-	}
-}); */
+});

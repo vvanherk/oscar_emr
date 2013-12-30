@@ -102,39 +102,37 @@ String user_no = (String) session.getAttribute("user");
 	
 	//define your dropdown lists here
 	<%		//Provider info: list of providers and group numbers/Billing Location
-		String  providerSelectionList = "";				
+		String  providerSelectionList = "";		
+		String  billableProviderSelectionList = "";			
 
-		List<Provider> prList = providerDao.getProviders(true);
+		List<Provider> prList = providerDao.getActiveProviders();
 		for(int i=0; i < prList.size(); i++){	
 			Provider curr = prList.get(i);
-			int provNo;
-			try{
-				provNo = Integer.parseInt(curr.getProviderNo());
-			} catch ( Exception e){
-				continue;
+			providerSelectionList += "<option value='"+ curr.getProviderNo() +"'>";
+			providerSelectionList += curr.getFormattedName();
+			providerSelectionList += "</option>";
+							//group number needs to be parsed from xml formatted comments
+			String comment = curr.getComments();		
+			String groupNo = "00000";
+			String xml_parse = "<xml_p_billinggroup_no>";
+
+			ProviderBillCenter pbc =  providerBillCenterDao.find(curr.getProviderNo());
+			String bc_code = (pbc != null && pbc.getBillCenterCode().length()==1)? pbc.getBillCenterCode(): "Z";
+
+			if(comment != null && comment.indexOf(xml_parse) >= 0){ //if it exists
+				groupNo = comment.substring(comment.indexOf(xml_parse) + xml_parse.length(),
+						 comment.indexOf("</xml_p_billinggroup_no>"));
 			}
-			if(provNo > 0 && provNo != 999998){			//do not include sysadmin or oscardoc
-				providerSelectionList += "<option value='"+ provNo +"'>";
-				providerSelectionList += curr.getFormattedName();
-				providerSelectionList += "</option>";
-								//group number needs to be parsed from xml formatted comments
-				String comment = curr.getComments();		
-				String groupNo = "00000";
-				String xml_parse = "<xml_p_billinggroup_no>";
-
-				ProviderBillCenter pbc =  providerBillCenterDao.find(provNo+"");
-				String bc_code = (pbc != null && pbc.getBillCenterCode().length()==1)? pbc.getBillCenterCode(): "Z";
-
-				if(comment != null && comment.indexOf(xml_parse) >= 0){ //if it exists
-					groupNo = comment.substring(comment.indexOf(xml_parse) + xml_parse.length(),
-							 comment.indexOf("</xml_p_billinggroup_no>"));
-				}
 		%>
 			
-			providers [<%= provNo %>] = new provider("<%= curr.getFormattedName() %>", "<%= groupNo %>", billCtrCodeKeyVal['<%= bc_code %>']);	
+			providers ["<%= curr.getProviderNo() %>"] = new provider("<%= curr.getFormattedName() %>", "<%= groupNo %>", billCtrCodeKeyVal['<%= bc_code %>']);	
 
-		<%		
-			} 	
+		<%			
+			if(curr.getOhipNo() != null && !curr.getOhipNo().equals("")){
+				billableProviderSelectionList += "<option value='"+ curr.getProviderNo() +"'>";
+				billableProviderSelectionList += curr.getFormattedName();;
+				billableProviderSelectionList += "</option>";		
+			}
 		}
 		String clinicSelectionList = "";				//Clinic info: list of clinic locations
 		List<ClinicLocation> clList = clinicLocationDao.findByClinicNo(1);
@@ -174,7 +172,7 @@ String user_no = (String) session.getAttribute("user");
 			ProfessionalSpecialist curr = spList.get(i);
 			String pName = (curr.getProfessionalLetters() == null) ? "" : curr.getProfessionalLetters();
 			if(curr.getReferralNo() != null){
-				pName+= " " + curr.getLastName() + ", " + curr.getFirstName();
+				pName+= curr.getFormattedName();
 				pSpecSelectionList += "<option value='"+ curr.getReferralNo() +"'>";
 				pSpecSelectionList += pName;
 				pSpecSelectionList += "</option>";	
@@ -201,6 +199,7 @@ String user_no = (String) session.getAttribute("user");
 		if(contentID === "#workbench"){
 			$.getScript("ON/work_bench/work_bench.js")
 			$(contentID).load("ON/work_bench/forms.jsp #dashboard",{ 
+				'billableProviders': "<%=billableProviderSelectionList%>",
 				'providers': "<%=providerSelectionList%>",
 				'locations': "<%=clinicSelectionList%>",
 				'superCodes': "<%= superCodeSelectionList %>",
@@ -216,6 +215,7 @@ String user_no = (String) session.getAttribute("user");
 		} else {
 			$.getScript("ON/batch_billing/batch_billing.js");
 			$(contentID).load("ON/batch_billing/forms.jsp " + contentID,{ 
+				'billableProviders': "<%=billableProviderSelectionList%>",
 				'providers': "<%=providerSelectionList%>",
 				'locations': "<%=clinicSelectionList%>",
 				'superCodes': "<%= superCodeSelectionList %>",

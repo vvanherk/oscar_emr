@@ -7,6 +7,7 @@
  */
 
 <%
+	String billableProviderSelectionList = request.getParameter("billableProviders");
 	String providerSelectionList = request.getParameter("providers");
 	String clinicSelectionList = request.getParameter("locations");
 	String superCodeSelectionList = request.getParameter("superCodes");
@@ -22,7 +23,7 @@
 		<div class="row-fluid">
 			<div class="billing-form-layout batch-info" style="width: 850px;">
 				<div class="span12"> 			<!-- for pages with 2 rows -->
-					<div><label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= providerSelectionList %></select></div>
+					<div><label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= billableProviderSelectionList %></select></div>
 					<div><label for="group_no"> Group # </label><input type="text" class="input-mini uneditable-input" placeholder="00000" id="group_no" name="group_no" readonly="true"></div>
 					<div><label for="provider"> Provider </label><select id="provider" name="prov" class="input-small combobox"><%= providerSelectionList %></select></div>
 					<div><label for="location"> Location </label><select id="location" name="loc" class="input-medium combobox"><%= clinicSelectionList %></select></div>
@@ -33,7 +34,7 @@
 						<div id="fdate" class="search-input datepicker">
 							<label for="from-date"> From Date </label>
 							<div id="from-date" class="input-append">
-								<input id="from-dt" name="from" data-format="yyyy-MM-dd" type="text" style="width:90px"" placeholder="YYYY-MM-DD"></input>
+								<input id="from-dt" name="from" data-format="yyyy-MM-dd" type="text" style="width:90px" placeholder="YYYY-MM-DD"></input>
 								<span class="add-on"><i data-time-icon="icon-time" data-date-icon="icon-calendar"></i></span>
 							</div>
 						</div>						
@@ -166,7 +167,7 @@
 		<div class="row-fluid">
 			<div class="span10 billing-form-layout batch-info">
 				<div class="span12"> 			<!-- for pages with 2 rows -->
-					<div><label for="b_provider"> Billing Provider </label><select id="b_provider" class="input-small combobox"><%= providerSelectionList %></select></div>
+					<div><label for="b_provider"> Billing Provider </label><select id="b_provider" class="input-small combobox"><%= billableProviderSelectionList %></select></div>
 					<div><label for="group_no"> Group # </label><input type="text" class="input-mini uneditable-input" placeholder="00000" id="group_no"></div>
 					<div><label for="location"> Location </label><select id="location" name="loc" class="input-small combobox"><%= clinicSelectionList %></select></div>
 					<div><label for="billing-center"> Billing Center </label><input type="text" class="input-medium uneditable-input" placeholder="Hamilton" id="billing-center"></div>
@@ -303,7 +304,7 @@
 		<div class="row-fluid">
 			<div class="span10 billing-form-layout batch-info">
 				<div class="span12"> 			<!-- for pages with 2 rows -->
-					<div><label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= providerSelectionList %></select></div>
+					<div><label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= billableProviderSelectionList %></select></div>
 					<div><label for="group_no"> Group # </label><input type="text" class="input-mini uneditable-input" placeholder="00000" id="group_no" name="group_no" readonly="true"></div>
 					<div><label for="billing-type"> Billing Type </label><select id="billing-type" name="btype" class="input-mini combobox"><option value="d1">OHIP</option></select></div>
 					<div><label for="location"> Location </label><select id="location" name="loc" class="input-small combobox"><%= clinicSelectionList %></select></div>
@@ -358,7 +359,7 @@
 					<div class="datepicker" style="width: 150px">
 						<label for="admission_date"> Admission date:</label>
 						<div id="admission_date" class="input-append">
-							<input data-format="yyyy-MM-dd" type="text" placeholder="YYYY-MM-DD" style="width:60%">
+							<input id="adm_date" data-format="yyyy-MM-dd" type="text" placeholder="YYYY-MM-DD" style="width:60%">
 							<span class="add-on">
 								<i data-time-icon="icon-time" data-date-icon="icon-calendar">
 							    </i>
@@ -409,9 +410,9 @@
 						<div class="span1"> <button class="btn" id="delete_item"><span class="icon-trash"></span></button> </div>
 						<div class="span4"> 
 							<div class="from_date" style="margin-left: 10px;">
-								<div id="from_date" class="datepicker">
+								<div class="datepicker">
 									<div id="from-date" class="input-append">
-										<input data-format="yyyy-MM-dd" type="text"placeholder="YYYY-MM-DD" style="width:70%">
+										<input id="from" data-format="yyyy-MM-dd" type="text"placeholder="YYYY-MM-DD" style="width:70%">
 										<span class="add-on">
 											<i data-time-icon="icon-time" data-date-icon="icon-calendar">
 											</i>

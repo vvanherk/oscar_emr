@@ -1,10 +1,10 @@
-/**
- * Copyright (c) 2013-2014 Prylynx Corporation
- *
- * This software is made available under the terms of the
- * GNU General Public License, Version 2, 1991 (GPLv2).
- * License details are available via "gnu.org/licenses/gpl-2.0.html".
- */
+<%--
+  Copyright (c) 2013-2014 Prylynx Corporation
+ 
+  This software is made available under the terms of the
+  GNU General Public License, Version 2, 1991 (GPLv2).
+  License details are available via "gnu.org/licenses/gpl-2.0.html".
+--%>
 <%@taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%><%@page import="java.util.List, java.util.Set, java.util.Collections, java.util.Comparator, java.util.Date, java.util.Calendar, java.text.SimpleDateFormat" %><%@page import="org.oscarehr.util.SpringUtils" %><%@page import="org.oscarehr.common.dao.DemographicDao" %><%@page import="org.oscarehr.common.model.Demographic" %>
 <%
 DemographicDao demographicDao = (DemographicDao)SpringUtils.getBean("demographicDao");

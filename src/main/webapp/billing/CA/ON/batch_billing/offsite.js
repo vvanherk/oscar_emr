@@ -62,8 +62,9 @@ $('#demo-name-search').typeahead({
 		selected.inv.demo = new demographic(demoList[d]);
 		selected.inv.rdoctor = demoList[d].rdoctor;
 		selected.inv.rdocNum = demoList[d].rdocNum;
-		save_invoice_info();
-		load_invoice_info();
+		if(selected.inv.rdoctor != ""){	fill_combobox($('#rdoctor'), selected.inv.rdoctor); }
+		if(selected.inv.sli == ""){	fill_combobox($('#location'), "First"); }
+		update_table_row(selected.inv, selected.row);
 		return demo;
 	}
 });
@@ -84,7 +85,7 @@ $('#manualCHK').change(function(){
 $('#next_patient').on('click', function(){ 
 	var next = parseInt(selected.id) - 1;
 	if(next < 0){ 
-		next = $('#invList_body tbody tr').length -1; 
+		insert_invoice(new invoice());
 	}
 	set_selected(next); 
 });
