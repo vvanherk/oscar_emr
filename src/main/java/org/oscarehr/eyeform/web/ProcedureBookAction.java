@@ -83,10 +83,11 @@ public class ProcedureBookAction extends DispatchAction {
     }
 
     public ActionForward getNoteText(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-    	String appointmentNo = request.getParameter("appointmentNo");
+    	Integer appointmentNo = getIntegerFromRequest(request, "appointmentNo");
+    	Integer demographicNo = getIntegerFromRequest(request, "demographicNo");
     	ProcedureBookDao dao = (ProcedureBookDao)SpringUtils.getBean("ProcedureBookDAO");
     	
-    	List<EyeformProcedureBook> procedures = dao.getByAppointmentNo(Integer.parseInt(appointmentNo));
+    	List<EyeformProcedureBook> procedures = dao.get(demographicNo, appointmentNo);
     	StringBuilder sb = new StringBuilder();
     	
     	for(EyeformProcedureBook f:procedures) {    		
@@ -130,4 +131,17 @@ public class ProcedureBookAction extends DispatchAction {
     	}
     	return sb.toString();
     }
+    
+    private Integer getIntegerFromRequest(HttpServletRequest request, String name) {
+		String asString = request.getParameter(name);
+    	Integer retVal = 0;
+    	
+		try {
+			retVal = Integer.parseInt(asString);
+		} catch (Exception e) {
+			logger.debug("Unable to parse " + name + ".");
+		}
+		
+		return retVal;
+	}
 }

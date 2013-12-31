@@ -215,11 +215,21 @@ function sendTickler()
         var id = sendList[item][0] + i;
         var text= getTicklerText(id);
         
+        var appointmentNo = 0;
+        <%
+		String appointmentNo = request.getParameter("followup.appointmentNo");
+		if (appointmentNo != null && appointmentNo.length() > 0) {
+		%>
+		appointmentNo = <%=appointmentNo%>;
+		<%
+		}
+        %>
+        
         // Only submit if we were able to find tickler text
         if (text) {
 	        var ticklerRecip = document.getElementById(id+'.Provider');        
 	        jQuery.ajax({
-	           url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+<%=request.getParameter("followup.appointmentNo")%>+"&text="+text+"&recip=" + ticklerRecip.value +"&demographicNo=<%=request.getParameter("followup.demographicNo")%>",
+	           url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+appointmentNo+"&text="+text+"&recip=" + ticklerRecip.value +"&demographicNo=<%=request.getParameter("followup.demographicNo")%>",
 	           async:false,
 	           success: function(data){		        
 	            },
