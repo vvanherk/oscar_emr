@@ -505,7 +505,7 @@ function displayTickler(value, element) {
 			success: function(data) {
 				$(box).css("top", ($(element).position().top - 16) + "px");
 				$(box).css("left", "201px");
-				$(box).find(".messageContent").text(data.tickler.message);
+				$(box).find(".messageContent").html(data.tickler.message);
 				$(box).find(".messageDate").text((new Date(data.tickler.updateDate.time)).toFormattedString());
 				$(box).find(".messageTo").text(data.tickler.toProvider);
 				$(box).find(".messageFrom").text(data.tickler.provider);
