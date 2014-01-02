@@ -78,7 +78,8 @@ $('#manualCHK').change(function(){
 $('#next_patient').on('click', function(){ 
 	var next = parseInt(selected.id) - 1;
 	if(next < 0){ 
-		insert_invoice(new invoice()); 
+		next = $('#invList_body tbody tr').length;
+		insert_invoice(new invoice());
 	}
 	set_selected(next); 
 });

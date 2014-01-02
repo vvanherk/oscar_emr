@@ -267,7 +267,7 @@ function load_invoice_info(){
 		}
 		else{ 
 			if($(fieldData).hasClass('combobox')){
-				if($(fieldData).val() === ''){
+				if(selected.inv[id] === ''){
 					fill_combobox($(fieldData),"First");
 				} else {
 					fill_combobox($(fieldData), selected.inv[id]);
