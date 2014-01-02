@@ -32,12 +32,27 @@
 <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>
 
 <%
-				Integer noteId = Integer.parseInt(request.getParameter("noteId"));
-				String aptNo = request.getParameter("appointmentNo");
-				String demographicNo = request.getParameter("demographicNo");
-			%>         
+	Integer noteId = Integer.parseInt(request.getParameter("noteId"));
+	String aptNo = request.getParameter("appointmentNo");
+	String demographicNo = request.getParameter("demographicNo");
+%>
 				
 <script type="text/javascript">
+
+var appointmentNo = 0;
+var demographicNo = 0;
+<%
+if (aptNo != null && aptNo.length() > 0) {
+%>
+appointmentNo = <%=aptNo%>;
+<%
+}
+if (demographicNo != null && demographicNo.length() > 0) {
+%>
+demographicNo = <%=demographicNo%>;
+<%
+}
+%>
 
 function setDischarge(){	
 	saveFlags();
@@ -80,19 +95,19 @@ function saveEyeformNote() {
 	saveFlags();
 	var notetext = '';
 	//get consults/procedures/tests/checkboxes to generate text
-	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getNoteText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getNoteText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
        // if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getNoteText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getNoteText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         //if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getNoteText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getNoteText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         //if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/NoteData.do?method=getNoteText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/NoteData.do?method=getNoteText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
        // if(data.length>0) {notetext+='\n';}
     }});
@@ -111,25 +126,25 @@ function saveNoteAndSendTickler() {
 	//alert("save function called for eyeform - " + savedNoteId);
 	//do the ajax call to save form values 	
 	saveFlags();
-    
+	
 	var notetext = '';
 	//get consults/procedures/tests/checkboxes to generate text
-	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getTicklerText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getTicklerText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getTicklerText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         if(data.length>0) {notetext+='\n';}
     }});
 
 	var ticklerRecip = document.getElementById('ticklerRecip');
 	
-	jQuery.ajax({ url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+<%=aptNo%>+"&text="+notetext+"&recip=" + ticklerRecip.value +"&demographicNo=<%=demographicNo %>", async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+appointmentNo+"&text="+notetext+"&recip=" + ticklerRecip.value +"&demographicNo="+demographicNo, async:false, success: function(data){
         alert('tickler sent');
     }});
 	
@@ -144,7 +159,7 @@ function saveFlags() {
 	
 	jQuery.ajax({
 		type: 'GET',
-		url: ctx+'/eyeform/NoteData.do?method=save&ack1_checked=' + ack1El.checked + '&ack2_checked=' + ack2El.checked + '&ack3_checked=' + ack3El.checked + '&appointmentNo=' + <%=aptNo%> ,
+		url: ctx+'/eyeform/NoteData.do?method=save&ack1_checked=' + ack1El.checked + '&ack2_checked=' + ack2El.checked + '&ack3_checked=' + ack3El.checked + '&appointmentNo=' + appointmentNo ,
 		success: function (){},
 		dataType: 'html'	
 	});
@@ -164,7 +179,7 @@ function saveFlags() {
 	<table border="0"><tbody>		           
 		<tr><td colspan="2">
 			<span note_addon="saveEyeformNoteNoGenerate"></span>
-			<span><input class="uiBtn uiBtnInEyeForm" type="button" onclick="popupPageOne('<c:out value="${ctx}"/>/eyeform/EyeformPlan.do?method=form&amp;followup.demographicNo=<%=demographicNo %>&amp;noteId=<%=noteId%>&amp;followup.appointmentNo=<%=aptNo%>','eyeFormPlan',600,1200);" value="Arrange Plan"/></span>
+			<span><input class="uiBtn uiBtnInEyeForm" type="button" onclick="popupPageOne('<c:out value="${ctx}"/>/eyeform/EyeformPlan.do?method=form&amp;followup.demographicNo=<%=demographicNo %>&amp;noteId=<%=noteId%>&amp;followup.appointmentNo=<%=(aptNo!=null && aptNo.length()>0? aptNo : "0")%>','eyeFormPlan',600,1200);" value="Arrange Plan"/></span>
 		</td></tr>
 		<tr><td width="85%">
 			<div>

@@ -59,9 +59,9 @@ public class NoteAddonAction extends DispatchAction {
 	private static ProviderDao providerDao = (ProviderDao) SpringUtils.getBean("providerDao");
 	
 	public ActionForward getCurrentNoteData(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-		String demographicNo = request.getParameter("demographicNo");
 		String noteId = request.getParameter("noteId");
-		String appointmentNo = request.getParameter("appointmentNo");
+		Integer appointmentNo = getIntegerFromRequest(request, "appointmentNo");
+    	Integer demographicNo = getIntegerFromRequest(request, "demographicNo");
 		
 		request.setAttribute("internalList", providerDao.getActiveProviders());
 
@@ -73,20 +73,20 @@ public class NoteAddonAction extends DispatchAction {
 		ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
 		DemographicDao demographicDao = (DemographicDao)SpringUtils.getBean("demographicDao");
 		
-		List<EyeformFollowUp> followUps = followUpDao.getByAppointmentNo(Integer.parseInt(appointmentNo));
+		List<EyeformFollowUp> followUps = followUpDao.get(demographicNo, appointmentNo);
 		for(EyeformFollowUp fu:followUps) {
 			fu.setProvider(providerDao.getProvider(fu.getFollowupProvider()));
 			fu.setDemographic(demographicDao.getDemographic(String.valueOf(fu.getDemographicNo())));			
 		}		
 		request.setAttribute("followUps",followUps);
 		
-		List<EyeformTestBook> testBookRecords = testDao.get(Integer.parseInt(demographicNo), Integer.parseInt(appointmentNo));
+		List<EyeformTestBook> testBookRecords = testDao.get(demographicNo, appointmentNo);
 		request.setAttribute("testBookRecords",testBookRecords);
 		
-		List<EyeformProcedureBook> procedures = procedureBookDao.get(Integer.parseInt(demographicNo), Integer.parseInt(appointmentNo));
+		List<EyeformProcedureBook> procedures = procedureBookDao.get(demographicNo, appointmentNo);
 		request.setAttribute("procedures",procedures);
 		
-		EyeForm eyeform = eyeformDao.getByAppointmentNo(Integer.parseInt(appointmentNo));
+		EyeForm eyeform = eyeformDao.getByAppointmentNo(appointmentNo);
 		request.setAttribute("eyeform", eyeform);
 		
 		
@@ -105,8 +105,8 @@ public class NoteAddonAction extends DispatchAction {
 	 */	
 	
 	public ActionForward save(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-		String appointmentNo = request.getParameter("appointmentNo");
-	
+		Integer appointmentNo = getIntegerFromRequest(request, "appointmentNo");
+		
 		String ack1Checked = request.getParameter("ack1_checked");
 		String ack2Checked = request.getParameter("ack2_checked");
 		String ack3Checked = request.getParameter("ack3_checked");
@@ -114,12 +114,12 @@ public class NoteAddonAction extends DispatchAction {
 		
 		EyeFormDao dao = (EyeFormDao)SpringUtils.getBean("EyeFormDao");
 		
-		EyeForm eyeform = dao.getByAppointmentNo(Integer.parseInt(appointmentNo));
+		EyeForm eyeform = dao.getByAppointmentNo(appointmentNo);
 	
 		if(eyeform == null) {
 			eyeform = new EyeForm();
 			eyeform.setDate(new Date());
-			eyeform.setAppointmentNo(Integer.parseInt(appointmentNo));			
+			eyeform.setAppointmentNo(appointmentNo);			
 		}
 		
 		eyeform.setDischarge(ack1Checked);
@@ -132,11 +132,11 @@ public class NoteAddonAction extends DispatchAction {
 	}
 	
 	public ActionForward getNoteText(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-    	String appointmentNo = request.getParameter("appointmentNo");
+    	Integer appointmentNo = getIntegerFromRequest(request, "appointmentNo");
     	
     	EyeFormDao dao = (EyeFormDao)SpringUtils.getBean("EyeFormDao");
     	
-    	EyeForm eyeform = dao.getByAppointmentNo(Integer.parseInt(appointmentNo));
+    	EyeForm eyeform = dao.getByAppointmentNo(appointmentNo);
     	StringBuilder sb = new StringBuilder();
     	
     	if(eyeform != null) {
@@ -197,6 +197,19 @@ public class NoteAddonAction extends DispatchAction {
 		
 		
 	    return null;
+	}
+	
+	private Integer getIntegerFromRequest(HttpServletRequest request, String name) {
+		String asString = request.getParameter(name);
+    	Integer retVal = 0;
+    	
+		try {
+			retVal = Integer.parseInt(asString);
+		} catch (Exception e) {
+			logger.debug("Unable to parse " + name + ".");
+		}
+		
+		return retVal;
 	}
 	
 }
