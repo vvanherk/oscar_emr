@@ -35,32 +35,32 @@
 	BillingServiceDao billingServiceDao = (BillingServiceDao)SpringUtils.getBean("billingServiceDao");
 	BillingClaimDAO billingClaimDao = (BillingClaimDAO)SpringUtils.getBean("billingClaimDAO");
 
-	String invType = request.getParameter("invoicesType"); 
-	JSONArray invoices = (JSONArray) JSONSerializer.toJSON(request.getParameter("invoicesData")); 
-	JSONObject batch = (JSONObject) JSONSerializer.toJSON(request.getParameter("batchData"));
-
-	Provider provider = providerDao.getProvider(batch.optString("b_provider"));
+	/*	To become server .java page function. Save a batch from batch billing pages.
+	 * */
 	
+	JSONArray invoices = (JSONArray) JSONSerializer.toJSON(request.getParameter("invoicesData")); 	// array of invoices 
+	JSONObject batch = (JSONObject) JSONSerializer.toJSON(request.getParameter("batchData"));		// general batch information
+	String invType = request.getParameter("invoicesType");  										// what page the batch was generated from: clinical, hospital, offsite
 	
-	for(int i = 0; i < invoices.size(); i++){
-		
-		Date service_date = new SimpleDateFormat("yyyy/MM/dd").parse(batch.optString("billDate")); //wrong.
+	Provider provider = providerDao.getProvider(batch.optString("b_provider"));						//start by singling out billing provider for batch.
+	int saved = 0;
+	
+	for(int i = 0; i < invoices.size(); i++){							// invoice iteration
 		
 		JSONObject newInvoiceData = invoices.getJSONObject(i);
 		JSONArray newInvItemsData = newInvoiceData.getJSONArray("items");
-		
 		String curuser = (String) session.getAttribute("user");
-		String sli = newInvoiceData.optString("sli_code").trim();
-		
-		sli = sli.equals("") ? "Not" : sli.substring(0,3);
-		 
-		Demographic demographic;
 		BillingClaimHeader1 newInvoice = new BillingClaimHeader1();
+		
+		//Defaults
+		Demographic demographic;
+		Date service_date = new SimpleDateFormat("yyyy/MM/dd").parse(batch.optString("billDate")); 
+		String 	sli = newInvoiceData.optString("sli_code").trim();
+				sli = sli.equals("") ? "Not" : sli.substring(0,3);
 		
 		if(invType.equals("clinical")){
 			Appointment appointment = appointmentDao.getAppointment(Integer.parseInt(newInvoiceData.optString("id")));
 			demographic = demographicDao.getDemographic(appointment.getDemographicNo() + "");
-			
 			service_date = appointment.getAppointmentDate();
 			
 			// update appointment status to be 'B' for billed
@@ -85,7 +85,6 @@
 			}
 			 else if(invType.equals("offsite")){
 				newInvoice.setVisittype("05");
-				//newInvoice.setAdmission_date();					//only hospital inpatient, not ER or outpatient
 			}
 		}
 		newInvoice.setDemographic_no(demographic.getDemographicNo());
@@ -93,14 +92,14 @@
 		newInvoice.setBilling_date(new SimpleDateFormat("yyyy/MM/dd").parse(batch.optString("billDate")));
 		newInvoice.setBilling_time(new SimpleDateFormat("HH:mm:ss").parse(batch.optString("billTime")));
 		newInvoice.setDemographic_name(demographic.getFormattedName());
-		if(newInvoiceData.optString("status").equals("Ready")){
+		if(newInvoiceData.optString("status").equals("Ready")){		// feeds directly into "Ready" table in workbench
 			newInvoice.setStatus("O");
 		} else if(newInvoiceData.optString("status").equals("Hold")){
-			newInvoice.setStatus("Z");								//new Status Code! HATE ME
+			newInvoice.setStatus("Z");								// feeds into "In Progress" table in workbench
 		}
 		if(!newInvoiceData.optString("rdocNum").equals("0")){	newInvoice.setRef_num(newInvoiceData.optString("rdocNum")); }
 		newInvoice.setComment1(newInvoiceData.optString("notes"));
-		newInvoice.setMan_review( (!newInvoiceData.optString("manual").equals("") ? "Y" : "") );
+		newInvoice.setMan_review( (!newInvoiceData.optString("manual").equals("") ? "Y" : "") );		//requires testing
 		if(newInvoiceData.optString("btype").equals("OHIP")){
 			newInvoice.setPay_program("HCP");		//only RMB or HCP for clinical, offsite and hospital. PAT is for Cash Register
 		}else{
@@ -146,12 +145,14 @@
 		try{
 			//validate(newInvoice, billingServiceDao, diagnosticCodeDao);
 			billingClaimDao.createBill(newInvoice);
+			saved ++;
 
 		} catch (Exception e) {
-				MiscUtils.getLogger().error("Error while creating/updating bill:", e);
+			MiscUtils.getLogger().error("Error while creating/updating bill:", e);
 		}
 	}
- %> Billing Saved <%!
+	%><%= saved %> Bills Saved<%!
+	
 /*
 void validate(BillingClaimHeader1 newBill, BillingServiceDao billingServiceDao, DiagnosticCodeDao diagnosticCodeDao) throws ValidationException, ConstraintViolationException {
     // Validate

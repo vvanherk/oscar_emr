@@ -23,9 +23,43 @@ fill_combobox($('#location'), 'First');
 //ensure that the cursor begins on #b_provider
 $("#b_provider").focus()
 
-// Still testing.
+// Hospital bills need to be rearranged to sort by patient and date
 $('#save-batch').click( function(){
 	var today = new Date();
+	var generalised_invs = [];
+	
+	save_invoice_info();
+	for( var i = 0; i < invoices.length; i++) { 
+		var this_inv = invoices[i];
+		var this_inv_trans = [];
+		
+		for(var k=0; k < this_inv.items.length; k++){
+			var this_item = this_inv.items[k];
+			
+			for( var j = 0; j < this_item.days; j++){
+				var insert_i = -1;
+				var chk_date = new Date(this_item.from);
+					chk_date.setDate(chk_date.getDate()+j);
+					chk_date = chk_date.getFullYear() +"-"+ (chk_date.getMonth()+1) +"-"+ (chk_date.getDate()+1);
+					
+				if(this_inv_trans.length > 0){
+					insert_i = $.map(this_inv_trans, function(x) {  return x.date; }).indexOf(chk_date);
+				}
+				if(insert_i > -1){
+					this_inv_trans[insert_i].items.push($.extend(new item(), this_item));
+				} else {
+					var trans_inv = new invoice();
+					$.extend(true, trans_inv, this_inv);
+					trans_inv.items.length = 0;
+					trans_inv.items.push($.extend(new item(), this_item));
+					trans_inv.date = chk_date;
+					this_inv_trans.push(trans_inv);
+				}
+			}
+		}
+		
+		generalised_invs = generalised_invs.concat(this_inv_trans);
+	}
 	
 	var batch = {};
 	batch["b_provider"] = $("#b_provider_val").val();
@@ -34,7 +68,7 @@ $('#save-batch').click( function(){
 	batch["billTime"] = today.getHours() + ":" + today.getMinutes() + ":" + today.getSeconds();
 	batch["location"] = $("#location_val").val();
 	
-	batch_save("hospital", batch); //hoping contentID is universal
+	batch_save("hospital", batch, generalised_invs);
 	return false;			
 });
 

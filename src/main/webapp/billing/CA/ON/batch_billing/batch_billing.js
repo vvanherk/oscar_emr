@@ -352,15 +352,20 @@ function clear_combobox($tar){	//does not work should use the above + ""
 
 /* Sends off batch information to be saved into OSCAR database.
  *  */
-function batch_save(contentID, batchInfo){
+function batch_save(contentID, batchInfo, invs){
 	save_invoice_info();
+	
+	if(invs == null){
+		invs = invoices;
+	}
+	
 	$.ajax({
 		type: "POST",
 		dataType: "html",
 		url: "batch-save.jsp",
 		data:{
 			invoicesType: contentID,
-			invoicesData: JSON.stringify(invoices),
+			invoicesData: JSON.stringify(invs),
 			batchData: JSON.stringify(batchInfo)
 		}
 	}).done(function(msg){
