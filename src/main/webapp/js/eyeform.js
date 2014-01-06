@@ -909,13 +909,17 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 				lastImpressionSet = true;
 			}
 
-			$("#" + boxNameId + " .historyTable").children("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'></tr>");
-			$("#" + boxNameId + " .historyTable").children("tbody").children("tr").append("<td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td>");
-			if(item.note.match(/\n[\[]/g) !== null){
-				$("#" + boxNameId + " .historyTable").children("tbody").children("tr").append("<td style='width:62%'> " + item.note.replace( /\n[\[]/g, '</td><td>[') + "</td>");
-			}
-			else{
-				$("#" + boxNameId + " .historyTable").children("tbody").children("tr").append("<td style='width:62%'> " + item.note+ '</td><td>[Signed by ' + signProvName + "]</td>");
+			$("#" + boxNameId + " .historyTable").find("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'></tr>");
+			
+			// Get the last tr element in the table
+			var $lastTr = $("#" + boxNameId + " .historyTable").find("tbody > tr:last");
+			
+			// Add the appropriate data to the tr
+			$lastTr.append("<td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td>");
+			if(item.note.match(/\n[\[]/g) !== null) {
+				$lastTr.append("<td style='width:62%'> " + item.note.replace( /\n[\[]/g, '</td><td>[') + "</td>");
+			} else {
+				$lastTr.append("<td style='width:62%'> " + item.note+ '</td><td>[Signed by ' + signProvName + "]</td>");
 			}
 		}
 
