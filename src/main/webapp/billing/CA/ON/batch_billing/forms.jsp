@@ -306,7 +306,6 @@
 				<div class="span12"> 			<!-- for pages with 2 rows -->
 					<div><label for="b_provider"> Billing Provider </label><select id="b_provider" name="bprov" class="input-small combobox"><%= billableProviderSelectionList %></select></div>
 					<div><label for="group_no"> Group # </label><input type="text" class="input-mini uneditable-input" placeholder="00000" id="group_no" name="group_no" readonly="true"></div>
-					<div><label for="billing-type"> Billing Type </label><select id="billing-type" name="btype" class="input-mini combobox"><option value="d1">OHIP</option></select></div>
 					<div><label for="location"> Location </label><select id="location" name="loc" class="input-small combobox"><%= clinicSelectionList %></select></div>
 					<div><label for="billing-center"> Billing Center </label><input type="text" class="input-mini uneditable-input" placeholder="Hamilton" id="billing-center" name="bcenter" readonly="true"></div>
 				</div>
@@ -356,7 +355,20 @@
 			</div>
 		    <div id="invoice-status" class="span7">
 				<div class="span12">
-					<div class="datepicker" style="width: 150px">
+					<div><label for="invStatus">Invoice Status </label>
+						<select id="invStatus" class="input-mini combobox">
+						<option value="ready">Ready</option>
+						<option value="hold">Hold</option>
+						</select>
+					</div>
+					<div class="inv-prop">
+						<label for="rdoctor">Referral Doctor</label>
+						<select id="rdoctor" class="input-small combobox"><%= pSpecSelectionList%></select>
+		      	    </div>
+		      	    <div class="inv-prop"><label for="billing-type"> Billing Type </label>
+						<select id="billing-type" name="btype" class="input-mini combobox"><option value="OHIP">OHIP</option><option value="RMB">RMB</option></select>
+					</div>
+		      	    <div class="datepicker" style="width: 150px">
 						<label for="admission_date"> Admission date:</label>
 						<div id="admission_date" class="input-append">
 							<input id="adm_date" data-format="yyyy-MM-dd" type="text" placeholder="YYYY-MM-DD" style="width:60%">
@@ -366,14 +378,11 @@
 							</span>
 						</div>
 					</div>
-					<div>
-						<label for="rdoctor">Referral Doctor</label>
-						<select id="rdoctor" class="input-small combobox"><%= pSpecSelectionList%></select>
-		      	    </div>
-		      	    <div>
+		      	    <div class="inv-prop">
 						<label for="sli_code"> SLI Code </label>
 		      		    <select id="sli_code" class="input-small combobox"><%= sliCodeSelectionList %></select>
 		       	    </div>
+		       	    
 				</div>
 			</div>
 			<div id="manual-and-notes" class="span4">
