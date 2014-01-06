@@ -912,7 +912,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			$("#" + boxNameId + " .historyTable").find("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'></tr>");
 			
 			// Get the last tr element in the table
-			var $lastTr = $("#" + boxNameId + " .historyTable").find("tbody > tr:last");
+			var $lastTr = $("#" + boxNameId + " .historyTable").find("tbody").children("tr").last();
 			
 			// Add the appropriate data to the tr
 			$lastTr.append("<td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td>");
