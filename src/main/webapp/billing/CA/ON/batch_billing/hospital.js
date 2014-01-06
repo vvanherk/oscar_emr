@@ -135,7 +135,8 @@ $("#select-all").on("click", function() {
 	select_all_invoices($selectAllCheckbox, $invoiceCheckboxes);
 });
 
-$('#admission_date input').on('blur', function(){
-	var tar = $("#items-space :eq(0)").find("#from-date input");
-	tar.val($('#admission_date input').val());
+// Set From Date in the first billing item to Admission Date.
+$('#admission_date input').on('blur', function() {
+	var $fromDate = $('#items-space #item0 #from');
+	$fromDate.val($('#admission_date input').val());
 });

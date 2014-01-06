@@ -58,6 +58,12 @@ function update_table_row(inv, table_row){
 		switch($(p).attr('class')){ //preserves table/jsobject mapping.
 			case "bc_apply":
 				newdata += '<input type="checkbox">';
+				break;		
+			case "service-start":
+				if(inv.demo !== "" && inv.admission_date !== ""){	newdata += inv.admission_date;	}
+				break;
+			case "service-end":
+				if(inv.demo !== "" && inv.admission_date !== ""){	newdata += inv.end_date;	}
 				break;
 			case "patient-name":
 				if(inv.demo !== ""){	newdata += inv.demo.name; 	}
@@ -87,7 +93,7 @@ function update_table_row(inv, table_row){
 				if(inv.inv_amount !== "NaN"){
 					newdata += inv.inv_amount;
 				} else { newdata += "0.00"; }
-				break;
+				break;	
 		}
 		newdata += '</td>';
 	});
@@ -114,7 +120,7 @@ function invoice_detail_map($invFields, action){
 				action(fieldData, "date");
 				break;
 			case 'adm_date':
-				action(fieldData, "adm_date");
+				action(fieldData, "admission_date");
 				break;
 			case 'invStatus':
 				action(fieldData, "status");
@@ -126,10 +132,10 @@ function invoice_detail_map($invFields, action){
 				action(fieldData, "rdocNum");
 				break;
 			case 'sli_code':
-				action(fieldData, "sli_code");;
+				action(fieldData, "sli_code");
 				break;
 			case 'billing-type':
-				action(fieldData, "btype");;
+				action(fieldData, "btype");
 				break;
 			case 'manual_text':
 				action(fieldData, "manual");
@@ -231,10 +237,37 @@ function save_invoice_info(){
 				selected.inv[id] = $(fieldData).val();			
 			}
 			$(fieldData).val("");
-		});
+		});		
 		
+		// If it is Hospital, calculate Service End date.
+		if ($('#items-master #days').length > 0)
+		{
+			var endDate = new Date(selected.inv.admission_date + "T00:00:00");
+			
+			for (var i=0; i<selected.inv.items.length; i++)
+			{	
+				var toDate = new Date(selected.inv.items[i]['from'] + "T00:00:00");					
+				var days = parseInt(selected.inv.items[i]['days']);
+		
+				toDate.setDate(toDate.getDate() + days);
+										
+				if (toDate > endDate)
+				{
+					endDate = toDate;
+				}						
+			}
+			
+			var yyyy = endDate.getFullYear();
+			var mm = endDate.getMonth() + 1;  // JavaScript counts months from 0 to 11.
+			var dd = endDate.getDate();
+				
+			var endDateString = yyyy + "-" + ((mm<10)?"0"+mm:mm) + "-" + ((dd<10)?"0"+dd:dd);
+				
+			selected.inv['end_date'] = endDateString;
+		}
+			
 		selected.inv.update_inv_total();
-		
+			
 		//update the table to reflect invoice changes.
 		update_table_row(selected.inv, $("#invList_body tbody").children("#row"+selected.id)[0]);
 		
