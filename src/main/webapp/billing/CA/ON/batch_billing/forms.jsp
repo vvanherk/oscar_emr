@@ -406,7 +406,7 @@
 					</div>
 					<div class="span6" style="margin:0px">
 						<div class="row-fluid" style="padding:0px">
-							<div class="span1" style="position:relative; left:-25px"> Dx </div>
+							<div class="span2" style="position:relative; left:-25px"> Dx </div>
 							<div class="span2" style="position:relative; left:-15px"> Amount </div>
 							<div class="span1" style="position:relative; left:-15px"> Units </div>
 							<div class="span2" style="position:relative; left:-10px"> Percent</div>
@@ -435,17 +435,17 @@
 					     <div class="span4"> <input type="text" class="input-80" id="description"> </div>
 					</div>
 					<div class="span6" style="margin:0px">
-						 <div class="span1" style="position:relative; left:-10px"> <input type='text' class="input-100" id="dx"> </div>
+						 <div class="span2" style="position:relative; left:-10px"> <input type='text' class="input-100" id="dx"> </div>
 					     <div class="span2"> <input type="text" class="input-80" id="amount" readonly="true"> </div>
 					     <div class="span1" style="position:relative; left:-3px"> <input type="text" class="input-80" id="units"> </div>
 					     <div class="span2"> <input type="text" class="input-80" id="percent" readonly="true"></div>
-					     <div class="span3"> <input type='text' class="input-80" id="l_total"> </div>
+					     <div class="span2"> <input type='text' class="input-80" id="l_total"> </div>
 					     <div class="span2"> <button class="btn" id="add_item"><span class="icon-plus"></span></button> </div>
 					</div>
 				</div>
 				<span id="items-space"> </span>
 				<div id="items-footer" class="span12" style="margin: 0px;">
-					<div class="span1 offset9" id="total"> $0.00 </div>
+					<div class="span1 offset9" style="padding-left:50px" id="total"> $0.00 </div>
 				</div>
 				<div id="patient-control" class="span12" style="margin: 0px;">
 					<div class="span1"><button class="btn" id="prev_patient"><span class="icon-chevron-left"></span></button></div>
