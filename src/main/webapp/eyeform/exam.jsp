@@ -95,7 +95,8 @@ function setfieldvalue(name,value) {
 function getfieldvalue(name) {
 	var val = undefined;
 	jQuery("input[measurement='"+name+"']").each(function() {
-		val = jQuery(this).val();
+		if (!val)
+			val = jQuery(this).val();
 	});
 	return val;
 }
