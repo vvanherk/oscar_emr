@@ -645,8 +645,10 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			
 			if (demographicNo == null)
 				demographicNo = note.getDemographic_no();
-				
-			note.setUpdate_date( noteDate );
+			
+			// Update the update date only if the note text has changed
+			if (!note.getNote().equalsIgnoreCase(strNote))
+				note.setUpdate_date( noteDate );
 
 		} else {
 			note.setDemographic_no(demographicNo);
