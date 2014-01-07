@@ -114,7 +114,7 @@ function invoice_detail_map($invFields, action){
 				action(fieldData, "date");
 				break;
 			case 'adm_date':
-				action(fieldData, "date");
+				action(fieldData, "adm_date");
 				break;
 			case 'invStatus':
 				action(fieldData, "status");
