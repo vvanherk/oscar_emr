@@ -15,6 +15,7 @@
 <%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.util.LoggedInInfo, org.oscarehr.util.SpringUtils, oscar.OscarProperties, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment, org.oscarehr.util.MiscUtils, oscar.SxmlMisc, org.oscarehr.common.dao.ProfessionalSpecialistDao"  %>
 <%@ page import="org.oscarehr.PMmodule.model.Program" %>
 <%@ page import="org.oscarehr.PMmodule.dao.ProgramDao" %>
+<%@ page import="oscar.OscarProperties" %>
 <%
 String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
 OscarProperties properties = OscarProperties.getInstance();
@@ -222,7 +223,9 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<span class="uiBarBtn"><span class="text rx3Btn">Rx3</span></span>
 			<span class="uiBarBtn"><span class="text billingBtn">B</span></span>
 			<span class="uiBarBtn"><span class="text masterRecBtn">M</span></span>
+			<% if (!OscarProperties.getInstance().isPropertyActive("redirect_echart_to_new_eyeform")) { %>
 			<span class="uiBarBtn"><span class="text eChartBtn">E</span></span>
+			<% } %>
 			<span class="uiBarBtn"><span class="text iViewsBtn">I-Views</span></span>
 
 		</div>

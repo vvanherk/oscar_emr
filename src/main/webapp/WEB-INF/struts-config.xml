@@ -707,6 +707,7 @@
 			<forward name="newRx" path="/oscarRx/prescribe.jsp" />
 		</action>
 		<action path="/oscarEncounter/IncomingEncounter" scope="request" type="oscar.oscarEncounter.pageUtil.EctIncomingEncounterAction">
+			<forward name="eyeform" path="/eyeform/eyeform.jsp" />
 			<forward name="failure" path="/oscarEncounter/error.jsp" />
 			<forward name="success" path="/oscarEncounter/Index.jsp" />
 			<forward name="success2" path="/oscarEncounter/Index2.jsp" />
