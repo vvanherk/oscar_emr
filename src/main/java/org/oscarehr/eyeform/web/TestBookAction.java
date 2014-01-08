@@ -130,7 +130,7 @@ public class TestBookAction extends DispatchAction {
     		sb.append("diag:" + f.getTestname()).append(" ").append(f.getEye()).append(" ").append(getUrgencyAbbreviation(f.getUrgency())).append(" ").append(f.getComment());
     		sb.append(" ").append(f.getComment());
     		sb.append("</span>");
-    		sb.append("<br/>");
+    		sb.append(" \n ");
     	}
     	return sb.toString();
     }

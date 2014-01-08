@@ -147,7 +147,7 @@ public class FollowUpAction extends DispatchAction {
     		}
     		sb.append(" Dr. ").append(p.getFormattedName());
     		sb.append(" ").append(f.getComment());
-    		sb.append("<br/>");
+    		sb.append(" \n ");
     	}
     	return sb.toString();
     }

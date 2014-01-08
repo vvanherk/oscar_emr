@@ -1870,11 +1870,13 @@ function loadMeasurements() {
 				j=j+1;
 			}
 			
-			$("#measurements .content").append("<span id='showAllMeasurementBtn' class='uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
-				e.stopPropagation();
-			    $(this).parent().find("table").removeClass("measurementsTableNoShow");
-			    document.getElementById('showAllMeasurementBtn').remove();
-			});
+			if (timesToShow.length > 2 && !showAllMeasurements) {
+				$("#measurements .content").append("<span id='showAllMeasurementBtn' class='uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
+					e.stopPropagation();
+				    $(this).parent().find("table").removeClass("measurementsTableNoShow");
+				    $('#showAllMeasurementBtn').remove();
+				});
+			}
 
 			$(".measurementsTable").click(function() {
 				showMeasurementsHistoryBox($(this).attr("measurementsTime"));

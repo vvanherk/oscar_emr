@@ -127,7 +127,7 @@ public class ProcedureBookAction extends DispatchAction {
     			style = "style=\"color:red;\"";
     		}
     		sb.append("<span "+style+" title=\""+f.getComment()+"\">proc:").append(f.getProcedureName()).append(" ").append(f.getEye()).append(" ").append(f.getLocation()).append(" ").append(f.getUrgency()).append(" ").append(f.getComment()).append("</span>");
-    		sb.append("<br/>");
+    		sb.append(" \n ");
     	}
     	return sb.toString();
     }
