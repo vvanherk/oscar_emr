@@ -2528,9 +2528,9 @@ $(document).ready(function() {
 		$("[itemtime]").each(function() {
 			var d = new Date(parseInt($(this).attr("itemtime")));
 			if (!isNaN(d.getTime())) {
-				d.setHours(23);
-				d.setMinutes(59);
-				d.setSeconds(59);
+				d.setHours(00);
+				d.setMinutes(00);
+				d.setSeconds(00);
 
 				if ($.inArray(d.getTime(), appointmentDate) == -1)
 					appointmentDate.push(d.getTime());
