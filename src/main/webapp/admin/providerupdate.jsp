@@ -41,6 +41,8 @@
 <%@page import="org.oscarehr.common.model.ProviderSite"%>
 <%@page import="org.oscarehr.common.model.ProviderSitePK"%>
 <%@page import="org.oscarehr.common.dao.ProviderSiteDao"%>
+<%@page import="org.oscarehr.common.dao.UserPropertyDAO"%>
+<%@page import="org.oscarehr.common.model.UserProperty"%>
 <jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean" scope="session" />
 <%
 	ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
@@ -165,20 +167,33 @@
 		  p.setLastUpdateDate(new java.util.Date());
 		  providerDao.updateProvider(p);
 
-		String[] sites = request.getParameterValues("sites");
-		DBPreparedHandler dbObj = new DBPreparedHandler();
-		String provider_no = request.getParameter("provider_no");
-		List<ProviderSite> pss = providerSiteDao.findByProviderNo(provider_no);
-		for(ProviderSite ps:pss) {
-			providerSiteDao.remove(ps.getId());
-		}
-		if (sites!=null) {
-			for (int i=0; i<sites.length; i++) {
-				ProviderSite ps = new ProviderSite();
-				ps.setId(new ProviderSitePK(provider_no,Integer.parseInt(sites[i])));
-				providerSiteDao.persist(ps);
-			}
-		}
+	UserPropertyDAO userPropertyDAO = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
+		 
+		  String officialFirstName = request.getParameter("officialFirstName");
+		  String officialSecondName = request.getParameter("officialSecondName");
+		  String officialLastName = request.getParameter("officialLastName");
+		
+		  userPropertyDAO.saveProp(provider.getProviderNo(), UserProperty.OFFICIAL_FIRST_NAME, officialFirstName);
+		  userPropertyDAO.saveProp(provider.getProviderNo(), UserProperty.OFFICIAL_SECOND_NAME, officialSecondName);
+		  userPropertyDAO.saveProp(provider.getProviderNo(), UserProperty.OFFICIAL_LAST_NAME, officialLastName);
+
+
+        if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
+            String[] sites = request.getParameterValues("sites");
+            DBPreparedHandler dbObj = new DBPreparedHandler();
+            String provider_no = request.getParameter("provider_no");
+            List<ProviderSite> pss = providerSiteDao.findByProviderNo(provider_no);
+            for(ProviderSite ps:pss) {
+            	providerSiteDao.remove(ps.getId());
+            }
+            if (sites!=null) {
+                for (int i=0; i<sites.length; i++) {
+                	ProviderSite ps = new ProviderSite();
+                	ps.setId(new ProviderSitePK(provider_no,Integer.parseInt(sites[i])));
+                	providerSiteDao.persist(ps);
+                }
+            }
+        }
 %>
 <p>
 <h2><bean:message key="admin.providerupdate.msgUpdateSuccess" /><a
