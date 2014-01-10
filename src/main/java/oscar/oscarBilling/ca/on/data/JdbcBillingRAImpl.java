@@ -179,7 +179,7 @@ public class JdbcBillingRAImpl {
 				} // ends with "1"
 
 				if (headerCount.compareTo("4") == 0) {
-                                        claimno = nextline.substring(3,14);
+                    claimno = nextline.substring(3,14);
 					transactiontype = nextline.substring(14, 15);
 					providerno = nextline.substring(15, 21);
 					specialty = nextline.substring(21, 23);

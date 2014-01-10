@@ -50,7 +50,7 @@
 				<div id="invList_body_container" class="bodycontainer scrollable" style="height:300px">
 					<table id="invList_body" class="table table-hover table-striped table-condensed table-scrollable">
 						<tbody>
-							<td style="text-align: center"> No items: Please choose query attributes above</td>
+							<td style="text-align: center"> No invoices found: Please choose another category. </td>
 						</tbody>
 					</table>
 				</div>

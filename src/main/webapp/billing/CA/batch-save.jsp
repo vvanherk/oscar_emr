@@ -81,7 +81,7 @@
 				} else {
 					newInvoice.setVisittype("02");
 				}
-				newInvoice.setAdmission_date(newInvoiceData.optString("adm_date"));					//only hospital inpatient, not ER or outpatient
+				newInvoice.setAdmission_date(newInvoiceData.optString("admission_date"));					//only hospital inpatient, not ER or outpatient
 			}
 			 else if(invType.equals("offsite")){
 				newInvoice.setVisittype("05");

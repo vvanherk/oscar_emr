@@ -484,6 +484,19 @@ public class BillingClaimDAO extends AbstractDao<BillingClaimHeader1> {
 
 		return numRows.intValue();
     }
+    
+    @SuppressWarnings("unchecked") 
+    public List<BillingClaimHeader1> getInvoicesByProviderAndStatuses(String provider_no, List<String> statusList){
+		
+		String sql = "SELECT h1 fFROM BillingClaimHeader1 h1 WHERE " +
+                " h1.provider_no = :prov AND h1.status IN (:status_list) order by h1.billing_date, h1.billing_time desc";
+        Query q = entityManager.createQuery(sql);
+        
+        q.setParameter("prov", provider_no);
+        q.setParameter("status_list", statusList);
+        
+		return q.getResultList();
+	}
 
     /**
      * @return the gstCtontrolDao
