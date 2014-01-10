@@ -594,7 +594,7 @@ Event.observe('rxInteractionWarningLevel', 'change', function(event) {
 						    for (Provider p : providerList) {
 						    %>
 								<option value="<%=p.getProviderNo()%>"
-									<%=billingProvider.startsWith(p.getProviderNo())?"selected":""%>><%=p.getFormattedName()%>
+									<%=billingProvider.equals(p.getProviderNo())?"selected":""%>><%=p.getFormattedName()%>
 								</option>
 							<% 
 							} 
