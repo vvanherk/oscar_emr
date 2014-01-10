@@ -114,7 +114,24 @@
             
             
             //check to see if we need to save
-            if( $(caseNote) != null && tmpSaveNeeded || ( (origCaseNote != $(caseNote).value || origObservationDate != $("observationDate").value) )) {
+            var noteNotNull = false;
+            var notesChanged = false;
+            var datesChanged = false;
+            
+            if($(caseNote) != null) {
+                noteNotNull = true;
+            }
+            
+            if (origCaseNote != $(caseNote).value) {
+                notesChanged = true;
+            }
+            
+            if (origObservationDate != $("observationDate").value) {
+                datesChanged = true;
+            }
+            
+            if (noteNotNull && notesChanged && tmpSaveNeeded || datesChanged) {
+            //if( $(caseNote) != null && tmpSaveNeeded || ( (origCaseNote != $(caseNote).value || origObservationDate != $("observationDate").value) )) {
                 tmpSaveNeeded = false;
                 //autoSave(false);
                 document.forms['caseManagementEntryForm'].sign.value='persist';
@@ -2371,7 +2388,7 @@ function saveNoteAjax(method, chain) {
                             }
 
                       );
-
+	tmpSaveNeeded = true;
     return false;
 }
 
