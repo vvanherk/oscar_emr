@@ -1235,6 +1235,8 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		currentPresentingNoteId = 0;
 
 	$("#saveBtn").css("display", "none");
+	$("#saveBtn2").css("display", "none");
+	$("#saveExitBtn").css("display", "none");
 	$("#saveSignExitBtn").css("display", "none");
 	$("#billBtn").css("display", "none");
 
@@ -1373,12 +1375,13 @@ function afterSave(callback, signAndExit, bill, closeForm) {
 		$(".loaderImg").css("display", "none");
 		$("#saveMsg").css("display", "block");
 
+		$("#saveBtn").css("display", "block");
+		$("#saveBtn2").css("display", "inline-block");
+		$("#saveExitBtn").css("display", "block");
+		$("#saveSignExitBtn").css("display", "block");
 		$("#billBtn").css("display", "block");
 
 		setTimeout(function() {
-			$("#saveBtn").css("display", "block");
-			$("#saveSignExitBtn").css("display", "block");
-			$("#billBtn").css("display", "block");
 			$("#saveMsg").css("display", "none");
 		}, 5000);
 
@@ -1997,6 +2000,14 @@ $(document).ready(function() {
 	});
 
 	$("#saveBtn").click(function() {
+		saveEyeform(saveFunc, false, false, false);
+	});
+	
+	$("#saveBtn2").click(function() {
+		saveEyeform(saveFunc, false, false, false);
+	});
+	
+	$("#saveExitBtn").click(function() {
 		saveEyeform(saveFunc, false, false, true);
 	});
 
