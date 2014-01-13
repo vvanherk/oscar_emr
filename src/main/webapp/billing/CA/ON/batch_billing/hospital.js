@@ -26,9 +26,28 @@ $("#b_provider").focus()
 // Hospital bills need to be rearranged to sort by patient and date
 $('#save-batch').click( function(){
 	var today = new Date();
-	var generalised_invs = [];
+	var generalised_invs = [];	
+	var errorMessage = "";
 	
 	save_invoice_info();
+	
+	for( var i = 0; i < invoices.length; i++) { 
+		var this_inv = invoices[i];
+		
+		// Admission Date is required unless SLI Code is HED (Hospital Emergency Department), HOP (Hospital Out-Patient) or HRP (Hospital Referred Patient).
+		if (this_inv.admission_date == "" && !(this_inv.sli_code == " HED | Hospital Emergency Department " || this_inv.sli_code == " HOP | Hospital Out-Patient " || this_inv.sli_code == " HRP | Hospital Referred Patient "))
+		{
+			errorMessage += "Please select an admission date for " + this_inv.name + "." + "\n";
+		}
+	}
+		
+	// Display a list of validation errors, if any.
+	if (errorMessage != "")
+	{
+		alert(errorMessage);
+		return false;
+	}
+			
 	for( var i = 0; i < invoices.length; i++) { 
 		var this_inv = invoices[i];
 		var this_inv_trans = [];
