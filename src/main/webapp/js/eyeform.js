@@ -1313,8 +1313,15 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 			success: function(data) {
 				sendPlanTickler = true;
 			}
-		});
-	}
+		});   
+      //reset closeForm
+      var r=confirm("Are you sure you want to exit?");
+      if (r==false) {
+         closeForm=false;
+         bill = false;
+         fn=saveFunc;
+      }
+   }
 	
 	saveInterval = setInterval(function () { afterSave(fn, signAndExit, bill, closeForm); }, 1000);
 }
@@ -1353,8 +1360,10 @@ function afterSave(callback, signAndExit, bill, closeForm) {
 
 		if (closeForm || (signAndExit && !bill)) {
 			window.opener.location.reload(true);
-			window.close();
-			return;
+         if(closeForm){
+            window.close();
+            return;
+         }
 		}
 
 		savedImpression = false;
