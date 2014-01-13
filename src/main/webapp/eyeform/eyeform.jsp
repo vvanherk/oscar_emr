@@ -220,6 +220,8 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				<span class="appointmentDate"><span class="appointmentDateText">Today</span>&#x25BC;</span>
 				<span class="appointmentList"></span>
 			</span>
+			<span class="uiBarSaveBtn" id="saveBtn2">Save</span>
+			<span class="loaderImg" style="margin: 10px;"><img src="<%=request.getContextPath()%>/images/DMSLoader.gif" /></span>
 			<span class="uiBarBtn"><span class="text rx3Btn">Rx3</span></span>
 			<span class="uiBarBtn"><span class="text billingBtn">B</span></span>
 			<span class="uiBarBtn"><span class="text masterRecBtn">M</span></span>
@@ -402,7 +404,8 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 		    </div>
 			<div class="uiBtn billBtn floatRight" id="billBtn">Sign, Save &amp; Bill</div>
 			<div class="uiBtn saveSignExitBtn floatRight" id="saveSignExitBtn">Sign, Save &amp; Exit</div>
-			<div class="uiBtn saveBtn floatRight" id="saveBtn">Save &amp; Exit</div>
+			<div class="uiBtn saveExitBtn floatRight" id="saveExitBtn">Save &amp; Exit</div>
+			<div class="uiBtn saveBtn floatRight" id="saveBtn">Save</div>
 			<div class="floatRight" id="saveMsg" style="display: none; margin-right: 15px;">Saved</div>
 			<span class="loaderImg floatRight" style="margin: 10px;"><img src="<%=request.getContextPath()%>/images/DMSLoader.gif" /></span>
 		</div>
