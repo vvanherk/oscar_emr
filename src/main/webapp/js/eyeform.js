@@ -388,12 +388,12 @@ function saveEditNote(item) {
 	$item.html("<strong><abbr /></strong><span class='noteContent' /><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span>");
 	$item.find("abbr").attr("title", $item.attr("dateData"));
 	$item.find("abbr").text($item.attr("date"));
-
+	
 	if ($item.attr("noteData") != data) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo,
-			data: "value=" + data + "&noteId=" + noteId + "&sign=false",
+			data: "value=" + data + "&noteId=" + noteId + "&sign=false&issue_code=" + $item.closest(".boxTitleLink").attr('id'),
 			dataType: "json",
 			success: function(data) {
 				if (typeof console != "undefined")
@@ -1295,7 +1295,7 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		$(".unSigned").each(function(){
 			unSignedNotes.push({
 				"value": encodeURIComponent($(this).find(".noteContent").html()),
-				"issue_id": $(this).closest(".boxTitleLink").attr("id"), 
+				"issue_code": $(this).closest(".boxTitleLink").attr("id"), 
 				"noteId": $(this).attr("note_id")
 			});
 		});

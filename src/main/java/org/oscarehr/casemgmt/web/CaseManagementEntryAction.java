@@ -573,16 +573,14 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			JSONObject currIssue = (JSONObject) JSONSerializer.toJSON(issues.getString(i));
 			
 			MockHttpServletRequest mockReq = new MockHttpServletRequest();
-			
-			logger.info("Added issue Change and archive booleans ");
-			
+						
 			mockReq.setSession(request.getSession());
 			mockReq.addParameter("appointment_no",request.getParameter("appointment_no"));
 			mockReq.addParameter("demographic_no",request.getParameter("demographic_no"));
 			mockReq.addParameter("sign", "true");
 			
 			mockReq.addParameter("value", currIssue.getString("value"));
-			mockReq.addParameter("issue_id", currIssue.getString("issue_id"));
+			mockReq.addParameter("issue_code", currIssue.getString("issue_code"));
 			mockReq.addParameter("noteId", currIssue.getString("noteId"));
 
 			
@@ -652,35 +650,62 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 		} else {
 			note.setDemographic_no(demographicNo);
-
-			CaseManagementIssue cIssue;
-			if (issueAlphaCode != null && issueAlphaCode.length() > 0)
-				cIssue = this.caseManagementMgr.getIssueByIssueCode(demographicNo, issueAlphaCode);
-			else
-				cIssue = this.caseManagementMgr.getIssueById(demographicNo,issueCode);
-
-			Set<CaseManagementIssue> issueSet = new HashSet<CaseManagementIssue>();
-			Set<CaseManagementNote> noteSet = new HashSet<CaseManagementNote>();
-
-			if( cIssue == null ) {
-				Issue issue;
-				if (issueAlphaCode != null && issueAlphaCode.length() > 0)
-					issue = this.caseManagementMgr.getIssueByCode(issueAlphaCode);
-				else
-					issue = this.caseManagementMgr.getIssue(issueCode);
-
-				cIssue = this.newIssueToCIssue(demographicNo, issue, Integer.parseInt("10016"));
-				cIssue.setNotes(noteSet);
-			}
-
-			issueSet.add(cIssue);
-			note.setIssues(issueSet);
-
 			note.setCreate_date(noteDate);
 			note.setObservation_date(noteDate);
 			note.setRevision("1");
 
 		}
+		
+		// Determines what program & role to assign the note to
+		ProgramProviderDAO programProviderDao = (ProgramProviderDAO) SpringUtils.getBean("programProviderDAO");
+		ProviderDefaultProgramDao defaultProgramDao = (ProviderDefaultProgramDao) SpringUtils.getBean("providerDefaultProgramDao");
+		ProgramProvider programProvider = programProviderDao.getProgramProviderByProviderNo(providerNo).get(0);
+		boolean programSet = false;
+
+		List<ProviderDefaultProgram> programs = defaultProgramDao.getProgramByProviderNo(providerNo);
+		HashMap<Program,List<Secrole>> rolesForDemo = NotePermissionsAction.getAllProviderAccessibleRolesForDemo(providerNo, demographicNo);
+		for (ProviderDefaultProgram pdp : programs) {
+			for (Program p : rolesForDemo.keySet()) {
+				if (pdp.getProgramId() == p.getId().intValue()) {
+					List<ProgramProvider> programProviderList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, (long) pdp.getProgramId());
+
+					note.setProgram_no("" + pdp.getProgramId());
+					note.setReporter_caisi_role("" + programProviderList.get(0).getRoleId());
+
+					programSet = true;
+				}
+			}
+		}
+
+		if (!programSet && !rolesForDemo.isEmpty()) {
+			Program program = rolesForDemo.keySet().iterator().next();
+			programProvider = programProviderDao.getProgramProvider(providerNo, (long) program.getId());
+			note.setProgram_no("" + programProvider.getProgramId());
+			note.setReporter_caisi_role("" + programProvider.getRoleId());
+		}
+		
+		CaseManagementIssue cIssue;
+		if (issueAlphaCode != null && issueAlphaCode.length() > 0)
+			cIssue = this.caseManagementMgr.getIssueByIssueCode(demographicNo, issueAlphaCode);
+		else
+			cIssue = this.caseManagementMgr.getIssueById(demographicNo,issueCode);
+
+		Set<CaseManagementIssue> issueSet = new HashSet<CaseManagementIssue>();
+		Set<CaseManagementNote> noteSet = new HashSet<CaseManagementNote>();
+
+		if( cIssue == null ) {
+			Issue issue;
+			if (issueAlphaCode != null && issueAlphaCode.length() > 0)
+				issue = this.caseManagementMgr.getIssueByCode(issueAlphaCode);
+			else
+				issue = this.caseManagementMgr.getIssue(issueCode);
+
+			cIssue = this.newIssueToCIssue(demographicNo, issue, Integer.parseInt(programProvider.getProgramId()+""));
+			cIssue.setNotes(noteSet);
+		}
+		issueSet.add(cIssue);
+		note.setIssues(issueSet);
+		
 
 		try {
 			note.setAppointmentNo(Integer.parseInt(appointmentNo));
@@ -733,34 +758,6 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		} else if (!note.isSigned() && (archived == null || !archived.equalsIgnoreCase("true"))) {
 			note.setSigned(false);
 			note.setSigning_provider_no("");
-		}
-
-
-		// Determines what program & role to assign the note to
-		ProgramProviderDAO programProviderDao = (ProgramProviderDAO) SpringUtils.getBean("programProviderDAO");
-		ProviderDefaultProgramDao defaultProgramDao = (ProviderDefaultProgramDao) SpringUtils.getBean("providerDefaultProgramDao");
-		boolean programSet = false;
-
-		List<ProviderDefaultProgram> programs = defaultProgramDao.getProgramByProviderNo(providerNo);
-		HashMap<Program,List<Secrole>> rolesForDemo = NotePermissionsAction.getAllProviderAccessibleRolesForDemo(providerNo, demographicNo);
-		for (ProviderDefaultProgram pdp : programs) {
-			for (Program p : rolesForDemo.keySet()) {
-				if (pdp.getProgramId() == p.getId().intValue()) {
-					List<ProgramProvider> programProviderList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, (long) pdp.getProgramId());
-
-					note.setProgram_no("" + pdp.getProgramId());
-					note.setReporter_caisi_role("" + programProviderList.get(0).getRoleId());
-
-					programSet = true;
-				}
-			}
-		}
-
-		if (!programSet && !rolesForDemo.isEmpty()) {
-			Program program = rolesForDemo.keySet().iterator().next();
-			ProgramProvider programProvider = programProviderDao.getProgramProvider(providerNo, (long) program.getId());
-			note.setProgram_no("" + programProvider.getProgramId());
-			note.setReporter_caisi_role("" + programProvider.getRoleId());
 		}
 
 		note.setReporter_program_team("0");
