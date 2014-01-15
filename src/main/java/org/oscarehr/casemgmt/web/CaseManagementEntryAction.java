@@ -699,7 +699,6 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				issue = this.caseManagementMgr.getIssueByCode(issueAlphaCode);
 			else
 				issue = this.caseManagementMgr.getIssue(issueCode);
-
 			cIssue = this.newIssueToCIssue(demographicNo, issue, Integer.parseInt(programProvider.getProgramId()+""));
 			cIssue.setNotes(noteSet);
 		}

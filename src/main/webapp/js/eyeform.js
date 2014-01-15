@@ -393,7 +393,7 @@ function saveEditNote(item) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo,
-			data: "value=" + data + "&noteId=" + noteId + "&sign=false&issue_code=" + $item.closest(".boxTitleLink").attr('id'),
+			data: "value=" + data + "&noteId=" + noteId + "&sign=false&issue_code=" + noteBoxes[$item.closest(".boxTitleLink").attr('id')],
 			dataType: "json",
 			success: function(data) {
 				if (typeof console != "undefined")
@@ -1308,7 +1308,7 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		$(".unSigned").each(function(){
 			unSignedNotes.push({
 				"value": encodeURIComponent($(this).find(".noteContent").html()),
-				"issue_code": $(this).closest(".boxTitleLink").attr("id"), 
+				"issue_code": noteBoxes[$(this).closest(".boxTitleLink").attr("id")], 
 				"noteId": $(this).attr("note_id")
 			});
 		});
