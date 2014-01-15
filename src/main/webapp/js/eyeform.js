@@ -754,15 +754,28 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 		}
 	}
 
-	if ($("#" + boxNameId + " .content ul li").length > 5 && !showAll) {
+	if ($("#" + boxNameId + " .content ul li").length > 5) {
 		$("#" + boxNameId + " .content ul li").slice(5).attr("class", "oldEntry");
+		
+		var showLessBtn = $("<span class='showLessBtn uiBarBtn'><span class='text smallerText'>Show Less</span></span>").click(function(e) {
+			e.stopPropagation();
+			$("#" + boxNameId + " .content ul li").slice(5).attr("class", "oldEntry");
+			$(this).hide();
+			$(this).parent().children(".showAllBtn").show();
+		});
 		
 		var showMoreBtn = $("<span class='showAllBtn uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
 			e.stopPropagation();
 			$(this).parent().find("li").removeClass("oldEntry");
-			$(this).remove();
+			$(this).hide();
+			$(this).parent().children(".showLessBtn").show();
 		});
 		$("#" + boxNameId + " .content").append(showMoreBtn);
+		$("#" + boxNameId + " .content").append(showLessBtn);
+		
+		if(showAll){ $('.showAllBtn').hide(); }
+		else {	$(".showLessBtn").hide();	}
+		
 	}
 
 	if (initialLoad) {
@@ -1882,12 +1895,25 @@ function loadMeasurements() {
 				j=j+1;
 			}
 			
-			if (timesToShow.length > 2 && !showAllMeasurements) {
+			if (timesToShow.length > 2) {
+				$("#measurements .content").append("<span id='showLessMeasurementBtn' class='uiBarBtn'><span class='text smallerText'>Show Less</span></span>");
+				
 				$("#measurements .content").append("<span id='showAllMeasurementBtn' class='uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
 					e.stopPropagation();
 				    $(this).parent().find("table").removeClass("measurementsTableNoShow");
-				    $('#showAllMeasurementBtn').remove();
+				    $('#showAllMeasurementBtn').hide();
+				    $('#showLessMeasurementBtn').show();
 				});
+				
+				$('#showLessMeasurementBtn').click(function(e) {
+					e.stopPropagation();
+				    $(this).parent().find("table").slice(2).addClass("measurementsTableNoShow");
+				    $('#showLessMeasurementBtn').hide();
+				    $('#showAllMeasurementBtn').show();
+				});
+				
+				if(showAllMeasurements){ $('#showAllMeasurementBtn').hide(); }
+				else{ $('#showLessMeasurementBtn').hide(); }
 			}
 
 			$(".measurementsTable").click(function() {
