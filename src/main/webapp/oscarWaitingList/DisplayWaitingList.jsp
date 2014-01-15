@@ -26,7 +26,7 @@
 
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
-<%@ page import="java.sql.*"%>
+<%@page import="java.sql.*"%>
 <%
     if(session.getValue("user") == null) response.sendRedirect("../../logout.jsp");
 
@@ -182,6 +182,11 @@ function removePatient(demographicNo, waitingList){
 					<jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean" scope="session" />
 					<html:select property="selectedWL">
 						<%
+						
+						String [][] dbQueries=new String[][] {
+						{"search_waiting_list", "select * from waitingListName where group_no='" + ((ProviderPreference)session.getAttribute(SessionConstants.LOGGED_IN_PROVIDER_PREFERENCE)).getMyGroupNo() +"' AND is_history='N' order by name"}  };
+						apptMainBean.doConfigure( dbQueries );
+						
                            ResultSet rsWL = apptMainBean.queryResults("search_waiting_list");
 						   String listID=request.getParameter("waitingListId");
 						   if(listID ==null )
