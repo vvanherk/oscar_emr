@@ -3223,7 +3223,13 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			else
 				mockReq.addParameter("xml_vdate", "");
 			mockReq.addParameter("apptProvider_no", appt == null ? "" : appt.getProviderNo());
-			mockReq.addParameter("xml_provider", provider.getProviderNo());
+			mockReq.addParameter("xml_provider", appt == null ? "" : appt.getProviderNo());
+			String site = "0";
+			if(appt !=null && appt.getSite() != null)
+				site = appt.getSite().toString();
+			else
+				log.info("Missing site info in appointment, set site value as 0");
+			mockReq.addParameter("site", site);
 			mockReq.getSession().setAttribute("user", LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
 
 			BillingSavePrep bObj = new BillingSavePrep();
