@@ -940,7 +940,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		impressionHistoryIssueId = jsonData.Issues[0].id;
 
 		$(".historyList .item, .historyTable tr").click(function() {
-			popupPage(800, 1200, "Appointment Report", ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + $(this).attr("appointmentNo"));
+			popupPage(800, 1200, "Appointment Report", ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + $(this).attr("appointmentNo") + "&demographicNo=" + demographicNo + "&apptZeroDates=" + date.toFormattedString());
 		});
 
 	} else if (boxNameId == "currentIssueHistory") {
