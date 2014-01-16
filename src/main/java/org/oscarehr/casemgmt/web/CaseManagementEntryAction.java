@@ -100,6 +100,7 @@ import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.OscarAppointmentDao;
 import org.oscarehr.common.dao.ProviderDefaultProgramDao;
 import org.oscarehr.common.dao.OfficeCommunicationDao;
+import org.oscarehr.common.dao.SiteDao;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DxAssociation;
@@ -107,6 +108,7 @@ import org.oscarehr.common.model.PartialDate;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.ProviderDefaultProgram;
 import org.oscarehr.common.model.OfficeCommunication;
+import org.oscarehr.common.model.Site;
 import org.oscarehr.eyeform.dao.EyeFormDao;
 import org.oscarehr.eyeform.dao.FollowUpDao;
 import org.oscarehr.eyeform.dao.MacroDao;
@@ -3222,12 +3224,34 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			else
 				mockReq.addParameter("xml_vdate", "");
 			mockReq.addParameter("apptProvider_no", appt == null ? "" : appt.getProviderNo());
-			mockReq.addParameter("xml_provider", appt == null ? "" : appt.getProviderNo());
-			String site = "0";
+			
+         //set provider value
+         String defaultProviderNo = provider.getProviderNo();
+			if( demo !=null && !demo.getProviderNo().trim().equals(""))
+				defaultProviderNo = demo.getProviderNo().trim();
+			else
+				log.warn("demographic(No):" + demographicNo + 
+						" has no valid value for provider." + 
+						"If there is no appointment link to this bill, " +
+						"provider no in the bill will be set as the provider who log in the system.");
+			mockReq.addParameter("xml_provider", appt == null ? defaultProviderNo : appt.getProviderNo());
+			
+         //set site value
+			String site = "1";	
 			if(appt !=null && appt.getSite() != null)
 				site = appt.getSite().toString();
-			else
-				log.info("Missing site info in appointment, set site value as 0");
+			else {
+				log.info("Missing site info in appointment or there is no appointment for this billing, " 
+			         + "set site value as provider's site");
+				SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
+				List<Site> sites = siteDao.getActiveSitesByProviderNo(mockReq.getParameter("xml_provider"));
+				if(sites != null && !sites.isEmpty())
+					site = sites.get(0).getId().toString();
+				else {
+					log.warn("Can't find site value by provider[ no ]" +  mockReq.getParameter("xml_provider")
+					         + " set site value as 1");
+				}
+			}
 			mockReq.addParameter("site", site);
 			mockReq.getSession().setAttribute("user", LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
 
