@@ -73,11 +73,11 @@ function goToPage(){
 }
 
 function popupEditWlNamePage(){
-	document.forms[0].waitingListId.value = 
-			document.forms[0].selectedWL.options[document.forms[0].selectedWL.selectedIndex].value;
-
-  	var redirectPage = "../oscarWaitingList/WLEditWaitingListNameAction.do?waitingListId=" + 
-  			document.forms[0].selectedWL.options[document.forms[0].selectedWL.selectedIndex].value + "&edit=Y";
+	var waitinglistId = 0;
+	if(document.forms[0].selectedWL.length > 0)
+		waitinglistId = document.forms[0].selectedWL.options[document.forms[0].selectedWL.selectedIndex].value;
+	document.forms[0].waitingListId.value = waitinglistId;
+  	var redirectPage = "../oscarWaitingList/WLEditWaitingListNameAction.do?waitingListId=" + waitinglistId + "&edit=Y";
 	popupDemographicPage(redirectPage);
 }
 
