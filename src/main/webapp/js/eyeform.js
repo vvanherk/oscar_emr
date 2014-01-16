@@ -456,7 +456,8 @@ function archiveNote(item) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson",
-			data: "value=" + $(item).children(".noteContent").html() + "&archiveNote=" + archiveNote + "&noteId=" + noteId + "&archived=true",
+			data: "value=" + $(item).children(".noteContent").html() + "&archiveNote=" + archiveNote + "&issue_code=" 
+				+ noteBoxes[$(item).closest(".boxTitleLink").attr('id')] + "&noteId=" + noteId + "&archived=true",
 			dataType: "json",
 			success: function(data) {
 				loadNoteBox(boxId, noteBoxes[boxId], false);
