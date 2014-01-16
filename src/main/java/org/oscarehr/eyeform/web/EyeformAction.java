@@ -478,11 +478,32 @@ public class EyeformAction extends DispatchAction {
 	   }
 
 
-	   public void doPrint(HttpServletRequest request, OutputStream os) throws IOException, DocumentException {
+	   public void doPrint(HttpServletRequest request, OutputStream os) throws Exception, IOException, DocumentException {
 			String ids[] = request.getParameter("apptNos").split(",");
 			String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
+			
+			// The demographic number only comes in certain situations - namely, when printing an impression note from the EyeForm
+			String demographicNoAsString = request.getParameter("demographicNo");
+			
+			// The dates to use when looking up appointments with id 0
+			String[] apptZeroDateStrings = new String[0];
+			if (request.getParameter("apptZeroDates") != null)
+				apptZeroDateStrings = request.getParameter("apptZeroDates").split(",");
+
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			List<Date> apptZeroDates = new ArrayList<Date>();
+			
+			// Convert to Java Date Object(s)
+			for (int i=0; i < apptZeroDateStrings.length; i++) {
+				Date date = sdf.parse( apptZeroDateStrings[i] );
+				apptZeroDates.add( date );
+			}
 				
+			if (apptZeroDates.size() == 0)
+				apptZeroDates = null;
+
 			String cpp = request.getParameter("cpp");
+			
 			boolean cppFromMeasurements=false;
 			if(cpp != null && cpp.equals("measurements")) {
 				cppFromMeasurements=true;
@@ -495,20 +516,52 @@ public class EyeformAction extends DispatchAction {
 
 			//loop through each visit..concatenate into 1 PDF
 			for(int x=0;x<ids.length;x++) {
-
+				List<Date> apptDates = null;
 
 				if(x>0) {
 					printer.setNewPage(true);
 				}
 
+				// Try to find the appointment
 				int appointmentNo = Integer.parseInt(ids[x]);
 				Appointment appointment = appointmentDao.find(appointmentNo);
-				Demographic demographic = demographicDao.getClientByDemographicNo(appointment.getDemographicNo());
-				printer.setDemographic(demographic);
-				printer.setAppointment(appointment);
+				
+				int demographicNo = 0;
+				
+				if (appointmentNo == 0) {
+					// Set values for when appointment number is 0
+					apptDates = apptZeroDates;
+					try {
+						demographicNo = Integer.parseInt(demographicNoAsString);
+					} catch (Exception e) {
+						logger.error("Unable to parse demographic number.");
+					}
+				}
 
 				//need to get notes first to set the signing provider
-				List<CaseManagementNote> notes = caseManagementNoteDao.getMostRecentNotesByAppointmentNo(appointmentNo);
+				List<CaseManagementNote> notes = null;
+				if (appointment != null) {
+					// Get all notes for appointment (if the appointment was found)
+					notes = caseManagementNoteDao.getMostRecentNotesByAppointmentNo(appointmentNo);
+					demographicNo = appointment.getDemographicNo();
+				} else if (demographicNo != 0) {
+					// Get all notes for appointment, but filter by dates and by demographic number (typically happens when appt number is 0)
+					notes = caseManagementNoteDao.getMostRecentNotesByAppointmentNoAndDemographicNo(appointmentNo, demographicNo, apptDates);
+					
+					if (notes.size() > 0) {
+						CaseManagementNote n = notes.get(0);
+						demographicNo = Integer.parseInt(n.getDemographic_no());
+					}
+				} else {
+					logger.error("No demographic number or valid appointment number provided.");
+					throw new Exception("No demographic number or valid appointment number provided.");
+				}
+				
+				if (demographicNo == 0) {
+					logger.error("Unable to get valid demographic number.");
+					throw new Exception("Unable to get valid demographic number.");
+				}
+				
 				notes = filterOutCpp(notes);
 				if(notes.size()>0) {
 					String tmp = notes.get(0).getSigning_provider_no();
@@ -519,6 +572,10 @@ public class EyeformAction extends DispatchAction {
 						}
 					}
 				}
+				
+				Demographic demographic = demographicDao.getClientByDemographicNo(demographicNo);
+				printer.setDemographic(demographic);
+				printer.setAppointment(appointment);
 				
 				
 				printer.printDocHeaderFooter();
@@ -538,44 +595,44 @@ public class EyeformAction extends DispatchAction {
 */
 				IssueDAO issueDao = (IssueDAO)SpringUtils.getBean("IssueDAO");
 
-					printCppItem(printer,"Current History","CurrentHistory",demographic.getDemographicNo(), appointmentNo, false);
-					printCppItem(printer,"Past Ocular History","PastOcularHistory",demographic.getDemographicNo(), appointmentNo, true);
-					printCppItem(printer,"Medical History","MedHistory",demographic.getDemographicNo(), appointmentNo, true);
-					printCppItem(printer,"Family History","FamHistory",demographic.getDemographicNo(), appointmentNo, true);
-					printCppItem(printer,"Diagnostic Notes","DiagnosticNotes",demographic.getDemographicNo(), appointmentNo, false);
-					printCppItem(printer,"Ocular Medications","OcularMedication",demographic.getDemographicNo(), appointmentNo, true);
+					printCppItem(printer,"Current History","CurrentHistory",apptDates,demographicNo, appointmentNo, false);
+					printCppItem(printer,"Past Ocular History","PastOcularHistory",apptDates,demographicNo, appointmentNo, true);
+					printCppItem(printer,"Medical History","MedHistory",apptDates,demographicNo, appointmentNo, true);
+					printCppItem(printer,"Family History","FamHistory",apptDates,demographicNo, appointmentNo, true);
+					printCppItem(printer,"Diagnostic Notes","DiagnosticNotes",apptDates,demographicNo, appointmentNo, false);
+					printCppItem(printer,"Ocular Medications","OcularMedication",apptDates,demographicNo, appointmentNo, true);
 
 					for(String customCppIssue:customCppIssues) {
 						Issue issue = issueDao.findIssueByCode(customCppIssue);
 						if(issue != null && !issue.getCode().equals("PatientLog") ) {
-							printCppItem(printer,issue.getDescription(),customCppIssue,demographic.getDemographicNo(), appointmentNo, true);
+							printCppItem(printer,issue.getDescription(),customCppIssue,apptDates,demographicNo, appointmentNo, true);
 						}
 					}
 //				}
-				printCppItem(printer,"Other Medications","OMeds",demographic.getDemographicNo(), appointmentNo, true);
+				printCppItem(printer,"Other Medications","OMeds",apptDates,demographicNo, appointmentNo, true);
 
 				printer.setNewPage(true);
 
 				//ocular procs
-				List<EyeformOcularProcedure> ocularProcs = ocularProcDao.getAllPreviousAndCurrent(demographic.getDemographicNo(),appointmentNo);
+				List<EyeformOcularProcedure> ocularProcs = ocularProcDao.getAllPreviousAndCurrent(demographicNo,appointmentNo);
 				if(ocularProcs.size()>0) {
 					printer.printOcularProcedures(ocularProcs);
 				}
 
 				//specs history
-				List<EyeformSpecsHistory> specsHistory = specsHistoryDao.getAllPreviousAndCurrent(demographic.getDemographicNo(),appointmentNo);
+				List<EyeformSpecsHistory> specsHistory = specsHistoryDao.getAllPreviousAndCurrent(demographicNo,appointmentNo);
 				if(specsHistory.size()>0) {
 					printer.printSpecsHistory(specsHistory);
 				}
 				
 				//allergies
-				List<Allergy> allergies = allergyDao.findAllergies(demographic.getDemographicNo());
+				List<Allergy> allergies = allergyDao.findAllergies(demographicNo);
 				if(allergies.size()>0) {
 					printer.printAllergies(allergies);
 				}
 				
 				//rx
-				printer.printRx(String.valueOf(demographic.getDemographicNo()));
+				printer.printRx(String.valueOf(demographicNo));
 
 				//measurements
 				List<Measurements> measurements = measurementsDao.getMeasurementsByAppointment(appointmentNo);
@@ -682,16 +739,26 @@ public class EyeformAction extends DispatchAction {
 	   }
 
 	   public void printCppItem(PdfRecordPrinter printer, String header, String issueCode, int demographicNo, int appointmentNo, boolean includePrevious) throws DocumentException {
-		   Collection<CaseManagementNote> notes = null;
-		   if(!includePrevious) {
-			    notes = filterNotesByAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode}),appointmentNo);
-		   } else {
-			   notes = filterNotesByPreviousOrCurrentAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode}),appointmentNo);
-		   }
-		   if(notes.size()>0) {
-			   printer.printCPPItem(header, notes);
-			   printer.printBlankLine();
-		   }
+		   printCppItem(printer, header, issueCode, null, demographicNo, appointmentNo, includePrevious);
+	   }
+	   
+	   public void printCppItem(PdfRecordPrinter printer, String header, String issueCode, List<Date> dates, int demographicNo, int appointmentNo, boolean includePrevious) throws DocumentException {
+			Collection<CaseManagementNote> notes = null;
+			
+			if (dates != null && dates.size() > 0)
+				notes = caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode}, dates);
+			else
+				notes = caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode});
+			
+			if (!includePrevious)
+				notes = filterNotesByAppointment(notes, appointmentNo);
+			else
+				notes = filterNotesByPreviousOrCurrentAppointment(notes, appointmentNo);
+			
+			if (notes.size() > 0) {
+				printer.printCPPItem(header, notes);
+				printer.printBlankLine();
+			}
 	   }
 
 	   public void printCppItemFromMeasurements(PdfRecordPrinter printer, String header, String measurementType, int demographicNo, int appointmentNo, boolean includePrevious) throws DocumentException {

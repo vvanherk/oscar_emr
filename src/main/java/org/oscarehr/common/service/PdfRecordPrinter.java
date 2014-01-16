@@ -253,10 +253,7 @@ public class PdfRecordPrinter {
         p.setAlignment(Paragraph.ALIGN_LEFT);
        // getDocument().add(p);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Paragraph p2 = new Paragraph("Date of Visit: " + sdf.format(appointment.getAppointmentDate()),getFont());
-        p2.setAlignment(Paragraph.ALIGN_RIGHT);
-       // getDocument().add(p);
+
 
         PdfPTable table = new PdfPTable(2);
         table.setWidthPercentage(100f);
@@ -264,11 +261,17 @@ public class PdfRecordPrinter {
         PdfPCell cell1 = new PdfPCell(p);
         cell1.setBorder(PdfPCell.NO_BORDER);
         cell1.setHorizontalAlignment(Element.ALIGN_LEFT);
-        PdfPCell cell2 = new PdfPCell(p2);
-        cell2.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        cell2.setBorder(PdfPCell.NO_BORDER);
         table.addCell(cell1);
-        table.addCell(cell2);
+        
+        if (appointment != null) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Paragraph p2 = new Paragraph("Date of Visit: " + sdf.format(appointment.getAppointmentDate()),getFont());
+			p2.setAlignment(Paragraph.ALIGN_RIGHT);
+			PdfPCell cell2 = new PdfPCell(p2);
+	        cell2.setHorizontalAlignment(Element.ALIGN_RIGHT);
+	        cell2.setBorder(PdfPCell.NO_BORDER);
+	        table.addCell(cell2);
+        }
 
         getDocument().add(table);
 
@@ -278,15 +281,20 @@ public class PdfRecordPrinter {
         cell1 = new PdfPCell(getParagraph("Signed Provider:" + ((signingProvider!=null)?signingProvider:"")));
         cell1.setBorder(PdfPCell.BOTTOM);
         cell1.setHorizontalAlignment(Element.ALIGN_LEFT);
-        cell2 = new PdfPCell(getParagraph("RFR:" + this.appointment.getReason()));
-        cell2.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell2.setBorder(PdfPCell.BOTTOM);
+        table.addCell(cell1);
+        
+        if (appointment != null) {
+			PdfPCell cell2 = new PdfPCell(getParagraph("RFR:" + this.appointment.getReason()));
+	        cell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+	        cell2.setBorder(PdfPCell.BOTTOM);
+	        table.addCell(cell2);
+        }
+        
         PdfPCell cell3 = new PdfPCell(getParagraph("Ref:" + this.getRefName(this.demographic)));
         cell3.setHorizontalAlignment(Element.ALIGN_RIGHT);
         cell3.setBorder(PdfPCell.BOTTOM);
-        table.addCell(cell1);
-        table.addCell(cell2);
         table.addCell(cell3);
+        
         getDocument().add(table);
 
         /*

@@ -373,43 +373,59 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 	}
 
 	public Collection<CaseManagementNote> findNotesByDemographicAndIssueCodeInEyeform(Integer demographic_no, String[] issueCodes) {
-                String issueCodeList=null;
-                if (issueCodes!=null && issueCodes.length>0) issueCodeList=SqlUtils.constructInClauseForStatements(issueCodes, true);
-
-                String sqlCommand="select distinct casemgmt_note.note_id from issue,casemgmt_issue,casemgmt_issue_notes,casemgmt_note where casemgmt_issue.issue_id=issue.issue_id and casemgmt_issue.demographic_no='"+demographic_no+"' "+(issueCodeList!=null?"and issue.code in "+issueCodeList:"")+" and casemgmt_issue_notes.id=casemgmt_issue.id and casemgmt_issue_notes.note_id=casemgmt_note.note_id order by casemgmt_note.note_id DESC";
-                Session session=getSession();
-                List<CaseManagementNote> notes=new ArrayList<CaseManagementNote>();
-                try
-                {
-                        SQLQuery query=session.createSQLQuery(sqlCommand);
-                        @SuppressWarnings("unchecked")
-                        List<Integer> ids=query.list();
-                        for (Integer id : ids) notes.add(getNote(id.longValue()));
-                }
-                finally
-                {
-                        session.close();
-                }
-
-                // make unique for appointmentNo
-                HashMap<Integer,CaseManagementNote> uniqueForApptId=new HashMap<Integer,CaseManagementNote>();
-                for (CaseManagementNote note : notes)
-                {
-                        CaseManagementNote existingNote=uniqueForApptId.get(note.getAppointmentNo());
-                        if (existingNote==null || note.getUpdate_date().after(existingNote.getUpdate_date())) uniqueForApptId.put(note.getAppointmentNo(), note);
-                }
-
-                // sort by observationdate
-                //observation date is same for cpp in eyeform
-                //sort by update update
-                TreeMap<Date,CaseManagementNote> sortedResults=new TreeMap<Date,CaseManagementNote>();
-                for (CaseManagementNote note : uniqueForApptId.values())
-                {
-                        sortedResults.put(note.getUpdate_date(), note);
-                }
-
-                return(sortedResults.values());
+                return findNotesByDemographicAndIssueCodeInEyeform(demographic_no, issueCodes, null);
         }
+    
+    public Collection<CaseManagementNote> findNotesByDemographicAndIssueCodeInEyeform(Integer demographic_no, String[] issueCodes, List<Date> dates) {
+		String issueCodeList=null;
+		if (issueCodes!=null && issueCodes.length>0) 
+			issueCodeList=SqlUtils.constructInClauseForStatements(issueCodes, true);
+
+		String sqlCommand="select distinct casemgmt_note.note_id from issue,casemgmt_issue,casemgmt_issue_notes,casemgmt_note where casemgmt_issue.issue_id=issue.issue_id and casemgmt_issue.demographic_no='"+demographic_no+"' "+(issueCodeList!=null?"and issue.code in "+issueCodeList:"")+" and casemgmt_issue_notes.id=casemgmt_issue.id and casemgmt_issue_notes.note_id=casemgmt_note.note_id order by casemgmt_note.note_id DESC";
+		Session session=getSession();
+		List<CaseManagementNote> notes=new ArrayList<CaseManagementNote>();
+		try
+		{
+				SQLQuery query=session.createSQLQuery(sqlCommand);
+				@SuppressWarnings("unchecked")
+				List<Integer> ids=query.list();
+				for (Integer id : ids) notes.add(getNote(id.longValue()));
+		}
+		finally
+		{
+				session.close();
+		}
+
+		// make unique for appointmentNo
+		HashMap<Integer,CaseManagementNote> uniqueForApptId=new HashMap<Integer,CaseManagementNote>();
+		for (CaseManagementNote note : notes)
+		{
+				CaseManagementNote existingNote=uniqueForApptId.get(note.getAppointmentNo());
+				if (existingNote==null || note.getUpdate_date().after(existingNote.getUpdate_date())) uniqueForApptId.put(note.getAppointmentNo(), note);
+		}
+
+
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+		// sort by observationdate
+		//observation date is same for cpp in eyeform
+		//sort by update update
+		TreeMap<Date,CaseManagementNote> sortedResults=new TreeMap<Date,CaseManagementNote>();
+		for (CaseManagementNote note : uniqueForApptId.values())
+		{
+			try {
+				Date todayWithZeroTime = formatter.parse( formatter.format(note.getCreate_date()) );
+			
+				// Only include notes with creation dates in the given list of dates (or add all of them if the list is null)
+				if (dates == null || dates.contains(todayWithZeroTime))
+					sortedResults.put(note.getUpdate_date(), note);
+			} catch (Exception e) {
+				MiscUtils.getLogger().warn("Unable to parse note creation date.", e);
+			}
+		}
+
+		return(sortedResults.values());
+	}
 
 
     @SuppressWarnings("unchecked")
@@ -667,13 +683,69 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
         return rs;
     }
 
-	public List<CaseManagementNote> getMostRecentNotesByAppointmentNo(int appointmentNo) {
-		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.appointmentNo = ?";
-		List<String> tmp = this.getHibernateTemplate().find(hql, appointmentNo);
-		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
-		for(String uuid:tmp) {
-			mostRecents.add(this.getMostRecentNote(uuid));
+	public List<CaseManagementNote> getMostRecentNotesByAppointmentNo(int appointmentNo) throws ParseException {
+		return getMostRecentNotesByAppointmentNo(appointmentNo, null);
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotesByAppointmentNo(int appointmentNo,  List<Date> dates) throws ParseException {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+		String dateList = "";
+		if (dates != null) {
+			for ( Date d : dates ) {
+				if (dateList.length() > 0)
+					dateList += ", ";
+				dateList += "'" + formatter.format(d) + "'";
+			}
 		}
+		
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.appointmentNo = ?";
+		
+		if (dateList.length() > 0)
+			hql +=  " and date(cmn.update_date) in (" + dateList + ")";
+		
+		List<String> tmp = this.getHibernateTemplate().find(hql, appointmentNo);
+		
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		
+		for (String uuid : tmp) {
+			CaseManagementNote note = this.getMostRecentNote(uuid);
+			
+			mostRecents.add(note);
+		}
+		
+		return mostRecents;
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotesByAppointmentNoAndDemographicNo(int appointmentNo, int demographicNo, List<Date> dates) throws ParseException {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+		// Compile the list of dates (if applicable)
+		String dateList = "";
+		if (dates != null) {
+			for ( Date d : dates ) {
+				if (dateList.length() > 0)
+					dateList += ", ";
+				dateList += "'" + formatter.format(d) + "'";
+			}
+		}
+		
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.appointmentNo = ? and cmn.demographic_no = ?";
+		
+		// Add the dates if there are any
+		if (dateList.length() > 0)
+			hql +=  " and date(cmn.update_date) in (" + dateList + ")";
+		
+		List<String> tmp = this.getHibernateTemplate().find(hql, new Object[] { new Integer(appointmentNo), String.valueOf(demographicNo) });
+		
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		
+		for (String uuid : tmp) {
+			CaseManagementNote note = this.getMostRecentNote(uuid);
+			
+			mostRecents.add(note);
+		}
+		
 		return mostRecents;
 	}
 
@@ -696,5 +768,5 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 			mostRecents.add(this.getMostRecentNote(uuid));
 		}
 		return mostRecents;
-	}
+	}	
 }
