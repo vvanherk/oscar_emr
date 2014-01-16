@@ -670,6 +670,7 @@ function changeSite(sel) {
                                 String numDaysUntilWarn = OscarProperties.getInstance().getProperty("tickler_warn_period");
                                 long ticklerWarnDays = Long.parseLong(numDaysUntilWarn);
                                 boolean ignoreWarning = (ticklerWarnDays < 0);
+                                boolean highlightMessage = t.getPriority().equals("High");
                                 
                                 
                                 //Set the colour of the table cell 
@@ -699,9 +700,11 @@ function changeSite(sel) {
                                     <TD ROWSPAN="1" class="<%=cellColour%>"><%=t.getPriority()%></TD>
                                     <TD ROWSPAN="1" class="<%=cellColour%>"><%=t.getAssignee() != null ? t.getAssignee().getLastName() + ", " + t.getAssignee().getFirstName() : "N/A"%></TD>
                                     <TD ROWSPAN="1" class="<%=cellColour%>"><%=t.getStatusDesc(request.getLocale())%></TD>
-                                    <TD ROWSPAN="1" class="<%=cellColour%>"><%=t.getMessage()%>
-                                        
-                                        <%
+                                    <TD ROWSPAN="1" class="<%=cellColour%>">
+                                    
+                                    <% 	if(highlightMessage) { %> <span style="background-color: #FFFF00"><%=t.getMessage()%></span> <% } 
+										else { %> <%=t.getMessage()%> <% }
+
                                         List<TicklerLink> linkList = ticklerLinkDao.getLinkByTickler(t.getTickler_no().intValue());
                                         if (linkList != null){
                                             for(TicklerLink tl : linkList){

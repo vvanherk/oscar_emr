@@ -472,7 +472,16 @@ DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:ss:mm.SSS", request.
 				<TD ROWSPAN="1" class="<%=bodd?"lilac":"white"%>"><%=apptMainBean.getString(rs,"priority")%></TD>
 				<TD ROWSPAN="1" class="<%=bodd?"lilac":"white"%>"><%=taskAssignedTo%></TD>
 				<TD ROWSPAN="1" class="<%=bodd?"lilac":"white"%>"><%=apptMainBean.getString(rs,"status").equals("A")?"Active":apptMainBean.getString(rs,"status").equals("C")?"Completed":apptMainBean.getString(rs,"status").equals("D")?"Deleted":apptMainBean.getString(rs,"status")%></TD>
-				<TD ROWSPAN="1" class="<%=bodd?"lilac":"white"%>"><%=apptMainBean.getString(rs,"message")%></TD>
+				<% 
+				   boolean highlightMessage = apptMainBean.getString(rs,"priority").equals("High"); 
+				   if(highlightMessage){
+				%>
+				<TD ROWSPAN="1" class="<%=bodd?"lilac":"white"%>">
+					<span style="background-color: #FFFF00"><%=apptMainBean.getString(rs,"message")%></span>
+				</TD>
+				<%} else {%>
+					<TD ROWSPAN="1" class="<%=bodd?"lilac":"white"%>"><%=apptMainBean.getString(rs,"message")%></TD>
+				<%}%>
 			</tr>
 			<%
 }

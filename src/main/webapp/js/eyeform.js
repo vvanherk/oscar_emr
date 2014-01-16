@@ -388,12 +388,12 @@ function saveEditNote(item) {
 	$item.html("<strong><abbr /></strong><span class='noteContent' /><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span>");
 	$item.find("abbr").attr("title", $item.attr("dateData"));
 	$item.find("abbr").text($item.attr("date"));
-
+	
 	if ($item.attr("noteData") != data) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo,
-			data: "value=" + data + "&noteId=" + noteId + "&sign=false",
+			data: "value=" + data + "&noteId=" + noteId + "&sign=false&issue_code=" + noteBoxes[$item.closest(".boxTitleLink").attr('id')],
 			dataType: "json",
 			success: function(data) {
 				if (typeof console != "undefined")
@@ -456,7 +456,8 @@ function archiveNote(item) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson",
-			data: "value=" + $(item).children(".noteContent").html() + "&archiveNote=" + archiveNote + "&noteId=" + noteId + "&archived=true",
+			data: "value=" + $(item).children(".noteContent").html() + "&archiveNote=" + archiveNote + "&issue_code=" 
+				+ noteBoxes[$(item).closest(".boxTitleLink").attr('id')] + "&noteId=" + noteId + "&archived=true",
 			dataType: "json",
 			success: function(data) {
 				loadNoteBox(boxId, noteBoxes[boxId], false);
@@ -754,15 +755,28 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 		}
 	}
 
-	if ($("#" + boxNameId + " .content ul li").length > 5 && !showAll) {
+	if ($("#" + boxNameId + " .content ul li").length > 5) {
 		$("#" + boxNameId + " .content ul li").slice(5).attr("class", "oldEntry");
+		
+		var showLessBtn = $("<span class='showLessBtn uiBarBtn'><span class='text smallerText'>Show Less</span></span>").click(function(e) {
+			e.stopPropagation();
+			$("#" + boxNameId + " .content ul li").slice(5).attr("class", "oldEntry");
+			$(this).hide();
+			$(this).parent().children(".showAllBtn").show();
+		});
 		
 		var showMoreBtn = $("<span class='showAllBtn uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
 			e.stopPropagation();
 			$(this).parent().find("li").removeClass("oldEntry");
-			$(this).remove();
+			$(this).hide();
+			$(this).parent().children(".showLessBtn").show();
 		});
 		$("#" + boxNameId + " .content").append(showMoreBtn);
+		$("#" + boxNameId + " .content").append(showLessBtn);
+		
+		if(showAll){ $('.showAllBtn').hide(); }
+		else {	$(".showLessBtn").hide();	}
+		
 	}
 
 	if (initialLoad) {
@@ -1295,7 +1309,7 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		$(".unSigned").each(function(){
 			unSignedNotes.push({
 				"value": encodeURIComponent($(this).find(".noteContent").html()),
-				"issue_id": $(this).closest(".boxTitleLink").attr("id"), 
+				"issue_code": noteBoxes[$(this).closest(".boxTitleLink").attr("id")], 
 				"noteId": $(this).attr("note_id")
 			});
 		});
@@ -1315,8 +1329,15 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 			success: function(data) {
 				sendPlanTickler = true;
 			}
-		});
-	}
+		});   
+      //reset closeForm
+      var r=confirm("Are you sure you want to exit?");
+      if (r==false) {
+         closeForm=false;
+         bill = false;
+         fn=saveFunc;
+      }
+   }
 	
 	saveInterval = setInterval(function () { afterSave(fn, signAndExit, bill, closeForm); }, 1000);
 }
@@ -1355,8 +1376,10 @@ function afterSave(callback, signAndExit, bill, closeForm) {
 
 		if (closeForm || (signAndExit && !bill)) {
 			window.opener.location.reload(true);
-			window.close();
-			return;
+         if(closeForm){
+            window.close();
+            return;
+         }
 		}
 
 		savedImpression = false;
@@ -1873,12 +1896,25 @@ function loadMeasurements() {
 				j=j+1;
 			}
 			
-			if (timesToShow.length > 2 && !showAllMeasurements) {
+			if (timesToShow.length > 2) {
+				$("#measurements .content").append("<span id='showLessMeasurementBtn' class='uiBarBtn'><span class='text smallerText'>Show Less</span></span>");
+				
 				$("#measurements .content").append("<span id='showAllMeasurementBtn' class='uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
 					e.stopPropagation();
 				    $(this).parent().find("table").removeClass("measurementsTableNoShow");
-				    $('#showAllMeasurementBtn').remove();
+				    $('#showAllMeasurementBtn').hide();
+				    $('#showLessMeasurementBtn').show();
 				});
+				
+				$('#showLessMeasurementBtn').click(function(e) {
+					e.stopPropagation();
+				    $(this).parent().find("table").slice(2).addClass("measurementsTableNoShow");
+				    $('#showLessMeasurementBtn').hide();
+				    $('#showAllMeasurementBtn').show();
+				});
+				
+				if(showAllMeasurements){ $('#showAllMeasurementBtn').hide(); }
+				else{ $('#showLessMeasurementBtn').hide(); }
 			}
 
 			$(".measurementsTable").click(function() {

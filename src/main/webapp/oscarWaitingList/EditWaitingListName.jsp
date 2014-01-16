@@ -19,6 +19,7 @@
 --%>
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
+<%@page import="java.sql.*"%>
 <%
     if(session.getValue("user") == null) response.sendRedirect("../../logout.jsp");
 %>
@@ -85,18 +86,24 @@ function resetFields(actionType){
 		<tr bgcolor="#EEEEFF">
 			<td width="25%" align="right" class="data4">Please select a
 			Waiting List name to be changed:</td>
-			<td align="right"><html:select property="selectedWL">
-				<option value=""></option>
-				<%
-                             for(int i=0; i<allWaitingListName.size(); i++){
-                                 WLWaitingListNameBean wLBean = (WLWaitingListNameBean) allWaitingListName.get(i);
-                                 String id = wLBean.getId();
-                                 String name = wLBean.getWaitingListName();                                       
-                                 String selected = id.compareTo((String) request.getAttribute("WLId")==null?"0":(String) request.getAttribute("WLId"))==0?"SELECTED":"";                                        
+			<td align="right">
+				<jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean" scope="session" />
+					<html:select property="selectedWL">
+						<%
+                           ResultSet rsWL = apptMainBean.queryResults("search_waiting_list");
+						   String listID=request.getParameter("waitingListId");
+						   if(listID ==null )
+							   listID="";
+                           while (rsWL.next()) {
+                        %>
+								<option value="<%=rsWL.getString("ID")%>"
+									<%=rsWL.getString("ID").equals(listID)?" selected":""%>>
+								    <%=rsWL.getString("name")%>
+								</option>
+						<% }
+                           rsWL.close();
                          %>
-				<option value="<%=id%>" <%=selected%>><%=name%></option>
-				<%}%>
-			</html:select></td>
+				</html:select></td>
 			<td align="left"><html:text property="wlChangedName" size="45"
 				maxlength="255" /></td>
 			<td width="30%" align="left"><input type="submit"
@@ -120,16 +127,20 @@ function resetFields(actionType){
 			<td width="25%" align="right" class="data4">Please select a
 			Waiting List name to be removed:</td>
 			<td align="right"><html:select property="selectedWL2">
-				<option value=""></option>
 				<%
-                             for(int i=0; i<allWaitingListName.size(); i++){
-                                 WLWaitingListNameBean wLBean2 = (WLWaitingListNameBean) allWaitingListName.get(i);
-                                 String id = wLBean2.getId();
-                                 String name = wLBean2.getWaitingListName();                                       
-                                 String selected = id.compareTo((String) request.getAttribute("WLId")==null?"0":(String) request.getAttribute("WLId"))==0?"SELECTED":"";                                        
-                         %>
-				<option value="<%=id%>" <%=selected%>><%=name%></option>
-				<%}%>
+				   ResultSet rsWL = apptMainBean.queryResults("search_waiting_list");
+				   String listID=request.getParameter("waitingListId");
+				   if(listID ==null )
+					   listID="";
+				   while (rsWL.next()) {
+				%>
+						<option value="<%=rsWL.getString("ID")%>"
+							<%=rsWL.getString("ID").equals(listID)?" selected":""%>>
+							<%=rsWL.getString("name")%>
+						</option>
+				<% }
+				   rsWL.close();
+				 %>
 			</html:select></td>
 			<td colspan="2" align="left"><input type="submit"
 				value="Remove Name"

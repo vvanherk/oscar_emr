@@ -100,6 +100,7 @@ import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.OscarAppointmentDao;
 import org.oscarehr.common.dao.ProviderDefaultProgramDao;
 import org.oscarehr.common.dao.OfficeCommunicationDao;
+import org.oscarehr.common.dao.SiteDao;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DxAssociation;
@@ -107,6 +108,7 @@ import org.oscarehr.common.model.PartialDate;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.ProviderDefaultProgram;
 import org.oscarehr.common.model.OfficeCommunication;
+import org.oscarehr.common.model.Site;
 import org.oscarehr.eyeform.dao.EyeFormDao;
 import org.oscarehr.eyeform.dao.FollowUpDao;
 import org.oscarehr.eyeform.dao.MacroDao;
@@ -573,16 +575,14 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			JSONObject currIssue = (JSONObject) JSONSerializer.toJSON(issues.getString(i));
 			
 			MockHttpServletRequest mockReq = new MockHttpServletRequest();
-			
-			logger.info("Added issue Change and archive booleans ");
-			
+						
 			mockReq.setSession(request.getSession());
 			mockReq.addParameter("appointment_no",request.getParameter("appointment_no"));
 			mockReq.addParameter("demographic_no",request.getParameter("demographic_no"));
 			mockReq.addParameter("sign", "true");
 			
 			mockReq.addParameter("value", currIssue.getString("value"));
-			mockReq.addParameter("issue_id", currIssue.getString("issue_id"));
+			mockReq.addParameter("issue_code", currIssue.getString("issue_code"));
 			mockReq.addParameter("noteId", currIssue.getString("noteId"));
 
 			
@@ -652,35 +652,61 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 		} else {
 			note.setDemographic_no(demographicNo);
-
-			CaseManagementIssue cIssue;
-			if (issueAlphaCode != null && issueAlphaCode.length() > 0)
-				cIssue = this.caseManagementMgr.getIssueByIssueCode(demographicNo, issueAlphaCode);
-			else
-				cIssue = this.caseManagementMgr.getIssueById(demographicNo,issueCode);
-
-			Set<CaseManagementIssue> issueSet = new HashSet<CaseManagementIssue>();
-			Set<CaseManagementNote> noteSet = new HashSet<CaseManagementNote>();
-
-			if( cIssue == null ) {
-				Issue issue;
-				if (issueAlphaCode != null && issueAlphaCode.length() > 0)
-					issue = this.caseManagementMgr.getIssueByCode(issueAlphaCode);
-				else
-					issue = this.caseManagementMgr.getIssue(issueCode);
-
-				cIssue = this.newIssueToCIssue(demographicNo, issue, Integer.parseInt("10016"));
-				cIssue.setNotes(noteSet);
-			}
-
-			issueSet.add(cIssue);
-			note.setIssues(issueSet);
-
 			note.setCreate_date(noteDate);
 			note.setObservation_date(noteDate);
 			note.setRevision("1");
 
 		}
+		
+		// Determines what program & role to assign the note to
+		ProgramProviderDAO programProviderDao = (ProgramProviderDAO) SpringUtils.getBean("programProviderDAO");
+		ProviderDefaultProgramDao defaultProgramDao = (ProviderDefaultProgramDao) SpringUtils.getBean("providerDefaultProgramDao");
+		ProgramProvider programProvider = programProviderDao.getProgramProviderByProviderNo(providerNo).get(0);
+		boolean programSet = false;
+
+		List<ProviderDefaultProgram> programs = defaultProgramDao.getProgramByProviderNo(providerNo);
+		HashMap<Program,List<Secrole>> rolesForDemo = NotePermissionsAction.getAllProviderAccessibleRolesForDemo(providerNo, demographicNo);
+		for (ProviderDefaultProgram pdp : programs) {
+			for (Program p : rolesForDemo.keySet()) {
+				if (pdp.getProgramId() == p.getId().intValue()) {
+					List<ProgramProvider> programProviderList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, (long) pdp.getProgramId());
+
+					note.setProgram_no("" + pdp.getProgramId());
+					note.setReporter_caisi_role("" + programProviderList.get(0).getRoleId());
+
+					programSet = true;
+				}
+			}
+		}
+
+		if (!programSet && !rolesForDemo.isEmpty()) {
+			Program program = rolesForDemo.keySet().iterator().next();
+			programProvider = programProviderDao.getProgramProvider(providerNo, (long) program.getId());
+			note.setProgram_no("" + programProvider.getProgramId());
+			note.setReporter_caisi_role("" + programProvider.getRoleId());
+		}
+		
+		CaseManagementIssue cIssue;
+		if (issueAlphaCode != null && issueAlphaCode.length() > 0)
+			cIssue = this.caseManagementMgr.getIssueByIssueCode(demographicNo, issueAlphaCode);
+		else
+			cIssue = this.caseManagementMgr.getIssueById(demographicNo,issueCode);
+
+		Set<CaseManagementIssue> issueSet = new HashSet<CaseManagementIssue>();
+		Set<CaseManagementNote> noteSet = new HashSet<CaseManagementNote>();
+
+		if( cIssue == null ) {
+			Issue issue;
+			if (issueAlphaCode != null && issueAlphaCode.length() > 0)
+				issue = this.caseManagementMgr.getIssueByCode(issueAlphaCode);
+			else
+				issue = this.caseManagementMgr.getIssue(issueCode);
+			cIssue = this.newIssueToCIssue(demographicNo, issue, Integer.parseInt(programProvider.getProgramId()+""));
+			cIssue.setNotes(noteSet);
+		}
+		issueSet.add(cIssue);
+		note.setIssues(issueSet);
+		
 
 		try {
 			note.setAppointmentNo(Integer.parseInt(appointmentNo));
@@ -733,34 +759,6 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		} else if (!note.isSigned() && (archived == null || !archived.equalsIgnoreCase("true"))) {
 			note.setSigned(false);
 			note.setSigning_provider_no("");
-		}
-
-
-		// Determines what program & role to assign the note to
-		ProgramProviderDAO programProviderDao = (ProgramProviderDAO) SpringUtils.getBean("programProviderDAO");
-		ProviderDefaultProgramDao defaultProgramDao = (ProviderDefaultProgramDao) SpringUtils.getBean("providerDefaultProgramDao");
-		boolean programSet = false;
-
-		List<ProviderDefaultProgram> programs = defaultProgramDao.getProgramByProviderNo(providerNo);
-		HashMap<Program,List<Secrole>> rolesForDemo = NotePermissionsAction.getAllProviderAccessibleRolesForDemo(providerNo, demographicNo);
-		for (ProviderDefaultProgram pdp : programs) {
-			for (Program p : rolesForDemo.keySet()) {
-				if (pdp.getProgramId() == p.getId().intValue()) {
-					List<ProgramProvider> programProviderList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, (long) pdp.getProgramId());
-
-					note.setProgram_no("" + pdp.getProgramId());
-					note.setReporter_caisi_role("" + programProviderList.get(0).getRoleId());
-
-					programSet = true;
-				}
-			}
-		}
-
-		if (!programSet && !rolesForDemo.isEmpty()) {
-			Program program = rolesForDemo.keySet().iterator().next();
-			ProgramProvider programProvider = programProviderDao.getProgramProvider(providerNo, (long) program.getId());
-			note.setProgram_no("" + programProvider.getProgramId());
-			note.setReporter_caisi_role("" + programProvider.getRoleId());
 		}
 
 		note.setReporter_program_team("0");
@@ -3226,7 +3224,35 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			else
 				mockReq.addParameter("xml_vdate", "");
 			mockReq.addParameter("apptProvider_no", appt == null ? "" : appt.getProviderNo());
-			mockReq.addParameter("xml_provider", provider.getProviderNo());
+			
+         //set provider value
+         String defaultProviderNo = provider.getProviderNo();
+			if( demo !=null && !demo.getProviderNo().trim().equals(""))
+				defaultProviderNo = demo.getProviderNo().trim();
+			else
+				log.warn("demographic(No):" + demographicNo + 
+						" has no valid value for provider." + 
+						"If there is no appointment link to this bill, " +
+						"provider no in the bill will be set as the provider who log in the system.");
+			mockReq.addParameter("xml_provider", appt == null ? defaultProviderNo : appt.getProviderNo());
+			
+         //set site value
+			String site = "1";	
+			if(appt !=null && appt.getSite() != null)
+				site = appt.getSite().toString();
+			else {
+				log.info("Missing site info in appointment or there is no appointment for this billing, " 
+			         + "set site value as provider's site");
+				SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
+				List<Site> sites = siteDao.getActiveSitesByProviderNo(mockReq.getParameter("xml_provider"));
+				if(sites != null && !sites.isEmpty())
+					site = sites.get(0).getId().toString();
+				else {
+					log.warn("Can't find site value by provider[ no ]" +  mockReq.getParameter("xml_provider")
+					         + " set site value as 1");
+				}
+			}
+			mockReq.addParameter("site", site);
 			mockReq.getSession().setAttribute("user", LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
 
 			BillingSavePrep bObj = new BillingSavePrep();
