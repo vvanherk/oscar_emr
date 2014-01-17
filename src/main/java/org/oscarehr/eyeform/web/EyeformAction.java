@@ -619,7 +619,7 @@ public class EyeformAction extends DispatchAction {
 					ocularProcs = ocularProcDao.getAllByDate(demographicNo,appointmentNo,apptDates);
 				else
 					ocularProcs = ocularProcDao.getAllPreviousAndCurrent(demographicNo,appointmentNo);
-				 
+
 				if(ocularProcs.size()>0) {
 					printer.printOcularProcedures(ocularProcs);
 				}
@@ -630,7 +630,7 @@ public class EyeformAction extends DispatchAction {
 					specsHistory = specsHistoryDao.getAllByDate(demographicNo,appointmentNo,apptDates);
 				else
 					specsHistory = specsHistoryDao.getAllPreviousAndCurrent(demographicNo,appointmentNo);
-				
+
 				if(specsHistory.size()>0) {
 					printer.printSpecsHistory(specsHistory);
 				}

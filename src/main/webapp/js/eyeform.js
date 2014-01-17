@@ -892,7 +892,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		if ( boxNameId == "currentIssueHistory")
 			$("#" + boxNameId + " .content").html("<div class='historyList'></div>");
 		else if (boxNameId == "impressionHistory")
-			$("#" + boxNameId + " .content").html("<table class='historyTable'><thead><th>Date</th><th>Impression</th><th>Signature</th></thead><tbody></tbody></table>");
+			$("#" + boxNameId + " .content").html("<table class='historyTable'><thead><th>Date</th><th>Impression</th><th>Signature</th></thead><tbody style='cursor: pointer;'></tbody></table>");
 		else if (boxNameId != "officeCommunication")
 			$("#" + boxNameId + " .content").html("<ul></ul>");
 	}
