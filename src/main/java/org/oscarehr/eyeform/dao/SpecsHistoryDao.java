@@ -103,5 +103,17 @@ public class SpecsHistoryDao extends AbstractDao<EyeformSpecsHistory> {
 	    return(results);		
 	}
 	
+	public List<EyeformSpecsHistory> getAllByDate(int demographicNo, int appointmentNo, List<Date> dates) {
+		String sql="select x from "+modelClass.getSimpleName()+" x where x.demographicNo = :demographicNo and x.appointmentNo=:appointmentNo and x.date in (:dates) order by x.date DESC";
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("demographicNo", demographicNo);	    
+		query.setParameter("appointmentNo", appointmentNo);
+		query.setParameter("dates", dates);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformSpecsHistory> results=query.getResultList();
+	    return(results);		
+	}
+	
 	
 }

@@ -614,13 +614,23 @@ public class EyeformAction extends DispatchAction {
 				printer.setNewPage(true);
 
 				//ocular procs
-				List<EyeformOcularProcedure> ocularProcs = ocularProcDao.getAllPreviousAndCurrent(demographicNo,appointmentNo);
+				List<EyeformOcularProcedure> ocularProcs = null;
+				if (apptDates != null)
+					ocularProcs = ocularProcDao.getAllByDate(demographicNo,appointmentNo,apptDates);
+				else
+					ocularProcs = ocularProcDao.getAllPreviousAndCurrent(demographicNo,appointmentNo);
+				 
 				if(ocularProcs.size()>0) {
 					printer.printOcularProcedures(ocularProcs);
 				}
 
 				//specs history
-				List<EyeformSpecsHistory> specsHistory = specsHistoryDao.getAllPreviousAndCurrent(demographicNo,appointmentNo);
+				List<EyeformSpecsHistory> specsHistory = null;
+				if (apptDates != null)
+					specsHistory = specsHistoryDao.getAllByDate(demographicNo,appointmentNo,apptDates);
+				else
+					specsHistory = specsHistoryDao.getAllPreviousAndCurrent(demographicNo,appointmentNo);
+				
 				if(specsHistory.size()>0) {
 					printer.printSpecsHistory(specsHistory);
 				}
@@ -635,7 +645,12 @@ public class EyeformAction extends DispatchAction {
 				printer.printRx(String.valueOf(demographicNo));
 
 				//measurements
-				List<Measurements> measurements = measurementsDao.getMeasurementsByAppointment(appointmentNo);
+				List<Measurements> measurements = null;
+				if (apptDates != null)
+					measurements = measurementsDao.getMeasurementsByAppointmentAndDate(appointmentNo,apptDates);
+				else
+					measurements = measurementsDao.getMeasurementsByAppointment(appointmentNo);
+					
 				if(measurements.size()>0) {
 /*
 					if(cppFromMeasurements) {
@@ -680,7 +695,13 @@ public class EyeformAction extends DispatchAction {
 				
 		        //photos
 		        DocumentResultsDao documentDao = (DocumentResultsDao)SpringUtils.getBean("documentResultsDao");
-		        List<Document> documents = documentDao.getPhotosByAppointmentNo(appointmentNo);
+		        List<Document> documents = null;
+		        
+		        if (apptDates != null)
+					documents = documentDao.getPhotosByAppointmentNoAndDates(appointmentNo,apptDates);
+				else
+					documents = documentDao.getPhotosByAppointmentNo(appointmentNo);
+
 		        if(documents.size()>0) {
 		        	String servletUrl  = request.getRequestURL().toString();
 		        	String url = servletUrl.substring(0,servletUrl.indexOf(request.getContextPath())+request.getContextPath().length());
@@ -691,6 +712,8 @@ public class EyeformAction extends DispatchAction {
 		        EFormValueDao eFormValueDao = (EFormValueDao) SpringUtils.getBean("EFormValueDao");
 		        EFormGroupDao eFormGroupDao = (EFormGroupDao) SpringUtils.getBean("EFormGroupDao");
 		        List<EFormGroup> groupForms = eFormGroupDao.getByGroupName("Eye form");
+		        
+		        // TODO: How will we filter this when appointment number is 0?
 		        List<EFormValue> values = eFormValueDao.findByApptNo(appointmentNo);
 		        List<EFormValue> diagrams = new ArrayList<EFormValue>();
 		        for(EFormValue value:values) {

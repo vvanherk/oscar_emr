@@ -102,6 +102,32 @@ public class MeasurementsDao extends HibernateDaoSupport {
 
 		return rs;
 	}
+	
+	public List<Measurements> getMeasurementsByAppointmentAndDate(int appointmentNo, List<Date> dates) {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+		// Compile the list of dates (if applicable)
+		String dateList = "";
+		if (dates != null) {
+			for ( Date d : dates ) {
+				if (dateList.length() > 0)
+					dateList += ", ";
+				dateList += "'" + formatter.format(d) + "'";
+			}
+		}
+		
+		String hql = "From Measurements m WHERE m.appointmentNo = " + appointmentNo;
+		
+		// Add the dates if there are any
+		if (dateList.length() > 0)
+			hql +=  " and date(m.dateEntered) in (" + dateList + ")";
+		
+		hql += " ORDER BY m.dateObserved DESC";
+
+		List<Measurements> rs = getHibernateTemplate().find(hql);
+
+		return rs;
+	}
 
 	public Measurements getLatestMeasurementByDemographicNoAndType(int demographicNo, String type) {
 		String queryStr = "From Measurements m WHERE m.demographicNo = " + demographicNo + " and m.type=? ORDER BY m.dateObserved DESC";
