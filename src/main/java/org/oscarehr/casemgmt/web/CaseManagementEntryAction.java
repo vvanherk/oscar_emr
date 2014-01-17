@@ -703,7 +703,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				issue = this.caseManagementMgr.getIssue(issueCode);
 			
 			if(issue != null){
-				cIssue = this.newIssueToCIssue(demographicNo, issue, (int) programProvider.getProgramId();
+				cIssue = this.newIssueToCIssue(demographicNo, issue, programProvider.getProgramId().intValue());
 				cIssue.setNotes(noteSet);
 			}
 		}
