@@ -930,7 +930,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			// Add the appropriate data to the tr
 			$lastTr.append("<td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td>");
 			if(item.note.match(/\n[\[]/g) !== null) {
-				$lastTr.append("<td style='width:62%'> " + item.note.replace( /\n[\[]S/g, '</td><td>[S') + "</td>");
+				$lastTr.append("<td style='width:62%'> " + item.note.replace( /\n\[Sign/, '</td><td>[Sign') + "</td>");
 			} else {
 				$lastTr.append("<td style='width:62%'> " + item.note+ '</td><td>[Signed by ' + signProvName + "]</td>");
 			}
@@ -1265,7 +1265,7 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 	$.ajax({
 		type: "POST",
 		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
-		data: "value=" + encodeURIComponen[st(value) + "&issue_id=" + impressionHistoryIssueId
+		data: "value=" + encodeURIComponent(value) + "&issue_id=" + impressionHistoryIssueId
 			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
 			+ (!isNaN(issueNoteId) ? "&noteId=" + issueNoteId : "&noteId=0")
 			+ (!isNaN(macroId) ? "&macroId=" + macroId : "")
