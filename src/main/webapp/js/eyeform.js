@@ -744,7 +744,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 		} else if (boxNameId == "macro") {
 			$("#" + boxNameId + " .content ul").prepend("<li><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\">" + item.title + "</span></li>");
 		} else {
-			if (item.PDF)
+			if (item.PDF || boxNameId == 'documents')
 				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"popupPage(800, 1000, '', '" + item.URL + "')\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
 			else {
 				var dateString = date.toFormattedString();
