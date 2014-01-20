@@ -198,6 +198,30 @@ public class UtilMisc {
     }
     return sb.toString();
   }
+  
+	public static String stripNewline(String s) {
+		if (null == s) {
+			return s;
+		}
+		
+		int n = s.length();
+		StringBuilder sb = new StringBuilder(n);
+		
+		for (int i = 0; i < n; i++) {
+			char c = s.charAt(i);
+			if (c == '\\') {
+				// no-op
+			} else if (c == '\n') {
+				// no-op
+			} else if (c == '\r') {
+				// no-op
+			} else {
+				sb.append(c);
+			}
+		}
+		
+		return sb.toString();
+	}
 
   public static String mysqlEscape(String S) {
     if (null == S) {
