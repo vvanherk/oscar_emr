@@ -568,25 +568,31 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 	
 	public ActionForward signSavedNotes(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		
-		JSONArray issues = (JSONArray) JSONSerializer.toJSON(request.getParameter("issues"));
+		JSONArray notes = (JSONArray) JSONSerializer.toJSON(request.getParameter("notes"));
 		
-		for(int i =0; i < issues.size(); i++)
+		for(int i =0; i < notes.size(); i++)
 		{
-			JSONObject currIssue = (JSONObject) JSONSerializer.toJSON(issues.getString(i));
+			JSONObject currIssNote = (JSONObject) JSONSerializer.toJSON(notes.getString(i));
+			String appointment_no = request.getParameter("appointment_no");
+			CaseManagementNote noteObj = null;
 			
-			MockHttpServletRequest mockReq = new MockHttpServletRequest();
-						
-			mockReq.setSession(request.getSession());
-			mockReq.addParameter("appointment_no",request.getParameter("appointment_no"));
-			mockReq.addParameter("demographic_no",request.getParameter("demographic_no"));
-			mockReq.addParameter("sign", "true");
+			noteObj = caseManagementNoteDao.getNote( Long.parseLong(currIssNote.getString("noteId"), 10) );
 			
-			mockReq.addParameter("value", currIssue.getString("value"));
-			mockReq.addParameter("issue_code", currIssue.getString("issue_code"));
-			mockReq.addParameter("noteId", currIssue.getString("noteId"));
+			if(appointment_no.equals("0") || noteObj.getAppointmentNo() == Integer.parseInt(appointment_no) ){
+				MockHttpServletRequest mockReq = new MockHttpServletRequest();
+							
+				mockReq.setSession(request.getSession());
+				mockReq.addParameter("appointment_no", appointment_no);
+				mockReq.addParameter("demographic_no",request.getParameter("demographic_no"));
+				mockReq.addParameter("sign", "true");
+				
+				mockReq.addParameter("value", currIssNote.getString("value"));
+				mockReq.addParameter("issue_code", currIssNote.getString("issue_code"));
+				mockReq.addParameter("noteId", currIssNote.getString("noteId"));
 
-			
-			ActionForward temp = issueNoteSaveJson(mapping, form, mockReq, response);
+				
+				ActionForward temp = issueNoteSaveJson(mapping, form, mockReq, response);
+			}
 		}
 		
 		return null;

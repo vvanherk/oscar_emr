@@ -11,7 +11,6 @@ var isEyeform = true;
 
 var COPY_LAST_IMPRESSION_TXT = "--Copy last impression--";
 
-
 /*
  * Utility Functions
  */
@@ -931,7 +930,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			// Add the appropriate data to the tr
 			$lastTr.append("<td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td>");
 			if(item.note.match(/\n[\[]/g) !== null) {
-				$lastTr.append("<td style='width:62%'> " + item.note.replace( /\n[\[]/g, '</td><td>[') + "</td>");
+				$lastTr.append("<td style='width:62%'> " + item.note.replace( /\n[\[]S/g, '</td><td>[S') + "</td>");
 			} else {
 				$lastTr.append("<td style='width:62%'> " + item.note+ '</td><td>[Signed by ' + signProvName + "]</td>");
 			}
@@ -1224,7 +1223,7 @@ function refreshBox(boxName, initialLoad) {
 
 
 function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {	
-   saveMeasurements();
+    saveMeasurements();
 	var value = $("#impressionAreaBox").val();
 	var currentPresentingValue = $("#currentIssueAreaBox").val();
 	var officeCommunicationValue = $("#officeCommunicationAreaBox").val();
@@ -1255,11 +1254,18 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 	$("#billBtn").css("display", "none");
 
 	$(".loaderImg").css("display", "inline");
-
+	      
+	if(appointmentNo === null || appointmentNo === "" ){
+		var r=confirm("Sign all unsigned notes for this patient?");
+		if (r==true) {
+			appointmentNo = '0';
+		}
+	}
+	      
 	$.ajax({
 		type: "POST",
 		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
-		data: "value=" + encodeURIComponent(value) + "&issue_id=" + impressionHistoryIssueId
+		data: "value=" + encodeURIComponen[st(value) + "&issue_id=" + impressionHistoryIssueId
 			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
 			+ (!isNaN(issueNoteId) ? "&noteId=" + issueNoteId : "&noteId=0")
 			+ (!isNaN(macroId) ? "&macroId=" + macroId : "")
@@ -1274,7 +1280,7 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		type: "POST",
 		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
 		data: "value=" + encodeURIComponent(currentPresentingValue) + "&issue_id=" + currentPresentingIssueId
-			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
+			+ (signAndExit ? "&sign=true&signAndExit=true" : "")
 			+ (!isNaN(currentPresentingNoteId) ? "&noteId=" + currentPresentingNoteId : "&noteId=0")
 			+ (!isNaN(macroId) ? "&macroId=" + macroId : "") // We need to include the macro id here so that 'issueNoteSaveJson' knowns what macro note data to add to the clinical note
 			+ "&runMacro=false",
@@ -1288,7 +1294,7 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		type: "POST",
 		url: ctx + "/CaseManagementEntry.do?method=officeCommunicationSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
 		data: "value=" + encodeURIComponent(officeCommunicationValue)
-			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
+			+ (signAndExit ? "&sign=true&signAndExit=true" : "")
 			+ (!isNaN(officeCommunicationNoteId) ? "&noteId=" + officeCommunicationNoteId : "&noteId=0")
 			+ (!isNaN(macroId) ? "&macroId=" + macroId : "") // We need to include the macro id here so that 'issueNoteSaveJson' knowns what macro note data to add to the clinical note
 			+ "&runMacro=false",
@@ -1317,7 +1323,7 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=signSavedNotes&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
-			data: "issues=" + JSON.stringify(unSignedNotes),
+			data: "notes=" + JSON.stringify(unSignedNotes),
 			dataType: "json"
 		});
 		
