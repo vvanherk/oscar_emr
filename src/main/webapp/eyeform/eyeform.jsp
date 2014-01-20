@@ -16,6 +16,7 @@
 <%@ page import="org.oscarehr.PMmodule.model.Program" %>
 <%@ page import="org.oscarehr.PMmodule.dao.ProgramDao" %>
 <%@ page import="oscar.OscarProperties" %>
+<%@ page import="oscar.util.UtilMisc"%>
 <%
 String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
 OscarProperties properties = OscarProperties.getInstance();
@@ -82,7 +83,7 @@ try {
 <script type="text/javascript">
 var ctx = "<%=request.getContextPath() %>";
 var demographicNo = "<%=request.getParameter("demographic_no") %>";
-var reason = "<%=appointmentReason%>";
+var reason = "<%=UtilMisc.stripNewline(appointmentReason)%>";
 var appointmentNo = "<%=appointmentNo %>";
 var providerNo = "<%=providerNo %>";
 var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
