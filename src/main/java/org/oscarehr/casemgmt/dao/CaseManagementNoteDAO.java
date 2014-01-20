@@ -688,36 +688,10 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 	}
 	
 	public List<CaseManagementNote> getMostRecentNotesByAppointmentNo(int appointmentNo,  List<Date> dates) throws ParseException {
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-
-		String dateList = "";
-		if (dates != null) {
-			for ( Date d : dates ) {
-				if (dateList.length() > 0)
-					dateList += ", ";
-				dateList += "'" + formatter.format(d) + "'";
-			}
-		}
-		
-		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.appointmentNo = ?";
-		
-		if (dateList.length() > 0)
-			hql +=  " and date(cmn.update_date) in (" + dateList + ")";
-		
-		List<String> tmp = this.getHibernateTemplate().find(hql, appointmentNo);
-		
-		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
-		
-		for (String uuid : tmp) {
-			CaseManagementNote note = this.getMostRecentNote(uuid);
-			
-			mostRecents.add(note);
-		}
-		
-		return mostRecents;
+		return getMostRecentNotesByAppointmentNoAndDemographicNo(appointmentNo, null, dates);
 	}
 	
-	public List<CaseManagementNote> getMostRecentNotesByAppointmentNoAndDemographicNo(int appointmentNo, int demographicNo, List<Date> dates) throws ParseException {
+	public List<CaseManagementNote> getMostRecentNotesByAppointmentNoAndDemographicNo(Integer appointmentNo, Integer demographicNo, List<Date> dates) throws ParseException {
 		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
 
 		// Compile the list of dates (if applicable)
@@ -730,13 +704,26 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 			}
 		}
 		
-		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.appointmentNo = ? and cmn.demographic_no = ?";
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.appointmentNo = ?";
+		Object[] params = null;
+		
+		// Add demographic number if there is one
+		// Also, create the params array
+		if (demographicNo != null) {
+			hql +=  "  and cmn.demographic_no = ?";
+			params = new Object[2];
+			params[1] = String.valueOf(demographicNo);
+		} else {
+			params = new Object[1];
+		}
+		
+		params[0] = appointmentNo;
 		
 		// Add the dates if there are any
 		if (dateList.length() > 0)
-			hql +=  " and date(cmn.update_date) in (" + dateList + ")";
+			hql +=  " and date(cmn.update_date) in (" + dateList + ")";		
 		
-		List<String> tmp = this.getHibernateTemplate().find(hql, new Object[] { new Integer(appointmentNo), String.valueOf(demographicNo) });
+		List<String> tmp = this.getHibernateTemplate().find(hql, params);
 		
 		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
 		
