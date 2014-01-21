@@ -48,7 +48,7 @@ sites = siteDao.getAllActiveSites();
 
 //get all sites bgColors
 for (Site st : sites) {
-	siteBgColor.put(st.getId().toString(), new String[]{st.getBgColor(), st.getShortName()});
+	siteBgColor.put(st.getId().toString(), new String[]{st.getBgColor(), st.getName()});
 }
 
   String curProvider_no = (String) session.getAttribute("user");
