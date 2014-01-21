@@ -263,7 +263,7 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 
 			} else if (issues.length == 1) {
 				hql = "select cmn from CaseManagementNote cmn where cmn.demographic_no= ? and cmn.id in (select max(cmn2.id) from CaseManagementNote cmn2 join cmn2.issues i" +
-					" where i.issue_id = ? and cmn2.demographic_no = ? and cmn2.archived = 0 group by cmn2.uuid) order by cmn.position, cmn.observation_date desc";
+					" where i.issue_id = ? and cmn2.demographic_no = ? group by cmn2.uuid) and cmn.archived=0 order by cmn.position, cmn.observation_date desc";
 				long id = Long.parseLong(issues[0]);
 				return this.getHibernateTemplate().find(hql, new Object[] { demographic_no, id, demographic_no });
 			}
