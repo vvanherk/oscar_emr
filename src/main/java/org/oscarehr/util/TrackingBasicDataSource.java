@@ -72,7 +72,7 @@ public class TrackingBasicDataSource extends BasicDataSource {
 
 		if (threadConnections.size() > MAX_CONNECTION_WARN_SIZE) {
 			String msg = "Thread is currently using " + threadConnections.size() + " separate jdbc connections, it souldn't need more than " + MAX_CONNECTION_WARN_SIZE;
-			logger.warn(msg);
+			//logger.warn(msg);
 			logger.debug(msg, new Exception(msg));
 		}
 
