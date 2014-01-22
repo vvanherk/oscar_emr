@@ -37,7 +37,8 @@ String appointmentReason = "";
 OscarAppointmentDao appointmentDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
 try {
 	Appointment appointment = null;
-	if (request.getParameter("appointment_no") != null) {
+	if (request.getParameter("appointment_no") != null &&
+       !request.getParameter("appointment_no").trim().equals("")) {
 		appointment = appointmentDao.find(Integer.parseInt(request.getParameter("appointment_no")));
 	} else {
 		appointment = appointmentDao.findDemoAppointmentToday(Integer.parseInt(request.getParameter("demographic_no")));
