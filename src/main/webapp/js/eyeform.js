@@ -1327,15 +1327,17 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 			dataType: "json"
 		});
 		
-		$.ajax({
-			type: "POST",
-			url: ctx + "/eyeform/Util.do?method=sendPlan",
-			data: "value=" + encodeURIComponent(planValue) + "&demographicNo=" + demographicNo,
-			dataType: "json",
-			success: function(data) {
-				sendPlanTickler = true;
-			}
-		});   
+      if(planValue != null && planValue.trim()!=""){
+         $.ajax({
+            type: "POST",
+            url: ctx + "/eyeform/Util.do?method=sendPlan",
+            data: "value=" + encodeURIComponent(planValue) + "&demographicNo=" + demographicNo,
+            dataType: "json",
+            success: function(data) {
+               sendPlanTickler = true;
+            }
+         });   
+      }
       //reset closeForm
       var r=confirm("Are you sure you want to exit?");
       if (r==false) {
