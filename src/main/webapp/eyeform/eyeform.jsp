@@ -248,6 +248,8 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				<div class="content" style="overflow: hidden;">
 					<textarea style="width: 100%; height: 99%;" id="currentIssueAreaBox"></textarea>
 				</div>
+				<div style='display: none;' class="historyList">
+				</div>
 			</div>
 			<div class="smallBox boxTitleLink" id="medicalOcularHistory">
 				<div class="title">
@@ -298,6 +300,8 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				</div>
 				<div class="content" style="overflow: hidden;">
 					<textarea style="width: 100%; height: 99%;" id="officeCommunicationAreaBox"></textarea>
+				</div>
+				<div style='display: none;' class="historyList">
 				</div>
 			</div>
 		</div>

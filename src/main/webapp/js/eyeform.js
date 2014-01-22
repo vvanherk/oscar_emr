@@ -59,10 +59,10 @@ Object.keys = Object.keys || (function () {
 
 
 Date.prototype.toFormattedString = function() {
-	var year = this.getUTCFullYear();
-	var month = this.getUTCMonth() + 1 + "";
+	var year = this.getFullYear();
+	var month = this.getMonth() + 1 + "";
 	month = (month.length == 1 ? "0" + month : month);
-	var day = this.getUTCDate() + "";
+	var day = this.getDate() + "";
 	day = (day.length == 1 ? "0" + day : day);
 
 	return year + "-" + month + "-" + day;
@@ -951,10 +951,14 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			currentIssueItems = currentIssueItems.slice(1);
 		}
 		
+		$("#currentIssueAreaBox").attr('isCurrentNote', true);
+		
 		$("#currentHistoryBox .title").click(function(e) {
 			e.stopPropagation();
 			popupPage(800, 600, "Current Issue History", ctx + "/CaseManagementEntry.do?method=issuehistory&demographicNo=" + demographicNo + "&issueIds=" + currentPresentingIssueId);
 		});
+
+		$("#currentHistoryBox .historyList").append("<div style='display: none;' id='currentHistoryNote' class='item'></div>");
 
 		for (var jsonItem in currentIssueItems) {
 			var item = currentIssueItems[jsonItem];
@@ -964,13 +968,15 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 
-			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#currentHistoryBox .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note.replace( /\n/g, ' ') + "</div>");
 		}
 
 		currentPresentingIssueId = jsonData.Issues[0].id;
 
 	} else if (boxNameId == "officeCommunication") {
 		var officeCommunicationItems = jsonData.Items;
+		
+		$("#officeCommunicationAreaBox").attr('isCurrentNote', true);
 		
 		$("#officeCommunication .title").click(function(e) {
 			e.stopPropagation();
@@ -982,8 +988,10 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			$("#officeCommunicationAreaBox").attr("noteId", jsonData.Items[0].id);
 			officeCommunicationItems = officeCommunicationItems.slice(1);
 		}
+		
+		$("#officeCommunication .historyList").append("<div style='display: none;' id='officeCommunicationNote' class='item'></div>");
 
-		/*
+		
 		for (var jsonItem in officeCommunicationItems) {
 			var item = officeCommunicationItems[jsonItem];
 			var date = new Date(item.update_date.time);
@@ -992,10 +1000,8 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 
-			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#officeCommunication .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note.replace( /\n/g, ' ') + "</div>");
 		}
-		*/
-
 	} else {
 		var boxItems = jsonData.Items;
 		if (boxNameId == "planHistory") {
@@ -2583,9 +2589,9 @@ $(document).ready(function() {
 		$("[itemtime]").each(function() {
 			var d = new Date(parseInt($(this).attr("itemtime")));
 			if (!isNaN(d.getTime())) {
-				d.setHours(00);
-				d.setMinutes(00);
-				d.setSeconds(00);
+				d.setHours(23);
+				d.setMinutes(59);
+				d.setSeconds(59);
 
 				if ($.inArray(d.getTime(), appointmentDate) == -1)
 					appointmentDate.push(d.getTime());
@@ -2611,6 +2617,9 @@ $(document).ready(function() {
 			$("[itemtime]").filter(function() {
 				return $(this).attr("itemtime") > time;
 			}).hide();
+			
+			changeTextAreaBasedOnAppointment(time, 'currentHistoryBox', 'currentHistoryNote', 'currentIssueAreaBox');
+			changeTextAreaBasedOnAppointment(time, 'officeCommunication', 'officeCommunicationNote', 'officeCommunicationAreaBox');
 
 			$(this).parent().parent().find(".appointmentDateText").text($(this).text());
 
@@ -2635,6 +2644,51 @@ $(document).ready(function() {
 
 
 });
+
+/**
+ * Will change the text area for the specified boxId to the text from the given appointment time.  It will also prevent
+ * the user from editing the previous note text (by setting the text area to readonly).
+ * 
+ * If the user is in the middle of entering text, it will save this text so that it can be restored if the user
+ * switches back to 'today'.
+ */
+function changeTextAreaBasedOnAppointment(time, boxId, note, textArea) {
+	var $note = $('#' + note);
+	var $textArea = $('#' + textArea);
+	
+	// Filter current history data from hidden div by the selected appointment date and copy to Current Hx field
+	if (time != endOfToday.getTime()) {
+		var latestCurHistItem = $("#" + boxId + " .historyList")
+		.children('[itemtime]')
+		.filter(function() { return $(this).attr("itemtime") <= time; })
+		.sort(function(a,b) { return new Date($(a).attr("itemtime")) > new Date($(b).attr("itemtime")); })
+		.first();
+		
+		// If we found an item with a date within the range, copy it to the text field
+		if (latestCurHistItem) {
+			// Backup the note the user is actively entering for this session
+			if ($note.text() == '' && $textArea.attr('isCurrentNote') == 'true') {
+				$note.text( $textArea.val() );
+				$textArea.attr('isCurrentNote', false);
+			}
+			
+			$textArea.val( latestCurHistItem.text() );
+			$textArea.attr('readonly', 'readonly');
+		}
+	} else {
+		// Restore the note the user was actively entering for this session
+		if ($note.text() != '') {
+			$textArea.val( $note.text() );
+			$note.text('');
+		} else {
+			$textArea.val('');
+		}
+		
+		$textArea.attr('isCurrentNote', true)
+		$textArea.removeAttr('readonly');
+	}
+}
+
 //Arrage plan  copy from eyeform2/cme.js
 function messagesLoaded(savedId){
 	   //alert('messagesLoaded() - savedNoteId=' + savedId); 
