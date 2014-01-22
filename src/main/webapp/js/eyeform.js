@@ -1333,7 +1333,7 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 			dataType: "json"
 		});
 		
-      if(planValue != null && planValue.trim()!=""){
+      if(planValue != null && planValue.trim()!="") {
          $.ajax({
             type: "POST",
             url: ctx + "/eyeform/Util.do?method=sendPlan",
@@ -1341,9 +1341,15 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
             dataType: "json",
             success: function(data) {
                sendPlanTickler = true;
-            }
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+				alert("Unable to send plan: " + textStatus + " (" + errorThrown + ")");
+			}
          });   
-      }
+      } else {
+		  // If there was no plan to send, just tell the eyeform that we successfully sent it (otherwise it will not close the window after saving)
+		  sendPlanTickler = true;
+	  }
       //reset closeForm
       var r=confirm("Are you sure you want to exit?");
       if (r==false) {
