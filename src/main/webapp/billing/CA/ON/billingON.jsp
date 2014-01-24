@@ -1775,14 +1775,17 @@ function changeSite(sel) {
       	
       	<select id="xml_provider" name="xml_provider" style="width:140px" onChange="onBillingDefaultsDropdownChange(this);">
 <%
-		if (selectedSite != null) {
-			Set<Provider> providers = selectedSite.getProviders();
+		if (selectedSite == null) {
+			selectedSite = selectedClinic.getSites().get(0);
+		}
+		Set<Provider> providers = selectedSite.getProviders();
 %>
-			<option value="000000" <%=providerview.equals("000000")?"selected":""%>>
-				<b>Select Provider</b>
-			</option>
+		<option value="000000" <%=providerview.equals("000000")?"selected":""%>>
+			<b>Select Provider</b>
+		</option>
 <%
-			for (Provider p : providers) {
+		for (Provider p : providers) {
+			if( p.getOhipNo() != null && p.getOhipNo().length() > 0 ){
 				String selected = "";
 				if ( defaultProvider.equals(p.getProviderNo()) ) {
 					selected = "selected";
@@ -1790,9 +1793,10 @@ function changeSite(sel) {
 					selected = "selected";
 				}
 %>
-				<option value="<%=p.getProviderNo()%>"<%=selected%>>
+				<option value="<%=p.getProviderNo()%>" <%=selected%>>
 					<b><%=p.getFormattedName()%></b>
 				</option>
+				
 <%			}
 		}
 %>
