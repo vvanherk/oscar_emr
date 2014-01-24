@@ -35,7 +35,6 @@ import javax.persistence.Table;
 
 import org.oscarehr.common.dao.ClinicDAO;
 
-//import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 
 @Entity
@@ -100,14 +99,11 @@ public class Site extends AbstractModel<Integer> implements java.io.Serializable
 
 	 */
 
-	@ManyToMany(cascade=CascadeType.ALL,fetch=FetchType.EAGER)
-	@JoinTable(name = "providersite",
-	joinColumns = {
-	@JoinColumn(name="site_id")
-	},
-	inverseJoinColumns = {
-	@JoinColumn(name="provider_no")
-	}
+	@ManyToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+	@JoinTable(
+		name = "providersite",
+		joinColumns = @JoinColumn(name="site_id"),
+		inverseJoinColumns = @JoinColumn(name="provider_no")
 	)
 		
 	private Set<Provider> providers;

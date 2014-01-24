@@ -90,12 +90,22 @@ public class SitesManageAction extends DispatchAction {
 
     	String clinicId = request.getParameter("site.clinic.id");
     	Clinic clinic = clinicDao.find( Integer.parseInt(clinicId) );
+    	
+    	Integer siteId = s.getId();
+    	if (siteId != null && siteId > 0) {
+			Site site = siteDao.getById( siteId );
+			
+			s.setProviders( site.getProviders() );
+		}
 
     	s.setClinic(clinic);
 
-    	if (this.getErrors(request).size()>0)
+    	if (this.getErrors(request).size()>0) {
+			List<Clinic> clinics = clinicDao.findAll();
+			request.setAttribute("clinics", clinics);
+			
     		return mapping.findForward("details");
-
+		}
 
     	siteDao.save(s);
 
