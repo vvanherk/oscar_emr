@@ -711,7 +711,9 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 				|| boxNameId == "consultations"
 				|| boxNameId == "documents"
 				|| boxNameId == "macro"
-				|| boxNameId == "allergies"))
+				|| boxNameId == "allergies"
+				|| boxNameId == "consultationReport"
+				|| boxNameId == "messages"))
 		jsonData.Items = jsonData.Items.reverse();
 
 	for (var jsonItem in jsonData.Items) {
