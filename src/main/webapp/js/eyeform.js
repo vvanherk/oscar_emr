@@ -63,7 +63,7 @@ Date.prototype.toFormattedString = function() {
 	var month = this.getMonth() + 1 + "";
 	month = (month.length == 1 ? "0" + month : month);
 	var day = this.getDate() + "";
-	day = (day.length == 1 ? "0" + day : day);
+	day = (day.length == 1 ? "0" + day  : day);
 
 	return year + "-" + month + "-" + day;
 };
@@ -643,12 +643,11 @@ function displayProcedure(value, element) {
 					$(box).find("#uiSaveProcedureBtn").click(function() {
 						if (!transformDate($("#procedureEditBox input[name=proc.dateStr]")))
 							return false;
-
+						
 						var dataStr = "";
 						$("#procedureEditBox").find("input, select, textarea").each(function(index) {
 							dataStr += "&" + $(this).attr("name") + "=" + encodeURIComponent($(this).val());
 						});
-
 						$.ajax({
 							url: ctx + "/eyeform/OcularProc.do",
 							data: "json=true&method=save&proc.id=" + id + dataStr,
@@ -706,15 +705,7 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 		$("#" + boxNameId + " .wrapper").html("<div class='content'><ul /></div>");
 	}
 
-	if ((typeof jsonData.Items != "undefined") &&
-			(boxNameId == "ocularMeds"
-				|| boxNameId == "consultations"
-				|| boxNameId == "documents"
-				|| boxNameId == "macro"
-				|| boxNameId == "allergies"
-				|| boxNameId == "consultationReport"
-				|| boxNameId == "messages"))
-		jsonData.Items = jsonData.Items.reverse();
+	jsonData.Items = jsonData.Items.reverse();
 
 	for (var jsonItem in jsonData.Items) {
 		var item = jsonData.Items[jsonItem];
@@ -1965,10 +1956,8 @@ function transformDate(dateField) {
 	var v = $(dateField).val();
 
 	var d = new Date(v);
-
-	if (typeof d != "undefined" && !isNaN(d.getTime()))
-		$(dateField).val(d.toFormattedString());
-	else {
+	
+	if (typeof d == "undefined" || isNaN(d.getTime())) {
 		$(dateField).css("border", "2px solid red");
 		$(dateField).one("click", function() {
 			$(this).css("border", "");

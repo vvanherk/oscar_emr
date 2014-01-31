@@ -58,8 +58,7 @@
 <nested:iterate indexId="idx" id="note" name="history">
 	<div
 		style="width: 99%; background-color: #EFEFEF; font-size: 12px; border-left: thin groove #000000; border-bottom: thin groove #000000; border-right: thin groove #000000;">
-		<pre><nested:equal name="note" property="signed" value="true">  Signed::
-		</nested:equal><nested:write name="note" property="note" /></pre>
+		<pre></nested:equal><nested:write name="note" property="note" /></pre>
 		<div style="color: #0000FF;">
         
         Creation Date: <nested:write name="note" property="createDate" format="dd-MMM-yyyy H:mm" /><br>
