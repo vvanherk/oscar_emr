@@ -2726,7 +2726,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		
 		List<OfficeCommunication> history = officeCommunicationDao.getByDemographicNo(Integer.parseInt(demono));
 		
-		Collections.reverse(history);
+		//Collections.reverse(history);
 		request.setAttribute("history",history);
 		
 		return mapping.findForward("offCommHist");
