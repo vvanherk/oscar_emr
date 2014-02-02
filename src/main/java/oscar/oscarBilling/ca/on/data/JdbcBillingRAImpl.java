@@ -697,7 +697,7 @@ public class JdbcBillingRAImpl {
 		
 		List ret = new Vector();
 		String sql = "select billing_no, service_count, error_code, amountclaim, service_code,service_date, "
-				+ "providerohip_no, amountpay, hin from radetail where raheader_no= " + id + " and providerohip_no ="
+				+ "providerohip_no, amountpay, claim_no, hin from radetail where raheader_no= " + id + " and providerohip_no ="
 				+ providerOhipNo + providerGroupBillingConditional;
 		ResultSet rsdemo = dbObj.searchDBRecord(sql);
 		try {
@@ -709,7 +709,7 @@ public class JdbcBillingRAImpl {
 				String demo_hin = rsdemo.getString("hin") != null ? rsdemo.getString("hin") : "";
 				demo_hin = demo_hin.trim();
 				String site = "";
-				sql = "select b.provider_no, b.demographic_name, b.hin, b.billing_date, b.billing_time, b.visittype,d.provider_no as fdoc, b.clinic as site "
+				sql = "select b.provider_no, b.demographic_name, b.hin, b.billing_date, b.billing_time, b.visittype,d.provider_no as fdoc, (select short_name from site where site_id=b.site) as site "
 						+ "from billing_on_cheader1 b, demographic d where b.id= " + account+ " and b.demographic_no = d.demographic_no";
 
 				ResultSet rsdemo3 = dbObj.searchDBRecord(sql);
