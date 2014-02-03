@@ -807,17 +807,8 @@ function onCheckMaster() {
 	<tr>
 			<td >
 			Billing Notes:<br>
-			<%
-			String tempLoc = "";
 
-            OscarProperties props = OscarProperties.getInstance();
-            boolean bMoreAddr = props.getProperty("scheduleSiteID", "").equals("") ? false : true;
-            if(bMoreAddr) {
-            	tempLoc = request.getParameter("siteId").trim();
-            }
-
-			%>
-			<textarea name="comment" cols=60 rows=4><%=tempLoc %></textarea>
+			<textarea name="comment" cols=60 rows=4></textarea>
 			</td>
 	</tr>
 <%      }
