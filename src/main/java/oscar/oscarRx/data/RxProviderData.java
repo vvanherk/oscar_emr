@@ -107,7 +107,7 @@ public class RxProviderData {
 			// Otherwise, set the providers clinic address to the default clinic
 		//	clinic = clinicDao.getClinic();
 		//}
-		MiscUtils.getLogger().info("CLINIC NO: " + clinicNo);
+		
 		if ( clinic != null ) {
 			clinicName = clinic.getClinicName();
         	clinicAddress = clinic.getClinicAddress();
@@ -118,7 +118,6 @@ public class RxProviderData {
         	clinicFax = clinic.getClinicFax();
 		}
 		
-		MiscUtils.getLogger().info("SITE ID: " + siteId);
 		// If we specified a valid site, set the providers clinic address to this site
 		Site site = siteDao.find(siteId);
 		
