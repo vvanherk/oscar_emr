@@ -30,12 +30,13 @@
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
 <%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@page import="org.oscarehr.eyeform.model.EyeformConsultationReport"%>
+<%@page import="java.lang.Integer"%>
 
 <html:html>
   <head>
     <html:base />
     <title>Generate Consultation Report</title>
-<link rel="stylesheet" href="css/displaytag.css" type="text/css">
+<link rel="stylesheet" href="../css/displaytag.css" type="text/css">
 <style type="text/css">
 .boldRow {
 	color:red;
@@ -107,6 +108,11 @@ function clear_demographic() {
 	document.consultationReportForm.elements['dmname'].value='';
 }
 
+function doPaginate(p) {
+	document.consultationReportForm.elements['page'].value=p;
+	doSubmit();
+}
+
 function doSubmit() {
 	document.consultationReportForm.method.value='list';
 	document.consultationReportForm.elements['cr.demographicName'].value=document.consultationReportForm.elements['dmname'].value
@@ -176,25 +182,51 @@ function doSubmit() {
 				Calendar.setup({ inputField : "edate", ifFormat : "%Y-%m-%d", showsTime :false, button : "edate_cal", singleClick : true, step : 1 });
 	   </script>
 	<td></td>
-
 			<td>
 
 			<html:submit onclick="return doSubmit();">List Consultation Reports</html:submit>
 
 			</td>
+		</tr>
+		<tr>
+			<td colspan=6 align="center">
+
+			<c:if test="${not empty demoName}">
+
+				Consultation reports for <c:out value="demoName"/>:
+
+			</c:if>
+			
+			<%
+				int itemCount = (Integer) request.getAttribute("conReportCount");
+				int currPage = (Integer) request.getAttribute("conReportPage");
+				if(itemCount > 15) {
+					if(currPage > 0){ %> <input type="submit" onclick="return doPaginate('<%= currPage - 1%>');" value="<<" >	<% }
+			%>
+			
+			Current Page: <input type="text" name="page" value="<%= currPage + 1%>" style="width:50px" />
+			
+			<% 		if((currPage+1) * 15 < itemCount){ %> <input type="submit" onclick="return doPaginate('<%= currPage + 1 %>');" value=">>" >	<% } %>
+			</td>
+			</tr><tr>
+			<td colspan=6>
+			
+				Pages: 
+			<%	
+					for( int i=0 ; i*15 < itemCount ; i++){	%>
+					
+						<input type="submit" onclick="return doPaginate('<%= i%>');" value=<%= i + 1 %> > 
+					
+			<%		}
+				}
+			%>
+
+			</td>
 
 		</tr>
 	</table>
-
-	<c:if test="${not empty demoName}">
-
-		Consultation reports for <c:out value="demoName"/>:
-
-	</c:if>
-
-
-	<display:table name="conReportList" requestURI="/eyeform/ConsultationReportList.do" defaultsort="2" sort="list" defaultorder="descending"
-		id="conreport" pagesize="15">
+	
+	<display:table name="conReportList" requestURI="/eyeform/ConsultationReportList.do" defaultsort="2" defaultorder="descending" id="conreport">
 
 		<c:url var="thisURL" value="/eyeform/Eyeform.do">
 			<c:param name="conReportNo" value="${conreport.id}"/>

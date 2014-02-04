@@ -67,6 +67,11 @@ public class ConReportListAction extends DispatchAction {
 		
 		DynaValidatorForm testForm = (DynaValidatorForm) form;
 		ConsultationReportFormBean crBean = (ConsultationReportFormBean)testForm.get("cr");
+		String pageStr = request.getParameter("page");
+		int page;
+		
+		if(pageStr == null || pageStr.equals("")){ 	page = 0; }
+		else { 	page = Integer.parseInt(pageStr);	}
 		
 		EyeformConsultationReport cr = new EyeformConsultationReport();
 		if(crBean.getStatus() != null && crBean.getStatus().length()>0) {
@@ -107,8 +112,13 @@ public class ConReportListAction extends DispatchAction {
 		
 		List<Provider> pl = providerDao.getActiveProviders();
 		crBean.setProviderList(pl);
-
-		List<EyeformConsultationReport> results = crDao.search(cr,startDate,endDate);
+		
+		int count = crDao.getCount(cr,startDate,endDate);
+		
+		request.setAttribute("conReportCount", count);
+		request.setAttribute("conReportPage", page);
+		
+		List<EyeformConsultationReport> results = crDao.search(cr,startDate,endDate, page);
 		for(EyeformConsultationReport crtmp:results) {
 			crtmp.setDemographic(demographicDao.getClientByDemographicNo(crtmp.getDemographicNo()));
 			crtmp.setProvider(providerDao.getProvider(crtmp.getProviderNo()));

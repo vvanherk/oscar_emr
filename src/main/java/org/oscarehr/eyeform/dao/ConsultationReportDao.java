@@ -57,10 +57,41 @@ public class ConsultationReportDao extends AbstractDao<EyeformConsultationReport
 	    return(results);
 	}
 	
+	public int getCount(EyeformConsultationReport queryBean,Date startDate, Date endDate){
+		
+		String sql="select count(x) ";
+		
+		Query query = createQuery(queryBean, startDate, endDate, -1, sql);
+		 
+		@SuppressWarnings("unchecked")
+	    Long result = (Long) query.getSingleResult();
+	    return( result.intValue());
+	}
+	
 	public List<EyeformConsultationReport> search(EyeformConsultationReport queryBean,Date startDate, Date endDate) {
-		String sql="select x from "+modelClass.getSimpleName()+" x ";
+		
+	    return(search(queryBean,startDate,endDate, -1));
+	}
+	
+	public List<EyeformConsultationReport> search(EyeformConsultationReport queryBean,Date startDate, Date endDate, int page) {
+		
+		String sql="select x ";
+		
+		Query query = createQuery(queryBean, startDate, endDate, page, sql);
+		 
+		@SuppressWarnings("unchecked")
+	    List<EyeformConsultationReport> results=query.getResultList();
+	    return(results);
+	}
+	
+	private Query createQuery(EyeformConsultationReport queryBean,Date startDate, Date endDate, int page, String sql){
+		
+		sql += "from "+modelClass.getSimpleName()+" x ";
+		
 		int pos=0;
+		
 		Map<Integer,Object> params = new LinkedHashMap<Integer,Object>();
+		
 		if(queryBean.getStatus() != null) {
 			if(pos == 0) {
 				sql += "WHERE ";
@@ -119,15 +150,24 @@ public class ConsultationReportDao extends AbstractDao<EyeformConsultationReport
 			params.put(pos, endDate);
 		}
 		
+		if(page > -1) {
+			sql += " order by x.id desc";
+		}
+		
 		logger.info(sql);
+		
 		Query query = entityManager.createQuery(sql);
+		
+		if(page > -1) {
+			query.setFirstResult( page*15 + 1);
+			query.setMaxResults( 15 );
+		}
+		
 		for(Integer p:params.keySet()) {
 			query.setParameter(p,params.get(p));
 		}
-		 
-		@SuppressWarnings("unchecked")
-	    List<EyeformConsultationReport> results=query.getResultList();
-	    return(results);
+		
+		return query;
 	}
 
 }
