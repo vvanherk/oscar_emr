@@ -1071,7 +1071,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 						$.ajax({
 							type: "POST",
 							url: address,
-							data: "value=" + value + "&issue_code=" + noteBoxes[$(parent).parent().parent().parent().attr('id')] + "&sign=false",
+							data: "value=" + encodeURIComponent(value) + "&issue_code=" + noteBoxes[$(parent).parent().parent().parent().attr('id')] + "&sign=false",
 							dataType: "json",
 							success: function(data) {
 								$("#" + boxNameId + " .content ul").children().remove();
