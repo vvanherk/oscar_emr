@@ -43,7 +43,7 @@
 		$.ajax({
 			type: "POST",
 			url: "<%=request.getContextPath()%>/CaseManagementEntry.do?method=issueNoteSaveJson&demographic_no=<%=request.getParameter("demographicNo")%>&noteId=0&json=true&issue_id=<%=request.getParameter("issueIds")%>",
-			data: "value=" + $("#noteText").val() + "&issue_code=PatientLog&sign=true",
+			data: "value=" + escape($("#noteText").val()) + "&issue_code=PatientLog&sign=true",
 			dataType: "json",
 			success: function(data) {
 				window.close();
