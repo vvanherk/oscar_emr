@@ -236,7 +236,11 @@ public class EyeformAction extends DispatchAction {
 			   request.setAttribute("ocularMedication",StringEscapeUtils.escapeJavaScript(getFormattedCppItemFromMeasurements("Ocular Medications:", "cpp_ocularMeds", Integer.parseInt(demo), appNo, true)));
 
 		   } else {*/
-			   request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", "CurrentHistory", Integer.parseInt(demo), appNo, false)));
+				List<String> currentHistoryIssueNames = new ArrayList<String>();
+				currentHistoryIssueNames.add("CurrentHistory");
+				currentHistoryIssueNames.add("eyeformCurrentIssue");
+			
+			   request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", currentHistoryIssueNames, Integer.parseInt(demo), appNo, false)));
 			   request.setAttribute("pastOcularHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Past Ocular History:", "PastOcularHistory", Integer.parseInt(demo), appNo, true)));
 			   request.setAttribute("diagnosticNotes",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Diagnostic Notes:", "DiagnosticNotes", Integer.parseInt(demo), appNo, true)));
 			   request.setAttribute("medicalHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Medical History:", "MedHistory", Integer.parseInt(demo), appNo, true)));
@@ -421,12 +425,19 @@ public class EyeformAction extends DispatchAction {
 		  return header + sb.toString();
 	   }
 
-	   public String getFormattedCppItem(String header, String issueCode, int demographicNo, int appointmentNo, boolean includePrevious) {
+	   public String getFormattedCppItem(String header, List<String> issueCodes, int demographicNo, int appointmentNo, boolean includePrevious) {
 		   Collection<CaseManagementNote> notes = null;
+			
+			if (issueCodes == null || issueCodes.size() == 0)
+				return "";
+			
+			String[] issues = new String[issueCodes.size()];
+			issueCodes.toArray(issues);
+		   
 		   if(!includePrevious) {
-			    notes = filterNotesByAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, new String[] {issueCode}),appointmentNo);
+			    notes = filterNotesByAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues),appointmentNo);
 		   } else {
-			   notes = filterNotesByPreviousOrCurrentAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, new String[] {issueCode}),appointmentNo);
+			   notes = filterNotesByPreviousOrCurrentAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues),appointmentNo);
 		   }
 
 		   if(notes.size()>0) {
@@ -438,6 +449,13 @@ public class EyeformAction extends DispatchAction {
 			   return header + sb.toString();
 		   }
 		   return new String();
+	   }
+	   
+	   public String getFormattedCppItem(String header, String issueCode, int demographicNo, int appointmentNo, boolean includePrevious) {
+		   List<String> issues = new ArrayList<String>();
+		   issues.add( issueCode );
+		   
+		   return getFormattedCppItem(header, issues, demographicNo, appointmentNo, includePrevious);
 	   }
 /*
 	   private String getCppItemAsString(String demo, String issueCode, String text) {
@@ -1018,7 +1036,11 @@ public class EyeformAction extends DispatchAction {
 			   request.setAttribute("ocularMedication",StringEscapeUtils.escapeJavaScript(getFormattedCppItemFromMeasurements("Current Medications:", "cpp_ocularMeds", demographic.getDemographicNo(), appNo, true)));
 
 			} else {*/
-				request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", "CurrentHistory", demographic.getDemographicNo(), appNo, false)));
+				List<String> currentHistoryIssueNames = new ArrayList<String>();
+				currentHistoryIssueNames.add("CurrentHistory");
+				currentHistoryIssueNames.add("eyeformCurrentIssue");
+				
+				request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", currentHistoryIssueNames, demographic.getDemographicNo(), appNo, false)));
 				request.setAttribute("pastOcularHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Past Ocular History:", "PastOcularHistory", demographic.getDemographicNo(), appNo, true)));
 				request.setAttribute("medHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Medical History:", "MedHistory", demographic.getDemographicNo(), appNo, true)));
 				request.setAttribute("famHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Family History:", "FamHistory", demographic.getDemographicNo(), appNo, true)));
