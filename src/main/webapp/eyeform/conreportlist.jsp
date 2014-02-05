@@ -31,6 +31,7 @@
 <%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@page import="org.oscarehr.eyeform.model.EyeformConsultationReport"%>
 <%@page import="java.lang.Integer"%>
+<%@page import="java.lang.Math"%>
 
 <html:html>
   <head>
@@ -200,24 +201,34 @@ function doSubmit() {
 			<%
 				int itemCount = (Integer) request.getAttribute("conReportCount");
 				int currPage = (Integer) request.getAttribute("conReportPage");
+				int offset = 0;
+				
+				if( currPage >= 10 && (currPage+9)*15 < itemCount ) { offset = currPage; }
+				else if( currPage >= 19 && (currPage+9)*15 > itemCount ) { offset = (int) Math.ceil(itemCount/15)- 19; }
 				if(itemCount > 15) {
-					if(currPage > 0){ %> <input type="submit" onclick="return doPaginate('<%= currPage - 1%>');" value="<<" >	<% }
+					if(currPage > 0){ %> 
+						<input type="submit" onclick="return doPaginate('<%= 0 %>');" value="<<" >	
+						<input type="submit" onclick="return doPaginate('<%= currPage - 1%>');" value="<" >	
+					<% }
 			%>
-			
 			Current Page: <input type="text" name="page" value="<%= currPage + 1%>" style="width:50px" />
 			
-			<% 		if((currPage+1) * 15 < itemCount){ %> <input type="submit" onclick="return doPaginate('<%= currPage + 1 %>');" value=">>" >	<% } %>
+			<% 		if((currPage+1) * 15 < itemCount){ %> 
+				<input type="submit" onclick="return doPaginate('<%= currPage + 1 %>');" value=">" >	
+				<input type="submit" onclick="return doPaginate('<%= (int) Math.ceil(itemCount/15) %>');" value=">>" >
+			<% } %>
 			</td>
 			</tr><tr>
 			<td colspan=6>
 			
 				Pages: 
 			<%	
-					for( int i=0 ; i*15 < itemCount ; i++){	%>
+					for( int i=0 ; (i+offset)*15 < itemCount ; i++){	%>
 					
-						<input type="submit" onclick="return doPaginate('<%= i%>');" value=<%= i + 1 %> > 
+						<input type="submit" onclick="return doPaginate('<%= i + offset%>');" value=<%= i + 1 + offset %> > 
 					
-			<%		}
+			<%		if(i == 19){ break; }
+					}
 				}
 			%>
 
