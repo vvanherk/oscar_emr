@@ -705,8 +705,10 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 		$("#" + boxNameId + " .wrapper").html("<div class='content'><ul /></div>");
 	}
 
-	jsonData.Items = jsonData.Items.reverse();
-
+	if( boxNameId != "billing") {
+		jsonData.Items = jsonData.Items.reverse();
+	}
+	
 	for (var jsonItem in jsonData.Items) {
 		var item = jsonData.Items[jsonItem];
 		item.title = item.title.replace(/\n/g," ");
