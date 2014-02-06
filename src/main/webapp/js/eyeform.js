@@ -923,9 +923,9 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			// Add the appropriate data to the tr
 			$lastTr.append("<td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td>");
 			if(item.note.match(/\n[\[]/g) !== null) {
-				$lastTr.append("<td style='width:62%'> " + item.note.replace( /\n\[Sign/, '</td><td>[Sign') + "</td>");
+				$lastTr.append("<td style='width:62%'> " + item.note.replace( /\n\[Sign/, '</td><td>[Sign').replace( /\n/, "<br>") + "</td>");
 			} else {
-				$lastTr.append("<td style='width:62%'> " + item.note+ '</td><td>[Signed by ' + signProvName + "]</td>");
+				$lastTr.append("<td style='width:62%'> " + item.note.replace(/\n/, "<br>")+ '</td><td>[Signed by ' + signProvName + "]</td>");
 			}
 		}
 
@@ -961,7 +961,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 
-			$("#currentHistoryBox .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#currentHistoryBox .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note + "</div>");
 		}
 
 		currentPresentingIssueId = jsonData.Issues[0].id;
@@ -993,7 +993,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 
-			$("#officeCommunication .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#officeCommunication .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note + "</div>");
 		}
 	} else {
 		var boxItems = jsonData.Items;
