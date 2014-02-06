@@ -248,8 +248,8 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
 					<span class="uiBarBtn"><span class="text smallerText" id="copyApptReasonBtn">Copy Appointment Reason</span></span>
 				</div>
-				<div class="content" style="overflow: hidden;">
-					<textarea style="width: 100%; height: 99%;" id="currentIssueAreaBox"></textarea>
+				<div class="content" style="overflow: auto;">
+					<textarea style="width: 99%; height: 99%;" id="currentIssueAreaBox"></textarea>
 				</div>
 				<div style='display: none;' class="historyList">
 				</div>
@@ -301,8 +301,8 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 					Office Communication
 					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
 				</div>
-				<div class="content" style="overflow: hidden;">
-					<textarea style="width: 100%; height: 99%;" id="officeCommunicationAreaBox"></textarea>
+				<div class="content" style="overflow: auto;">
+					<textarea style="width:99%; height: 99%;" id="officeCommunicationAreaBox"></textarea>
 				</div>
 				<div style='display: none;' class="historyList">
 				</div>

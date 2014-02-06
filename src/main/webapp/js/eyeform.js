@@ -961,7 +961,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 
-			$("#currentHistoryBox .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#currentHistoryBox .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note + "</div>");
 		}
 
 		currentPresentingIssueId = jsonData.Issues[0].id;
@@ -993,7 +993,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 
-			$("#officeCommunication .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#officeCommunication .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note + "</div>");
 		}
 	} else {
 		var boxItems = jsonData.Items;
