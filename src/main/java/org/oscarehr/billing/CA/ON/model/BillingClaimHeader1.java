@@ -102,7 +102,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     private String creator;
     @Temporal(TemporalType.TIMESTAMP)    
     private Date timestamp1;
-    private Integer site;
+    private Integer site = 1;
 
     @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
     @JoinColumn(name="ch1_id", referencedColumnName="id")

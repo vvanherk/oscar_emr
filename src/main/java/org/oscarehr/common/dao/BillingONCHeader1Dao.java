@@ -52,10 +52,10 @@ public class BillingONCHeader1Dao extends AbstractDao<BillingONCHeader1>{
 
         Query query = entityManager.createNativeQuery("select count("+distinctStr+" demographic_no) from billing_on_cheader1 ch where ch.provider_no = ? and billing_date >= ? and billing_date <= ?");
         query.setParameter(1, providerNo);
-                query.setParameter(2,startDate);
-                query.setParameter(3,endDate);
-                BigInteger bint =  (BigInteger) query.getSingleResult();
-                return bint.intValue();
+		query.setParameter(2,startDate);
+		query.setParameter(3,endDate);
+		BigInteger bint =  (BigInteger) query.getSingleResult();
+		return bint.intValue();
     }
 
 }

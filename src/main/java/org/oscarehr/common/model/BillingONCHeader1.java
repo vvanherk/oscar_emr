@@ -101,7 +101,7 @@ public class BillingONCHeader1 extends AbstractModel<Integer> implements Seriali
 	@Column(name = "timestamp1", insertable = false, updatable = false)
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date timestamp;
-	private Integer site = null;
+	private Integer site = 1;
 
 	public BillingONCHeader1() {}
 

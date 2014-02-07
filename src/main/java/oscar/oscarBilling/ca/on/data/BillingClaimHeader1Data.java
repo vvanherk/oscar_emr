@@ -36,7 +36,7 @@ public class BillingClaimHeader1Data {
 	String ref_lab_num;
 	String man_review;
 	String location;
-	Integer site;
+	Integer site = 1;
 
 	String demographic_no;
 	String provider_no;
