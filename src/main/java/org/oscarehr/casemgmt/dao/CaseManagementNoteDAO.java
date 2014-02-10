@@ -86,10 +86,21 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 
 	@SuppressWarnings("unchecked")
 	public List<CaseManagementNote> getIssueHistory(String issueIds, String demoNo) {
-		String hql = "select distinct cmn from CaseManagementNote cmn where cmn.demographic_no = ? and exists" 
-				+ "(select cn.id from CaseManagementNote cn join cn.issues i where i.issue_id in (" + issueIds
-				+ ") and cn.demographic_no = ? GROUP BY cn.uuid HAVING max(cn.id)=cmn.id ) ORDER BY cmn.observation_date asc";
-		return this.getHibernateTemplate().find(hql, new Object[] { demoNo, demoNo });
+				
+		String hql = "select cmn from CaseManagementNote cmn join cmn.issues i where i.issue_id in (" + issueIds + ") and cmn.demographic_no= ? ORDER BY cmn.observation_date asc";
+			
+		List<CaseManagementNote> issueList = this.getHibernateTemplate().find(hql, demoNo );
+		
+		hql = "select max(cmn.id) from CaseManagementNote cmn join cmn.issues i where i.issue_id in (" + issueIds + ") and cmn.demographic_no = ? group by cmn.uuid order by max(cmn.id)";
+		List<Integer> currNoteList = (List<Integer>) this.getHibernateTemplate().find(hql, demoNo );
+		
+		for(CaseManagementNote issueNote : issueList)
+		{
+			if(!currNoteList.contains(issueNote.getId())){
+				issueList.remove(issueNote);
+			}
+		}
+		return issueList;
 	}
 
 	public CaseManagementNote getNote(Long id) {
@@ -262,10 +273,22 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 				return this.getHibernateTemplate().find(hql, demographic_no);
 
 			} else if (issues.length == 1) {
-				hql = "select cmn from CaseManagementNote cmn where cmn.demographic_no= ? and exists (select cmn2.id from CaseManagementNote cmn2 join cmn2.issues i" +
-					" where i.issue_id = ? and cmn2.demographic_no = ? group by cmn2.uuid having max(cmn2.id) = cmn.id) and cmn.archived=0 order by cmn.position, cmn.observation_date desc";
 				long id = Long.parseLong(issues[0]);
-				return this.getHibernateTemplate().find(hql, new Object[] { demographic_no, id, demographic_no });
+				
+				hql = "select cmn from CaseManagementNote cmn join cmn.issues i where i.issue_id = ? and cmn.demographic_no= ? and cmn.archived=0 order by cmn.position, cmn.observation_date desc";
+					
+				List<CaseManagementNote> issueList = this.getHibernateTemplate().find(hql, new Object[] { id, demographic_no });
+				
+				hql = "select  max(cmn.id) from CaseManagementNote cmn join cmn.issues i where i.issue_id = ? and cmn.demographic_no = ? group by cmn.uuid order by max(cmn.id)";
+				List<Integer> currNoteList = (List<Integer>) this.getHibernateTemplate().find(hql, new Object[] { id, demographic_no });
+				
+				for(CaseManagementNote issueNote : issueList)
+				{
+					if(!currNoteList.contains(issueNote.getId())){
+						issueList.remove(issueNote);
+					}
+				}
+				return issueList;
 			}
 		}
 
