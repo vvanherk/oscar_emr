@@ -259,6 +259,9 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
     public List<CaseManagementNote> getActiveNotesByDemographic(String demographic_no, String[] issues) {
 		String list = null;
 		String hql;
+		
+		List<CaseManagementNote> issueListReturn = new ArrayList<CaseManagementNote>();
+		
 		if (issues != null) {
 			if (issues.length > 1) {
 				list = "";
@@ -284,15 +287,16 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 				
 				for(CaseManagementNote issueNote : issueList)
 				{
-					if(!currNoteList.contains(issueNote.getId())){
-						issueList.remove(issueNote);
+					if(currNoteList.contains(issueNote.getId())) {
+						issueListReturn.add(issueNote);
 					}
 				}
-				return issueList;
+				
+				return issueListReturn;
 			}
 		}
 
-		return new ArrayList<CaseManagementNote>();
+		return issueListReturn;
 	}
 
 	@SuppressWarnings("unchecked")
