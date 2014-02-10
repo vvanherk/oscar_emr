@@ -69,6 +69,11 @@ function currentProAdd(val,ob) {
 			break;
 <%
 	String customCppIssues[] = oscar.OscarProperties.getInstance().getProperty("encounter.custom_cpp_issues", "").split(",");
+	
+	// Error check
+	if (customCppIssues.length == 1 && (customCppIssues[0] == null || customCppIssues[0].length() == 0))
+		customCppIssues = new String[0];
+	
 	for(String customCppIssue:customCppIssues) {
 		%>
 		case '<%=customCppIssue %>':
