@@ -53,7 +53,7 @@ public class JdbcBillingCorrection {
 				+ ch1Obj.getProvider_rma_no() + "'," + " apptProvider_no='" + ch1Obj.getApptProvider_no() + "',"
 				+ " asstProvider_no='" + ch1Obj.getAsstProvider_no() + "'," + " creator='" + ch1Obj.getCreator()
 
-				+ "', site=" + (ch1Obj.getSite()==null?"null":"'"+ch1Obj.getSite()+"'")
+				+ "', site=" + (ch1Obj.getSite()==null?"1":"'"+ch1Obj.getSite()+"'")
 
 				+ " where id=" + ch1Obj.getId();
 		_logger.info("updateBillingClaimHeader(sql = " + sql + ")");
@@ -236,7 +236,7 @@ public class JdbcBillingCorrection {
 				ch1Obj.setCreator(rs.getString("creator"));			
 				ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
 
-				Integer siteNo = null;
+				Integer siteNo = 1;
 				if (rs.getString("site") != null) {
 					try {
 						siteNo = Integer.parseInt( rs.getString("site") );

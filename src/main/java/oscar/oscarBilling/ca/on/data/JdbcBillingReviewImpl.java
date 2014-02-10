@@ -152,7 +152,7 @@ public class JdbcBillingReviewImpl {
                                 }
                                 rs2.close();
 				
-				Integer siteNo = null;
+				Integer siteNo = 1;
 				if (rs.getString("site") != null) {
 					try {
 						siteNo = Integer.parseInt( rs.getString("site") );
@@ -213,7 +213,7 @@ public class JdbcBillingReviewImpl {
 					ch1Obj.setApptProvider_no(rs.getString("apptProvider_no"));
 					ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
 					
-					Integer siteNo = null;
+					Integer siteNo = 1;
 					if (rs.getString("site") != null) {
 						try {
 							siteNo = Integer.parseInt( rs.getString("site") );
@@ -298,7 +298,7 @@ public class JdbcBillingReviewImpl {
 				ch1Obj.setApptProvider_no(rs.getString("apptProvider_no"));
 				ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
 				
-				Integer siteNo = null;
+				Integer siteNo = 1;
 				if (rs.getString("site") != null) {
 					try {
 						siteNo = Integer.parseInt( rs.getString("site") );
@@ -427,7 +427,7 @@ public class JdbcBillingReviewImpl {
 
                                ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
 								
-								Integer siteNo = null;
+								Integer siteNo = 1;
 								if (rs.getString("site") != null) {
 									try {
 										siteNo = Integer.parseInt( rs.getString("site") );

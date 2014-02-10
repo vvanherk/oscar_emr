@@ -202,7 +202,7 @@ public class BillingSavePrep {
 		claim1Header.setAsstProvider_no("");
 		claim1Header.setCreator((String) val.getSession().getAttribute("user"));
 		
-		Integer siteNo = null;
+		Integer siteNo = 1;
 		if (val.getParameter("site") != null) {
 			try {
 				siteNo = Integer.parseInt( val.getParameter("site") );

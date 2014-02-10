@@ -163,7 +163,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
 		
 		bill2.creator = new String( bill.getCreator() );
 		bill2.timestamp1 = new Date( bill.getTimestamp1().getTime() );
-		bill2.site = new Integer( bill.getSite() == null ? 0 : bill.getSite() );
+		bill2.site = new Integer( bill.getSite() == null ? 1 : bill.getSite() );
 		
 		List<BillingItem> items = bill.getBillingItems();
 		List<BillingItem> billingItems = bill2.getBillingItems();
@@ -483,7 +483,8 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
      * @param site the site to set
      */
     public void setSite(Integer site) {
-        this.site = site;
+		if (site != null)
+			this.site = site;
     }
 
     /**

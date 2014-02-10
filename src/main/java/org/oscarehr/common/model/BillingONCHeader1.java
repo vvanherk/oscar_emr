@@ -150,7 +150,8 @@ public class BillingONCHeader1 extends AbstractModel<Integer> implements Seriali
 		this.asstProviderNo = asstProviderNo;
 		this.creator = creator;
 		this.timestamp = timestamp;
-		this.site = site;
+		if (site != null)
+			this.site = site;
 	}
 
 
@@ -427,7 +428,8 @@ public class BillingONCHeader1 extends AbstractModel<Integer> implements Seriali
 	}
 
 	public void setSite(Integer site) {
-		this.site = site;
+		if (site != null)
+			this.site = site;
 	}
 
 	public boolean equals(Object o) {

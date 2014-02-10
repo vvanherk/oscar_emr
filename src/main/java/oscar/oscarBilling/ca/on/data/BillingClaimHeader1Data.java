@@ -69,7 +69,8 @@ public class BillingClaimHeader1Data {
 	}
 
 	public void setSite(Integer site) {
-		this.site = site;
+		if (site != null)
+			this.site = site;
 	}
 
 	public String getAcc_num() {
