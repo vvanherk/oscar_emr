@@ -1339,7 +1339,10 @@ public class CaseManagementViewAction extends BaseCaseManagementViewAction {
 			addUrl = "";
 			
 			OfficeCommunicationDao officeCommunicationDao = (OfficeCommunicationDao) SpringUtils.getBean("officeCommunicationDao");
-			List<OfficeCommunication> ocList = officeCommunicationDao.getByAppointmentNo( Integer.parseInt(appointmentNoAsString) );
+			List<OfficeCommunication> ocList;
+			
+			if(appointmentNoAsString.equals("0")){	ocList = officeCommunicationDao.getByDemographicNo( Integer.parseInt(demoNo) );}
+			else {	ocList = officeCommunicationDao.getByAppointmentNo( Integer.parseInt(appointmentNoAsString) ); }
 			
 			if (ocList != null) {
 				for ( OfficeCommunication oc : ocList ) {
