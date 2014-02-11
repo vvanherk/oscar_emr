@@ -583,7 +583,7 @@ public class JdbcBillingCreateBillingFile {
 				ch1Obj.setAsstProvider_no(rs.getString("asstProvider_no"));
 				ch1Obj.setCreator(rs.getString("creator"));
 				
-				Integer siteNo = null;
+				Integer siteNo = 1;
 				if (rs.getString("site") != null) {
 					try {
 						siteNo = Integer.parseInt( rs.getString("site") );
@@ -788,7 +788,7 @@ public class JdbcBillingCreateBillingFile {
 				ch1Obj.setAsstProvider_no(rs.getString("asstProvider_no"));
 				ch1Obj.setCreator(rs.getString("creator"));
 				
-				Integer siteNo = null;
+				Integer siteNo = 1;
 				if (rs.getString("site") != null) {
 					try {
 						siteNo = Integer.parseInt( rs.getString("site") );

@@ -109,7 +109,7 @@ public class BillingCorrectionPrep {
 			ch1Obj.setCreator((String) requestData.getSession().getAttribute(
 					"user"));
 			
-			Integer siteNo = null;
+			Integer siteNo = 1;
 			if (requestData.getParameter("site") != null) {
 				try {
 					siteNo = Integer.parseInt( requestData.getParameter("site") );
