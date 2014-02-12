@@ -113,6 +113,10 @@ public class EFormExportZip {
             Pattern eformImagePattern = Pattern.compile("\\$\\{oscar_image_path\\}.+?[\"|'|>|<]"); //searches for ${oscar_image_path}xxx...xxx" (terminated by ", ', or >)
             Matcher matcher = eformImagePattern.matcher(html);
             int start = 0;
+            
+            // We don't want to add duplicate images to the zip file (causes a ZipException)
+            List<String> addedImagesList = new ArrayList<String>();
+            
             while (matcher.find(start)) {
                 String match = matcher.group();
                 MiscUtils.getLogger().debug(match);
@@ -120,6 +124,10 @@ public class EFormExportZip {
                 int length = "${oscar_image_path}".length();
                 String imageFileName = match.substring(length, match.length()-1);
                 MiscUtils.getLogger().debug("Image Name: " + imageFileName);
+                
+                if (addedImagesList.contains(imageFileName))
+					continue;
+                
                 File imageFile = DisplayImageAction.getImageFile(imageFileName);
                 try {
                     FileInputStream fis = new FileInputStream(imageFile);  //should error out if image not found, in this case, skip the image
@@ -127,6 +135,8 @@ public class EFormExportZip {
                     zos.putNextEntry(imageZipEntry);
                     outputToInput(zos, fis);
                     zos.closeEntry();
+                    
+                    addedImagesList.add(imageFileName);
                 } catch (FileNotFoundException fnfe) {
                      continue;
                 }

@@ -36,7 +36,7 @@
     UserProperty prop = userPropertyDAO.getProp((String) session.getAttribute("user"),  UserProperty.MYDRUGREF_ID);
     String mydrugrefid = "";
     if (prop != null) {
-        String mydrugrefid = prop.getValue();
+        mydrugrefid = prop.getValue();
         if (mydrugrefid == null){mydrugrefid = "";}
 	}
 %>
