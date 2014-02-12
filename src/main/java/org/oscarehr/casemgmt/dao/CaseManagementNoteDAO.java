@@ -86,21 +86,22 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 
 	@SuppressWarnings("unchecked")
 	public List<CaseManagementNote> getIssueHistory(String issueIds, String demoNo) {
-				
 		String hql = "select cmn from CaseManagementNote cmn join cmn.issues i where i.issue_id in (" + issueIds + ") and cmn.demographic_no= ? ORDER BY cmn.observation_date asc";
-			
+		
+		List<CaseManagementNote> issueListReturn = new ArrayList<CaseManagementNote>();
+		
 		List<CaseManagementNote> issueList = this.getHibernateTemplate().find(hql, demoNo );
 		
 		hql = "select max(cmn.id) from CaseManagementNote cmn join cmn.issues i where i.issue_id in (" + issueIds + ") and cmn.demographic_no = ? group by cmn.uuid order by max(cmn.id)";
 		List<Integer> currNoteList = (List<Integer>) this.getHibernateTemplate().find(hql, demoNo );
 		
-		for(CaseManagementNote issueNote : issueList)
-		{
-			if(!currNoteList.contains(issueNote.getId())){
-				issueList.remove(issueNote);
+		for (CaseManagementNote issueNote : issueList) {
+			if (currNoteList.contains( issueNote.getId() )) {
+				issueListReturn.add(issueNote);
 			}
 		}
-		return issueList;
+		
+		return issueListReturn;
 	}
 
 	public CaseManagementNote getNote(Long id) {
