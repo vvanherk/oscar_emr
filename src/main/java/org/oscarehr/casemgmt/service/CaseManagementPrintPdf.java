@@ -38,7 +38,9 @@ import javax.servlet.http.HttpServletRequest;
 import org.oscarehr.casemgmt.model.CaseManagementNote;
 
 import oscar.OscarProperties;
-import oscar.oscarClinic.ClinicData;
+import org.oscarehr.util.SpringUtils;
+import org.oscarehr.common.dao.ClinicDAO;
+import org.oscarehr.common.model.Clinic;
 
 import com.lowagie.text.Chunk;
 import com.lowagie.text.Document;
@@ -60,6 +62,8 @@ import com.lowagie.text.pdf.PdfWriter;
  * @author rjonasz
  */
 public class CaseManagementPrintPdf {
+	
+	private ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
 
     private HttpServletRequest request;
     private OutputStream os;
@@ -137,8 +141,17 @@ public class CaseManagementPrintPdf {
         String mrp = propResource.getString("oscarEncounter.pdfPrint.mrp") + " " + (String)request.getAttribute("mrp") + "\n";
         String[] info = new String[] { title, gender, dob, age, mrp };
 
-        ClinicData clinicData = new ClinicData();
-        clinicData.refreshClinicData();
+		String clinicNoAsString = request.getParameter("clinicNo");
+		Clinic clinicData;
+		
+		if(clinicNoAsString != null) { 
+			int clinicNo = Integer.parseInt(clinicNoAsString); 
+			clinicData = clinicDao.find(clinicNo);
+		}
+		else { 	
+			clinicData = clinicDao.getClinic();
+		}
+		
         String[] clinic = new String[] {clinicData.getClinicName(), clinicData.getClinicAddress(),
         clinicData.getClinicCity() + ", " + clinicData.getClinicProvince(),
         clinicData.getClinicPostal(), clinicData.getClinicPhone()};

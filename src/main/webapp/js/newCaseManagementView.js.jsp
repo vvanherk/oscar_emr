@@ -3227,7 +3227,8 @@ function autoCompleteShowMenuCPP(element, update) {
         var frm = document.forms["caseManagementEntryForm"];
 
         frm.method.value = "print";
-
+		
+		frm.clinicNo.value = $F("clinicNo");
         frm.pStartDate.value = $F("printStartDate");
         frm.pEndDate.value = $F("printEndDate");
         frm.submit();

@@ -419,6 +419,7 @@ try
 	<html:hidden property="billRegion" value="<%=((String )OscarProperties.getInstance().getProperty(\"billregion\",\"\")).trim().toUpperCase()%>" />
 	<html:hidden property="apptProvider" value="<%=apptProv%>" />
 	<html:hidden property="providerview" value="<%=provView%>" />
+	<html:hidden property="clinicNo" value="" />
 	<input type="hidden" name="toBill" id="toBill" value="false">
 	<input type="hidden" name="deleteId" value="0">
 	<input type="hidden" name="lineId" value="0">

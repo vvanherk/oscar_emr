@@ -33,7 +33,10 @@
 <%@page import="org.oscarehr.casemgmt.web.formbeans.*, org.oscarehr.casemgmt.model.CaseManagementNote"%>
 <%@page import="org.oscarehr.common.dao.UserPropertyDAO, oscar.OscarProperties" %>
 <%@page import="org.oscarehr.common.model.UserProperty" %>
+<%@page import="org.oscarehr.common.dao.ClinicDAO" %>
+<%@page import="org.oscarehr.common.model.Clinic" %>
 <%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="java.util.List" %>
 <%@page import="org.oscarehr.util.LoggedInInfo" %>
 <%@page import="org.oscarehr.casemgmt.common.Colour" %>
 
@@ -51,6 +54,8 @@
 
     String frmName = "caseManagementEntryForm" + request.getParameter("demographicNo");
 	CaseManagementEntryFormBean cform = (CaseManagementEntryFormBean)session.getAttribute(frmName);
+	
+	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
 
 %>
 
@@ -781,7 +786,16 @@ function doscroll(){
               <form id="frmPrintOps" action="" onsubmit="return false;">
 	              	<%
 	              		String demographicNo = (String) request.getParameter("demographicNo");
+	              		List<Clinic> clinics = clinicDao.findAll();
 	              	%>
+	              	<select id="clinicNo" name="clinicNo">
+					<% for(Clinic c: clinics){ 
+						String clinicName = c.getClinicName();
+						if(clinicName.length()>25){ clinicName =  clinicName.substring(0, 24) + "..."; }
+						%>
+						<option value="<%= c.getId() %>"> <%= clinicName %> </option>
+					<% } %>
+	              	</select>
               		<input type="hidden" id="demographicNo" value="<%=demographicNo%>" />
               		<table id="printElementsTable">
               			<tr>

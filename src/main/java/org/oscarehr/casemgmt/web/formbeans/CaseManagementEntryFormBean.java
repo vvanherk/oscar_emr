@@ -31,6 +31,7 @@ import org.oscarehr.casemgmt.model.CaseManagementCPP;
 import org.oscarehr.casemgmt.model.CaseManagementNote;
 import org.oscarehr.casemgmt.web.CheckBoxBean;
 import org.oscarehr.casemgmt.web.CheckIssueBoxBean;
+import org.oscarehr.util.SpringUtils;
 
 public class CaseManagementEntryFormBean extends ActionForm  implements java.io.Serializable {
 	private CaseManagementNote caseNote;
@@ -54,44 +55,45 @@ public class CaseManagementEntryFormBean extends ActionForm  implements java.io.
 	private String caseNote_note;
 	private String caseNote_history;	
 	private String chain;
-        private String appointmentNo;
-        private String appointmentDate;
-        private String startTime;
-        private String billRegion;
-        private String apptProvider;
-        private String providerview;
+	private String appointmentNo;
+	private String appointmentDate;
+	private String startTime;
+	private String billRegion;
+	private String apptProvider;
+	private String providerview;
+
+	private String observation_date;
+
+	private boolean groupNote;
+	private String[] groupNoteClientIds;
+	private int groupNoteTotalAnonymous;
 	
-        private String observation_date;
 	
-        private boolean groupNote;
-        private String[] groupNoteClientIds;
-        private int groupNoteTotalAnonymous;
-        
-        
-        public CaseManagementEntryFormBean() {
-            super();           
-            this.caseNote = new CaseManagementNote();
-        }               
-        
-        public void reset(ActionMapping mapping, javax.servlet.http.HttpServletRequest request) {
-            String strDemo;
-            if( (strDemo = request.getParameter("demographicNo")) != null) {                
-                String sessionName = "caseManagementEntryForm" + strDemo;
-                CaseManagementEntryFormBean sessionFrm = (CaseManagementEntryFormBean)request.getSession().getAttribute(sessionName);
-                if( sessionFrm != null ) {
-                    this.issueCheckList = sessionFrm.getIssueCheckList();
-                    this.newIssueCheckList = sessionFrm.newIssueCheckList;
-                }
-            }
-        }
-        
-        public String getObservation_date() {
-            return this.observation_date;
-        }
-        
-        public void setObservation_date(String date) {
-            this.observation_date = date;
-        }
+	public CaseManagementEntryFormBean() {
+		super();           
+		
+		this.caseNote = new CaseManagementNote();
+	}               
+	
+	public void reset(ActionMapping mapping, javax.servlet.http.HttpServletRequest request) {
+		String strDemo;
+		if( (strDemo = request.getParameter("demographicNo")) != null) {                
+			String sessionName = "caseManagementEntryForm" + strDemo;
+			CaseManagementEntryFormBean sessionFrm = (CaseManagementEntryFormBean)request.getSession().getAttribute(sessionName);
+			if( sessionFrm != null ) {
+				this.issueCheckList = sessionFrm.getIssueCheckList();
+				this.newIssueCheckList = sessionFrm.newIssueCheckList;
+			}
+		}
+	}
+	
+	public String getObservation_date() {
+		return this.observation_date;
+	}
+	
+	public void setObservation_date(String date) {
+		this.observation_date = date;
+	}
         
 	public String getCaseNote_history() {
 		return caseNote_history;
