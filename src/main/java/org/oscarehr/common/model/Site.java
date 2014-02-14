@@ -33,8 +33,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
-import org.oscarehr.common.dao.ClinicDAO;
-
 import org.oscarehr.util.SpringUtils;
 
 @Entity

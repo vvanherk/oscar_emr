@@ -60,30 +60,6 @@ select {
 </style>
 <%
 	String demographicNo = (String) request.getAttribute("demographicNo");
-	org.oscarehr.common.model.Allergy[] allergies = RxPatientData.getPatient(Integer.parseInt(demographicNo)).getAllergies();
-		String aller = "";
-		for (int j = 0; j < allergies.length; j++) {
-			aller += allergies[j].getShortDesc(13, 8,
-					"...")
-					+ ";";
-		}
-		String presc = "";
-
-		oscar.oscarRx.data.RxPrescriptionData prescriptData = new oscar.oscarRx.data.RxPrescriptionData();
-		oscar.oscarRx.data.RxPrescriptionData.Prescription[] arr = {};
-		arr = prescriptData.getUniquePrescriptionsByPatient(Integer
-				.parseInt(demographicNo));
-		if (arr.length > 0) {
-			for (int i = 0; i < arr.length; i++) {
-				String rxD = arr[i].getRxDate().toString();
-
-				String rxP = arr[i].getFullOutLine().replaceAll(";",
-						" ");
-				rxP = rxP + "   " + arr[i].getEndDate();
-				if (arr[i].getEndDate().after(new java.util.Date()))
-					presc += rxD + "  " + rxP + "\n";
-			}
-		}
 %>
 
 <%
@@ -177,8 +153,8 @@ function confirmPrint(btn) {
 	con_testbook='<%=request.getAttribute("testbooking")%>';
 	con_ocularpro='<%=request.getAttribute("ocularProc")%>';
 	con_follow='<%=request.getAttribute("followup")%>';
-	con_aller='<%=StringEscapeUtils.escapeJavaScript(aller) %>';
-	con_presc='<%=StringEscapeUtils.escapeJavaScript(presc) %>';
+	con_aller='<%=request.getAttribute("aller")%>';
+	con_presc='<%=request.getAttribute("presc")%>';
 
 <%
 	String customCppIssues[] = oscar.OscarProperties.getInstance().getProperty("encounter.custom_cpp_issues", "").split(",");
@@ -271,12 +247,12 @@ function confirmPrint(btn) {
 
 	function allergiesAdd(){
 		if (con_aller!=null && trim(con_aller)!='')
-			document.eyeForm.elements["cp.allergies"].value+="Allergies:"+con_aller+"\n";
+			document.eyeForm.elements["cp.allergies"].value+=con_aller+"\n";
 	}
 
 	function prescriptionsAdd(){
 		if (con_presc!=null && trim(con_presc)!='')
-			document.eyeForm.elements["cp.allergies"].value+="Current Prescriptions:\n"+con_presc+"\n";
+			document.eyeForm.elements["cp.allergies"].value+=con_presc+"\n";
 	}
 	function currentMedsAdd(str){
 		if (str!=null && trim(str)!='')

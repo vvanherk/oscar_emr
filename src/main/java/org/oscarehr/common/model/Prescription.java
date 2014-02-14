@@ -39,6 +39,9 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.CascadeType;
+import javax.persistence.FetchType;
+import javax.persistence.OneToOne;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -75,6 +78,9 @@ public class Prescription extends AbstractModel<Integer> implements Serializable
 
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date lastUpdateDate;
+	
+	@OneToOne(cascade=CascadeType.ALL, fetch=FetchType.EAGER, mappedBy = "prescription")
+	private Drug drug;
 	
 	@PreRemove
 	protected void jpaPreventDelete() {
@@ -152,5 +158,13 @@ public class Prescription extends AbstractModel<Integer> implements Serializable
 	public Date getLastUpdateDate() {
     	return (lastUpdateDate);
     }
+    
+    public Drug getDrug() {
+		return drug;
+	}
+	
+	public void setDrug(Drug drug) {
+		this.drug = drug;
+	}
 
 }

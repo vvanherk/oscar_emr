@@ -669,6 +669,16 @@ function displayProcedure(value, element) {
 	})();
 }
 
+function openNewConsultationReport() {
+	var endDate = $(".appointmentSelectBtn .appointmentDateText").html();
+	if (endDate === undefined || endDate.toLowerCase() === 'today')
+		endDate = endOfToday.toFormattedString();
+
+	var url = ctx + "/eyeform/Eyeform.do?method=prepareConReport&demographicNo=" + demographicNo + "&flag=new&endDate=" + endDate;
+	
+	popupPage(700, 1000, 'AddConReport' + demographicNo, url);
+}
+
 function closeAll() {
 	$(".uiBarBtnOn").removeClass("uiBarBtnOn");
 
@@ -838,6 +848,12 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 					$("#newProcedureDate").focus();
 					$("#procedures .uiBarBtn").addClass("uiBarBtnOn");
 				}
+			});
+		} else if (boxNameId == "consultationReport") {
+			$("#" + boxNameId + " .addBtn").click( function(e) {
+				e.stopPropagation();
+				openNewConsultationReport();
+				//eval("(function() { " + action + "})()");
 			});
 		} else {
 			if (jsonData.PopUpMenuURLS.length > 0 && jsonData.PopUpMenuURLS.length == jsonData.PopUpMenuNames.length) {
@@ -1287,6 +1303,9 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 			+ "&runMacro=false",
 		dataType: "json",
 		success: function(data) {
+			if (data['id']) {
+				$("#currentIssueAreaBox").attr("noteId", data['id']);
+			}
 			savedCurrentPresenting = true;
 		}
 	});
