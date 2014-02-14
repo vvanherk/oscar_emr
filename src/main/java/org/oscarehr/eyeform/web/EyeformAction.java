@@ -480,22 +480,28 @@ public class EyeformAction extends DispatchAction {
 		   
 		   if ( prescriptions.size() > 0 ) {
 			   StringBuilder sb = new StringBuilder();
+			   Date now = new java.util.Date();
+			   
 			   for (Prescription p : prescriptions) {
-				   Drug d = p.getDrug();
-				   sb.append("\n");
-				   /*
-				   if (d.getBrandName() != null) {
-						sb.append(d.getBrandName() + "\n");
-					if (d.getCustomName() != null)
-						sb.append(d.getCustomName() + "\n");
-					if (d.getQuantity() != null)
-						sb.append("Quantity: " + d.getQuantity() + "\n");
-					if (d.getRepeat() != null && d.getRepeat() != 0)
-						sb.append("Repeats: " + d.getRepeat() + "\n");
-					if (p.getComments() != null)
-						sb.append(p.getComments() + "\n");
-					*/
-					sb.append(d.getSpecial());
+				   List<Drug> drugs = p.getDrugs();
+				   for ( Drug d : drugs ) {
+					   if ( !d.getEndDate().after(now) )
+							continue;
+						sb.append("\n");
+					   /*
+					   if (d.getBrandName() != null) {
+							sb.append(d.getBrandName() + "\n");
+						if (d.getCustomName() != null)
+							sb.append(d.getCustomName() + "\n");
+						if (d.getQuantity() != null)
+							sb.append("Quantity: " + d.getQuantity() + "\n");
+						if (d.getRepeat() != null && d.getRepeat() != 0)
+							sb.append("Repeats: " + d.getRepeat() + "\n");
+						if (p.getComments() != null)
+							sb.append(p.getComments() + "\n");
+						*/
+						sb.append(d.getSpecial());
+					}
 			   }
 			   
 			   return "Prescriptions:" + sb.toString() + "\n";
@@ -975,10 +981,15 @@ public class EyeformAction extends DispatchAction {
 		   List<Prescription> filteredPrescriptions = new ArrayList<Prescription>();
 		   
 		   for ( Prescription p : prescriptions) {
-				if ( !p.getDrug().getEndDate().after(now) )
-					continue;
+				boolean hasAVAlidDrug = false;
+				for ( Drug d : p.getDrugs() ) {
+					if ( d.getEndDate().after(now) ) {
+						hasAVAlidDrug = true;
+						break;
+					}
+				}
 
-			   if ( p.getDatePrescribed().compareTo(endDateMidnight) > 0 && p.getDatePrescribed().compareTo(endDate) <= 0) {
+			   if ( hasAVAlidDrug && p.getDatePrescribed().compareTo(endDateMidnight) > 0 && p.getDatePrescribed().compareTo(endDate) <= 0) {
 				   filteredPrescriptions.add(p);
 			   }
 		   }
@@ -992,10 +1003,15 @@ public class EyeformAction extends DispatchAction {
 		   List<Prescription> filteredPrescriptions = new ArrayList<Prescription>();
 		   
 		   for ( Prescription p : prescriptions) {			   
-			   if ( !p.getDrug().getEndDate().after(now) )
-					continue;
+			   boolean hasAVAlidDrug = false;
+				for ( Drug d : p.getDrugs() ) {
+					if ( d.getEndDate().after(now) ) {
+						hasAVAlidDrug = true;
+						break;
+					}
+				}
 
-			   if ( p.getDatePrescribed().compareTo(endDate) <= 0) {
+			   if ( hasAVAlidDrug && p.getDatePrescribed().compareTo(endDate) <= 0) {
 				   filteredPrescriptions.add(p);
 			   }
 		   }

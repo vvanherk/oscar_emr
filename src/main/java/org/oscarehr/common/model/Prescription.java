@@ -27,6 +27,7 @@ package org.oscarehr.common.model;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -41,7 +42,7 @@ import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.CascadeType;
 import javax.persistence.FetchType;
-import javax.persistence.OneToOne;
+import javax.persistence.OneToMany;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -79,8 +80,8 @@ public class Prescription extends AbstractModel<Integer> implements Serializable
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date lastUpdateDate;
 	
-	@OneToOne(cascade=CascadeType.ALL, fetch=FetchType.EAGER, mappedBy = "prescription")
-	private Drug drug;
+	@OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER, mappedBy = "prescription")
+	private List<Drug> drugs;
 	
 	@PreRemove
 	protected void jpaPreventDelete() {
@@ -159,12 +160,12 @@ public class Prescription extends AbstractModel<Integer> implements Serializable
     	return (lastUpdateDate);
     }
     
-    public Drug getDrug() {
-		return drug;
+    public List<Drug> getDrugs() {
+		return drugs;
 	}
 	
-	public void setDrug(Drug drug) {
-		this.drug = drug;
+	public void setDrugs(List<Drug> drugs) {
+		this.drugs = drugs;
 	}
 
 }
