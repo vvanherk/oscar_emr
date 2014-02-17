@@ -647,13 +647,18 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 			note.setRevision(Integer.parseInt(note.getRevision())+1 + "");
 
-			if (archived != null && archived.equalsIgnoreCase("true")){	note.setArchived(true);	}
+			boolean isNewlyArchived = false;
+			if (archived != null && archived.equalsIgnoreCase("true")) {
+				if (!note.isArchived())
+					isNewlyArchived = true;
+				note.setArchived(true);
+			}
 			
 			if (demographicNo == null)
 				demographicNo = note.getDemographic_no();
 			
-			// Update the update date only if the note text has changed
-			if (!note.getNote().equalsIgnoreCase(strNote))
+			// Update the update date only if the note text has changed or we have archived the note
+			if (!note.getNote().equalsIgnoreCase(strNote) || isNewlyArchived)
 				note.setUpdate_date( noteDate );
 
 		} else {

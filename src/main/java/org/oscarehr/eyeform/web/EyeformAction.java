@@ -934,6 +934,9 @@ public class EyeformAction extends DispatchAction {
 	   public Collection<CaseManagementNote> filterNotesByAppointment(Collection<CaseManagementNote> notes, int appointmentNo) {
 		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
 		   for(CaseManagementNote note:notes) {
+			   if (note.isArchived())
+					continue;
+
 			   if(note.getAppointmentNo() == appointmentNo) {
 				   filteredNotes.add(note);
 			   }
@@ -944,6 +947,9 @@ public class EyeformAction extends DispatchAction {
 	   public Collection<CaseManagementNote> filterNotesByPreviousOrCurrentAppointment(Collection<CaseManagementNote> notes, int appointmentNo) {
 		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
 		   for(CaseManagementNote note:notes) {
+			   if (note.isArchived())
+					continue;
+
 			   if(note.getAppointmentNo() <= appointmentNo) {
 				   filteredNotes.add(note);
 			   }
@@ -1051,6 +1057,9 @@ public class EyeformAction extends DispatchAction {
 		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
 		   
 		   for ( CaseManagementNote note : notes) {
+			   if (note.isArchived())
+					continue;
+
 			   if ( note.getObservation_date().compareTo(endDateMidnight) > 0 && note.getObservation_date().compareTo(endDate) <= 0) {
 				   filteredNotes.add(note);
 			   }
@@ -1063,6 +1072,9 @@ public class EyeformAction extends DispatchAction {
 		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
 		   
 		   for ( CaseManagementNote note : notes ) {
+			   if (note.isArchived())
+					continue;
+
 			   if ( note.getObservation_date().compareTo(endDate) <= 0 ) {
 				   filteredNotes.add(note);
 			   }
