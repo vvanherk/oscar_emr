@@ -589,10 +589,14 @@ public class PdfRecordPrinter {
             	chunk = new Chunk("Impression/Plan: (" + formatter.format(note.getObservation_date()) + ")\n", obsfont);
             	phrase.add(chunk);
             }
+            
+            String noteText = note.getNote();
+            noteText = noteText.replaceAll("\\[Signed on.*?\\]", "");
+            
             if(compact) {
-            	phrase.add(note.getNote() + "\n");
+            	phrase.add(noteText + "\n");
             } else {
-            	phrase.add(note.getNote() + "\n\n");
+            	phrase.add(noteText + "\n\n");
             }
             p.add(phrase);
             document.add(p);

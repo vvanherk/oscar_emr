@@ -933,7 +933,9 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 				lastImpressionSet = true;
 			}
 
-			$("#" + boxNameId + " .historyTable").find("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'></tr>");
+			var onClick = "popupPage(800, 1200, \"Appointment Report\", \"" + ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + $(this).attr("appointmentNo") + "&demographicNo=" + demographicNo + "&apptZeroDates=" + date.toFormattedString() + "\")";
+
+			$("#" + boxNameId + " .historyTable").find("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' onClick='" + onClick + "' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'></tr>");
 			
 			// Get the last tr element in the table
 			var $lastTr = $("#" + boxNameId + " .historyTable").find("tbody").children("tr").last();
@@ -948,10 +950,6 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 		}
 
 		impressionHistoryIssueId = jsonData.Issues[0].id;
-
-		$(".historyList .item, .historyTable tr").click(function() {
-			popupPage(800, 1200, "Appointment Report", ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + $(this).attr("appointmentNo") + "&demographicNo=" + demographicNo + "&apptZeroDates=" + date.toFormattedString());
-		});
 
 	} else if (boxNameId == "currentIssueHistory") {
 		var currentIssueItems = jsonData.Items;

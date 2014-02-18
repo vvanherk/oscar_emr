@@ -125,7 +125,7 @@ import com.lowagie.text.pdf.PdfCopyFields;
 public class EyeformAction extends DispatchAction {
 
 	static Logger logger = MiscUtils.getLogger();
-	static String[] cppIssues = {"CurrentHistory","PastOcularHistory","MedHistory","OMeds","OcularMedication","DiagnosticNotes","FamHistory"};
+	static String[] cppIssues = {"CurrentHistory","eyeformCurrentIssue","Reminders","PastOcularHistory","MedHistory","OMeds","OcularMedication","DiagnosticNotes","FamHistory"};
 
 	CaseManagementManager cmm = null;
 	OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
@@ -668,7 +668,8 @@ public class EyeformAction extends DispatchAction {
 						logger.error("Unable to parse demographic number.");
 					}
 				}
-
+				
+				
 				//need to get notes first to set the signing provider
 				List<CaseManagementNote> notes = null;
 				if (appointment != null) {
@@ -710,7 +711,8 @@ public class EyeformAction extends DispatchAction {
 				
 				
 				printer.printDocHeaderFooter();
-
+				
+				
 				//get cpp items by appointmentNo (current history,past ocular hx,
 				//medical hx, ocular meds, other meds, diagnostic notes
 /*
@@ -724,6 +726,7 @@ public class EyeformAction extends DispatchAction {
 
 				} else {
 */
+				/*
 				IssueDAO issueDao = (IssueDAO)SpringUtils.getBean("IssueDAO");
 
 					printCppItem(printer,"Current History","CurrentHistory",apptDates,demographicNo, appointmentNo, false);
@@ -783,18 +786,10 @@ public class EyeformAction extends DispatchAction {
 					measurements = measurementsDao.getMeasurementsByAppointment(appointmentNo);
 					
 				if(measurements.size()>0) {
-/*
-					if(cppFromMeasurements) {
-						if(getNumMeasurementsWithoutCpp(measurements)>0) {
-							MeasurementFormatter formatter = new MeasurementFormatter(measurements);
-							printer.printEyeformMeasurements(formatter);
-						}
-					} else {
-*/
-						MeasurementFormatter formatter = new MeasurementFormatter(measurements);
-						printer.printEyeformMeasurements(formatter);
-//					}
+					MeasurementFormatter formatter = new MeasurementFormatter(measurements);
+					printer.printEyeformMeasurements(formatter);
 				}
+				*/
 				
 				//impression
 				//let's filter out custom cpp notes, as they will already have been
@@ -824,6 +819,7 @@ public class EyeformAction extends DispatchAction {
 		        printer.printEyeformPlan(followUps, procedureBooks, testBooks,eyeform);
 				*/
 				
+				/*
 		        //photos
 		        DocumentResultsDao documentDao = (DocumentResultsDao)SpringUtils.getBean("documentResultsDao");
 		        List<Document> documents = null;
@@ -862,7 +858,7 @@ public class EyeformAction extends DispatchAction {
 		        if(diagrams.size()>0) {
 		        	printer.printDiagrams(diagrams);
 		        }
-
+				*/
 
 			} //end of loop
 
@@ -1107,6 +1103,9 @@ public class EyeformAction extends DispatchAction {
 		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
 		   for(CaseManagementNote note:notes) {
 			   boolean skip=false;
+			   
+			 if (note.getIssues() == null || note.getIssues().size() == 0)
+				skip = true;
 			   
 			 for(CaseManagementIssue issue:note.getIssues()) {
 				 for(int x=0;x<cppIssues.length;x++) {
