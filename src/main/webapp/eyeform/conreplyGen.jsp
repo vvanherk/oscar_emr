@@ -60,6 +60,7 @@ select {
 </style>
 <%
 	String demographicNo = (String) request.getAttribute("demographicNo");
+	String endDate = (String) request.getAttribute("endDate");
 %>
 
 <%
@@ -453,10 +454,13 @@ function confirmPrint(btn) {
 <script>
 var ctx;
 var appointmentNo;
+var endDate;
+
 
 jQuery(document).ready(function() {
 	ctx = '<%=request.getContextPath()%>';
 	demoNo = '<%=demographicNo%>';
+	endDate = '<%=endDate%>';
 	appointmentNo = document.eyeForm.elements['cp.appointmentNo'].value;
 	
 	// Only set the CC if this is a new consult report
@@ -860,13 +864,13 @@ jQuery(document).ready(function() {
                 			<input type="button" value=">>" onclick="addSection(document.eyeForm.elements['fromlist1'],document.eyeForm.elements['fromlist2']);"/>
                 		</td>
                 		<td>
-                			<select id="fromlist2" name="fromlist2" multiple="multiple" size="9" ondblclick="addExam(ctx,'fromlist2',document.eyeForm.elements['cp.examination'],appointmentNo);">
+                			<select id="fromlist2" name="fromlist2" multiple="multiple" size="9" ondblclick="addExam(ctx,'fromlist2',document.eyeForm.elements['cp.examination'],appointmentNo,demoNo,endDate);">
                 			
                 				<c:forEach var="item" items="${headers}">
                 					<option value="<c:out value="${item.value}"/>"><c:out value="${item.label}"/></option>
                 				</c:forEach>
                 			</select>
-							<input style="vertical-align: middle;" type="button" value="add" onclick="addExam(ctx,'fromlist2',document.eyeForm.elements['cp.examination'],appointmentNo);">
+							<input style="vertical-align: middle;" type="button" value="add" onclick="addExam(ctx,'fromlist2',document.eyeForm.elements['cp.examination'],appointmentNo,demoNo,endDate);">
 						</td>
 						</tr>
 					</table>

@@ -285,7 +285,14 @@
                                             Address:
                                         </td>
                                         <td class="fillLineh">
-                                	<p><c:out value="${refer.streetAddress}"/></p>
+		                                	<p>
+												<c:out value="${refer.address1}"/> <c:out value="${refer.address2}"/>
+												<br>
+												<c:out value="${refer.city}"/>, <c:out value="${refer.province}"/>
+												<c:out value="${refer.country}"/>
+												<br>
+												<c:out value="${refer.postal}"/>
+											</p>
                                         </td>
                                     </tr>
                                     <tr>
@@ -294,7 +301,7 @@
                                             Phone:
                                         </td>
                                         <td class="fillLineh">
-                                	<c:out value="${refer.phoneNumber}"/>
+                                	<c:out value="${refer.phone}"/>
                                         </td>
                                     </tr>
                                     <tr>
@@ -303,7 +310,7 @@
                                         </td>
 
                                         <td class="fillLineh">
-                                			<c:out value="${refer.faxNumber}"/>
+                                			<c:out value="${refer.fax}"/>
                                         </td>
                                     </tr>
 

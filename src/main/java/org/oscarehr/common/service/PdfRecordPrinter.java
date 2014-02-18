@@ -44,6 +44,8 @@ import org.oscarehr.PMmodule.dao.ProviderDao;
 import org.oscarehr.casemgmt.model.CaseManagementNote;
 import org.oscarehr.common.dao.EFormValueDao;
 import org.oscarehr.common.model.Allergy;
+import org.oscarehr.common.model.Prescription;
+import org.oscarehr.common.model.Drug;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.EFormValue;
@@ -318,6 +320,40 @@ public class PdfRecordPrinter {
         cb.stroke();     
         */
     }
+    
+    public void printRx(List<Prescription> prescriptions) throws DocumentException {
+        ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+        
+        Font obsfont = new Font(getBaseFont(), FONTSIZE, Font.UNDERLINE);
+
+
+        Paragraph p = new Paragraph();
+        p.setAlignment(Paragraph.ALIGN_LEFT);
+        Phrase phrase = new Phrase(LEADING, "\n", getFont());
+        p.add(phrase);
+        phrase = new Phrase(LEADING, "Prescriptions", obsfont);
+        p.add(phrase);
+        getDocument().add(p);
+		
+		Date now = new Date();
+        for(Prescription presc : prescriptions) {
+			List<Drug> drugs = presc.getDrugs();
+		   for ( Drug d : drugs ) {
+			   if ( !d.getEndDate().after(now) )
+					continue;
+				
+	        	p = new Paragraph();
+	    		phrase = new Phrase(LEADING, "", getFont());
+	    		Chunk chunk = new Chunk(formatter.format(d.getRxDate()) + " - ");
+	    		phrase.add(chunk);
+	    		chunk = new Chunk(d.getSpecial().replaceAll("\n", " "));
+	    		phrase.add(chunk);
+	    		p.add(phrase);
+	    		getDocument().add(p);
+			}
+		}
+        getDocument().add(new Phrase("\n",getFont()));
+    }
 
     public void printRx(String demoNo) throws DocumentException {
         printRx(demoNo,null);
@@ -384,8 +420,6 @@ public class PdfRecordPrinter {
     public void printCPPItem(String heading, Collection<CaseManagementNote> notes) throws DocumentException {
         if( newPage )
             document.newPage();
-      //  else
-      //      newPage = true;
 
         Font obsfont = new Font(bf, FONTSIZE, Font.UNDERLINE);
 
@@ -400,10 +434,6 @@ public class PdfRecordPrinter {
         document.add(p);
         newPage = false;
         this.printNotes(notes,true);
-
-
-       // cb.endText();
-
     }
 
     public void printCPPItem(String heading, Measurements measurement) throws DocumentException {
@@ -563,7 +593,6 @@ public class PdfRecordPrinter {
     }
 
     public void printNotes(Collection<CaseManagementNote>notes, boolean compact) throws DocumentException{
-
         CaseManagementNote note;
         Font obsfont = new Font(bf, FONTSIZE, Font.UNDERLINE);
         Paragraph p;
@@ -592,6 +621,7 @@ public class PdfRecordPrinter {
             
             String noteText = note.getNote();
             noteText = noteText.replaceAll("\\[Signed on.*?\\]", "");
+            noteText = noteText.trim();
             
             if(compact) {
             	phrase.add(noteText + "\n");
@@ -748,7 +778,6 @@ public class PdfRecordPrinter {
     		p.add(phrase);
     		getDocument().add(p);
         }
-        getDocument().add(new Phrase("\n",getFont()));
     }
 
     public void printEyeformPlan(List<EyeformFollowUp>followUps, List<EyeformProcedureBook> procedureBooks, List<EyeformTestBook>testBooks,EyeForm eyeform) throws DocumentException {

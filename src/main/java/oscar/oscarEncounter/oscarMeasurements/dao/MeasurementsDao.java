@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
 
@@ -103,30 +104,82 @@ public class MeasurementsDao extends HibernateDaoSupport {
 		return rs;
 	}
 	
-	public List<Measurements> getMeasurementsByAppointmentAndDate(int appointmentNo, List<Date> dates) {
-		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-
-		// Compile the list of dates (if applicable)
-		String dateList = "";
-		if (dates != null) {
-			for ( Date d : dates ) {
-				if (dateList.length() > 0)
-					dateList += ", ";
-				dateList += "'" + formatter.format(d) + "'";
+	/**
+	 * This method assumes that the measurements are already sorted by type and dateEntered (in descending order)
+	 */
+	private List<Measurements> filterMeasurementsByLatest(List<Measurements> measurements) {
+		List<Measurements> filteredList = new ArrayList<Measurements>();
+		String currentType = "";
+		
+		for ( Measurements m : measurements ) {
+			if (!m.getType().equals(currentType)) {
+				filteredList.add(m);
+				currentType = m.getType();
 			}
 		}
 		
-		String hql = "From Measurements m WHERE m.appointmentNo = " + appointmentNo;
+		return filteredList;
+	}
+	
+	public List<Measurements> getMeasurements(int demographicNo) {
+		return getMeasurementsBeforeDate(demographicNo, null);
+	}
+	
+	public List<Measurements> getMeasurements(int appointmentNo, int demographicNo) {
+		return getMeasurementsBeforeDate(appointmentNo, demographicNo, null);
+	}
+	
+	public List<Measurements> getMeasurementsBeforeDate(int demographicNo, Date endDate) {
+		Object[] params = null;
+		
+		String hql = "From Measurements m WHERE m.demographicNo = ?";
 		
 		// Add the dates if there are any
-		if (dateList.length() > 0)
-			hql +=  " and date(m.dateEntered) in (" + dateList + ")";
+		if (endDate != null) {
+			params = new Object[2];
+			params[1] = endDate;
+			hql +=  " and date(m.dateObserved) <= ?";
+		} else {
+			params = new Object[1];
+		}
 		
-		hql += " ORDER BY m.dateObserved DESC";
+		params[0] = new Integer(demographicNo);
+		
+		hql += " ORDER BY m.type, m.dateEntered DESC";
 
-		List<Measurements> rs = getHibernateTemplate().find(hql);
+		List<Measurements> rs = getHibernateTemplate().find(hql, params);
 
-		return rs;
+		// Filter by latest 
+		List<Measurements> filteredList = filterMeasurementsByLatest(rs);
+
+		return filteredList;
+	}
+	
+	public List<Measurements> getMeasurementsBeforeDate(int appointmentNo, int demographicNo, Date endDate) {
+		Object[] params = null;
+		
+		String hql = "From Measurements m WHERE m.appointmentNo = ? and m.demographicNo = ?";
+		
+		// Add the dates if there are any
+		if (endDate != null) {
+			params = new Object[3];
+			params[2] = endDate;
+			hql +=  " and date(m.dateObserved) <= ?";
+		} else {
+			params = new Object[2];
+		}
+		
+		params[0] = new Integer(appointmentNo);
+		params[1] = new Integer(demographicNo);
+		
+		hql += " ORDER BY m.type, m.dateEntered DESC";
+
+		List<Measurements> rs = getHibernateTemplate().find(hql, params);
+
+		// Filter by latest 
+		List<Measurements> filteredList = filterMeasurementsByLatest(rs);
+
+		return filteredList;
 	}
 
 	public Measurements getLatestMeasurementByDemographicNoAndType(int demographicNo, String type) {

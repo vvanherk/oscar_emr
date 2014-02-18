@@ -711,6 +711,39 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 
         return rs;
     }
+    
+    public List<CaseManagementNote> getMostRecentNotesByDemographicNo(int demographicNo) throws ParseException {
+		return getMostRecentNotesByDemographicNo(demographicNo, null);
+	}
+    
+    public List<CaseManagementNote> getMostRecentNotesByDemographicNo(int demographicNo, Date endDate) throws ParseException {		
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.demographic_no = ?";
+		
+		Object[] params = null;
+		
+		
+		if (endDate != null) {
+			params = new Object[2];
+			hql += " and date(cmn.observation_date) <= ?";
+			params[1] = endDate;
+		} else {
+			params = new Object[1];
+		}
+		
+		params[0] = String.valueOf(demographicNo);
+		
+		List<String> tmp = this.getHibernateTemplate().find(hql, params);
+		
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		
+		for (String uuid : tmp) {
+			CaseManagementNote note = this.getMostRecentNote(uuid);
+			
+			mostRecents.add(note);
+		}
+		
+		return mostRecents;
+	}
 
 	public List<CaseManagementNote> getMostRecentNotesByAppointmentNo(int appointmentNo) throws ParseException {
 		return getMostRecentNotesByAppointmentNo(appointmentNo, null);
@@ -718,6 +751,10 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 	
 	public List<CaseManagementNote> getMostRecentNotesByAppointmentNo(int appointmentNo,  List<Date> dates) throws ParseException {
 		return getMostRecentNotesByAppointmentNoAndDemographicNo(appointmentNo, null, dates);
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotesByAppointmentNoAndDemographicNo(Integer appointmentNo, Integer demographicNo) throws ParseException {
+		return getMostRecentNotesByAppointmentNoAndDemographicNo(appointmentNo, demographicNo, null);
 	}
 	
 	public List<CaseManagementNote> getMostRecentNotesByAppointmentNoAndDemographicNo(Integer appointmentNo, Integer demographicNo, List<Date> dates) throws ParseException {

@@ -430,13 +430,13 @@ public class DocumentResultsDao extends AbstractDao<Document>{
     	return results;
     }
     
-    public List<Document> getPhotosByAppointmentNoAndDates(int appointmentNo, List<Date> dates) {
-		String sql = "SELECT d FROM Document d WHERE d.appointmentNo = :appointmentNo and d.observationdate in (:dates) and d.doctype='photo'";
+    public List<Document> getPhotosByAppointmentNoAndBeforeDates(int appointmentNo, Date endDate) {
+		String sql = "SELECT d FROM Document d WHERE d.appointmentNo = :appointmentNo and d.observationdate <= (:endDate) and d.doctype='photo'";
 		
     	Query query = entityManager.createQuery(sql);
     	
     	query.setParameter("appointmentNo", appointmentNo);
-    	query.setParameter("dates", dates);
+    	query.setParameter("endDate", endDate);
 
     	@SuppressWarnings("unchecked")
     	List<Document> results =  query.getResultList();

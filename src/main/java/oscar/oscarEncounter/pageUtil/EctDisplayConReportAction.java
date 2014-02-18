@@ -98,7 +98,12 @@ public class EctDisplayConReportAction extends EctDisplayAction {
     	NavBarDisplayDAO.Item item = NavBarDisplayDAO.Item();
     	item.setDate(cr.getDate());
 
-    	ProfessionalSpecialist specialist = professionalSpecialistDao.find(cr.getReferralId());
+    	List<ProfessionalSpecialist> specialists = professionalSpecialistDao.findByReferralNo(cr.getReferralId() + "");
+    	ProfessionalSpecialist specialist = null;
+    	
+    	if (specialists != null && specialists.size() > 0)
+			specialist = specialists.get(0);
+    	
     	String title = "No Specialist Found - " + cr.getStatus();
     	if ( specialist != null )
 			title = specialist.getFormattedName() + " - " + cr.getStatus();
