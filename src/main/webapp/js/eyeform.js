@@ -933,7 +933,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 				lastImpressionSet = true;
 			}
 
-			var onClick = "popupPage(800, 1200, \"Appointment Report\", \"" + ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + $(this).attr("appointmentNo") + "&demographicNo=" + demographicNo + "&endDate=" + date.toFormattedString() + "\")";
+			var onClick = "popupPage(800, 1200, \"Appointment Report\", \"" + ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + item.appointment_no + "&demographicNo=" + demographicNo + "&endDate=" + date.toFormattedString() + "\")";
 
 			$("#" + boxNameId + " .historyTable").find("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' onClick='" + onClick + "' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'></tr>");
 			
