@@ -1297,7 +1297,12 @@ public class EyeformAction extends DispatchAction {
 				request.setAttribute("newFlag", "false");
 				appNo = cp.getAppointmentNo();
 
-				ProfessionalSpecialist specialist = professionalSpecialistDao.find(cp.getReferralId());
+				List<ProfessionalSpecialist> specialists = professionalSpecialistDao.findByReferralNo(cp.getReferralId());
+				ProfessionalSpecialist specialist = null;
+				
+				if (specialists != null && specialists.size() > 0)
+					specialist = specialists.get(0);
+				
 				if(specialist != null) {
 					referraldoc = specialist.getLastName() + "," + specialist.getFirstName();
 					request.setAttribute("referral_doc_name", referraldoc);
@@ -1371,7 +1376,7 @@ public class EyeformAction extends DispatchAction {
 				String referral = demographic.getFamilyDoctor();
 
 				if (referral != null && !"".equals(referral.trim())) {
-					Integer ref = getRefId(referral);
+					String ref = getRefId(referral);
 					cp.setReferralId(ref);
 					refNo = getRefNo(referral);
 
@@ -1578,11 +1583,7 @@ public class EyeformAction extends DispatchAction {
 			}
 			BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
 
-			try {
-				consultReport.setReferralId( Integer.parseInt(cp.getReferralNo()) );
-			} catch (Exception e) {
-				MiscUtils.getLogger().error("Error", e);
-			}
+			consultReport.setReferralId( cp.getReferralNo() );
 
 			//ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(cp.getReferralNo());
 			//if (professionalSpecialist != null) {
@@ -1620,18 +1621,18 @@ public class EyeformAction extends DispatchAction {
 			}
 			return ref;
 		}
-		public Integer getRefId(String referal) {
+		public String getRefId(String referal) {
 			int start = referal.indexOf("<rdohip>");
 			int end = referal.indexOf("</rdohip>");
 			String ref = new String();
-			Integer refNo = new Integer(0);
+			String refNo = new String();
 			if (start >= 0 && end >= 0) {
 				String subreferal = referal.substring(start + 8, end);
 				if (!"".equalsIgnoreCase(subreferal.trim())) {
 					ref = subreferal;
 					ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(ref.trim());
 					if(professionalSpecialist != null)
-						refNo = professionalSpecialist.getId();
+						refNo = professionalSpecialist.getId() + "";
 				}
 			}
 			return refNo;
@@ -1669,17 +1670,9 @@ public class EyeformAction extends DispatchAction {
 			//if (professionalSpecialist != null)
 			//	cp.setReferralId(professionalSpecialist.getId());
 			
-			try {
-				consultReport.setReferralId( Integer.parseInt(cp.getReferralNo()) );
-			} catch (Exception e) {
-				MiscUtils.getLogger().error("Error", e);
-			}
+			consultReport.setReferralId( cp.getReferralNo() );
 			
-			try {
-				cp.setReferralId( Integer.parseInt(cp.getReferralNo()) );
-			} catch (Exception e) {
-				MiscUtils.getLogger().error("Error", e);
-			}
+			cp.setReferralId( cp.getReferralNo() );
 			
 			if(consultReport.getDate()==null){
 				consultReport.setDate(new Date());
