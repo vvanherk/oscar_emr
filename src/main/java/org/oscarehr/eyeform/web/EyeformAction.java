@@ -1708,6 +1708,7 @@ public class EyeformAction extends DispatchAction {
 				internalProvider = providerDao.getProvider(demographic.getProviderNo());
 				if(internalProvider != null) {
 					request.setAttribute("internalDrName", internalProvider.getFirstName() + " " + internalProvider.getLastName());
+					request.setAttribute("appointmentDoctor", internalProvider.getFirstName() + " " + internalProvider.getLastName());
 				} else {
 //				request.setAttribute("internalDrName", );
 				}
@@ -1777,6 +1778,7 @@ public class EyeformAction extends DispatchAction {
 			request.setAttribute("clinic", clinic);
 			request.setAttribute("appointDate", (appointment!=null?appointment.getAppointmentDate(): "") );
 
+			// If appointment is not null, replace 'appointmentDoctor' with the provider from the appointment
 			if(appointment!=null) {
 				Provider apptProvider = providerDao.getProvider(appointment.getProviderNo());
 				request.setAttribute("appointmentDoctor", apptProvider.getFormattedName());
