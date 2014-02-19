@@ -81,7 +81,7 @@
                         else {
                            billReferenceDate = request.getParameter("appointment_date");
                         }
-			String demoname = request.getParameter("demographic_name");
+			String demoname = URLDecoder.decode( request.getParameter("demographic_name"), "UTF-8" );
 			String demo_no = request.getParameter("demographic_no");
 			String apptProvider_no = request.getParameter("apptProvider_no");
 			String assgProvider_no = request.getParameter("assgProvider_no");
