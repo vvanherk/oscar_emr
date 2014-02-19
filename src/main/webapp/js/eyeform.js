@@ -455,7 +455,7 @@ function archiveNote(item) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson",
-			data: "value=" + $(item).children(".noteContent").html() + "&archiveNote=" + archiveNote + "&issue_code=" 
+			data: "value=" + encodeURIComponent($(item).children(".noteContent").html()) + "&archiveNote=" + archiveNote + "&issue_code=" 
 				+ noteBoxes[$(item).closest(".boxTitleLink").attr('id')] + "&noteId=" + noteId + "&archived=true",
 			dataType: "json",
 			success: function(data) {
@@ -1341,7 +1341,7 @@ function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=signSavedNotes&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
-			data: "notes=" + JSON.stringify(unSignedNotes),
+			data: "notes=" + encodeURIComponent(JSON.stringify(unSignedNotes)),
 			dataType: "json"
 		});
 		
