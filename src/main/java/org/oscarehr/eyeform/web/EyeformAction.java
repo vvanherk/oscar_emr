@@ -369,7 +369,7 @@ public class EyeformAction extends DispatchAction {
            }           
            
 			//impression
-			String impression = getFormattedCppItem("Impression:", "eyeformImpression", demographicNo, appNo, endDate, true);
+			String impression = getFormattedCppItem("Impression:", "eyeformImpression", demographicNo, appNo, endDate, false);
 			impression = impression.replaceAll("\\[Signed on.*?\\]", "");
 			request.setAttribute( "impression", StringEscapeUtils.escapeJavaScript(impression) );
 
@@ -1508,7 +1508,7 @@ public class EyeformAction extends DispatchAction {
 	           request.setAttribute("specs", StringEscapeUtils.escapeJavaScript(specsStr1));
 
 				//impression
-				String impression = getFormattedCppItem("Impression:", "eyeformImpression", demographicNo, appNo, endDate, true);
+				String impression = getFormattedCppItem("Impression:", "eyeformImpression", demographicNo, appNo, endDate, false);
 				impression = impression.replaceAll("\\[Signed on.*?\\]", "");
 				request.setAttribute( "impression", StringEscapeUtils.escapeJavaScript(impression) );
 
