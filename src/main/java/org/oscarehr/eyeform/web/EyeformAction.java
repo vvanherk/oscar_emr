@@ -1709,8 +1709,6 @@ public class EyeformAction extends DispatchAction {
 				if(internalProvider != null) {
 					request.setAttribute("internalDrName", internalProvider.getFirstName() + " " + internalProvider.getLastName());
 					request.setAttribute("appointmentDoctor", internalProvider.getFirstName() + " " + internalProvider.getLastName());
-				} else {
-//				request.setAttribute("internalDrName", );
 				}
 			}
 
@@ -1725,6 +1723,7 @@ public class EyeformAction extends DispatchAction {
 			} else
 				specialty = new String();
 			request.setAttribute("specialty", specialty);
+			request.setAttribute("appointmentDoctorSpecialty", specialty);
 
 			//Clinic clinic = clinicDao.getClinic();
 			// prepare the satellite clinic address
@@ -1782,6 +1781,19 @@ public class EyeformAction extends DispatchAction {
 			if(appointment!=null) {
 				Provider apptProvider = providerDao.getProvider(appointment.getProviderNo());
 				request.setAttribute("appointmentDoctor", apptProvider.getFormattedName());
+				
+				specialty = new String();
+				mdStr = new String();
+				if (apptProvider != null)
+					specialty = apptProvider.getSpecialty();
+				if (specialty != null && !"".equalsIgnoreCase(specialty.trim())) {
+					if ("MD".equalsIgnoreCase(specialty.substring(0, 2)))
+						mdStr = "Dr.";
+					specialty = ", " + specialty.trim();
+				} else
+					specialty = new String();
+				
+				request.setAttribute("appointmentDoctorSpecialty", specialty);
 			}
 
 			return mapping.findForward("printReport");

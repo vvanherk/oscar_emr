@@ -528,7 +528,9 @@
             <tr>
             <td class="letterContent">
 
-                <c:out value="${appointmentDoctor}"/>
+				<c:out value="${appointmentDoctor}"/>
+				<c:out value="${appointmentDoctorSpecialty}"/>
+                
             </td>
             </tr>
             <tr>
