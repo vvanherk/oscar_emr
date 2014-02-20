@@ -146,7 +146,7 @@
 
     </script>
     <title>
-    ConsultationFormPrint
+    Consultation for <c:out value="${demographic.lastName}"/>, <c:out value="${demographic.firstName}"/>
     </title>
     </head>
     <body>
