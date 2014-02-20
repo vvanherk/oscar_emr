@@ -87,7 +87,7 @@ try {
 <script type="text/javascript">
 var ctx = "<%=request.getContextPath() %>";
 var demographicNo = "<%=request.getParameter("demographic_no") %>";
-var reason = "<%=UtilMisc.stripNewline(appointmentReason)%>";
+var reason = "<%=UtilMisc.stripNewline(appointmentReason).replaceAll("\"", "&quot;")%>";
 var appointmentNo = "<%=appointmentNo %>";
 var providerNo = "<%=providerNo %>";
 var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
