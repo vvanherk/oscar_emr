@@ -1708,7 +1708,6 @@ public class EyeformAction extends DispatchAction {
 				internalProvider = providerDao.getProvider(demographic.getProviderNo());
 				if(internalProvider != null) {
 					request.setAttribute("internalDrName", internalProvider.getFirstName() + " " + internalProvider.getLastName());
-					request.setAttribute("appointmentDoctor", internalProvider.getFirstName() + " " + internalProvider.getLastName());
 				}
 			}
 
@@ -1723,7 +1722,6 @@ public class EyeformAction extends DispatchAction {
 			} else
 				specialty = new String();
 			request.setAttribute("specialty", specialty);
-			request.setAttribute("appointmentDoctorSpecialty", specialty);
 
 			//Clinic clinic = clinicDao.getClinic();
 			// prepare the satellite clinic address
@@ -1776,25 +1774,6 @@ public class EyeformAction extends DispatchAction {
 			//request.setAttribute("sateliteFlag", sateliteFlag);
 			request.setAttribute("clinic", clinic);
 			request.setAttribute("appointDate", (appointment!=null?appointment.getAppointmentDate(): "") );
-
-			// If appointment is not null, replace 'appointmentDoctor' with the provider from the appointment
-			if(appointment!=null) {
-				Provider apptProvider = providerDao.getProvider(appointment.getProviderNo());
-				request.setAttribute("appointmentDoctor", apptProvider.getFormattedName());
-				
-				specialty = new String();
-				mdStr = new String();
-				if (apptProvider != null)
-					specialty = apptProvider.getSpecialty();
-				if (specialty != null && !"".equalsIgnoreCase(specialty.trim())) {
-					if ("MD".equalsIgnoreCase(specialty.substring(0, 2)))
-						mdStr = "Dr.";
-					specialty = ", " + specialty.trim();
-				} else
-					specialty = new String();
-				
-				request.setAttribute("appointmentDoctorSpecialty", specialty);
-			}
 
 			return mapping.findForward("printReport");
 		}

@@ -527,10 +527,9 @@
             </c:if>
             <tr>
             <td class="letterContent">
-
-				<c:out value="${appointmentDoctor}"/>
-				<c:out value="${appointmentDoctorSpecialty}"/>
-                
+				<c:out value="${mdstring}"/>
+				<c:out value="${internalDrName}"/>
+				<c:out value="${specialty}"/>
             </td>
             </tr>
             <tr>
