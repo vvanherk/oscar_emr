@@ -1,1 +1,1 @@
-ALTER TABLE casemgmt_note_ext ADD INDEX (note_id);
+ALTER TABLE EyeformConsultationReport MODIFY referralId VARCHAR(11);
