@@ -61,13 +61,15 @@ public class PatientListByAppt extends HttpServlet {
 
 
             java.sql.ResultSet rs;
-            String sql = "select d.last_name, d.first_name, d.phone,  d.phone2,  "+
-                         "       a.appointment_date, a.start_time, a.type,       "+
-                         "       p.last_name, p.first_name, s.name               "+
-                         "from   demographic d, provider p, appointment a        "+
-                         "left join site s on s.site_id = a.site                 "+
-                         "where  a.demographic_no=d.demographic_no               "+
-                         "and    a.provider_no=p.provider_no                     ";
+            
+            String sql = "select d.last_name, d.first_name, d.phone,  d.phone2, "+
+                         "       a.appointment_date, a.start_time, a.type,     "+
+                         "       p.last_name, p.first_name, a.location           "+
+                         "from   demographic d, appointment a, provider p       "+
+                         "where  a.demographic_no=d.demographic_no              "+
+                         "and    a.provider_no=p.provider_no                    "+
+                         "and    a.status <> 'C'                                "+
+                         "and    a.status <> 'D'                                ";
 
 
             if(!drNo.equals("all")){
