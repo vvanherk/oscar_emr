@@ -555,18 +555,36 @@ public class EyeformAction extends DispatchAction {
 			
 			String[] issues = new String[issueCodes.size()];
 			issueCodes.toArray(issues);
-		   
-		   if (endDate != null) {
+			
+			if (endDate != null) {
 				if( !includePrevious ) {
 					notes = filterNotesByDate( caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues), endDate );
 				} else {
 					notes = filterNotesByPreviousOrCurrentDate( caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues), endDate );
 				}
-		   } else if( !includePrevious ) {
+			} else if( !includePrevious ) {
 				notes = filterNotesByAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues),appointmentNo);
-		   } else {
+			} else {
 				notes = filterNotesByPreviousOrCurrentAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues),appointmentNo);
-		   }
+			}
+			
+			//since current history has a different format
+			
+			if(issueCodes.contains("CurrentHistory") || issueCodes.contains("eyeformCurrentIssue")){
+				 
+				 CaseManagementNote closestBeforeDate = null;
+				 
+				for(CaseManagementNote note:notes) {
+					if(closestBeforeDate==null)
+					{	closestBeforeDate = note;	}
+					else if(note.getObservation_date().compareTo(closestBeforeDate.getObservation_date()) >= 0) {
+						closestBeforeDate = note;
+					}
+				}
+		   
+				notes = new ArrayList<CaseManagementNote>();
+				notes.add(closestBeforeDate);
+			}
 
 		   return notes;
 	   }
@@ -575,8 +593,14 @@ public class EyeformAction extends DispatchAction {
 		   Collection<CaseManagementNote> notes = getCppItems(issueCodes, demographicNo, appointmentNo, endDate, includePrevious);
 			
 			if (notes == null)
+			{	
+				String output = "";
+				for (String s : issueCodes){
+					output += s + ", ";
+				}
+				MiscUtils.getLogger().info("Found nothing for " + output);
 				return "";
-
+			}
 		   if(notes.size()>0) {
 			   StringBuilder sb = new StringBuilder();
 			   for(CaseManagementNote note:notes) {
@@ -748,7 +772,7 @@ public class EyeformAction extends DispatchAction {
 				
 				Collection<CaseManagementNote> cppNotes = null;
 				
-				cppNotes = getCppItems(currentHistoryIssueNames, demographicNo, appointmentNo, endDate, false);
+				cppNotes = getCppItems(currentHistoryIssueNames, demographicNo, appointmentNo, endDate, true);
 				if (cppNotes != null && cppNotes.size() > 0) {
 					printer.printCPPItem("Current History", cppNotes);
 					printer.printBlankLine();
@@ -1405,7 +1429,7 @@ public class EyeformAction extends DispatchAction {
 				currentHistoryIssueNames.add("CurrentHistory");
 				currentHistoryIssueNames.add("eyeformCurrentIssue");
 				
-				request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", currentHistoryIssueNames, demographic.getDemographicNo(), appNo, endDate, false)));
+				request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", currentHistoryIssueNames, demographic.getDemographicNo(), appNo, endDate, true)));
 				request.setAttribute("pastOcularHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Past Ocular History:", "PastOcularHistory", demographic.getDemographicNo(), appNo, endDate, true)));
 				request.setAttribute("medHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Medical History:", "MedHistory", demographic.getDemographicNo(), appNo, endDate, true)));
 				request.setAttribute("famHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Family History:", "FamHistory", demographic.getDemographicNo(), appNo, endDate, true)));

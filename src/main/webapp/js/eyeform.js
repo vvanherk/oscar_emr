@@ -2677,8 +2677,9 @@ function changeTextAreaBasedOnAppointment(time, boxId, note, textArea) {
 		var latestCurHistItem = $("#" + boxId + " .historyList")
 		.children('[itemtime]')
 		.filter(function() { return $(this).attr("itemtime") <= time; })
-		.sort(function(a,b) { return new Date($(a).attr("itemtime")) > new Date($(b).attr("itemtime")); })
+		.sort(function(a,b) { return new $(a).attr("itemtime") < new $(b).attr("itemtime"); })
 		.first();
+		
 		
 		// If we found an item with a date within the range, copy it to the text field
 		if (latestCurHistItem) {

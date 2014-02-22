@@ -373,10 +373,19 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 		List<CaseManagementNote> notes=new ArrayList<CaseManagementNote>();
 		try
 		{
+			String output = "";
+			for (String s : issueCodes){
+				output += s + ", ";
+			}
+			output += ": ";
 			SQLQuery query=session.createSQLQuery(sqlCommand);
 			@SuppressWarnings("unchecked")
 			List<Integer> ids=query.list();
-			for (Integer id : ids) notes.add(getNote(id.longValue()));
+			for (Integer id : ids){
+				notes.add(getNote(id.longValue()));
+				output += id.longValue() + " ";
+			}
+			MiscUtils.getLogger().debug("Get Demographic Notes -- " + output);
 		}
 		finally
 		{
