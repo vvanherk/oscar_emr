@@ -49,7 +49,7 @@ public class EyeformConsultationReport extends AbstractModel<Integer> {
 	@Temporal(TemporalType.TIMESTAMP)
 	private Date date;
 	
-	private int referralId;
+	private String referralId;
 	private int greeting;
 	private int appointmentNo;
 	
@@ -84,6 +84,8 @@ public class EyeformConsultationReport extends AbstractModel<Integer> {
 	@Transient
 	private String referralNo;
 	
+	private Integer clinicNo;
+	private Integer siteId;
 	
 	public EyeformConsultationReport() {
 		date = new Date();
@@ -99,12 +101,12 @@ public class EyeformConsultationReport extends AbstractModel<Integer> {
 	}
 
 
-	public int getReferralId() {
+	public String getReferralId() {
 		return referralId;
 	}
 
 
-	public void setReferralId(int referralId) {
+	public void setReferralId(String referralId) {
 		this.referralId = referralId;
 	}
 
@@ -351,6 +353,19 @@ public class EyeformConsultationReport extends AbstractModel<Integer> {
 		this.referralNo = referralNo;
 	}
 	
+	public Integer getClinicNo() {
+		return this.clinicNo;
+	}
+	public void setClinicNo(Integer clinicNo) {
+		this.clinicNo = clinicNo;
+	}
+	
+	public Integer getSiteId() {
+		return this.siteId;
+	}
+	public void setSiteId(Integer siteId) {
+		this.siteId = siteId;
+	}
 	
 	
 }

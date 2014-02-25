@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.persistence.Query;
+import javax.persistence.NonUniqueResultException;
 
 import org.oscarehr.common.model.ProviderSite;
 import org.oscarehr.common.model.Site;
@@ -44,39 +45,7 @@ public class SiteDao extends AbstractDao<Site> {
 	}
 
 	public void save(Site s) {
-		boolean isUpdate = s.getSiteId() != null && s.getSiteId() > 0;
-		if (isUpdate) {
-			Site old = find(s.getSiteId());
-			if (!old.getName().equals(s.getName())) {
-				// site name changed, need to update all references as it serves as PK
-				// so we need to update the tables that references to the site
-
-				Query query = entityManager.createNativeQuery("update rschedule set avail_hour = replace(avail_hour, :oldname, :newname) ");
-				query.setParameter("oldname", ">"+old.getName()+"<");
-				query.setParameter("newname", ">"+s.getName()+"<");
-				query.executeUpdate();
-
-				query = entityManager.createNativeQuery("update scheduledate set reason = :newname where reason = :oldname");
-				query.setParameter("oldname", old.getName());
-				query.setParameter("newname", s.getName());
-				query.executeUpdate();
-
-				query = entityManager.createNativeQuery("update appointment set location = :newname where location = :oldname");
-				query.setParameter("oldname", old.getName());
-				query.setParameter("newname", s.getName());
-				query.executeUpdate();
-
-				query = entityManager.createNativeQuery("update billing_on_cheader1 set clinic = :newname where clinic = :oldname");
-				query.setParameter("oldname", old.getName());
-				query.setParameter("newname", s.getName());
-				query.executeUpdate();
-
-
-			}
-		}
-
 		merge(s);
-
 	}
 
 	public List<Site> getAllSites() {
@@ -102,15 +71,9 @@ public class SiteDao extends AbstractDao<Site> {
 
 		List<Site> rs = new ArrayList<Site>();
 		for(ProviderSite ps:pss) {
-			rs.add(find(ps.getId().getSiteId()));
-		}
-
-		Iterator<Site> it = rs.iterator();
-		while (it.hasNext()) {
-			Site site = it.next();
-			// remove inactive sites
-			if (site.getStatus() == 0)
-				it.remove();
+			Site s = find(ps.getId().getSiteId());
+			if (s != null && s.getStatus() != 0)
+				rs.add(s);
 		}
 
 		Collections.sort(rs, new Comparator<Site>() {
@@ -126,9 +89,9 @@ public class SiteDao extends AbstractDao<Site> {
 		return find(id);
 	}
 
-	public Site getByLocation(String location) {
-		Query query = this.entityManager.createQuery("select s from Site s where s.name=?");
-		query.setParameter(1, location);
+	public Site getByLocation(Integer siteId) {
+		Query query = this.entityManager.createQuery("select s from Site s where s.siteId=?");
+		query.setParameter(1, siteId);
 
 		@SuppressWarnings("unchecked")
         List<Site> rs = query.getResultList();
@@ -139,14 +102,14 @@ public class SiteDao extends AbstractDao<Site> {
 			return null;
 	}
 
-	public List<String> getGroupBySiteLocation(String location) {
+	public List<String> getGroupBySiteLocation(Integer siteId) {
 		Query query = entityManager.createNativeQuery(
 				"select distinct g.mygroup_no from mygroup g	" +
 						" inner join provider p on p.provider_no = g.provider_no and p.status = 1 " +
 						" inner join providersite ps on ps.provider_no = g.provider_no " +
 						" inner join site s on s.site_id = ps.site_id " +
-						" where  s.name like :sitename ");
-		query.setParameter("sitename",location);
+						" where  s.site_id = :siteId ");
+		query.setParameter("siteId",siteId);
 
 		@SuppressWarnings("unchecked")
         List<String> groupList = query.getResultList();
@@ -155,16 +118,16 @@ public class SiteDao extends AbstractDao<Site> {
 		return groupList;
 	}
 
-	public List<String> getProviderNoBySiteLocation(String location) {
+	public List<String> getProviderNoBySiteLocation(Integer siteId) {
 
 		Query query = entityManager.createNativeQuery(
 					"select distinct p.provider_no	" +
 					" from provider p " +
 					" inner join providersite ps on ps.provider_no = p.provider_no " +
 					" inner join site s on s.site_id = ps.site_id " +
-					" where  s.name like :sitename ") ;
+					" where  s.site_id = :siteId ") ;
 
-		query.setParameter("sitename", location);
+		query.setParameter("siteId", siteId);
 
 		@SuppressWarnings("unchecked")
         List<String> pList = query.getResultList();
@@ -203,18 +166,43 @@ public class SiteDao extends AbstractDao<Site> {
 
 		return groupList;
 	}
-
-	public String getSiteNameByAppointmentNo(String appointmentNo) {
-
-		Query query = entityManager.createNativeQuery("select location from appointment where appointment_no = :appointmentno");
+	
+	public Site getSiteByAppointmentNo(String appointmentNo) {
+		Query query = entityManager.createNativeQuery("select site from appointment where appointment_no = :appointmentno");
 		query.setParameter("appointmentno", appointmentNo);
 
 		@SuppressWarnings("unchecked")
-        List<String> list = query.getResultList();
-		if(list.size()>0) {
-			return list.get(0);
+        List<Integer> siteIds = query.getResultList();
+        
+        Integer siteId = null;
+        
+        // Error check our results
+        if (siteIds.size() > 1) {
+			throw new NonUniqueResultException("More than one appointment with appointment number " + appointmentNo + " was found.");
+		} else if (siteIds.size() > 0) {
+			siteId = siteIds.get(0);
 		}
+        
+        if (siteId != null && siteId != 0) {
+			query = this.entityManager.createQuery("select s from Site s where s.siteId=?");
+			query.setParameter(1, siteId);
 
+			@SuppressWarnings("unchecked")
+	        Site s = (Site) query.getSingleResult();
+	
+			if (s != null)
+				return s;
+		}
+		
+		return null;
+	}
+
+	public String getSiteNameByAppointmentNo(String appointmentNo) {
+		Site s = getSiteByAppointmentNo(appointmentNo);
+		
+		if (s != null)
+			return s.getName();
+		
 		return "";
 	}
 	

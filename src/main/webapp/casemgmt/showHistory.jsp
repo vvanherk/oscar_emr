@@ -26,19 +26,72 @@
 
 <%@ include file="/casemgmt/taglibs.jsp"%>
 <%@ page
-	import="org.springframework.web.context.*,org.springframework.web.context.support.*, org.oscarehr.PMmodule.service.ProviderManager, org.oscarehr.casemgmt.model.CaseManagementNote"%>
+	import="org.springframework.web.context.*,org.springframework.web.context.support.*, org.oscarehr.PMmodule.service.ProviderManager, org.oscarehr.util.SpringUtils, java.util.List" %>
+<%@ page
+	import="org.oscarehr.casemgmt.model.CaseManagementNoteExt, org.oscarehr.casemgmt.model.CaseManagementNote, org.oscarehr.casemgmt.dao.CaseManagementNoteDAO, org.oscarehr.casemgmt.dao.CaseManagementNoteExtDAO"%>
 <%
     WebApplicationContext ctx = WebApplicationContextUtils.getRequiredWebApplicationContext(getServletContext());
     ProviderManager pMgr = (ProviderManager)ctx.getBean("providerManager");
+    CaseManagementNoteExtDAO caseManagementNoteExtDao = (CaseManagementNoteExtDAO) SpringUtils.getBean("CaseManagementNoteExtDAO");
  %>
 <html>
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
+<script type="text/javascript" src="<%=request.getContextPath() %>/share/javascript/jquery/jquery-1.4.2.js"></script>
+<script>	
+	function addNote(){
+		$.ajax({
+			type: "POST",
+			url: "<%=request.getContextPath()%>/CaseManagementEntry.do?method=issueNoteSaveJson&demographic_no=<%=request.getParameter("demographicNo")%>&noteId=0&json=true&issue_id=<%=request.getParameter("issueIds")%>",
+			data: "value=" + encodeURIComponent($("#noteText").val()) + "&issue_code=PatientLog&sign=true",
+			dataType: "json",
+			success: function(data) {
+				window.close();
+			}
+		});
+	}
+	
+</script>
+<link rel="stylesheet" type="text/css" href="<%=request.getContextPath() %>/css/eyeform.css" />
+<style>
+	#menu {
+		background-color: lightgrey;
+		font-size: xx-small;
+		text-align: right;
+		text-color: white;
+	}
+	pre {
+	 white-space: pre-wrap;       /* css-3 */
+	 white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+	 white-space: -pre-wrap;      /* Opera 4-6 */
+	 white-space: -o-pre-wrap;    /* Opera 7 */
+	 word-wrap: break-word;       /* Internet Explorer 5.5+ */
+	}
+</style>
 <title>Note History</title>
 </head>
 <body>
+<div id="menu">
+<h2 style="text-align:left"><nested:write name="demoName" /> | DOB: <nested:write name="demoDOB" /> (<nested:write name="demoAge" /> yrs), <nested:write name="demoSex" /> </h2>
+<a href="<%=request.getContextPath()%>/tickler/ticklerAdd.jsp?demographic_no=<%=request.getParameter("demographicNo")%>&name=<nested:write name="demoName" />&chart_no=&bFirstDisp=false&messageID=0"> Send Tickler </a>
+</div>
 <h3 style="text-align: center;"><nested:write name="title" /></h3>
-<h3 style="text-align: center;"><nested:write name="demoName" /></h3>
+<div id="newNote" style="text-align:center">
+	<form>
+		<textarea id="noteText" rows="5" cols="75" style="align:center">Enter New Note</textarea> <br />
+		<input type="button" onclick="addNote()" style="margin-left:285px" value="Save & Exit">
+		<input type="button" onclick="window.close()" value="Discard & Exit">
+		<input type="button" onclick="document.getElementById('newNote').style.display='none';window.print();document.getElementById('newNote').style.display='block'" value="Print" >
+	</form>
+</div>
+
+<script>
+
+	if("<nested:write name="title" />" !== "Patient Log History"){
+		$("#newNote").css('display', 'none');
+	}
+
+</script>
 <nested:iterate indexId="idx" id="note" name="history">
 	<div
 		style="width: 99%; background-color: #EFEFEF; font-size: 12px; border-left: thin groove #000000; border-bottom: thin groove #000000; border-right: thin groove #000000;">
@@ -49,7 +102,17 @@
 		</c:if>
 	</nested:notEmpty>
         <c:if test="${note.archived == true}">
-                <div style="color: #336633;">ARCHIVED</div>
+                <div style="color: #336633;">ARCHIVED: 
+                <%
+					CaseManagementNote n = (CaseManagementNote)note;
+					List<CaseManagementNoteExt> archiveNote = caseManagementNoteExtDao.getExtByNote(new Long(n.getId()));
+					CaseManagementNoteExt curr;
+					if(archiveNote != null && archiveNote.size() > 0){ 
+						curr = archiveNote.get(0);
+						out.println(curr.getValue());
+					}
+                %>
+                </div>
         </c:if>
         
         Documentation Date: <nested:write name="note"

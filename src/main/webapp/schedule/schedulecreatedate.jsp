@@ -24,23 +24,42 @@
 
 --%>
 <%!
-//multisite starts =====================
-private	List<Site> sites;
-private boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
 
-private String getSiteHTML(String reason, List<Site> sites) {
-	 if (reason==null||reason.trim().length()==0)
+private	List<Site> sites;
+
+private String getSiteHTML(String siteIdAsString, List<Site> sites) {
+	 if (siteIdAsString==null || siteIdAsString.trim().length()==0)
 		 return "";
-	 else
-		 return "<span style='background-color:"+ApptUtil.getColorFromLocation(sites, reason)+"'>"+ApptUtil.getShortNameFromLocation(sites, reason)+"</span>";
+	
+	Site selectedSite = null; 
+	Integer siteId = 0;
+	
+	try {
+		siteId = Integer.parseInt( siteIdAsString );
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("Unable to parse site number.", e);
+		return "";
+	}
+	
+	for (Site s : sites) {
+		if (s.getId().equals(siteId)) {
+			selectedSite = s;
+			break;
+		}
+	}
+	
+	if (selectedSite != null)
+		return "<span style='background-color:"+selectedSite.getBgColor()+"'>"+selectedSite.getName()+"</span>";
+
+	return "";
+	 
 }
 %>
 <%
-if (bMultisites) {
-	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-	sites = siteDao.getAllSites();
-}
-//multisite ends =====================
+
+SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+sites = siteDao.getAllSites();
+
 %>
 <%
 
@@ -60,6 +79,7 @@ if (bMultisites) {
 <jsp:useBean id="scheduleDateBean" class="java.util.Hashtable"	scope="session" />
 <jsp:useBean id="scheduleHolidayBean" class="java.util.Hashtable" scope="session" />
 <%@ page import="org.oscarehr.util.SpringUtils" %>
+<%@ page import="org.oscarehr.util.MiscUtils" %>
 <%@ page import="org.oscarehr.common.model.ScheduleDate" %>
 <%@ page import="org.oscarehr.common.dao.ScheduleDateDao" %>
 <%@ page import="org.oscarehr.common.model.RSchedule" %>
@@ -81,7 +101,7 @@ if (bMultisites) {
   int delta = 0; //add or minus month
   now = new GregorianCalendar(year,month-1,1);
   String weekdaytag[] = {"SUN","MON","TUE","WED","THU","FRI","SAT"};
-  String reasontag[] = {"A7","A1","A2","A3","A4","A5","A6"};
+  String siteIdTag[] = {"A7","A1","A2","A3","A4","A5","A6"};
 
   if(request.getParameter("bFirstDisp")!=null && request.getParameter("bFirstDisp").compareTo("0")==0) {
     year = Integer.parseInt(request.getParameter("year"));
@@ -194,7 +214,7 @@ if(request.getParameter("bFirstDisp")==null || request.getParameter("bFirstDisp"
   scheduleDateBean.clear();
   ResultSet rsgroup = scheduleMainBean.queryResults(request.getParameter("provider_no"),"search_scheduledate_c");
   while (rsgroup.next()) {
-    scheduleDateBean.put(rsgroup.getString("sdate"), new HScheduleDate(rsgroup.getString("available"), rsgroup.getString("priority"), rsgroup.getString("reason"), rsgroup.getString("hour"), rsgroup.getString("creator") ));
+    scheduleDateBean.put(rsgroup.getString("sdate"), new HScheduleDate(rsgroup.getString("available"), rsgroup.getString("priority"), rsgroup.getString("siteId"), rsgroup.getString("hour"), rsgroup.getString("creator") ));
   }
 
   //initial scheduleHolidayBean record
@@ -229,7 +249,7 @@ if(request.getParameter("bFirstDisp")==null || request.getParameter("bFirstDisp"
       sd.setProviderNo(provider_no);
       sd.setAvailable('1');
       sd.setPriority('b');
-      sd.setReason(scheduleRscheduleBean.getSiteAvail(cal));
+      sd.setSite(scheduleRscheduleBean.getSiteAvail(cal));
       sd.setHour(scheduleRscheduleBean.getDateAvailHour(cal));
       sd.setCreator(user_name);
       sd.setStatus(scheduleRscheduleBean.active.toCharArray()[0]);
@@ -374,7 +394,7 @@ function refresh() {
               StringBuffer bgcolor = new StringBuffer();
               StringBuffer strHolidayName = new StringBuffer();
               StringBuffer strHour = new StringBuffer();
-              StringBuffer strReason = new StringBuffer();
+              StringBuffer strSiteId = new StringBuffer();
               for (int i=0; i<dateGrid.length; i++) {
                 out.println("<tr>");
                 for (int j=0; j<7; j++) {
@@ -383,13 +403,12 @@ function refresh() {
                     now.add(Calendar.DATE, 1);
                     bgcolor = new StringBuffer("navy"); //default color for absence
                     strHour = new StringBuffer();
-                    strReason = new StringBuffer();
+                    strSiteId = new StringBuffer();
                     strHolidayName = new StringBuffer();
                    if(scheduleRscheduleBean.getDateAvail(now) ) {
                       bgcolor = new StringBuffer("white"); //color for attendance
                       strHour = new StringBuffer(SxmlMisc.getXmlContent(scheduleRscheduleBean.getAvailHour(now), weekdaytag[now.get(Calendar.DAY_OF_WEEK)-1]));
-                      if (bMultisites)
-                    	  strReason.append(SxmlMisc.getXmlContent(scheduleRscheduleBean.getAvailHour(now), reasontag[now.get(Calendar.DAY_OF_WEEK)-1]));
+					  strSiteId.append(SxmlMisc.getXmlContent(scheduleRscheduleBean.getAvailHour(now), siteIdTag[now.get(Calendar.DAY_OF_WEEK)-1]));
                     }
                     aHScheduleHoliday = (HScheduleHoliday) scheduleHolidayBean.get(year+"-"+MyDateFormat.getDigitalXX(month)+"-"+MyDateFormat.getDigitalXX(dateGrid[i][j]));
                     if (aHScheduleHoliday!=null) {
@@ -400,17 +419,17 @@ function refresh() {
                     if (aHScheduleDate!=null) {
                       bgcolor = new StringBuffer("gold");
                       if(aHScheduleDate.available.equals("0")) bgcolor = new StringBuffer("navy");
-                      strHour = new StringBuffer(aHScheduleDate.hour);
-                      strReason = new StringBuffer(aHScheduleDate.reason!=null?aHScheduleDate.reason:"");
+                      strHour = new StringBuffer(aHScheduleDate.hour!=null?aHScheduleDate.hour:"");
+                      strSiteId = new StringBuffer(aHScheduleDate.siteId!=null?aHScheduleDate.siteId:"");
                     }
 
             %>
 			<td bgcolor='<%=bgcolor.toString()%>'><a href="#"
-				onclick="popupPage(260,500,'scheduledatepopup.jsp?provider_no=<%=provider_no%>&year=<%=year%>&month=<%=month%>&day=<%=dateGrid[i][j]%>&bFistDisp=1')">
+				onclick="popupPage(260,500,'scheduledatepopup.jsp?provider_no=<%=provider_no%>&year=<%=year%>&month=<%=month%>&day=<%=dateGrid[i][j]%>&site=<%=strSiteId.toString()%>&bFistDisp=1')">
 			<font color="red"><%= dateGrid[i][j] %></font> <font size="-3"
 				color="blue"><%=strHolidayName.toString()%></font> <br>
 			<font size="-2">&nbsp;<%=strHour.toString()%> <br>
-			&nbsp;<%=bMultisites?getSiteHTML(strReason.toString(), sites):strReason.toString()%></font></a></td>
+			&nbsp;<%=getSiteHTML(strSiteId.toString(), sites)%></font></a></td>
 			<%
                   }
                 }

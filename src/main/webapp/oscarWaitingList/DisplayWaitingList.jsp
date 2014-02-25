@@ -26,6 +26,7 @@
 
 <%@page import="org.oscarehr.util.SessionConstants"%>
 <%@page import="org.oscarehr.common.model.ProviderPreference"%>
+<%@page import="java.sql.*"%>
 <%
     if(session.getValue("user") == null) response.sendRedirect("../../logout.jsp");
 
@@ -72,11 +73,11 @@ function goToPage(){
 }
 
 function popupEditWlNamePage(){
-	document.forms[0].waitingListId.value = 
-			document.forms[0].selectedWL.options[document.forms[0].selectedWL.selectedIndex].value;
-
-  	var redirectPage = "../oscarWaitingList/WLEditWaitingListNameAction.do?waitingListId=" + 
-  			document.forms[0].selectedWL.options[document.forms[0].selectedWL.selectedIndex].value + "&edit=Y";
+	var waitinglistId = 0;
+	if(document.forms[0].selectedWL.length > 0)
+		waitinglistId = document.forms[0].selectedWL.options[document.forms[0].selectedWL.selectedIndex].value;
+	document.forms[0].waitingListId.value = waitinglistId;
+  	var redirectPage = "../oscarWaitingList/WLEditWaitingListNameAction.do?waitingListId=" + waitinglistId + "&edit=Y";
 	popupDemographicPage(redirectPage);
 }
 
@@ -177,26 +178,30 @@ function removePatient(demographicNo, waitingList){
 					<td align="right"></td>
 
 					<td align="left">Please Select a Waiting List:</td>
-					<td><html:select property="selectedWL">
-						<option value=""></option>
+					<td>
+					<jsp:useBean id="apptMainBean" class="oscar.AppointmentMainBean" scope="session" />
+					<html:select property="selectedWL">
 						<%
-                                	String providerNo = (String)session.getAttribute("user");
-                                	String groupNo = "";
-                                	ProviderPreference providerPreference=(ProviderPreference)session.getAttribute(SessionConstants.LOGGED_IN_PROVIDER_PREFERENCE);
-                                    if(providerPreference.getMyGroupNo() != null){
-                                    	groupNo = providerPreference.getMyGroupNo();
-                                    }
-                                    WLWaitingListNameBeanHandler wlNameHd = new WLWaitingListNameBeanHandler(groupNo, providerNo);
-                                    List allWaitingListName = wlNameHd.getWaitingListNameList();
-                                    for(int i=0; i<allWaitingListName.size(); i++){
-                                        WLWaitingListNameBean wLBean = (WLWaitingListNameBean) allWaitingListName.get(i);
-                                        String id = wLBean.getId();
-                                        String name = wLBean.getWaitingListName();                                       
-                                        String selected = id.compareTo((String) request.getAttribute("WLId")==null?"0":(String) request.getAttribute("WLId"))==0?"SELECTED":"";                                        
-                                %>
-						<option value="<%=id%>" <%=selected%>><%=name%></option>
-						<%}%>
-					</html:select> <INPUT type="button" onClick="goToPage()" value="Generate Report">
+						
+						String [][] dbQueries=new String[][] {
+						{"search_waiting_list", "select * from waitingListName where group_no='" + ((ProviderPreference)session.getAttribute(SessionConstants.LOGGED_IN_PROVIDER_PREFERENCE)).getMyGroupNo() +"' AND is_history='N' order by name"}  };
+						apptMainBean.doConfigure( dbQueries );
+						
+                           ResultSet rsWL = apptMainBean.queryResults("search_waiting_list");
+						   String listID=request.getParameter("waitingListId");
+						   if(listID ==null )
+							   listID="";
+                           while (rsWL.next()) {
+                        %>
+								<option value="<%=rsWL.getString("ID")%>"
+									<%=rsWL.getString("ID").equals(listID)?" selected":""%>>
+								    <%=rsWL.getString("name")%>
+								</option>
+						<% }
+                           rsWL.close();
+                         %>
+						</html:select>
+					 <INPUT type="button" onClick="goToPage()" value="Generate Report">
 					<%
         String userRole = "";
         if(session.getAttribute("userrole") != null){

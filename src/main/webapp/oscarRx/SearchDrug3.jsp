@@ -37,6 +37,8 @@
 <%@ page import="oscar.oscarRx.data.*,oscar.oscarProvider.data.ProviderMyOscarIdData,oscar.oscarDemographic.data.DemographicData,oscar.OscarProperties,oscar.log.*"%>
 <%@page import="org.oscarehr.common.dao.ClinicDAO" %>
 <%@page import="org.oscarehr.common.model.Clinic" %>
+<%@page import="org.oscarehr.common.dao.SiteDao" %>
+<%@page import="org.oscarehr.common.model.Site" %>
 <%@ page import="org.oscarehr.common.model.OscarAnnotation" %>
 <%@page import="org.oscarehr.casemgmt.service.CaseManagementManager"%>
 <%@page import="java.text.SimpleDateFormat" %>
@@ -227,6 +229,67 @@ if (rx_enhance!=null && rx_enhance.equals("true")) {
         <script>
           jQuery.noConflict();
         </script>
+        
+        <script>
+			jQuery("document").ready(function() {
+					setSiteOnPageLoad();
+			});
+			
+			var clinics = new Object();
+			<%
+			// We will create an object mapping clinics to sites
+			for ( Clinic c : clinics) {
+			%>
+				clinics['<%=c.getId()%>'] = new Object();
+			<%	
+				List<Site> sites = c.getSites();
+				for (Site s : sites) {
+				%>
+					var data = new Object();
+					data[0] = '<%=s.getName()%>';
+					data[1] = '<%=s.getBgColor()%>';
+					
+					clinics['<%=c.getId()%>']['<%=s.getId()%>'] = data;
+				<%
+				}
+			}
+			%>
+			
+			function rebuildSiteDropdown(clinicId) {
+				var sites = clinics[clinicId];
+				
+				var $sel = jQuery("[name='site_id']");
+				$sel.empty();
+				
+				$sel.append( jQuery('<option></option>').val('0').html('** Use Clinic Letterhead **').css('background-color', 'white') );
+				
+				for (var id in sites) {
+					$sel.append( jQuery('<option></option>').val(id).html(sites[id][0]).css('background-color', sites[id][1]) );
+				}
+			}
+			
+			function changeClinic(sel) {
+				var clinicId = sel.options[sel.selectedIndex].value;
+				
+				// Change contents of site dropdown
+				rebuildSiteDropdown(clinicId);
+				
+				var sel = document.getElementsByName("site_id")[0];
+				changeSite(sel);
+			}
+			
+			/**
+			 * Call this on page load so that the default site gets set properly.
+			 */ 
+			function setSiteOnPageLoad() {
+				var sel = document.getElementsByName("site_id")[0];
+				sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+			}
+			
+			function changeSite(sel) {
+				sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;	
+			}
+		</script>
 
 
         <link rel="stylesheet" type="text/css" href="<c:out value="${ctx}/share/yui/css/fonts-min.css"/>" >
@@ -947,22 +1010,49 @@ body {
                                                 <div style="height: 100px; overflow: auto; background-color: #DCDCDC; border: thin solid green; display: none;" id="reprint">
                                                 
 													<%
-													if (clinics != null && clinics.size() > 1) {
+													if (clinics != null && clinics.size() > 0) {
 													%>
 														<div style="float: left; width: 24%; padding-left: 20px;">
+														
 														<label title="Clinic">Clinic: </label>
-														<select id="clinic_no" name="clinic_no">
+														<select id="clinic_no" name="clinic_no" onchange="changeClinic(this);">
 														<%
+														Clinic selectedClinic = null;
+														boolean clinicMatch = false;
 														String sessionClinicId = (String) session.getAttribute("clinic_id");
 														if (sessionClinicId == null)
 															sessionClinicId = "";
 														for ( Clinic clinic : clinics) {
+															clinicMatch = sessionClinicId.equals(clinic.getId().toString());
+															if (clinicMatch)
+																selectedClinic = clinic;
 														%>
-															<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+															<option <%=clinicMatch? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
 														<%
 														}
 														%>
 														</select>
+														<br>
+														<label title="Site">Site: </label>
+														<select id="site_id" name="site_id" onchange="changeSite(this);">
+															<option value="0" style='background-color: white;'> ** Use Clinic Letterhead ** </option>
+															<%
+															if (selectedClinic == null) {
+																selectedClinic = clinics.get(0);
+															}
+															//String sessionClinicId = (String) session.getAttribute("clinic_id");
+															//if (sessionClinicId == null)
+															//	sessionClinicId = "";
+															if (selectedClinic != null) {
+																for ( Site s : selectedClinic.getSites()) {
+															%>
+																	<option value="<%=s.getId()%>" style='<%="background-color: "+s.getBgColor()%>'> <%=s.getName()%> </option>
+															<%
+																}
+															}
+															%>
+														</select>
+														
 														</div>
 														<br><br>
 													<%
@@ -1435,8 +1525,9 @@ function changeLt(drugId){
 
     function reprint2(scriptNo){
 		var clinicNo = jQuery('#clinic_no').val();
+		var siteId = jQuery('#site_id').val();
 		
-        var data="scriptNo="+scriptNo + "&clinicNo="+clinicNo+"&rand=" + Math.floor(Math.random()*10001);
+        var data="scriptNo="+scriptNo + "&clinicNo="+clinicNo+"&siteId="+siteId+"&rand=" + Math.floor(Math.random()*10001);
         var url= "<c:out value="${ctx}"/>" + "/oscarRx/rePrescribe2.do?method=reprint2";
        new Ajax.Request(url,
         {method: 'post',postBody:data,
@@ -1663,10 +1754,37 @@ function customWarning2(){
         var randomId=Math.round(Math.random()*1000000);
         var url="<c:out value="${ctx}"/>"+ "/oscarRx/WriteScript.do?parameterValue=newCustomDrug";
         var data="randomId="+randomId;
-        new Ajax.Updater('rxText',url,{method:'get',parameters:data,asynchronous:true,evalScripts:true,
-            insertion: Insertion.Bottom, onComplete:function(transport){
-                updateQty($('quantity_'+randomId));
-            }});
+        
+        /*
+        new Ajax.Updater(
+			'rxText',
+			url,
+			{
+				method:'get',
+				parameters:data,
+				asynchronous:true,
+				evalScripts:true,
+				insertion: Insertion.Bottom, 
+				onComplete: function(transport) {
+					updateQty($('quantity_'+randomId));
+				}
+            }
+        );
+        */
+        jQuery.ajax({
+			url: url,
+			type: "get",
+			dataType: "html",
+			data: data,
+			success: function(data){
+				jQuery('#rxText').html(data);
+				var element = $('quantity_'+randomId);
+				updateQty(element);
+			},
+			error: function(e){
+				alert(e);
+			}
+            });
 
     }
 

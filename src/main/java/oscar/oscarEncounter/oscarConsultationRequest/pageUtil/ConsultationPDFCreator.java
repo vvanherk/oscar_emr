@@ -23,6 +23,8 @@ import org.oscarehr.common.dao.DigitalSignatureDao;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.dao.ClinicDAO;
 import org.oscarehr.common.model.Clinic;
+import org.oscarehr.common.dao.SiteDao;
+import org.oscarehr.common.model.Site;
 import org.oscarehr.common.model.DigitalSignature;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
@@ -60,6 +62,7 @@ public class ConsultationPDFCreator extends PdfPageEventHelper {
 	private EctConsultationFormRequestUtil reqFrm;
 	private OscarProperties props;
 	private Clinic clinic;
+	private Site site;
 	private ResourceBundle oscarR;
 
 	/**
@@ -73,6 +76,7 @@ public class ConsultationPDFCreator extends PdfPageEventHelper {
 	    reqFrm.estRequestFromId((String)request.getAttribute("reqId"));
 	    props = OscarProperties.getInstance();
 	    clinic = parseClinic(request);
+	    site = parseSite(request);
 		oscarR = ResourceBundle.getBundle("oscarResources",request.getLocale());
 	}
 	
@@ -105,6 +109,28 @@ public class ConsultationPDFCreator extends PdfPageEventHelper {
 		}
 		
 		return clinic;
+	}
+	
+	private Site parseSite(HttpServletRequest request) {
+		SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
+		
+		String siteNo = request.getParameter("siteNo");
+		Site site = null;
+		
+		try {
+			int siteNoAsInt = Integer.parseInt(siteNo);
+			site = siteDao.find(siteNoAsInt);
+		} catch (Exception e) {
+			logger.error("Unable to parse site number.", e);
+		}
+		
+		// Error check
+		if (site == null) {
+			logger.error("No site found in OSCAR!");
+			return null;
+		}
+		
+		return site;
 	}
 
 	/**
@@ -221,42 +247,80 @@ public class ConsultationPDFCreator extends PdfPageEventHelper {
 	 */
 	private PdfPTable createClinicInfoHeader() {
 
+		String clinicName = clinic.getClinicName();
 		String letterheadName = null;
+		String subHeaderName = null;
 
+		// What is 'prog_' from?  Caisi?
 		if (reqFrm.letterheadName != null && reqFrm.letterheadName.startsWith("prog_")) {
 			ProgramDao programDao = (ProgramDao) SpringUtils.getBean("programDao");
 			Integer programNo = Integer.parseInt(reqFrm.letterheadName.substring(5));
 			letterheadName = programDao.getProgramName(programNo);
-		} else if (!reqFrm.letterheadName.equals("-1")) {
-			Provider letterheadNameProvider = (reqFrm.letterheadName != null ? new RxProviderData().getProvider(reqFrm.letterheadName) : null);
-			if (letterheadNameProvider != null)
-				letterheadName = letterheadNameProvider.getFirstName() + " " + letterheadNameProvider.getSurname();
-		} else {
-			letterheadName = clinic.getClinicName();
+		} else if (site != null) {
+			letterheadName = site.getName();
+		}
+		
+		if (!reqFrm.letterheadName.equals("-1")) {
+			Provider p = (reqFrm.letterheadName != null ? new RxProviderData().getProvider(reqFrm.letterheadName) : null);
+			if (p != null)
+				subHeaderName = p.getFirstName() + " " + p.getSurname();
 		}
 
 		PdfPCell cell;
 		PdfPTable infoTable = new PdfPTable(1);
 
-		cell = new PdfPCell(new Phrase(letterheadName, headerFont));
-
+		// Clinic name
+		cell = new PdfPCell(new Phrase(clinicName, headerFont));
 		cell.setBorder(0);
 		cell.setPaddingLeft(25);
 		infoTable.addCell(cell);
 
-		cell.setPhrase(new Phrase(
-				(reqFrm.letterheadAddress != null && reqFrm.letterheadAddress.trim().length() > 0 ?
-						String.format("%s", reqFrm.letterheadAddress)
-					  : String.format("%s, %s, %s %s",
-						 	   clinic.getClinicAddress(),  clinic.getClinicCity(),
-							   clinic.getClinicProvince(), clinic.getClinicPostal())), font));
+		// letterheadName
+		if ( letterheadName != null ) {
+			cell.setPhrase(new Phrase(letterheadName, boldFont));
+			infoTable.addCell(cell);
+		}
+		
+		// subHeaderName
+		if ( subHeaderName != null ) {
+			cell.setPhrase(new Phrase(subHeaderName, boldFont));
+			infoTable.addCell(cell);
+		}
+
+		// Address
+		String address = null;
+		if (reqFrm.letterheadAddress != null && reqFrm.letterheadAddress.trim().length() > 0)
+			address = String.format("%s", reqFrm.letterheadAddress);
+		else if (site != null)
+			address = String.format("%s, %s, %s %s", site.getAddress(),  site.getCity(), site.getProvince(), site.getPostal());
+		else
+			address = String.format("%s, %s, %s %s", clinic.getClinicAddress(),  clinic.getClinicCity(), clinic.getClinicProvince(), clinic.getClinicPostal());
+		
+		cell.setPhrase(new Phrase(address, font));
 		infoTable.addCell(cell);
 
-		cell.setPhrase(new Phrase(String.format("Tel: %s Fax: %s",
-				(reqFrm.letterheadPhone != null && reqFrm.letterheadPhone.trim().length() > 0 ? reqFrm.letterheadPhone : clinic.getClinicPhone()),
-				(reqFrm.letterheadFax != null && reqFrm.letterheadFax.trim().length() > 0 ? reqFrm.letterheadFax : clinic.getClinicFax())), font));
+		// Phone & fax number
+		String phone = null;
+		String fax = null;
+		
+		if (reqFrm.letterheadPhone != null && reqFrm.letterheadPhone.trim().length() > 0)
+			phone = reqFrm.letterheadPhone;
+		else if (site != null && site.getPhone() != null)
+			phone = site.getPhone();
+		else
+			phone = clinic.getClinicPhone();
+		
+		if (reqFrm.letterheadFax != null && reqFrm.letterheadFax.trim().length() > 0)
+			fax = reqFrm.letterheadPhone;
+		else if (site != null && site.getFax() != null)
+			fax = site.getFax();
+		else
+			fax = clinic.getClinicFax();
+		
+		cell.setPhrase(new Phrase(String.format("Tel: %s Fax: %s", phone, fax), font));
 		infoTable.addCell(cell);
 
+		// Misc stuff
 		cell.setPadding(0);
 		cell.setPhrase(new Phrase(getResource("msgConsReq"), font));
 		cell.setHorizontalAlignment(Element.ALIGN_CENTER);
@@ -266,15 +330,9 @@ public class ConsultationPDFCreator extends PdfPageEventHelper {
 			cell.setPhrase(new Phrase(getResource("msgPleaseReplyPatient"), boldFont));
 		}
 
-		else if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
+		else
 			cell.setPhrase(new Phrase("Please reply", boldFont));
-		}
-		else {
-			cell.setPhrase(new Phrase(
-					String.format("%s %s %s", getResource("msgPleaseReplyPart1"),
-											  clinic.getClinicName(),
-											  getResource("msgPleaseReplyPart2")), boldFont));
-		}
+		
 		infoTable.addCell(cell);
 
 		return infoTable;

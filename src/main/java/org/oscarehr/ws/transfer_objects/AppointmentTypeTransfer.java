@@ -36,7 +36,7 @@ public final class AppointmentTypeTransfer {
 	private String name = null;
 	private String notes = null;
 	private String reason = null;
-	private String location = null;
+	private String site = null;
 	private String resources = null;
 	private int duration;
 
@@ -72,12 +72,12 @@ public final class AppointmentTypeTransfer {
 		this.reason = reason;
 	}
 
-	public String getLocation() {
-		return (location);
+	public String getSite() {
+		return (site);
 	}
 
-	public void setLocation(String location) {
-		this.location = location;
+	public void setSite(String site) {
+		this.site = site;
 	}
 
 	public String getResources() {

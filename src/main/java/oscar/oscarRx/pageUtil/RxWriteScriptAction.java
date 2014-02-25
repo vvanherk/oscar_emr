@@ -784,6 +784,7 @@ public final class RxWriteScriptAction extends DispatchAction {
 	public ActionForward updateSaveAllDrugs(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws IOException, ServletException, Exception {
 		oscar.oscarRx.pageUtil.RxSessionBean bean = (oscar.oscarRx.pageUtil.RxSessionBean) request.getSession().getAttribute("RxSessionBean");
 		String clinicNo = "";
+		String siteId = "";
 		
 		request.getSession().setAttribute("rePrint", null);// set to print.
 		List<String> paramList = new ArrayList();
@@ -809,6 +810,19 @@ public final class RxWriteScriptAction extends DispatchAction {
 					request.getSession().setAttribute("clinic_id", clinicNo);
 				} catch (Exception e) {
 					logger.error("Unable to parse clinic number: " + clinicNo, e);
+				}
+			}
+			
+			// Set clinic number (if present)
+			if (ele.startsWith("site_")) {
+				siteId = request.getParameter(ele);
+				try {
+					int siteIdAsInt = Integer.parseInt(siteId);
+					bean.setSiteId(siteIdAsInt);
+					logger.info("SET site number!: " + siteIdAsInt);
+					//request.getSession().setAttribute("clinic_id", siteId);
+				} catch (Exception e) {
+					logger.error("Unable to parse site number: " + siteId, e);
 				}
 			}
 			

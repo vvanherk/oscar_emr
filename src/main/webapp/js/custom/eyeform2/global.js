@@ -27,11 +27,18 @@ function sendConReportTickler(ctx,demographicNo){
 
 
     
-function addExam(ctx,listId,whereTo,appointmentNo) {
+function addExam(ctx,listId,whereTo,appointmentNo, demographicNo, endDate) {
+	var extraParams = "";
+	if (endDate)
+		extraParams += "&endDate=" + endDate;
+	if (demographicNo)
+		extraParams += "&demographicNo=" + demographicNo;
+	
 	//POST the list box, and get back the text to add.
 	var data = jQuery("#"+listId).serialize();
-	jQuery.ajax({type:'POST',url:ctx+'/eyeform/Eyeform.do?method=getMeasurementText&name='+listId+'&appointmentNo='+appointmentNo,data:data,success: function(data){
-		whereTo.value = whereTo.value + data + "\n";
+	jQuery.ajax({type:'POST',url:ctx+'/eyeform/Eyeform.do?method=getMeasurementText&name='+listId+'&appointmentNo='+appointmentNo+extraParams,data:data,success: function(data){
+		if(data && data.trim().length > 0)
+			whereTo.value = whereTo.value + data + "\n";
 	}});
 }
 

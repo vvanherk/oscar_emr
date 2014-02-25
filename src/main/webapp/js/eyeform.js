@@ -11,7 +11,6 @@ var isEyeform = true;
 
 var COPY_LAST_IMPRESSION_TXT = "--Copy last impression--";
 
-
 /*
  * Utility Functions
  */
@@ -60,11 +59,11 @@ Object.keys = Object.keys || (function () {
 
 
 Date.prototype.toFormattedString = function() {
-	var year = this.getUTCFullYear();
-	var month = this.getUTCMonth() + 1 + "";
+	var year = this.getFullYear();
+	var month = this.getMonth() + 1 + "";
 	month = (month.length == 1 ? "0" + month : month);
-	var day = this.getUTCDate() + "";
-	day = (day.length == 1 ? "0" + day : day);
+	var day = this.getDate() + "";
+	day = (day.length == 1 ? "0" + day  : day);
 
 	return year + "-" + month + "-" + day;
 };
@@ -113,6 +112,7 @@ var appointmentDate = [];
 
 
 var BoxIssueUrls = {
+		"macro": ctx + "/oscarEncounter/displayMacro.do",
 		"specsHistory": ctx + "/oscarEncounter/displaySpecsHistory.do",
 		"procedures": ctx + "/oscarEncounter/displayOcularProcedure.do",
 		"consultations": ctx + "/oscarEncounter/displayConsultation.do?appointment_no=" + appointmentNo,
@@ -120,12 +120,15 @@ var BoxIssueUrls = {
 		"documents": ctx + "/oscarEncounter/displayDocuments.do",
 		"diagrams": ctx + "/oscarEncounter/displayDiagrams.do?appointment_no=" + appointmentNo,
 		"tickler": ctx + "/oscarEncounter/displayTickler.do",
+		"messages": ctx + "/oscarEncounter/displayMessages.do",
 		"billing": ctx + "/oscarEncounter/displayBilling.do",
 		"ocularMeds": ctx + "/oscarEncounter/displayRx.do",
-		"allergies": ctx + "/oscarEncounter/displayAllergy.do"
+		"allergies": ctx + "/oscarEncounter/displayAllergy.do",
+		"consultationReport": ctx + "/oscarEncounter/displayConReport.do?appointment_no=" + appointmentNo
 };
 
 var cmds = {
+		"macro": "macro",
 		"consultations": "consultation",
 		"specsHistory": "specshistory",
 		"procedures": "ocularprocedure",
@@ -133,9 +136,11 @@ var cmds = {
 		"documents": "docs",
 		"diagrams": "diagrams",
 		"tickler": "tickler",
+		"messages": "msgs",
 		"billing": "Billing",
 		"ocularMeds": "Rx",
-		"allergies": "allergies"
+		"allergies": "allergies",
+		"consultationReport": "conReport"
 };
 
 var noteBoxes = {
@@ -146,9 +151,11 @@ var noteBoxes = {
 		"impressionHistory": "eyeformImpression",
 		"planHistory": "eyeformPlan",
 		"currentIssueHistory": "eyeformCurrentIssue",
+		"officeCommunication": "officeCommunication",
 		"ocularHistory": "PastOcularHistory",
 		"familyMedicalOcularHistory": "FamHistory",
-		"eyedrops": "OcularMedication"
+		"eyedrops": "OcularMedication",
+		"otherMeds": "OMeds"
 };
 
 var measurementsToTypes = {
@@ -251,7 +258,7 @@ var procedureItems = ["procedure_eye", "procedure_procedure", "procedure_locatio
 var diagnosticsItems = ["diagnostics_eye", "diagnostics_name", "diagnostics_urgency", "diagnostics_comment"];
 
 
-var savedImpression = false, savedCurrentPresenting = false, sendPlanTickler = false, savedPlan = false;
+var savedImpression = false, savedCurrentPresenting = false, savedOfficeCommunication = false, sendPlanTickler = false;
 var saveInterval;
 var billingArgs;
 
@@ -281,7 +288,7 @@ function isThisAppointment(apptNo) {
 	return false;
 }
 
-function getApopintmentClass(appointmentNo) {
+function getAppointmentClass(appointmentNo) {
 	if (isThisAppointment(appointmentNo))
 		return "thisVisit";
 	else if (appointmentNo == lastAppointmentNo)
@@ -290,81 +297,20 @@ function getApopintmentClass(appointmentNo) {
 		return "";
 }
 
-function initMacroList() {
-	$.ajax({
-		url: ctx + "/eyeform/Util.do?method=getMacroList",
-		dataType: "json",
-		success: function(data) {
-			macros = data.macros;
-
-			$("#macroList option").remove();
-
-			for (var m in macros) {
-				$("#macroList").append("<option value='" + m + "'>" + macros[m].macroName + "</option>");
-			}
-
-			newMacro();
-
-			$("#macroList").change(function() {
-				showEditMacro($(this).val());
-			});
-		}
-	});
-}
-
-function showEditMacro(m) {
-	$("#macroIdField").val(macros[m].id);
-	$("#macroNameBox").val(macros[m].macroName);
-	$("#macroImpressionBox").val(macros[m].impressionText);
-	$("#macroPlanBox").val(macros[m].planText);
-
-	if (macros[m].copyFromLastImpression) {
-		$("#macroCopyLastImpressionBtn").addClass("uiBarBtnOn");
-		$("#macroImpressionBox").val(COPY_LAST_IMPRESSION_TXT)
-		$("#macroImpressionBox").attr("disabled", "disabled");
-	} else {
-		$("#macroCopyLastImpressionBtn").removeClass("uiBarBtnOn");
-		$("#macroImpressionBox").removeAttr("disabled");
-	}
-
-	$("#macroBillingItemBox .macroBillingItem").remove();
-	for (var b in macros[m].billingItems) {
-		$("#macroBillingItemBox").append("<div class='macroBillingItem'><span class='removeBillingItem'>x</span> " + macros[m].billingItems[b].billingServiceCode + " x" + macros[m].billingItems[b].multiplier + "</div>");
-	}
-
-	$(".removeBillingItem").click(function() {
-		$(this).parent().remove();
-	});
-}
-
 function newMacro() {
-	$("#macroIdField").val("");
-	$("#macroNameBox").val("");
-	$("#macroImpressionBox").val("");
-	$("#macroPlanBox").val("");
-	$("#macroCopyLastImpressionBtn").removeClass("uiBarBtnOn");
-	$("#macroImpressionBox").removeAttr("disabled");
-
-	$(".macroBillingItem").remove();
-
-	$("#macroList").val("");
-
-	$("#macroNameBox").focus();
-}
-
-function copyMacro() {
-	$("#macroIdField").val("");
-	$("#macroNameBox").val("");
-	$("#macroNameBox").focus();
-
-	$("#macroList").val("");
+	popupPage(800, 600, "Eyeform Macro Details", ctx + "/eyeform/Macro.do?method=addMacro");
 }
 
 function getMostRecentItem(boxName, callback) {
+	var apptNo = "";
+	
+	if ( boxName == "officeCommunication" )
+		apptNo = "&appointment_no=" + appointmentNo;
+	
 	$.ajax({
 		type: "POST",
 		url: ctx + "/CaseManagementView.do",
-		data: noteExtraParams + "&issue_code=" + noteBoxes[boxName],
+		data: noteExtraParams + apptNo + "&issue_code=" + noteBoxes[boxName],
 		dataType: "json",
 		success: function(data) {
 			var item = {note: ""};
@@ -377,10 +323,15 @@ function getMostRecentItem(boxName, callback) {
 }
 
 function loadNoteBox(boxName, boxIssue, initialLoad) {
+	var apptNo = "";
+	
+	if ( boxName == "officeCommunication" )
+		apptNo = "&appointment_no=" + appointmentNo;
+	
 	$.ajax({
 		type: "POST",
 		url: ctx + "/CaseManagementView.do",
-		data: noteExtraParams + "&issue_code=" + boxIssue,
+		data: noteExtraParams + apptNo + "&issue_code=" + boxIssue,
 		dataType: "json",
 		success: function(data) {
 			fillAjaxBoxNote(boxName, data, initialLoad);
@@ -400,6 +351,8 @@ function editNote(item) {
 	$(item).find("input").attr("value", data);
 
 	$(item).unbind("click");
+	
+	$(item).find("input").click(function(e){ e.stopPropagation(); });
 
 	$(item).find("input").blur(function() {
 		$(this).parent().unbind("click");
@@ -424,39 +377,47 @@ function editNote(item) {
 }
 
 function saveEditNote(item) {
-	$(item).removeClass("updating");
+	var $item = $(item);
+	
+	$item.removeClass("updating");
 
 	var data = encodeURIComponent($(item).find("input").val());
 	var noteId = $(item).attr("note_id");
 
-	$(item).html("<strong><abbr /></strong><span class='noteContent' /><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span>");
-	$(item).find("abbr").attr("title", $(item).attr("dateData"));
-	$(item).find("abbr").text($(item).attr("date"));
-
-	if ($(item).attr("noteData") != data) {
+	$item.html("<strong><abbr /></strong><span class='noteContent' /><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span>");
+	$item.find("abbr").attr("title", $item.attr("dateData"));
+	$item.find("abbr").text($item.attr("date"));
+	
+	if ($item.attr("noteData") != data) {
 		$.ajax({
 			type: "POST",
 			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo,
-			data: "value=" + data + "&noteId=" + noteId + "&sign=true",
+			data: "value=" + data + "&noteId=" + noteId + "&sign=false&issue_code=" + noteBoxes[$item.closest(".boxTitleLink").attr('id')],
 			dataType: "json",
 			success: function(data) {
 				if (typeof console != "undefined")
 					console.log("Saved " + data.id);
+
+				var date = new Date();
+				$item.find("abbr").html(date.toFormattedString());
+			},
+			error: function(data) {
+				alert("Unable to save note!");
 			}
 		});
-		$(item).find("span.noteContent").text( unescape(data) );
-		$(item).addClass("thisVisit");
+		$item.find("span.noteContent").text( unescape(data) );
+		$item.addClass("thisVisit");
 
 	} else {
-		$(item).find("span.noteContent").text( unescape($(item).attr("noteData")) );
+		$item.find("span.noteContent").text( unescape($item.attr("noteData")) );
 	}
 
-	$(item).click(function(e) {
+	$item.click(function(e) {
 		editNote($(this));
 		e.stopPropagation();
 	});
 
-	$(item).find(".archiveNoteBtn").click(function(e) {
+	$item.find(".archiveNoteBtn").click(function(e) {
 		if (typeof console != "undefined")
 			console.log("Archive Btn Clicked");
 		e.stopPropagation();
@@ -467,19 +428,41 @@ function saveEditNote(item) {
 function archiveNote(item) {
 	var noteId = $(item).attr("note_id");
 	var boxId = $(item).parent().parent().parent().attr("id");
+	var $archiveNoteBtn = $(item).find(".archiveNoteBtn");
+	
+	closeAll();
+	
+	$(".archiveBox").css("display", "block");
+	$(".archiveBox").css("top", ($(window).height()/2-275) + "px");
+	$(".archiveBox").css("left", ($(window).width()/2-100) + "px");
+	
+	$(".archiveBox").children("[name=note_id]").val(noteId);
+	$("#newArchiveText").focus();
 
-	if (typeof console != "undefined")
-		console.log("Archiving " + noteId);
-	$(item).hide();
+	$("#closeArchiveBoxBtn").click(function(){	
+		$(".archiveBox").css("display", "none");
+		$(".archiveBox").children("input").val();	
+	});
+	
+	$("#uiBoxArchiveBtn").click(function(){
+		var archiveNote = encodeURIComponent($("#newArchiveText").val());
+		
+		if (typeof console != "undefined")
+			console.log("Archiving " + noteId);
+		$(item).hide();
+		$(".archiveBox").css("display", "none");
+		
+		$.ajax({
+			type: "POST",
+			url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson",
+			data: "value=" + encodeURIComponent($(item).children(".noteContent").html()) + "&archiveNote=" + archiveNote + "&issue_code=" 
+				+ noteBoxes[$(item).closest(".boxTitleLink").attr('id')] + "&noteId=" + noteId + "&archived=true",
+			dataType: "json",
+			success: function(data) {
+				loadNoteBox(boxId, noteBoxes[boxId], false);
+			}
+		});
 
-	$.ajax({
-		type: "POST",
-		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson",
-		data: "noteId=" + noteId + "&archived=true",
-		dataType: "json",
-		success: function(data) {
-			loadNoteBox(boxId, noteBoxes[boxId], false);
-		}
 	});
 }
 
@@ -522,13 +505,18 @@ function displayTickler(value, element) {
 			success: function(data) {
 				$(box).css("top", ($(element).position().top - 16) + "px");
 				$(box).css("left", "201px");
-				$(box).find(".messageContent").text(data.tickler.message);
+				$(box).find(".messageContent").html(data.tickler.message);
 				$(box).find(".messageDate").text((new Date(data.tickler.updateDate.time)).toFormattedString());
-				$(box).find(".messageTo").text(data.tickler.provider);
-				$(box).find(".messageFrom").text(data.tickler.toProvider);
+				$(box).find(".messageTo").text(data.tickler.toProvider);
+				$(box).find(".messageFrom").text(data.tickler.provider);
 				$(box).css("display", "block");
 				$(element).addClass("openBox");
 				$(element).append(box);
+				
+				$("#closeTicklerUiBoxBtn").click(function(event) {
+					event.stopPropagation();
+					closeAll();
+				});
 			}
 		});
 	})();
@@ -655,12 +643,11 @@ function displayProcedure(value, element) {
 					$(box).find("#uiSaveProcedureBtn").click(function() {
 						if (!transformDate($("#procedureEditBox input[name=proc.dateStr]")))
 							return false;
-
+						
 						var dataStr = "";
 						$("#procedureEditBox").find("input, select, textarea").each(function(index) {
 							dataStr += "&" + $(this).attr("name") + "=" + encodeURIComponent($(this).val());
 						});
-
 						$.ajax({
 							url: ctx + "/eyeform/OcularProc.do",
 							data: "json=true&method=save&proc.id=" + id + dataStr,
@@ -682,6 +669,16 @@ function displayProcedure(value, element) {
 	})();
 }
 
+function openNewConsultationReport() {
+	var endDate = $(".appointmentSelectBtn .appointmentDateText").html();
+	if (endDate === undefined || endDate.toLowerCase() === 'today')
+		endDate = endOfToday.toFormattedString();
+
+	var url = ctx + "/eyeform/Eyeform.do?method=prepareConReport&demographicNo=" + demographicNo + "&flag=new&endDate=" + endDate;
+	
+	popupPage(700, 1000, 'AddConReport' + demographicNo, url);
+}
+
 function closeAll() {
 	$(".uiBarBtnOn").removeClass("uiBarBtnOn");
 
@@ -690,6 +687,8 @@ function closeAll() {
 	$(".openTickler").remove();
 
 	$("#newTicklerBox").css("display", "none");
+	
+	$("#newArchiveBox").css("display", "none");
 
 	$("#newSpecsBox").css("display", "none");
 
@@ -701,23 +700,25 @@ function closeAll() {
 	$(".openAddList").remove();
 
 	$(".loaderImg").css("display", "none");
-
-	$("#macroListBox").css("display", "none");
 }
 
 function fillAjaxBox(boxNameId, jsonData, initialLoad) {
-
+	var showAll = false;
+	
+	// If we are reloading a box and the user has already clicked 'show more', we want to show all upon reloading
+	if (!initialLoad) {
+		if ( $("#" + boxNameId + " .content ul li").length > 5 )
+			showAll = !$( $("#" + boxNameId + " .content ul li").get(5) ).hasClass("oldEntry");
+	}
+	
 	if (jsonData.Items.length > 0) {
 		$("#" + boxNameId + " .wrapper").html("<div class='content'><ul /></div>");
 	}
 
-	if ((typeof jsonData.Items != "undefined") &&
-			(boxNameId == "ocularMeds"
-				|| boxNameId == "consultations"
-				|| boxNameId == "documents"
-				|| boxNameId == "allergies"))
+	if( boxNameId != "billing") {
 		jsonData.Items = jsonData.Items.reverse();
-
+	}
+	
 	for (var jsonItem in jsonData.Items) {
 		var item = jsonData.Items[jsonItem];
 		item.title = item.title.replace(/\n/g," ");
@@ -736,33 +737,54 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 
 		if (boxNameId == "tickler") {
 			$("#tickler .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"displayTickler('" + item.value + "', this)\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
+		} else if (boxNameId == "messages") {
+			$("#messages .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
 		} else if (boxNameId == "specsHistory") {
 			$("#specsHistory .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"displaySpecs('" + item.value + "', this)\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
 		} else if (boxNameId == "procedures") {
 			$("#procedures .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"displayProcedure('" + item.value + "', this)\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
 		} else if (boxNameId == "billing") {
 			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
+		} else if (boxNameId == "macro") {
+			$("#" + boxNameId + " .content ul").prepend("<li><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\">" + item.title + "</span></li>");
 		} else {
-			if (item.PDF)
+			if (item.PDF || boxNameId == 'documents')
 				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"popupPage(800, 1000, '', '" + item.URL + "')\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
-			else
-				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + date.toFormattedString() + "</strong> " + item.title + "</span></li>");
+			else {
+				var dateString = date.toFormattedString();
+				if (dateString == "Unspecified")
+					dateString = "";
+				$("#" + boxNameId + " .content ul").prepend("<li itemtime=\"" + date.getTime() + "\"><span onclick=\"" + item.URL + "\" title=\"" + item.linkTitle + "\"><strong>" + dateString + "</strong> " + item.title + "</span></li>");
+			}
 		}
 	}
 
 	if ($("#" + boxNameId + " .content ul li").length > 5) {
 		$("#" + boxNameId + " .content ul li").slice(5).attr("class", "oldEntry");
-
+		
+		var showLessBtn = $("<span class='showLessBtn uiBarBtn'><span class='text smallerText'>Show Less</span></span>").click(function(e) {
+			e.stopPropagation();
+			$("#" + boxNameId + " .content ul li").slice(5).attr("class", "oldEntry");
+			$(this).hide();
+			$(this).parent().children(".showAllBtn").show();
+		});
+		
 		var showMoreBtn = $("<span class='showAllBtn uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
 			e.stopPropagation();
 			$(this).parent().find("li").removeClass("oldEntry");
-			$(this).remove();
+			$(this).hide();
+			$(this).parent().children(".showLessBtn").show();
 		});
 		$("#" + boxNameId + " .content").append(showMoreBtn);
+		$("#" + boxNameId + " .content").append(showLessBtn);
+		
+		if(showAll){ $('.showAllBtn').hide(); }
+		else {	$(".showLessBtn").hide();	}
+		
 	}
 
 	if (initialLoad) {
-		$("#newTicklerBox, #newSpecsBox, #newProcedureBox, #macroListBox").draggable({
+		$("#newTicklerBox, #newSpecsBox, #newProcedureBox").draggable({
 			handle: "div.boxTitle",
 			cancel: "div.uiBarBtn",
 			drag: function() {
@@ -772,7 +794,8 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 
 		if (boxNameId == "labResults" || boxNameId == "diagrams" || boxNameId == "documents"
 			|| boxNameId == "billing" || boxNameId == "tickler" || boxNameId == "consultations"
-				|| boxNameId == "ocularMeds" || boxNameId == "allergies") {
+			|| boxNameId == "consultationReport" || boxNameId == "messages"
+				|| boxNameId == "ocularMeds" || boxNameId == "allergies" || boxNameId == "macro") {
 			$("#" + boxNameId + " .title").click((function (action) {
 				return function(e) {
 					e.stopPropagation();
@@ -826,6 +849,12 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 					$("#procedures .uiBarBtn").addClass("uiBarBtnOn");
 				}
 			});
+		} else if (boxNameId == "consultationReport") {
+			$("#" + boxNameId + " .addBtn").click( function(e) {
+				e.stopPropagation();
+				openNewConsultationReport();
+				//eval("(function() { " + action + "})()");
+			});
 		} else {
 			if (jsonData.PopUpMenuURLS.length > 0 && jsonData.PopUpMenuURLS.length == jsonData.PopUpMenuNames.length) {
 				(function(urlList, nameList, boxName) {
@@ -869,10 +898,12 @@ function fillAjaxBox(boxNameId, jsonData, initialLoad) {
 }
 
 function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
-	if (jsonData.Items.length > 0) {
-		if (boxNameId == "impressionHistory" || boxNameId == "currentIssueHistory")
+	if (jsonData !=null && jsonData.Items.length > 0) {
+		if ( boxNameId == "currentIssueHistory")
 			$("#" + boxNameId + " .content").html("<div class='historyList'></div>");
-		else
+		else if (boxNameId == "impressionHistory")
+			$("#" + boxNameId + " .content").html("<table class='historyTable'><thead><th>Date</th><th>Impression</th><th>Signature</th></thead><tbody style='cursor: pointer;'></tbody></table>");
+		else if (boxNameId != "officeCommunication")
 			$("#" + boxNameId + " .content").html("<ul></ul>");
 	}
 
@@ -892,20 +923,33 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			var provName = "";
 			if (item.provider)
 				provName = item.provider.formattedName;
+				
+			var signProvName = "";
+			if (item.signing_provider)
+				signProvName = item.signing_provider.formattedName;
 
 			if (!lastImpressionSet) {
 				lastImpression = item.note;
 				lastImpressionSet = true;
 			}
 
-			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
+			var onClick = "popupPage(800, 1200, \"Appointment Report\", \"" + ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + item.appointment_no + "&demographicNo=" + demographicNo + "&endDate=" + date.toFormattedString() + "\")";
+
+			$("#" + boxNameId + " .historyTable").find("tbody").append("<tr itemtime=\"" + date.getTime() + "\" class='item' onClick='" + onClick + "' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'></tr>");
+			
+			// Get the last tr element in the table
+			var $lastTr = $("#" + boxNameId + " .historyTable").find("tbody").children("tr").last();
+			
+			// Add the appropriate data to the tr
+			$lastTr.append("<td style='width:7%;' ><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong></td>");
+			if(item.note.match(/\n[\[]/g) !== null) {
+				$lastTr.append("<td style='width:62%'> " + item.note.replace( /\n\[Sign/, '</td><td>[Sign').replace( /(\r\n|\n|\r)/gm, "<br>") + "</td>");
+			} else {
+				$lastTr.append("<td style='width:62%'> " + item.note.replace(/\n/, "<br>")+ '</td><td>[Signed by ' + signProvName + "]</td>");
+			}
 		}
 
 		impressionHistoryIssueId = jsonData.Issues[0].id;
-
-		$(".historyList .item").click(function() {
-			popupPage(800, 1200, "Appointment Report", ctx + "/eyeform/Eyeform.do?method=print&apptNos=" + $(this).attr("appointmentNo"));
-		});
 
 	} else if (boxNameId == "currentIssueHistory") {
 		var currentIssueItems = jsonData.Items;
@@ -915,6 +959,15 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 
 			currentIssueItems = currentIssueItems.slice(1);
 		}
+		
+		$("#currentIssueAreaBox").attr('isCurrentNote', true);
+		
+		$("#currentHistoryBox .title").click(function(e) {
+			e.stopPropagation();
+			popupPage(800, 600, "Current Issue History", ctx + "/CaseManagementEntry.do?method=issuehistory&demographicNo=" + demographicNo + "&issueIds=" + currentPresentingIssueId);
+		});
+
+		$("#currentHistoryBox .historyList").append("<div style='display: none;' id='currentHistoryNote' class='item'></div>");
 
 		for (var jsonItem in currentIssueItems) {
 			var item = currentIssueItems[jsonItem];
@@ -924,11 +977,40 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			if (item.provider)
 				provName = item.provider.formattedName;
 
-			$("#" + boxNameId + " .historyList").append("<div itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong> " + item.note.replace( /\n/g, ' ') + "</div>");
+			$("#currentHistoryBox .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note + "</div>");
 		}
 
 		currentPresentingIssueId = jsonData.Issues[0].id;
 
+	} else if (boxNameId == "officeCommunication") {
+		var officeCommunicationItems = jsonData.Items;
+		
+		$("#officeCommunicationAreaBox").attr('isCurrentNote', true);
+		
+		$("#officeCommunication .title").click(function(e) {
+			e.stopPropagation();
+			popupPage(800, 600, "Office Communication History", ctx + "/CaseManagementEntry.do?method=offCommHist&demographicNo=" + demographicNo);
+		});
+		
+		if (jsonData.Items.length > 0 && !jsonData.Items[0].signed) {
+			$("#officeCommunicationAreaBox").val(jsonData.Items[0].note);
+			$("#officeCommunicationAreaBox").attr("noteId", jsonData.Items[0].id);
+			officeCommunicationItems = officeCommunicationItems.slice(1);
+		}
+		
+		$("#officeCommunication .historyList").append("<div style='display: none;' id='officeCommunicationNote' class='item'></div>");
+
+		
+		for (var jsonItem in officeCommunicationItems) {
+			var item = officeCommunicationItems[jsonItem];
+			var date = new Date(item.update_date.time);
+			
+			var provName = "";
+			if (item.provider)
+				provName = item.provider.formattedName;
+
+			$("#officeCommunication .historyList").append("<div style='display: none;' itemtime=\"" + date.getTime() + "\" class='item' appointmentNo='" + item.appointment_no + "' class='" + getAppointmentClass(item.appointment_no) + "'>" + item.note + "</div>");
+		}
 	} else {
 		var boxItems = jsonData.Items;
 		if (boxNameId == "planHistory") {
@@ -947,23 +1029,32 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			var provName = "";
 			if (item.provider)
 				provName = item.provider.formattedName;
-			
-			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\" note_id='" + item.id + "' class='" + getApopintmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong><span class='noteContent'>" + item.note.replace( /\n/g, ' ' ) + "</span><span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span></li>");
+				
+			$("#" + boxNameId + " .content ul").append("<li itemtime=\"" + date.getTime() + "\" note_id='" + item.id + "' class='" + getAppointmentClass(item.appointment_no) + "'><strong><abbr title='Note created by " + provName + "'>" + date.toFormattedString() + "</abbr></strong><span class='noteContent'>" + item.note.replace( /\n/g, ' ' ) + "</span></li>");
+
+			if(boxNameId != "patientLog") { //changed to build list contents based on item properties.
+				var $currItem = $("#" + boxNameId + " .content ul").children().last();
+				
+				$currItem.append("<span class='uiBarBtn archiveNoteBtn'><span class='text smallerText'>Archive</span></span>");
+				if( !item.signed ) {
+					$currItem.addClass("unSigned");
+					$currItem.click(function(e) {
+						e.stopPropagation();
+						editNote($(this));
+					});
+				}
+			}
+		
 		}
 
-		$("#" + boxNameId + " .content ul li").click(function(e) {
-			e.stopPropagation();
-			editNote($(this));
-		});
 
 		$("#" + boxNameId + " .content ul li .archiveNoteBtn").click(function(e) {
 			e.stopPropagation();
 			archiveNote($(this).parent());
 		});
 
-
 		if (initialLoad) {
-			if (boxNameId == "planHistory" || boxNameId == "diagnostics" || boxNameId == "patientLog" || boxNameId == "reminders" || boxNameId == "ocularHistory" || boxNameId == "familyMedicalOcularHistory" || boxNameId == "eyedrops") {
+			if (boxNameId == "planHistory" || boxNameId == "diagnostics" || boxNameId == "patientLog" || boxNameId == "otherMeds" || boxNameId == "medicalOcularHistory" || boxNameId == "reminders" || boxNameId == "ocularHistory" || boxNameId == "familyMedicalOcularHistory" || boxNameId == "eyedrops") {
 				$("#" + boxNameId + " .title").click(function(e) {
 					e.stopPropagation();
 					var rnd = Math.round(Math.random() * 1000);
@@ -974,9 +1065,10 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 			}
 		}
 	}
-	if (initialLoad) {
+	if (initialLoad && boxNameId != "officeCommunication" && boxNameId != "patientLog") {
 		$("#" + boxNameId + " .addBtn, #" + boxNameId + " .content").click(function(e) {
 			e.stopPropagation();
+			$("#" + boxNameId).find(".updating").find("input").blur();
 
 			checkModify($("#newNoteText"));
 			$("#" + boxNameId + " .content ul").prepend("<li><input type='text' id='newNoteText' /></li>");
@@ -995,7 +1087,7 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 						$.ajax({
 							type: "POST",
 							url: address,
-							data: "value=" + value + "&issue_code=" + noteBoxes[$(parent).parent().parent().parent().attr('id')] + "&sign=true",
+							data: "value=" + encodeURIComponent(value) + "&issue_code=" + noteBoxes[$(parent).parent().parent().parent().attr('id')] + "&sign=false",
 							dataType: "json",
 							success: function(data) {
 								$("#" + boxNameId + " .content ul").children().remove();
@@ -1027,16 +1119,16 @@ function fillAjaxBoxNote(boxNameId, jsonData, initialLoad) {
 }
 
 
-function displayMeasurements(data, table) {
+function displayMeasurements(data, table, timeshow) {
 	// Build the initial list of measurements to present
 	// VA, IOP, AR
-
-
+	//<tr><td class='measurementsDate'><strong>" + new Date(parseInt(timesToShow[t])).toFormattedString() + "</strong></td><td class='measurementsDetail' id='measurements_" + timesToShow[t] + "'></td></tr>
+	$(table).append("<tr><td colspan='4'><strong>" + new Date(timeshow).toFormattedString() + "</strong></td></tr>");
 	var vaPresent = false, iopPresent = false, arPresent = false;
 
 	for (var e in eyes) {
 		for (var i in va) {
-			if (!(typeof data[eyes[e] + "_" + i] == "undefined"))
+			if ( !(typeof data[eyes[e] + "_" + i] == "undefined"))
 				vaPresent = true;
 		}
 
@@ -1052,16 +1144,25 @@ function displayMeasurements(data, table) {
 	}
 
 	if (vaPresent || iopPresent || arPresent)
-		$(table).append("<tr />");
-
-	if (vaPresent) {
-		var vaStr = "<strong>VA</strong><br /> ";
+		$(table).append("<tr/>");
+	
+	if (arPresent||iopPresent||vaPresent) {
+		var vaStr = "<br />";
 		for (var e in eyes) {
 			vaStr += "<em>" + eyes[e].toUpperCase() + "</em> ";
+			vaStr += "<br />";
+		}
+
+		$(table).children().last().append("<td>" + vaStr + "</td>");
+	}
+
+	if (vaPresent) {
+		var vaStr="<strong>VA</strong><br /> ";
+		for (var e in eyes) {
 			for (var i in va) {
-				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
+				if (!(typeof data[eyes[e] + "_" + i] == "undefined")&&i.indexOf("ph_distance")==-1) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
-					vaStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getApopintmentClass(va[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					vaStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(va[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
 				}
 			}
 			vaStr += "<br />";
@@ -1073,11 +1174,10 @@ function displayMeasurements(data, table) {
 	if (iopPresent) {
 		var iopStr = "<strong>IOP</strong><br /> ";
 		for (var e in eyes) {
-			iopStr += "<em>" + eyes[e].toUpperCase() + "</em> ";
 			for (var i in iop) {
-				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
+				if (!(typeof data[eyes[e] + "_" + i] == "undefined") &&i.indexOf("iop_applanation")!=-1) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
-					iopStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getApopintmentClass(iop[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					iopStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(iop[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
 				}
 			}
 			iopStr += "<br />";
@@ -1085,15 +1185,18 @@ function displayMeasurements(data, table) {
 
 		$(table).children().last().append("<td>" + iopStr + "</td>");
 	}
-
 	if (arPresent) {
 		var arStr = "<strong>AR</strong><br /> ";
 		for (var e in eyes) {
-			arStr += "<em>" + eyes[e].toUpperCase() + "</em> ";
+			var j=0;
 			for (var i in ar) {
 				if (!(typeof data[eyes[e] + "_" + i] == "undefined")) {
 					var date = new Date(data[eyes[e] + "_" + i].dateEntered.time);
-					arStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getApopintmentClass(ar[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">" + data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					arStr += "<span itemtime=\"" + date.getTime() + "\" class='measurementItem " + getAppointmentClass(ar[i].appointmentNo) + "'><abbr title=\"" + va[i] + "\">";
+               if(j==2)
+                  arStr += "X" ;
+               arStr += data[eyes[e] + "_" + i].dataField + "</abbr></span>";
+					j++;
 				}
 			}
 			arStr += "<br />";
@@ -1112,14 +1215,14 @@ function displayMeasurements(data, table) {
 		}
 	}
 
-	if (count > 0) {
-		$(table).append("<tr><td class='moreMeasurements' itemtime='" + newestDate + "'>+ " + count + " more</td></tr>");
-	}
+	/*if (count > 0) {
+		//$(table).append("<tr><td class='moreMeasurements' itemtime='" + newestDate + "'>+ " + count + " more</td></tr>");
+	}*/
 }
 
 function refreshBox(boxName, initialLoad) {
 	var boxUrl = BoxIssueUrls[boxName];
-
+	
 	$.ajax({
 		type: "POST",
 		url: boxUrl,
@@ -1134,17 +1237,20 @@ function refreshBox(boxName, initialLoad) {
 }
 
 
-function saveEyeform(fn, signAndExit, bill, closeForm) {
+function saveEyeform(fn, signAndExit, bill, closeForm, macroId) {	
+    saveMeasurements();
 	var value = $("#impressionAreaBox").val();
 	var currentPresentingValue = $("#currentIssueAreaBox").val();
+	var officeCommunicationValue = $("#officeCommunicationAreaBox").val();
 	var planValue = $("#planBox").val();
 	var issueNoteId = $("#impressionAreaBox").attr("noteId");
 	var planNoteId = $("#planBox").attr("noteId");
 	var currentPresentingNoteId = $("#currentIssueAreaBox").attr("noteId");
+	var officeCommunicationNoteId = $("#officeCommunicationAreaBox").attr("noteId");
 	savedImpression = false;
 	savedCurrentPresenting = false;
+	savedOfficeCommunication = false;
 	sendPlanTickler = false;
-	savedPlan = false;
 	savedForm = false;
 
 	if (typeof issueNoteId == "undefined")
@@ -1157,18 +1263,28 @@ function saveEyeform(fn, signAndExit, bill, closeForm) {
 		currentPresentingNoteId = 0;
 
 	$("#saveBtn").css("display", "none");
+	$("#saveBtn2").css("display", "none");
+	$("#saveExitBtn").css("display", "none");
 	$("#saveSignExitBtn").css("display", "none");
 	$("#billBtn").css("display", "none");
 
 	$(".loaderImg").css("display", "inline");
-
-
+	      
+	if(appointmentNo === null || appointmentNo === "" ){
+		var r=confirm("Sign all unsigned notes for this patient?");
+		if (r==true) {
+			appointmentNo = '0';
+		}
+	}
+	      
 	$.ajax({
 		type: "POST",
 		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
 		data: "value=" + encodeURIComponent(value) + "&issue_id=" + impressionHistoryIssueId
 			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
-			+ (!isNaN(issueNoteId) ? "&noteId=" + issueNoteId : "&noteId=0"),
+			+ (!isNaN(issueNoteId) ? "&noteId=" + issueNoteId : "&noteId=0")
+			+ (!isNaN(macroId) ? "&macroId=" + macroId : "")
+			+ "&runMacro=true", // We only want to run the macro once
 		dataType: "json",
 		success: function(data) {
 			savedImpression = true;
@@ -1179,41 +1295,82 @@ function saveEyeform(fn, signAndExit, bill, closeForm) {
 		type: "POST",
 		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
 		data: "value=" + encodeURIComponent(currentPresentingValue) + "&issue_id=" + currentPresentingIssueId
-			+ (signAndExit ? "&sign=true&appendSignText=true&signAndExit=true" : "")
-			+ (!isNaN(currentPresentingNoteId) ? "&noteId=" + currentPresentingNoteId : "&noteId=0"),
+			+ (signAndExit ? "&sign=true&signAndExit=true" : "")
+			+ (!isNaN(currentPresentingNoteId) ? "&noteId=" + currentPresentingNoteId : "&noteId=0")
+			+ (!isNaN(macroId) ? "&macroId=" + macroId : "") // We need to include the macro id here so that 'issueNoteSaveJson' knowns what macro note data to add to the clinical note
+			+ "&runMacro=false",
 		dataType: "json",
 		success: function(data) {
+			if (data['id']) {
+				$("#currentIssueAreaBox").attr("noteId", data['id']);
+			}
 			savedCurrentPresenting = true;
 		}
 	});
-
-
-	// Send the plan text to all receptionists
-	if (signAndExit) {
-		$.ajax({
-			type: "POST",
-			url: ctx + "/eyeform/Util.do?method=sendPlan",
-			data: "value=" + encodeURIComponent(planValue) + "&demographicNo=" + demographicNo,
-			dataType: "json",
-			success: function(data) {
-				sendPlanTickler = true;
-			}
-		});
-	}
-
-	// Save the plan
+	
 	$.ajax({
 		type: "POST",
-		url: ctx + "/CaseManagementEntry.do?method=issueNoteSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
-		data: "value=" + encodeURIComponent(planValue) + "&issue_code=eyeformPlan"
-			+ (signAndExit ? "&sign=true" : "")
-			+ (!isNaN(planNoteId) ? "&noteId=" + planNoteId : "&noteId=0"),
+		url: ctx + "/CaseManagementEntry.do?method=officeCommunicationSaveJson&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
+		data: "value=" + encodeURIComponent(officeCommunicationValue)
+			+ (signAndExit ? "&sign=true&signAndExit=true" : "")
+			+ (!isNaN(officeCommunicationNoteId) ? "&noteId=" + officeCommunicationNoteId : "&noteId=0")
+			+ (!isNaN(macroId) ? "&macroId=" + macroId : "") // We need to include the macro id here so that 'issueNoteSaveJson' knowns what macro note data to add to the clinical note
+			+ "&runMacro=false",
 		dataType: "json",
 		success: function(data) {
-			savedPlan = true;
+			savedOfficeCommunication = true;
 		}
 	});
 
+	// sign all unsigned notes.
+	// Send the plan text to all receptionists
+	if (signAndExit) {
+		
+		$(".updating").find("input").blur(); 		//save all current notes
+		
+		var unSignedNotes = [];
+		
+		$(".unSigned").each(function(){
+			unSignedNotes.push({
+				"value": $(this).find(".noteContent").html(),
+				"issue_code": noteBoxes[$(this).closest(".boxTitleLink").attr("id")], 
+				"noteId": $(this).attr("note_id")
+			});
+		});
+		
+		$.ajax({
+			type: "POST",
+			url: ctx + "/CaseManagementEntry.do?method=signSavedNotes&appointment_no=" + appointmentNo + "&demographic_no=" + demographicNo + "&json=true",
+			data: "notes=" + encodeURIComponent(JSON.stringify(unSignedNotes)),
+			dataType: "json"
+		});
+		
+      if(planValue != null && planValue.trim()!="") {
+         $.ajax({
+            type: "POST",
+            url: ctx + "/eyeform/Util.do?method=sendPlan",
+            data: "value=" + encodeURIComponent(planValue) + "&demographicNo=" + demographicNo,
+            dataType: "json",
+            success: function(data) {
+               sendPlanTickler = true;
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+				alert("Unable to send plan: " + textStatus + " (" + errorThrown + ")");
+			}
+         });   
+      } else {
+		  // If there was no plan to send, just tell the eyeform that we successfully sent it (otherwise it will not close the window after saving)
+		  sendPlanTickler = true;
+	  }
+      //reset closeForm
+      var r=confirm("Are you sure you want to exit?");
+      if (r==false) {
+         closeForm=false;
+         bill = false;
+         fn=saveFunc;
+      }
+   }
+	
 	saveInterval = setInterval(function () { afterSave(fn, signAndExit, bill, closeForm); }, 1000);
 }
 
@@ -1221,7 +1378,7 @@ function saveMeasurements() {
 	$("#measurementsSavingMessage").show();
 
 	var postData = "";
-	$("#measurementsBox [measurement]").each(function() {
+	$("#NewMeasurementContent [measurement]").each(function() {
 		var className = $(this).attr("class");
 
 
@@ -1246,29 +1403,31 @@ function saveMeasurements() {
 }
 
 function afterSave(callback, signAndExit, bill, closeForm) {
-	if ((!signAndExit && savedImpression && savedPlan) ||
-			(signAndExit && savedImpression && savedPlan && sendPlanTickler)) {
+	if ((!signAndExit && savedImpression) ||
+			(signAndExit && savedImpression && sendPlanTickler)) {
 
 		if (closeForm || (signAndExit && !bill)) {
 			window.opener.location.reload(true);
-			window.close();
-			return;
+         if(closeForm){
+            window.close();
+            return;
+         }
 		}
 
 		savedImpression = false;
-		savedPlan = false;
 		sendPlanTickler = false;
 		savedForm = true;
 
 		$(".loaderImg").css("display", "none");
 		$("#saveMsg").css("display", "block");
 
+		$("#saveBtn").css("display", "block");
+		$("#saveBtn2").css("display", "inline-block");
+		$("#saveExitBtn").css("display", "block");
+		$("#saveSignExitBtn").css("display", "block");
 		$("#billBtn").css("display", "block");
 
 		setTimeout(function() {
-			$("#saveBtn").css("display", "block");
-			$("#saveSignExitBtn").css("display", "block");
-			$("#billBtn").css("display", "block");
 			$("#saveMsg").css("display", "none");
 		}, 5000);
 
@@ -1386,6 +1545,25 @@ function handleAutocompleteKeyup(autocomplete, textbox, event, submitFn) {
 		submitFn($(autocomplete).find(".selectedListItem"));
 		return true;
 	}
+	return false;
+}
+
+/**
+ * Function to run the macro.  Not sure why we are using the odd name - it's from the echart macro code.
+ */
+function runMacro2(macroId, macroName, appointmentNo, cpp) {
+	var c = confirm('Are you sure to execute macro [ '+ macroName+' ] and sign this form?');
+	if (c == false) 
+		return false;
+		
+	//potentially need admission date.
+	//document.forms['caseManagementEntryForm'].sign.value='on';
+	//jQuery("form[name='caseManagementEntryForm']").append("<input type=\"hidden\" id=\"macro.id\" name=\"macro.id\" value=\""+macroId+"\"/>");
+	
+	//var result =  savePage('runMacro', '');
+	saveEyeform(saveFunc, true, false, true, macroId);
+	//saveEyeform(postBillingEntry, true, true, false);
+	
 	return false;
 }
 
@@ -1635,6 +1813,7 @@ function showMeasurementsHistoryBox(time) {
 
 	$(tmpMeasurementsBox).find(".explanation").css("display", "block");
 	$(tmpMeasurementsBox).find(".measurementsTime").text(new Date(parseInt(time)).toFormattedString());
+   $(tmpMeasurementsBox).find("#save_measurements").css("display", "none");
 
 	$(tmpMeasurementsBox).draggable({
 		handle: "div.boxTitle",
@@ -1696,7 +1875,7 @@ function loadMeasurements() {
 		}
 		types += $(this).attr("measurement");
 	});
-
+	
 	$.ajax({
 		url:ctx+"/oscarEncounter/MeasurementData.do?demographicNo=" + demographicNo + "&types="+types+"&action=getMeasurementsGroupByDate&appointmentNo=" + appointmentNo + "&fresh=cpp_currentHis&json=true",
 		dataType: "json",
@@ -1736,18 +1915,55 @@ function loadMeasurements() {
 						timesToShow.push(times[t]);
 				}
 			}
-
+            var showAllMeasurements = false;
+            var i = 2;
+            var j = 0;
 			for (var t in timesToShow) {
-				$("#measurements .content").append("<table class='measurementsTable' measurementsTime='" + timesToShow[t] + "'><tr><td class='measurementsDate'><strong>" + new Date(parseInt(timesToShow[t])).toFormattedString() + "</strong></td><td class='measurementsDetail'><table id='measurements_" + timesToShow[t] + "'></table></td></tr></table>");
-				displayMeasurements(data[timesToShow[t]], $("#measurements_" + timesToShow[t]));
+				var showMeasurement = (j<2) || showAllMeasurements;
+				if(showMeasurement)
+					$("#measurements .content").append("<table class='measurementsTableLatest2' measurementsTime='" +  + timesToShow[t] + "' id='measurements_" + timesToShow[t] + "'></table>");
+     			else
+					$("#measurements .content").append("<table class='measurementsTable measurementsTableNoShow' measurementsTime='" +  + timesToShow[t] + "' id='measurements_" + timesToShow[t] + "'></table>");			
+				displayMeasurements(data[timesToShow[t]], $("#measurements_" + timesToShow[t]),parseInt(timesToShow[t]));
+				j=j+1;
+			}
+			
+			if (timesToShow.length > 2) {
+				$("#measurements .content").append("<span id='showLessMeasurementBtn' class='uiBarBtn'><span class='text smallerText'>Show Less</span></span>");
+				
+				$("#measurements .content").append("<span id='showAllMeasurementBtn' class='uiBarBtn'><span class='text smallerText'>Show All</span></span>").click(function(e) {
+					e.stopPropagation();
+				    $(this).parent().find("table").removeClass("measurementsTableNoShow");
+				    $('#showAllMeasurementBtn').hide();
+				    $('#showLessMeasurementBtn').show();
+				});
+				
+				$('#showLessMeasurementBtn').click(function(e) {
+					e.stopPropagation();
+				    $(this).parent().find("table").slice(2).addClass("measurementsTableNoShow");
+				    $('#showLessMeasurementBtn').hide();
+				    $('#showAllMeasurementBtn').show();
+				});
+				
+				if(showAllMeasurements){ $('#showAllMeasurementBtn').hide(); }
+				else{ $('#showLessMeasurementBtn').hide(); }
 			}
 
 			$(".measurementsTable").click(function() {
 				showMeasurementsHistoryBox($(this).attr("measurementsTime"));
 			});
+			$(".measurementsTableLatest2").click(function() {
+				showMeasurementsHistoryBox($(this).attr("measurementsTime"));
+			});
 		}
 	});
 }
+
+// Ported from newEncounterLayout.jsp - used after creating / editing a macro
+function reloadNav(name) {
+	refreshBox(name, false);
+}
+
 
 //For OscarRx "Paste into EMR" functionality
 function pasteToEncounterNote(text) {
@@ -1759,10 +1975,8 @@ function transformDate(dateField) {
 	var v = $(dateField).val();
 
 	var d = new Date(v);
-
-	if (typeof d != "undefined" && !isNaN(d.getTime()))
-		$(dateField).val(d.toFormattedString());
-	else {
+	
+	if (typeof d == "undefined" || isNaN(d.getTime())) {
 		$(dateField).css("border", "2px solid red");
 		$(dateField).one("click", function() {
 			$(this).css("border", "");
@@ -1774,6 +1988,16 @@ function transformDate(dateField) {
 	return true;
 }
 
+function saveFunc() {
+	loadMeasurements();
+	loadNoteBox("impressionHistory", noteBoxes["impressionHistory"], false);
+	loadNoteBox("planHistory", noteBoxes["planHistory"], false);
+	refreshBox("tickler", false);
+	$("#impressionAreaBox").val("");
+	$("#planBox").val("");
+	$("#billDxCodeBox").empty();
+	$("#billCodeBox").empty();
+}
 
 $(document).ready(function() {
 	setHighlight(defaultDateRange);
@@ -1804,17 +2028,17 @@ $(document).ready(function() {
 
 	});
 
-	$("#copyApptReasonBtn").click(function() {
+	$("#copyApptReasonBtn").click(function(e) {
+		e.stopPropagation();
 		$("#currentIssueAreaBox").val($.trim($("#currentIssueAreaBox").val() + "\n\n" + $("#complaint .content").text()));
 		$("#currentIssueAreaBox").autogrow();
 	});
 
-	$("#currentIssueShowHistoryBtn").click(function(e) {
-		e.stopPropagation();
-		popupPage(800, 600, "Current Issue History", ctx + "/CaseManagementEntry.do?method=issuehistory&demographicNo=" + demographicNo + "&issueIds=" + currentPresentingIssueId);
+	
+	$(".iViewsBtn").click(function() {
+		window.open(ctx + "/oscarEncounter/eyeform/downloadIViews.do?demographicNo=" + demographicNo);
 	});
-
-
+	
 	$(".eChartBtn").click(function() {
 		window.open(ctx + "/oscarEncounter/IncomingEncounter.do?demographicNo=" + demographicNo + "&curProviderNo=&reason=Progress+Notes&encType=&curDate=&appointmentDate=&startTime=&status=", "width=1024,height=710");
 	});
@@ -1832,18 +2056,15 @@ $(document).ready(function() {
 		postBillingEntry();
 	});
 
-	var saveFunc = function() {
-		loadMeasurements();
-		loadNoteBox("impressionHistory", noteBoxes["impressionHistory"], false);
-		loadNoteBox("planHistory", noteBoxes["planHistory"], false);
-		refreshBox("tickler", false);
-		$("#impressionAreaBox").val("");
-		$("#planBox").val("");
-		$("#billDxCodeBox").empty();
-		$("#billCodeBox").empty();
-	};
-
 	$("#saveBtn").click(function() {
+		saveEyeform(saveFunc, false, false, false);
+	});
+	
+	$("#saveBtn2").click(function() {
+		saveEyeform(saveFunc, false, false, false);
+	});
+	
+	$("#saveExitBtn").click(function() {
 		saveEyeform(saveFunc, false, false, true);
 	});
 
@@ -2108,10 +2329,6 @@ $(document).ready(function() {
 		$(this).parent().find("loaderImg").css("display", "inline");
 	});
 
-
-	// Macro stuff
-	initMacroList();
-
 	$("#openMacroBoxBtn, #closeMacroBoxBtn").click(function() {
 		if ($("#macroListBox").css("display") == "block") {
 			closeAll();
@@ -2187,12 +2404,12 @@ $(document).ready(function() {
 
 				var completeList = [];
 				for (var m in macros) {
-					if (macros[m].macroName.toLowerCase().indexOf($(this).val().toLowerCase()) >= 0)
+					if (macros[m].label.toLowerCase().indexOf($(this).val().toLowerCase()) >= 0)
 						completeList.push(m);
 				}
 
 				for (var c in completeList) {
-					$("#macroAutocomplete").append("<div class='listItem' code='" + completeList[c] + "'><span class='autocompleteTitle'>" + macros[completeList[c]].macroName + "</span></div>");
+					$("#macroAutocomplete").append("<div class='listItem' code='" + completeList[c] + "'><span class='autocompleteTitle'>" + macros[completeList[c]].label + "</span></div>");
 				}
 
 				$("#macroAutocomplete .listItem").first().addClass("selectedListItem");
@@ -2244,8 +2461,6 @@ $(document).ready(function() {
 				} else {
 					alert("Error in saving macro: " + data.error);
 				}
-
-				initMacroList();
 			}
 		});
 	});
@@ -2405,7 +2620,12 @@ $(document).ready(function() {
 		var appointmentListItemCallback = function(e) {
 			e.stopPropagation();
 
-			$(".showAllBtn").remove();
+			$(".showAllBtn").each(function() {
+				// Remove all 'show all' buttons except the one for macros
+				$this = $(this);
+				if (!$this.closest("#macro").length)
+					$this.remove();
+			});
 
 			$("[itemtime]").show();
 
@@ -2413,6 +2633,9 @@ $(document).ready(function() {
 			$("[itemtime]").filter(function() {
 				return $(this).attr("itemtime") > time;
 			}).hide();
+			
+			changeTextAreaBasedOnAppointment(time, 'currentHistoryBox', 'currentHistoryNote', 'currentIssueAreaBox');
+			changeTextAreaBasedOnAppointment(time, 'officeCommunication', 'officeCommunicationNote', 'officeCommunicationAreaBox');
 
 			$(this).parent().parent().find(".appointmentDateText").text($(this).text());
 
@@ -2437,3 +2660,74 @@ $(document).ready(function() {
 
 
 });
+
+/**
+ * Will change the text area for the specified boxId to the text from the given appointment time.  It will also prevent
+ * the user from editing the previous note text (by setting the text area to readonly).
+ * 
+ * If the user is in the middle of entering text, it will save this text so that it can be restored if the user
+ * switches back to 'today'.
+ */
+function changeTextAreaBasedOnAppointment(time, boxId, note, textArea) {
+	var $note = $('#' + note);
+	var $textArea = $('#' + textArea);
+	
+	// Filter current history data from hidden div by the selected appointment date and copy to Current Hx field
+	if (time != endOfToday.getTime()) {
+		var latestCurHistItem = $("#" + boxId + " .historyList")
+		.children('[itemtime]')
+		.filter(function() { return $(this).attr("itemtime") <= time; })
+		.sort(function(a,b) { return new $(a).attr("itemtime") < new $(b).attr("itemtime"); })
+		.first();
+		
+		
+		// If we found an item with a date within the range, copy it to the text field
+		if (latestCurHistItem) {
+			// Backup the note the user is actively entering for this session
+			if ($note.text() == '' && $textArea.attr('isCurrentNote') == 'true') {
+				$note.text( $textArea.val() );
+				$textArea.attr('isCurrentNote', false);
+			}
+			
+			$textArea.val( latestCurHistItem.text() );
+			$textArea.attr('readonly', 'readonly');
+		}
+	} else {
+		// Restore the note the user was actively entering for this session
+		if ($note.text() != '') {
+			$textArea.val( $note.text() );
+			$note.text('');
+		} else {
+			$textArea.val('');
+		}
+		
+		$textArea.attr('isCurrentNote', true)
+		$textArea.removeAttr('readonly');
+	}
+}
+
+//Arrage plan  copy from eyeform2/cme.js
+function messagesLoaded(savedId){
+	   //alert('messagesLoaded() - savedNoteId=' + savedId); 
+	   var noteAddonUrl = ctx+"/eyeform/NoteData.do?method=getCurrentNoteData&demographicNo="+demographicNo+"&noteId="+savedId+"&appointmentNo="+appointmentNo;
+    jQuery.ajax({url:noteAddonUrl,dataType: "html",success: function(data) {
+			jQuery("#current_note_addon").html(data);
+    }});
+
+    jQuery("#displayResolvedIssues").hide();
+    jQuery("#displayUnresolvedIssues").hide();
+    jQuery("#newNoteImg").hide();
+    jQuery("#imgPrintEncounter").removeAttr('onclick');
+    jQuery("#imgPrintEncounter").live('click',function(e){
+ 	   e.preventDefault();
+ 	   location.href=ctx+'/eyeform/Eyeform.do?method=print&apptNos=' + appointmentNo;
+    });
+    jQuery("#assignIssueSection").html("<span>&nbsp;</span>");
+    jQuery("#caseNote_note"+savedId).css('height','10em');
+    
+    jQuery("#saveImg, #signSaveImg, #signVerifyImg, #signSaveBill").bind('click',function() {      	   
+    
+ 	   jQuery("#save_measurements").click();
+ 	   saveEyeformNoteNoGenerate();
+    });    
+}

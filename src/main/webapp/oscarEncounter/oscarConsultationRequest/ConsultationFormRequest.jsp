@@ -70,7 +70,7 @@
 <%
 displayServiceUtil.estSpecialist();
 %>
-<%! boolean bMultisites=org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
+
 <%
 	
 
@@ -78,26 +78,19 @@ displayServiceUtil.estSpecialist();
 	String appNo = request.getParameter("appNo");
 	appNo = (appNo==null ? "" : appNo);
 
-	String defaultSiteName = "";
+	Integer defaultSiteNo = 0;
 	Integer defaultSiteId = 0;
 	Vector<String> vecAddressName = new Vector<String>() ;
 	Vector<String> bgColor = new Vector<String>() ;
 	Vector<Integer> siteIds = new Vector<Integer>();
-	if (bMultisites) {
-		SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
 
-		List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-		if (sites != null) {
-			for (Site s:sites) {
-				   siteIds.add(s.getSiteId());
-		           vecAddressName.add(s.getName());
-		           bgColor.add(s.getBgColor());
-		 	}
-		}
+	List<Site> availableSites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
 
-		if (appNo != "") {
-			defaultSiteName = siteDao.getSiteNameByAppointmentNo(appNo);
-		}
+	if (appNo.length() > 0) {
+		Site s = siteDao.getSiteByAppointmentNo(appNo);
+		if (s != null)
+			defaultSiteNo = s.getId();
 	}
 	
 	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
@@ -117,6 +110,7 @@ displayServiceUtil.estSpecialist();
 
 		RxProviderData rx = new RxProviderData();
 		List<Provider> prList = rx.getAllProviders();
+		
 		Provider thisProvider = rx.getProvider(providerNo);
 		
 		EctConsultationFormRequestUtil consultUtil = new EctConsultationFormRequestUtil();
@@ -169,6 +163,7 @@ displayServiceUtil.estSpecialist();
 		OscarProperties props = OscarProperties.getInstance();
 %><head>
 <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>
+
 <script>
 	var ctx = '<%=request.getContextPath()%>';
 	var requestId = '<%=request.getParameter("requestId")%>';
@@ -196,6 +191,67 @@ displayServiceUtil.estSpecialist();
    <script>
      jQuery.noConflict();
    </script>
+   
+<script>
+	jQuery(document).ready(function(){
+		setSiteOnPageLoad();
+	});
+
+	var clinics = new Object();
+	<%
+	// We will create an object mapping clinics to sites
+	for ( Clinic c : clinics) {
+	%>
+		clinics['<%=c.getId()%>'] = new Object();
+	<%	
+		List<Site> sites = c.getSites();
+		for (Site s : sites) {
+		%>
+			var data = new Object();
+			data[0] = '<%=s.getName()%>';
+			data[1] = '<%=s.getBgColor()%>';
+			
+			clinics['<%=c.getId()%>']['<%=s.getId()%>'] = data;
+		<%
+		}
+	}
+	%>
+	
+	function rebuildSiteDropdown(clinicId) {
+		var sites = clinics[clinicId];
+		
+		var $sel = jQuery("[name='siteNo']");
+		$sel.empty();
+		
+		$sel.append( jQuery('<option></option>').val('0').html('** Use Clinic Letterhead **').css('background-color', 'white') );
+		
+		for (var id in sites) {
+			$sel.append( jQuery('<option></option>').val(id).html(sites[id][0]).css('background-color', sites[id][1]) );
+		}
+	}
+	
+	function changeClinic(sel) {
+		var clinicId = sel.options[sel.selectedIndex].value;
+		
+		// Change contents of site dropdown
+		rebuildSiteDropdown(clinicId);
+		
+		var sel = document.getElementsByName("siteNo")[0];
+		changeSite(sel);
+	}
+	
+	/**
+	 * Call this on page load so that the default site gets set properly.
+	 */ 
+	function setSiteOnPageLoad() {
+		var sel = document.getElementsByName("siteNo")[0];
+		sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+	}
+	
+	function changeSite(sel) {
+		sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;	
+	}
+</script>
 
 
 	<oscar:customInterface section="conreq"/>
@@ -886,9 +942,9 @@ for (Provider p : prList) {
 		%>
 	 providerData['<%=prov_no%>'] = new Object(); //{};
 
-	providerData['<%=prov_no%>'].address = "<%=p.getFullAddress() %>";
-	providerData['<%=prov_no%>'].phone = "<%=p.getClinicPhone().trim() %>";
-	providerData['<%=prov_no%>'].fax = "<%=p.getClinicFax().trim() %>";
+	providerData['<%=prov_no%>'].address = "<%=(p.getFullAddress() != null ? p.getFullAddress().trim() : "") %>";
+	providerData['<%=prov_no%>'].phone = "<%=(p.getClinicPhone() != null ? p.getClinicPhone().trim() : "") %>";
+	providerData['<%=prov_no%>'].fax = "<%=(p.getClinicFax() != null ? p.getClinicFax().trim() : "") %>";
 
 <%	}
 }
@@ -1087,15 +1143,14 @@ function updateFaxButton() {
 		if (requestId != null)
 		{
 			EctViewRequestAction.fillFormValues(thisForm, new Integer(requestId));
-                thisForm.setSiteName(consultUtil.siteName);
-                defaultSiteName = consultUtil.siteName ;
-
+                thisForm.setSiteNo(consultUtil.siteNo);
+                defaultSiteNo = consultUtil.siteNo;
 		}
 		else if (segmentId != null)
 		{
 			EctViewRequestAction.fillFormValues(thisForm, segmentId);
-                thisForm.setSiteName(consultUtil.siteName);
-                defaultSiteName = consultUtil.siteName ;
+                thisForm.setSiteNo(consultUtil.siteNo);
+                defaultSiteNo = consultUtil.siteNo ;
 		}
 		else if (request.getAttribute("validateError") == null)
 		{
@@ -1115,8 +1170,9 @@ function updateFaxButton() {
 				{
 					thisForm.setCurrentMedications(RxInfo.getCurrentMedication(demo));
 				}
-
-				team = consultUtil.getProviderTeam(consultUtil.mrp);
+				
+				if (consultUtil.mrp != null && consultUtil.mrp.length() > 0)
+					team = consultUtil.getProviderTeam(consultUtil.mrp);
 			}
 
 			thisForm.setStatus("1");
@@ -1124,9 +1180,7 @@ function updateFaxButton() {
 			thisForm.setSendTo(team);
 			//thisForm.setConcurrentProblems(demographic.EctInfo.getOngoingConcerns());
 			thisForm.setAppointmentYear(year);
-        		if (bMultisites) {
-	        		thisForm.setSiteName(defaultSiteName);
-        		}
+	        thisForm.setSiteNo(defaultSiteNo);
 		}
 
 		if (thisForm.iseReferral())
@@ -1548,25 +1602,6 @@ function updateFaxButton() {
 							</table>
 							</td>
 						</tr>
-						<%if (bMultisites) { %>
-						<tr>
-							<td  class="tite4">
-								<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.siteName" />:
-							</td>
-							<td>
-								<html:select property="siteName" onchange='this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor'>
-						            <%  for (int i =0; i < vecAddressName.size();i++){
-						                 String te = vecAddressName.get(i);
-						                 String bg = bgColor.get(i);
-						                 if (te.equals(defaultSiteName))
-						                	 defaultSiteId = siteIds.get(i);
-						            %>
-						                    <html:option value="<%=te%>" style='<%="background-color: "+bg%>'> <%=te%> </html:option>
-						            <%  }%>
-							</html:select>
-							</td>
-						</tr>
-						<%} %>
 					</table>
 					</td>
 					<td valign="top" cellspacing="1" class="tite4">
@@ -1676,7 +1711,7 @@ function updateFaxButton() {
 							</td>
 							
 							<td align="right" class="tite3">								
-								<select id="clinicNo" name="clinicNo" style="width: 275px;">
+								<select id="clinicNo" name="clinicNo" onchange="changeClinic(this);" style="width: 275px;">
 								<%
 								String sessionClinicId = (String) session.getAttribute("clinic_id");
 								if (sessionClinicId == null)
@@ -1692,11 +1727,28 @@ function updateFaxButton() {
 						</tr>
 						
 						<tr>
+							<td  class="tite4">
+								<bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.siteName" />:
+							</td>
+							<td align="right" class="tite3">
+								<html:select property="siteNo" onchange='changeSite(this);' style="width: 275px;">
+									<html:option value="0" style='background-color: white;'> ** Use Clinic Letterhead ** </html:option>
+						            <%  for ( Site s : availableSites ) {
+							                String te = s.getId().toString();
+							                String bg = s.getBgColor();
+						            %>
+						                    <html:option value="<%=te%>" style='<%="background-color: "+bg%>'> <%=s.getName()%> </html:option>
+						            <%  }%>
+								</html:select>
+							</td>
+						</tr>
+						
+						<tr>
 							<td class="tite4"><bean:message key="oscarEncounter.oscarConsultationRequest.ConsultationFormRequest.letterheadName" />:
 							</td>
 							<td align="right" class="tite3">
 								<select name="letterheadName" id="letterheadName" onchange="switchProvider(this.value)" style="width: 275px;">
-									<option value="-1">** Use Clinic Letterhead **</option>
+									<option value="-1">** Use Clinic/Site Letterhead **</option>
 								<%
 									for (Provider p : prList) {
 										if (p.getProviderNo().compareTo("-1") != 0 && (p.getFirstName() != null || p.getSurname() != null)) {

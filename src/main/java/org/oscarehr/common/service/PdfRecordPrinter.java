@@ -44,6 +44,8 @@ import org.oscarehr.PMmodule.dao.ProviderDao;
 import org.oscarehr.casemgmt.model.CaseManagementNote;
 import org.oscarehr.common.dao.EFormValueDao;
 import org.oscarehr.common.model.Allergy;
+import org.oscarehr.common.model.Prescription;
+import org.oscarehr.common.model.Drug;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.EFormValue;
@@ -253,10 +255,7 @@ public class PdfRecordPrinter {
         p.setAlignment(Paragraph.ALIGN_LEFT);
        // getDocument().add(p);
 
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-        Paragraph p2 = new Paragraph("Date of Visit: " + sdf.format(appointment.getAppointmentDate()),getFont());
-        p2.setAlignment(Paragraph.ALIGN_RIGHT);
-       // getDocument().add(p);
+
 
         PdfPTable table = new PdfPTable(2);
         table.setWidthPercentage(100f);
@@ -264,11 +263,17 @@ public class PdfRecordPrinter {
         PdfPCell cell1 = new PdfPCell(p);
         cell1.setBorder(PdfPCell.NO_BORDER);
         cell1.setHorizontalAlignment(Element.ALIGN_LEFT);
-        PdfPCell cell2 = new PdfPCell(p2);
-        cell2.setHorizontalAlignment(Element.ALIGN_RIGHT);
-        cell2.setBorder(PdfPCell.NO_BORDER);
         table.addCell(cell1);
-        table.addCell(cell2);
+        
+        if (appointment != null) {
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			Paragraph p2 = new Paragraph("Date of Visit: " + sdf.format(appointment.getAppointmentDate()),getFont());
+			p2.setAlignment(Paragraph.ALIGN_RIGHT);
+			PdfPCell cell2 = new PdfPCell(p2);
+	        cell2.setHorizontalAlignment(Element.ALIGN_RIGHT);
+	        cell2.setBorder(PdfPCell.NO_BORDER);
+	        table.addCell(cell2);
+        }
 
         getDocument().add(table);
 
@@ -278,15 +283,20 @@ public class PdfRecordPrinter {
         cell1 = new PdfPCell(getParagraph("Signed Provider:" + ((signingProvider!=null)?signingProvider:"")));
         cell1.setBorder(PdfPCell.BOTTOM);
         cell1.setHorizontalAlignment(Element.ALIGN_LEFT);
-        cell2 = new PdfPCell(getParagraph("RFR:" + this.appointment.getReason()));
-        cell2.setHorizontalAlignment(Element.ALIGN_CENTER);
-        cell2.setBorder(PdfPCell.BOTTOM);
+        table.addCell(cell1);
+        
+        if (appointment != null) {
+			PdfPCell cell2 = new PdfPCell(getParagraph("RFR:" + this.appointment.getReason()));
+	        cell2.setHorizontalAlignment(Element.ALIGN_CENTER);
+	        cell2.setBorder(PdfPCell.BOTTOM);
+	        table.addCell(cell2);
+        }
+        
         PdfPCell cell3 = new PdfPCell(getParagraph("Ref:" + this.getRefName(this.demographic)));
         cell3.setHorizontalAlignment(Element.ALIGN_RIGHT);
         cell3.setBorder(PdfPCell.BOTTOM);
-        table.addCell(cell1);
-        table.addCell(cell2);
         table.addCell(cell3);
+        
         getDocument().add(table);
 
         /*
@@ -309,6 +319,40 @@ public class PdfRecordPrinter {
         cb.lineTo(document.right(), document.top() - (font.getCalculatedLeading(LINESPACING)*5f));
         cb.stroke();     
         */
+    }
+    
+    public void printRx(List<Prescription> prescriptions) throws DocumentException {
+        ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
+        
+        Font obsfont = new Font(getBaseFont(), FONTSIZE, Font.UNDERLINE);
+
+
+        Paragraph p = new Paragraph();
+        p.setAlignment(Paragraph.ALIGN_LEFT);
+        Phrase phrase = new Phrase(LEADING, "\n", getFont());
+        p.add(phrase);
+        phrase = new Phrase(LEADING, "Prescriptions", obsfont);
+        p.add(phrase);
+        getDocument().add(p);
+		
+		Date now = new Date();
+        for(Prescription presc : prescriptions) {
+			List<Drug> drugs = presc.getDrugs();
+		   for ( Drug d : drugs ) {
+			   if ( !d.getEndDate().after(now) )
+					continue;
+				
+	        	p = new Paragraph();
+	    		phrase = new Phrase(LEADING, "", getFont());
+	    		Chunk chunk = new Chunk(formatter.format(d.getRxDate()) + " - ");
+	    		phrase.add(chunk);
+	    		chunk = new Chunk(d.getSpecial().replaceAll("\n", " "));
+	    		phrase.add(chunk);
+	    		p.add(phrase);
+	    		getDocument().add(p);
+			}
+		}
+        getDocument().add(new Phrase("\n",getFont()));
     }
 
     public void printRx(String demoNo) throws DocumentException {
@@ -376,8 +420,6 @@ public class PdfRecordPrinter {
     public void printCPPItem(String heading, Collection<CaseManagementNote> notes) throws DocumentException {
         if( newPage )
             document.newPage();
-      //  else
-      //      newPage = true;
 
         Font obsfont = new Font(bf, FONTSIZE, Font.UNDERLINE);
 
@@ -392,10 +434,6 @@ public class PdfRecordPrinter {
         document.add(p);
         newPage = false;
         this.printNotes(notes,true);
-
-
-       // cb.endText();
-
     }
 
     public void printCPPItem(String heading, Measurements measurement) throws DocumentException {
@@ -555,7 +593,6 @@ public class PdfRecordPrinter {
     }
 
     public void printNotes(Collection<CaseManagementNote>notes, boolean compact) throws DocumentException{
-
         CaseManagementNote note;
         Font obsfont = new Font(bf, FONTSIZE, Font.UNDERLINE);
         Paragraph p;
@@ -581,10 +618,15 @@ public class PdfRecordPrinter {
             	chunk = new Chunk("Impression/Plan: (" + formatter.format(note.getObservation_date()) + ")\n", obsfont);
             	phrase.add(chunk);
             }
+            
+            String noteText = note.getNote();
+            noteText = noteText.replaceAll("\\[Signed on.*?\\]", "");
+            noteText = noteText.trim();
+            
             if(compact) {
-            	phrase.add(note.getNote() + "\n");
+            	phrase.add(noteText + "\n");
             } else {
-            	phrase.add(note.getNote() + "\n\n");
+            	phrase.add(noteText + "\n\n");
             }
             p.add(phrase);
             document.add(p);
@@ -736,7 +778,6 @@ public class PdfRecordPrinter {
     		p.add(phrase);
     		getDocument().add(p);
         }
-        getDocument().add(new Phrase("\n",getFont()));
     }
 
     public void printEyeformPlan(List<EyeformFollowUp>followUps, List<EyeformProcedureBook> procedureBooks, List<EyeformTestBook>testBooks,EyeForm eyeform) throws DocumentException {

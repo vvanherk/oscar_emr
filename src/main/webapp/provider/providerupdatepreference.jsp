@@ -61,6 +61,11 @@
 		MiscUtils.getLogger().warn("case_program_id is null - not setting as session attribute");
 	}
 	
+	String selected_clinic = (String) request.getParameter("clinic") ;
+	if (selected_clinic != null) {
+		session.setAttribute("clinic_selected", (selected_clinic.equals("none") ? null : selected_clinic) );	    
+	}
+	
 	String selected_site = (String) request.getParameter("site") ;
 	if (selected_site != null) {
 		session.setAttribute("site_selected", (selected_site.equals("none") ? null : selected_site) );	    

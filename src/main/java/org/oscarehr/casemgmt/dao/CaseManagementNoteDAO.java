@@ -86,10 +86,22 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 
 	@SuppressWarnings("unchecked")
 	public List<CaseManagementNote> getIssueHistory(String issueIds, String demoNo) {
-		String hql = "select distinct cmn from CaseManagementNote cmn join cmn.issues i where i.issue_id in (" + issueIds
-				+ ") and cmn.demographic_no = ? and cmn.id in (select max(cn.id) from CaseManagementNote cn join cn.issues i where i.issue_id in (" + issueIds
-				+ ") and cn.demographic_no = ? GROUP BY cn.uuid) ORDER BY cmn.observation_date asc";
-		return this.getHibernateTemplate().find(hql, new Object[] { demoNo, demoNo });
+		String hql = "select cmn from CaseManagementNote cmn join cmn.issues i where i.issue_id in (" + issueIds + ") and cmn.demographic_no= ? ORDER BY cmn.observation_date asc";
+		
+		List<CaseManagementNote> issueListReturn = new ArrayList<CaseManagementNote>();
+		
+		List<CaseManagementNote> issueList = this.getHibernateTemplate().find(hql, demoNo );
+		
+		hql = "select max(cmn.id) from CaseManagementNote cmn join cmn.issues i where i.issue_id in (" + issueIds + ") and cmn.demographic_no = ? group by cmn.uuid order by max(cmn.id)";
+		List<Integer> currNoteList = (List<Integer>) this.getHibernateTemplate().find(hql, demoNo );
+		
+		for (CaseManagementNote issueNote : issueList) {
+			if (currNoteList.contains( issueNote.getId() )) {
+				issueListReturn.add(issueNote);
+			}
+		}
+		
+		return issueListReturn;
 	}
 
 	public CaseManagementNote getNote(Long id) {
@@ -248,6 +260,9 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
     public List<CaseManagementNote> getActiveNotesByDemographic(String demographic_no, String[] issues) {
 		String list = null;
 		String hql;
+		
+		List<CaseManagementNote> issueListReturn = new ArrayList<CaseManagementNote>();
+		
 		if (issues != null) {
 			if (issues.length > 1) {
 				list = "";
@@ -262,13 +277,27 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 				return this.getHibernateTemplate().find(hql, demographic_no);
 
 			} else if (issues.length == 1) {
-				hql = "select cmn from CaseManagementNote cmn join cmn.issues i where i.issue_id = ? and cmn.demographic_no = ? and cmn.archived = 0 and cmn.id = (select max(cmn2.id) from CaseManagementNote cmn2 where cmn.uuid = cmn2.uuid) ORDER BY cmn.position, cmn.observation_date desc";
 				long id = Long.parseLong(issues[0]);
-				return this.getHibernateTemplate().find(hql, new Object[] { id, demographic_no });
+				
+				hql = "select cmn from CaseManagementNote cmn join cmn.issues i where i.issue_id = ? and cmn.demographic_no= ? and cmn.archived=0 order by cmn.position, cmn.observation_date desc";
+					
+				List<CaseManagementNote> issueList = this.getHibernateTemplate().find(hql, new Object[] { id, demographic_no });
+				
+				hql = "select  max(cmn.id) from CaseManagementNote cmn join cmn.issues i where i.issue_id = ? and cmn.demographic_no = ? group by cmn.uuid order by max(cmn.id)";
+				List<Integer> currNoteList = (List<Integer>) this.getHibernateTemplate().find(hql, new Object[] { id, demographic_no });
+				
+				for(CaseManagementNote issueNote : issueList)
+				{
+					if(currNoteList.contains(issueNote.getId())) {
+						issueListReturn.add(issueNote);
+					}
+				}
+				
+				return issueListReturn;
 			}
 		}
 
-		return new ArrayList<CaseManagementNote>();
+		return issueListReturn;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -339,15 +368,24 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 		String issueCodeList=null;
 		if (issueCodes!=null && issueCodes.length>0) issueCodeList=SqlUtils.constructInClauseForStatements(issueCodes, true);
 
-		String sqlCommand="select distinct casemgmt_note.note_id from issue,casemgmt_issue,casemgmt_issue_notes,casemgmt_note where casemgmt_issue.issue_id=issue.issue_id and casemgmt_issue.demographic_no='"+demographic_no+"' "+(issueCodeList!=null?"and issue.code in "+issueCodeList:"")+" and casemgmt_issue_notes.id=casemgmt_issue.id and casemgmt_issue_notes.note_id=casemgmt_note.note_id";
+		String sqlCommand="select distinct casemgmt_note.note_id from issue,casemgmt_issue,casemgmt_issue_notes,casemgmt_note where casemgmt_issue.issue_id=issue.issue_id and casemgmt_note.demographic_no='"+demographic_no+"' "+(issueCodeList!=null?"and issue.code in "+issueCodeList:"")+" and casemgmt_issue_notes.id=casemgmt_issue.id and casemgmt_issue_notes.note_id=casemgmt_note.note_id";
 		Session session=getSession();
 		List<CaseManagementNote> notes=new ArrayList<CaseManagementNote>();
 		try
 		{
+			String output = "";
+			for (String s : issueCodes){
+				output += s + ", ";
+			}
+			output += ": ";
 			SQLQuery query=session.createSQLQuery(sqlCommand);
 			@SuppressWarnings("unchecked")
 			List<Integer> ids=query.list();
-			for (Integer id : ids) notes.add(getNote(id.longValue()));
+			for (Integer id : ids){
+				notes.add(getNote(id.longValue()));
+				output += id.longValue() + " ";
+			}
+			MiscUtils.getLogger().debug("Get Demographic Notes -- " + output);
 		}
 		finally
 		{
@@ -373,43 +411,59 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 	}
 
 	public Collection<CaseManagementNote> findNotesByDemographicAndIssueCodeInEyeform(Integer demographic_no, String[] issueCodes) {
-                String issueCodeList=null;
-                if (issueCodes!=null && issueCodes.length>0) issueCodeList=SqlUtils.constructInClauseForStatements(issueCodes, true);
-
-                String sqlCommand="select distinct casemgmt_note.note_id from issue,casemgmt_issue,casemgmt_issue_notes,casemgmt_note where casemgmt_issue.issue_id=issue.issue_id and casemgmt_issue.demographic_no='"+demographic_no+"' "+(issueCodeList!=null?"and issue.code in "+issueCodeList:"")+" and casemgmt_issue_notes.id=casemgmt_issue.id and casemgmt_issue_notes.note_id=casemgmt_note.note_id order by casemgmt_note.note_id DESC";
-                Session session=getSession();
-                List<CaseManagementNote> notes=new ArrayList<CaseManagementNote>();
-                try
-                {
-                        SQLQuery query=session.createSQLQuery(sqlCommand);
-                        @SuppressWarnings("unchecked")
-                        List<Integer> ids=query.list();
-                        for (Integer id : ids) notes.add(getNote(id.longValue()));
-                }
-                finally
-                {
-                        session.close();
-                }
-
-                // make unique for appointmentNo
-                HashMap<Integer,CaseManagementNote> uniqueForApptId=new HashMap<Integer,CaseManagementNote>();
-                for (CaseManagementNote note : notes)
-                {
-                        CaseManagementNote existingNote=uniqueForApptId.get(note.getAppointmentNo());
-                        if (existingNote==null || note.getUpdate_date().after(existingNote.getUpdate_date())) uniqueForApptId.put(note.getAppointmentNo(), note);
-                }
-
-                // sort by observationdate
-                //observation date is same for cpp in eyeform
-                //sort by update update
-                TreeMap<Date,CaseManagementNote> sortedResults=new TreeMap<Date,CaseManagementNote>();
-                for (CaseManagementNote note : uniqueForApptId.values())
-                {
-                        sortedResults.put(note.getUpdate_date(), note);
-                }
-
-                return(sortedResults.values());
+                return findNotesByDemographicAndIssueCodeInEyeform(demographic_no, issueCodes, null);
         }
+    
+    public Collection<CaseManagementNote> findNotesByDemographicAndIssueCodeInEyeform(Integer demographic_no, String[] issueCodes, List<Date> dates) {
+		String issueCodeList=null;
+		if (issueCodes!=null && issueCodes.length>0) 
+			issueCodeList=SqlUtils.constructInClauseForStatements(issueCodes, true);
+
+		String sqlCommand="select distinct casemgmt_note.note_id from issue,casemgmt_issue,casemgmt_issue_notes,casemgmt_note where casemgmt_issue.issue_id=issue.issue_id and casemgmt_note.demographic_no='"+demographic_no+"' "+(issueCodeList!=null?"and issue.code in "+issueCodeList:"")+" and casemgmt_issue_notes.id=casemgmt_issue.id and casemgmt_issue_notes.note_id=casemgmt_note.note_id order by casemgmt_note.note_id DESC";
+		Session session=getSession();
+		List<CaseManagementNote> notes=new ArrayList<CaseManagementNote>();
+		try
+		{
+				SQLQuery query=session.createSQLQuery(sqlCommand);
+				@SuppressWarnings("unchecked")
+				List<Integer> ids=query.list();
+				for (Integer id : ids) notes.add(getNote(id.longValue()));
+		}
+		finally
+		{
+				session.close();
+		}
+
+		// make unique for appointmentNo
+		HashMap<Integer,CaseManagementNote> uniqueForApptId=new HashMap<Integer,CaseManagementNote>();
+		for (CaseManagementNote note : notes)
+		{
+				CaseManagementNote existingNote=uniqueForApptId.get(note.getAppointmentNo());
+				if (existingNote==null || note.getUpdate_date().after(existingNote.getUpdate_date())) uniqueForApptId.put(note.getAppointmentNo(), note);
+		}
+
+
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+		// sort by observationdate
+		//observation date is same for cpp in eyeform
+		//sort by update update
+		TreeMap<Date,CaseManagementNote> sortedResults=new TreeMap<Date,CaseManagementNote>();
+		for (CaseManagementNote note : uniqueForApptId.values())
+		{
+			try {
+				Date todayWithZeroTime = formatter.parse( formatter.format(note.getCreate_date()) );
+			
+				// Only include notes with creation dates in the given list of dates (or add all of them if the list is null)
+				if (dates == null || dates.contains(todayWithZeroTime))
+					sortedResults.put(note.getUpdate_date(), note);
+			} catch (Exception e) {
+				MiscUtils.getLogger().warn("Unable to parse note creation date.", e);
+			}
+		}
+
+		return(sortedResults.values());
+	}
 
 
     @SuppressWarnings("unchecked")
@@ -666,14 +720,94 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 
         return rs;
     }
-
-	public List<CaseManagementNote> getMostRecentNotesByAppointmentNo(int appointmentNo) {
-		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.appointmentNo = ?";
-		List<String> tmp = this.getHibernateTemplate().find(hql, appointmentNo);
-		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
-		for(String uuid:tmp) {
-			mostRecents.add(this.getMostRecentNote(uuid));
+    
+    public List<CaseManagementNote> getMostRecentNotesByDemographicNo(int demographicNo) throws ParseException {
+		return getMostRecentNotesByDemographicNo(demographicNo, null);
+	}
+    
+    public List<CaseManagementNote> getMostRecentNotesByDemographicNo(int demographicNo, Date endDate) throws ParseException {		
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.demographic_no = ?";
+		
+		Object[] params = null;
+		
+		
+		if (endDate != null) {
+			params = new Object[2];
+			hql += " and date(cmn.observation_date) <= ?";
+			params[1] = endDate;
+		} else {
+			params = new Object[1];
 		}
+		
+		params[0] = String.valueOf(demographicNo);
+		
+		List<String> tmp = this.getHibernateTemplate().find(hql, params);
+		
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		
+		for (String uuid : tmp) {
+			CaseManagementNote note = this.getMostRecentNote(uuid);
+			
+			mostRecents.add(note);
+		}
+		
+		return mostRecents;
+	}
+
+	public List<CaseManagementNote> getMostRecentNotesByAppointmentNo(int appointmentNo) throws ParseException {
+		return getMostRecentNotesByAppointmentNo(appointmentNo, null);
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotesByAppointmentNo(int appointmentNo,  List<Date> dates) throws ParseException {
+		return getMostRecentNotesByAppointmentNoAndDemographicNo(appointmentNo, null, dates);
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotesByAppointmentNoAndDemographicNo(Integer appointmentNo, Integer demographicNo) throws ParseException {
+		return getMostRecentNotesByAppointmentNoAndDemographicNo(appointmentNo, demographicNo, null);
+	}
+	
+	public List<CaseManagementNote> getMostRecentNotesByAppointmentNoAndDemographicNo(Integer appointmentNo, Integer demographicNo, List<Date> dates) throws ParseException {
+		SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+
+		// Compile the list of dates (if applicable)
+		String dateList = "";
+		if (dates != null) {
+			for ( Date d : dates ) {
+				if (dateList.length() > 0)
+					dateList += ", ";
+				dateList += "'" + formatter.format(d) + "'";
+			}
+		}
+		
+		String hql = "select distinct cmn.uuid from CaseManagementNote cmn where cmn.appointmentNo = ?";
+		Object[] params = null;
+		
+		// Add demographic number if there is one
+		// Also, create the params array
+		if (demographicNo != null) {
+			hql +=  "  and cmn.demographic_no = ?";
+			params = new Object[2];
+			params[1] = String.valueOf(demographicNo);
+		} else {
+			params = new Object[1];
+		}
+		
+		params[0] = appointmentNo;
+		
+		// Add the dates if there are any
+		if (dateList.length() > 0)
+			hql +=  " and date(cmn.update_date) in (" + dateList + ")";		
+		
+		List<String> tmp = this.getHibernateTemplate().find(hql, params);
+		
+		List<CaseManagementNote> mostRecents = new ArrayList<CaseManagementNote>();
+		
+		for (String uuid : tmp) {
+			CaseManagementNote note = this.getMostRecentNote(uuid);
+			
+			mostRecents.add(note);
+		}
+		
 		return mostRecents;
 	}
 
@@ -696,5 +830,5 @@ public class CaseManagementNoteDAO extends HibernateDaoSupport {
 			mostRecents.add(this.getMostRecentNote(uuid));
 		}
 		return mostRecents;
-	}
+	}	
 }

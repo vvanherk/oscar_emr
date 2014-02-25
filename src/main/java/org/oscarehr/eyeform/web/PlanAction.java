@@ -69,11 +69,8 @@ public class PlanAction extends DispatchAction {
     public ActionForward form(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
     	request.setAttribute("providers",providerDao.getActiveProviders());
 
-    	String strAppointmentNo = request.getParameter("followup.appointmentNo");
-    	int appointmentNo = Integer.parseInt(strAppointmentNo);
-    	
-    	String strDemographicNo = request.getParameter("followup.demographicNo");
-    	int demographicNo = Integer.parseInt(strDemographicNo);
+		Integer appointmentNo = getIntegerFromRequest(request, "followup.appointmentNo");
+    	Integer demographicNo = getIntegerFromRequest(request, "followup.demographicNo");
 
     	//get all follow ups, procs, and tests for this appointment
     	List<EyeformFollowUp> followUps = followUpDao.get(demographicNo, appointmentNo);
@@ -91,15 +88,15 @@ public class PlanAction extends DispatchAction {
         return mapping.findForward("form");
     }
 
-    public ActionForward edit(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-    	String strAppointmentNo = request.getParameter("appointmentNo");
-    	int appointmentNo = Integer.parseInt(strAppointmentNo);
+    public ActionForward edit(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {    	
+    	Integer appointmentNo = getIntegerFromRequest(request, "appointmentNo");
+    	Integer demographicNo = getIntegerFromRequest(request, "demographicNo");
 
     	request.setAttribute("providers",providerDao.getActiveProviders());
     	//get all follow ups, procs, and tests for this appointment
-    	List<EyeformFollowUp> followUps = followUpDao.getByAppointmentNo(appointmentNo);
-    	List<EyeformProcedureBook> procedures = procBookDao.getByAppointmentNo(appointmentNo);
-    	List<EyeformTestBook> tests = testBookDao.getByAppointmentNo(appointmentNo);
+    	List<EyeformFollowUp> followUps = followUpDao.get(demographicNo, appointmentNo);
+    	List<EyeformProcedureBook> procedures = procBookDao.get(demographicNo, appointmentNo);
+    	List<EyeformTestBook> tests = testBookDao.get(demographicNo, appointmentNo);
 
     	request.setAttribute("followUps", followUps);
     	request.setAttribute("procedures", procedures);
@@ -108,39 +105,9 @@ public class PlanAction extends DispatchAction {
     	return mapping.findForward("edit");
     }
 
-    public ActionForward save(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-    	/*
-       	DynaValidatorForm f = (DynaValidatorForm)form;
-    	EyeformFollowUp followUp = (FollowUp)f.get("followup");
-    	ProcedureBook proc = (ProcedureBook)f.get("proc");
-    	TestBookRecord test = (TestBookRecord)f.get("test");
-
-    	int appointmentNo = followUp.getAppointmentNo();
-
-    	followUp.setId(null);
-    	proc.setId(null);
-    	test.setId(null);
-
-
-    	proc.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
-    	proc.setAppointmentNo(appointmentNo);
-    	proc.setDemographicNo(followUp.getDemographicNo());
-    	test.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
-    	test.setAppointmentNo(appointmentNo);
-    	test.setDemographicNo(followUp.getDemographicNo());
-
-
-    	if(followUp.getTimespan()>0)
-    		followUpDao.save(followUp);
-    	if(proc.getProcedureName().length()>0)
-    		procBookDao.save(proc);
-    	if(test.getTestname().length()>0) {
-    		testBookDao.save(test);
-    	}
-
-    	*/
-    	int demographicNo = Integer.parseInt(request.getParameter("followup.demographicNo"));
-    	int appointmentNo = Integer.parseInt(request.getParameter("followup.appointmentNo"));
+    public ActionForward save(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {   	
+    	Integer appointmentNo = getIntegerFromRequest(request, "followup.appointmentNo");
+    	Integer demographicNo = getIntegerFromRequest(request, "followup.demographicNo");
 
     	int maxFollowUp = Integer.parseInt(request.getParameter("followup_num"));
     	for(int x=1;x<=maxFollowUp;x++) {
@@ -208,7 +175,7 @@ public class PlanAction extends DispatchAction {
     			proc.setProcedureName(request.getParameter("procedure_"+x+".procedureName"));
     			proc.setLocation(request.getParameter("procedure_"+x+".location"));
     			proc.setUrgency(request.getParameter("procedure_"+x+".urgency"));
-    			proc.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
+    			proc.setProvider(request.getParameter("procedure_"+x+".Provider"));
     			if(proc.getId() == null)
     				procBookDao.persist(proc);
     			else
@@ -246,8 +213,7 @@ public class PlanAction extends DispatchAction {
     			test.setEye(request.getParameter("test_"+x+".eye"));
     			test.setTestname(request.getParameter("test_"+x+".testname"));
     			test.setUrgency(request.getParameter("test_"+x+".urgency"));
-
-    			test.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
+    			test.setProvider(request.getParameter("test_"+x+".Provider"));
     			if(test.getId() == null)
     				testBookDao.persist(test);
     			else
@@ -259,8 +225,10 @@ public class PlanAction extends DispatchAction {
     	ids = request.getParameterValues("test.delete");
     	if(ids != null) {
     		for(String id:ids) {
-    			int testId = Integer.parseInt(id);
-    			testBookDao.remove(testId);
+				if(id.length()>0) {
+					int testId = Integer.parseInt(id);
+					testBookDao.remove(testId);
+				}
     		}
     	}
 
@@ -438,4 +406,17 @@ public class PlanAction extends DispatchAction {
 
     	return sb.toString();
     }
+    
+    private Integer getIntegerFromRequest(HttpServletRequest request, String name) {
+		String asString = request.getParameter(name);
+    	Integer retVal = 0;
+    	
+		try {
+			retVal = Integer.parseInt(asString);
+		} catch (Exception e) {
+			logger.debug("Unable to parse " + name + ".");
+		}
+		
+		return retVal;
+	}
 }

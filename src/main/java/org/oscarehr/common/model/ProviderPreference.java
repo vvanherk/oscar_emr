@@ -87,6 +87,7 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 	private String billingVisitTypeDefault="";
 	private String billingVisitLocationDefault="";
 	private String billingProviderDefault="";
+	private Integer billingSiteDefault = new Integer(0);
 	private byte[] encryptedMyOscarPassword=null;
 	
 	/**
@@ -342,6 +343,14 @@ public class ProviderPreference extends AbstractModel<String> implements Seriali
 
 	public void setBillingRefBoxDefaultChecked(boolean billingRefBoxDefaultChecked) {
 		this.billingRefBoxDefaultChecked = billingRefBoxDefaultChecked;
+	}
+	
+	public Integer getBillingSiteDefault() {
+		return billingSiteDefault;
+	}
+
+	public void setBillingSiteDefault(Integer billingSiteDefault) {
+		this.billingSiteDefault = billingSiteDefault;
 	}
 
 	public String getBillingProviderDefault() {

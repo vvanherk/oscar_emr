@@ -38,12 +38,10 @@
 <%@ page import="org.oscarehr.util.DigitalSignatureUtils"%>
 <%@ page import="org.oscarehr.util.LoggedInInfo"%>
 <%@ page import="org.oscarehr.ui.servlet.ImageRenderingServlet"%>
-<%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
+
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 
-<%@page import="org.oscarehr.common.dao.SiteDao"%>
 <%@page import="org.springframework.web.context.support.WebApplicationContextUtils"%>
-<%@page import="org.oscarehr.common.model.Site"%>
 <%@page import="oscar.service.OscarSuperManager"%><html:html locale="true">
 
 <head>
@@ -86,80 +84,33 @@ else
     createAnewRx = "javascript:clearPending('')";
 
 // for satellite clinics
-Vector vecAddressName = null;
-Vector vecAddress = null;
-Vector vecAddressPhone = null;
-Vector vecAddressFax = null;
+
 OscarProperties props = OscarProperties.getInstance();
-if(bMultisites) {
-	String appt_no=(String)session.getAttribute("cur_appointment_no");
-	String location = null;
-	if (appt_no!=null) {
-		List<Map<String,Object>> resultList = oscarSuperManager.find("appointmentDao", "search", new Object[] {appt_no});
-		if (resultList!=null) location = (String) resultList.get(0).get("location");
-	}
 
-    oscar.oscarRx.data.RxProviderData.Provider provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo());
-    ProSignatureData sig = new ProSignatureData();
-    boolean hasSig = sig.hasSignature(bean.getProviderNo());
-    String doctorName = "";
-    if (hasSig){
-       doctorName = sig.getSignature(bean.getProviderNo());
-    }else{
-       doctorName = (provider.getFirstName() + ' ' + provider.getSurname());
-    }
-    doctorName = doctorName.replaceAll("\\d{6}","");
-    doctorName = doctorName.replaceAll("\\-","");
-
-    vecAddressName = new Vector();
-    vecAddress = new Vector();
-    vecAddressPhone = new Vector();
-    vecAddressFax = new Vector();
-
-    java.util.ResourceBundle rb = java.util.ResourceBundle.getBundle("oscarResources",request.getLocale());
-
-	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-	List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-
-	for (int i=0;i<sites.size();i++) {
-		Site s = sites.get(i);
-        vecAddressName.add(s.getName());
-        vecAddress.add("<b>"+doctorName+"</b><br>"+s.getName()+"<br>"+s.getAddress() + "<br>" + s.getCity() + ", " + s.getProvince() + " " + s.getPostal() + "<br>"+rb.getString("RxPreview.msgTel")+": " + s.getPhone() + "<br>"+rb.getString("RxPreview.msgFax")+": " + s.getFax());
-        if (s.getName().equals(location))
-        	session.setAttribute("RX_ADDR",String.valueOf(i));
-	}
-
-
-} else if(props.getProperty("clinicSatelliteName") != null) {
-    oscar.oscarRx.data.RxProviderData.Provider provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo());
-    ProSignatureData sig = new ProSignatureData();
-    boolean hasSig = sig.hasSignature(bean.getProviderNo());
-    String doctorName = "";
-    if (hasSig){
-       doctorName = sig.getSignature(bean.getProviderNo());
-    }else{
-       doctorName = (provider.getFirstName() + ' ' + provider.getSurname());
-    }
-
-    ClinicData clinic = new ClinicData();
-    vecAddressName = new Vector();
-    vecAddress = new Vector();
-    vecAddressPhone = new Vector();
-    vecAddressFax = new Vector();
-    String[] temp0 = props.getProperty("clinicSatelliteName", "").split("\\|");
-    String[] temp1 = props.getProperty("clinicSatelliteAddress", "").split("\\|");
-    String[] temp2 = props.getProperty("clinicSatelliteCity", "").split("\\|");
-    String[] temp3 = props.getProperty("clinicSatelliteProvince", "").split("\\|");
-    String[] temp4 = props.getProperty("clinicSatellitePostal", "").split("\\|");
-    String[] temp5 = props.getProperty("clinicSatellitePhone", "").split("\\|");
-    String[] temp6 = props.getProperty("clinicSatelliteFax", "").split("\\|");
-    java.util.ResourceBundle rb = java.util.ResourceBundle.getBundle("oscarResources",request.getLocale());
-
-    for(int i=0; i<temp0.length; i++) {
-        vecAddressName.add(temp0[i]);
-        vecAddress.add("<b>"+doctorName+"</b><br>"+temp0[i]+"<br>"+temp1[i] + "<br>" + temp2[i] + ", " + temp3[i] + " " + temp4[i] + "<br>"+rb.getString("RxPreview.msgTel")+": " + temp5[i] + "<br>"+rb.getString("RxPreview.msgFax")+": " + temp6[i]);
-    }
+String appt_no=(String)session.getAttribute("cur_appointment_no");
+String site = null;
+if (appt_no!=null) {
+	List<Map<String,Object>> resultList = oscarSuperManager.find("appointmentDao", "search", new Object[] {appt_no});
+	if (resultList!=null) site = (String) resultList.get(0).get("site").toString();
 }
+
+oscar.oscarRx.data.RxProviderData.Provider provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo());
+ProSignatureData sig = new ProSignatureData();
+boolean hasSig = sig.hasSignature(bean.getProviderNo());
+String doctorName = "";
+if (hasSig){
+   doctorName = sig.getSignature(bean.getProviderNo());
+}else{
+   doctorName = (provider.getFirstName() + ' ' + provider.getSurname());
+}
+doctorName = doctorName.replaceAll("\\d{6}","");
+doctorName = doctorName.replaceAll("\\-","");
+
+
+
+java.util.ResourceBundle rb = java.util.ResourceBundle.getBundle("oscarResources",request.getLocale());
+
+
 String comment = (String) request.getSession().getAttribute("comment");
 RxPharmacyData pharmacyData = new RxPharmacyData();
 PharmacyInfo pharmacy;
@@ -224,17 +175,7 @@ if (userAgent != null) {
         var scAddress="";
         var rxPageSize=$('printPageSize').value;
         //console.log("rxPagesize  "+rxPageSize);
-
-
-  <% if(vecAddressName != null) {
-    %>
-        useSC=true;
-   <%      for(int i=0; i<vecAddressName.size(); i++) {%>
-	    if(document.getElementById("addressSel").value=="<%=i%>") {
-    	       scAddress="<%=vecAddress.get(i)%>";
-            }
-<%       }
-      }%>
+        
               var action="../form/createcustomedpdf?__title=Rx&__method=" +  method+"&useSC="+useSC+"&scAddress="+scAddress+"&rxPageSize="+rxPageSize+"&scriptId="+scriptId;
             document.getElementById("preview").contentWindow.document.getElementById("preview2Form").action = action;
             document.getElementById("preview").contentWindow.document.getElementById("preview2Form").target="_blank";
@@ -245,15 +186,6 @@ if (userAgent != null) {
 function setComment(){
     frames['preview'].document.getElementById('additNotes').innerHTML = '<%=comment%>';
 }
-
-function setDefaultAddr(){
-    var url = "setDefaultAddr.jsp";
-    var ran_number=Math.round(Math.random()*1000000);
-    var addr = encodeURIComponent(document.getElementById('addressSel').value);
-    var params = "addr="+addr+"&rand="+ran_number;
-    new Ajax.Request(url, {method: 'post',parameters:params});
-}
-
 
 
 
@@ -324,26 +256,6 @@ function printPaste2Parent(print){
    if (print) { printIframe(); }
 }
 
-
-
-
-function addressSelect() {
-   <% if(vecAddressName != null) {
-    %>
-        setDefaultAddr();
-   <%      for(int i=0; i<vecAddressName.size(); i++) {%>
-	    if(document.getElementById("addressSel").value=="<%=i%>") {
-    	       frames['preview'].document.getElementById("clinicAddress").innerHTML="<%=vecAddress.get(i)%>";
-            }
-<%       }
-      }%>
-
-    <%if (comment != null){ %>
-       setComment();
-    <%}%>
-
-
-}
 
 
 
@@ -432,7 +344,7 @@ function enableDisableFaxButton() {
 </head>
 
 <body topmargin="0" leftmargin="0" vlink="#0000FF"
-	onload="addressSelect();  enableDisableFaxButton();">
+	onload="enableDisableFaxButton();">
 
 <!-- added by vic, hsfo -->
 <%
@@ -561,25 +473,7 @@ function toggleView(form) {
                             </script>
 
 				<table cellpadding=10 cellspacingp=0>
-					<% //vecAddress=null;
-                                        if(vecAddress != null) { %>
-					<tr>
-						<td align="left" colspan=2><bean:message key="ViewScript.msgAddress"/>
-                                                    <select	name="addressSel" id="addressSel" onChange="addressSelect()" style="width:200px;" >
-							<% String rxAddr = (String) session.getAttribute("RX_ADDR");
-                                                          for (int i =0; i < vecAddressName.size();i++){
-					                 String te = (String) vecAddressName.get(i);
-                                                         String tf = (String) vecAddress.get(i);%>
-
-							<option value="<%=i%>"
-								<% if ( rxAddr != null && rxAddr.equals(""+i)){ %>SELECTED<%}%>
-                                                                ><%=te%></option>
-							<%  }%>
-
-                                                    </select>
-                                                </td>
-					</tr>
-					<% } %>
+					
 					<tr>
 						<td colspan=2 style="font-weight: bold;"><span><bean:message key="ViewScript.msgActions"/></span>
 						</td>

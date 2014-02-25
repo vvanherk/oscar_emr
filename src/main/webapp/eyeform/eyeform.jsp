@@ -10,10 +10,13 @@
 --%>
 
 <%@ include file="/casemgmt/taglibs.jsp" %>
-
-<%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.util.LoggedInInfo, org.oscarehr.util.SpringUtils, oscar.OscarProperties, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment, org.oscarehr.util.MiscUtils, oscar.SxmlMisc, org.oscarehr.common.dao.ProfessionalSpecialistDao"  %>
+<%@ page
+	import="org.oscarehr.casemgmt.web.formbeans.CaseManagementEntryFormBean, org.oscarehr.common.model.Facility"%>
+<%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.PMmodule.dao.ProviderDao, org.oscarehr.util.LoggedInInfo, org.oscarehr.util.SpringUtils, oscar.OscarProperties, org.oscarehr.common.dao.OscarAppointmentDao, org.oscarehr.common.model.Appointment, org.oscarehr.util.MiscUtils, oscar.SxmlMisc, org.oscarehr.common.dao.ProfessionalSpecialistDao, org.oscarehr.common.model.ProfessionalSpecialist"  %>
 <%@ page import="org.oscarehr.PMmodule.model.Program" %>
 <%@ page import="org.oscarehr.PMmodule.dao.ProgramDao" %>
+<%@ page import="oscar.OscarProperties" %>
+<%@ page import="oscar.util.UtilMisc"%>
 <%
 String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
 OscarProperties properties = OscarProperties.getInstance();
@@ -34,7 +37,8 @@ String appointmentReason = "";
 OscarAppointmentDao appointmentDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
 try {
 	Appointment appointment = null;
-	if (request.getParameter("appointment_no") != null) {
+	if (request.getParameter("appointment_no") != null &&
+       !request.getParameter("appointment_no").trim().equals("")) {
 		appointment = appointmentDao.find(Integer.parseInt(request.getParameter("appointment_no")));
 	} else {
 		appointment = appointmentDao.findDemoAppointmentToday(Integer.parseInt(request.getParameter("demographic_no")));
@@ -60,7 +64,10 @@ try {
 	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
 
 	rdOhip = SxmlMisc.getXmlContent(d.getFamilyDoctor(),"rdohip").trim();
-	rdName = professionalSpecialistDao.getByReferralNo(rdOhip).getFormattedName();
+	
+	ProfessionalSpecialist ps = professionalSpecialistDao.getByReferralNo(rdOhip);
+	if (ps != null)
+		rdName = ps.getFormattedName();
 } catch (Exception e) {
 	MiscUtils.getLogger().error("Couldn't evaluate XML string for family doctor (" + d.getFamilyDoctor() + ")", e);
 }
@@ -80,13 +87,12 @@ try {
 <script type="text/javascript">
 var ctx = "<%=request.getContextPath() %>";
 var demographicNo = "<%=request.getParameter("demographic_no") %>";
-var reason = "<%=appointmentReason%>";
+var reason = "<%=UtilMisc.stripNewline(appointmentReason).replaceAll("\"", "&quot;")%>";
 var appointmentNo = "<%=appointmentNo %>";
 var providerNo = "<%=providerNo %>";
 var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 </script>
 <script type="text/javascript" src="<%=request.getContextPath() %>/js/eyeform.js"></script>
-
 <title><%=d.getLastName() %>, <%=d.getFirstName() %> (<%=d.getSex() %>) - Eyeform</title>
 </head>
 <body>
@@ -95,16 +101,19 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<div id="highlightSlider" class="contentItem"></div>
 			<div id="highlightSliderLengthBox"><strong>Highlight:</strong> <span id="highlightSliderLength"></span></div>
 		</div>
-		<div class="smallBox macroBox">
-			<span class="uiBarBtn macroBtn" id="openMacroBoxBtn">M</span>
-			<input type="text" placeholder="macro" id="selectMacroExecuteBox">
-			<div class="autocompleteList" id="macroAutocomplete" style="display: none;"></div>
-		</div>
 		<div class="smallBox boxTitleLink" id="allergies">
 			<div class="title">
 				Allergies
 				<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
 				<span class="uiBarBtn"><span class="text addBtn" id="addAllergiesBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>
+		<div class="smallBox boxTitleLink" id="ocularMeds">
+			<div class="title">
+				Prescriptions
+				<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+				<span class="uiBarBtn"><span class="text addBtn" id="addOcularMedsBtn">+</span></span>
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
@@ -121,7 +130,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				<span class="uiBarBtn"><span class="text addBtn" id="addProcedureBtn">+</span></span>
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
-		</div>
+		</div>		
 		<div class="smallBox boxTitleLink" id="labResults">
 			<div class="title">
 				Lab Results
@@ -151,6 +160,12 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
+		<div class="smallBox boxTitleLink" id="measurements">
+			<div class="title">
+				measurements
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>
 		<div class="smallBox boxTitleLink" id="tickler">
 			<div class="title">
 				Tickler
@@ -159,11 +174,35 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
+		<div class="smallBox boxTitleLink" id="messages">
+			<div class="title">
+				Messages
+				<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+				<span class="uiBarBtn"><span class="text addBtn" id="addMessageBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>
 		<div class="smallBox boxTitleLink" id="consultations">
 			<div class="title">
 				Consultations
 				<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
 				<span class="uiBarBtn"><span class="text addBtn" id="addConsultationBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>
+		<div class="smallBox boxTitleLink" id="consultationReport">
+			<div class="title">				
+				Consultation Reports
+				<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+				<span class="uiBarBtn"><span class="text addBtn" id="addConReportBtn">+</span></span>
+			</div>
+			<div class="wrapper"><div class="content"></div></div>
+		</div>
+		<div class="smallBox boxTitleLink" id="macro">
+			<div class="title">
+				Macros
+				<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+				<span class="uiBarBtn"><span class="text addBtn" id="addMacroBtn">+</span></span>
 			</div>
 			<div class="wrapper"><div class="content"></div></div>
 		</div>
@@ -186,10 +225,15 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				<span class="appointmentDate"><span class="appointmentDateText">Today</span>&#x25BC;</span>
 				<span class="appointmentList"></span>
 			</span>
+			<span class="uiBarSaveBtn" id="saveBtn2">Save</span>
+			<span class="loaderImg" style="margin: 10px;"><img src="<%=request.getContextPath()%>/images/DMSLoader.gif" /></span>
 			<span class="uiBarBtn"><span class="text rx3Btn">Rx3</span></span>
 			<span class="uiBarBtn"><span class="text billingBtn">B</span></span>
 			<span class="uiBarBtn"><span class="text masterRecBtn">M</span></span>
+			<% if (!OscarProperties.getInstance().isPropertyActive("redirect_echart_to_new_eyeform")) { %>
 			<span class="uiBarBtn"><span class="text eChartBtn">E</span></span>
+			<% } %>
+			<span class="uiBarBtn"><span class="text iViewsBtn">I-Views</span></span>
 
 		</div>
 		<div id="complaint">
@@ -198,6 +242,104 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			<input type="text" id="complaintBox" value="" />
 		</div>
 		<div class="formBoxes">
+			<div class="smallBox boxTitleLink" id="currentHistoryBox">
+				<div class="title">
+					Current Hx
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+					<span class="uiBarBtn"><span class="text smallerText" id="copyApptReasonBtn">Copy Appointment Reason</span></span>
+				</div>
+				<div class="content" style="overflow: auto;">
+					<textarea style="width: 99%; height: 99%;" id="currentIssueAreaBox"></textarea>
+				</div>
+				<div style='display: none;' class="historyList">
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="medicalOcularHistory">
+				<div class="title">
+					Medical History
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+					<span class="uiBarBtn"><span class="text addBtn" id="addHistoryBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="reminders">
+				<div class="title">
+					<abbr title="(Reminders)">Research/Notes</abbr>
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+					<span class="uiBarBtn"><span class="text addBtn" id="addReminderBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+		</div>
+		<div class="formBoxes">
+			<div class="smallBox boxTitleLink" id="ocularHistory">
+				<div class="title">
+					Past Eye History
+					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+					<span class="uiBarBtn"><span class="text addBtn" id="addOcularHistoryBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="familyMedicalOcularHistory">
+				<div class="title">
+					Family History
+					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+					<span class="uiBarBtn"><span class="text addBtn" id="addFamilyHistoryBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="officeCommunication">
+				<div class="title">
+					Office Communication
+					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+				</div>
+				<div class="content" style="overflow: auto;">
+					<textarea style="width:99%; height: 99%;" id="officeCommunicationAreaBox"></textarea>
+				</div>
+				<div style='display: none;' class="historyList">
+				</div>
+			</div>
+		</div>
+		<div class="formBoxes">
+			<div class="smallBox boxTitleLink" id="eyedrops">
+				<div class="title">
+					Eye Meds
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+					<span class="uiBarBtn"><span class="text addBtn" id="addEyedropBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="otherMeds">
+				<div class="title">
+					Other Meds
+					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
+					<span class="uiBarBtn"><span class="text addBtn" id="addOtherMedsBtn">+</span></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			<div class="smallBox boxTitleLink" id="patientLog">
+				<div class="title">
+					Patient Log
+					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
+				</div>
+				<div class="content">
+					<ul></ul>
+				</div>
+			</div>
+			
+			<!--
 			<div class="smallBox boxTitleLink" id="planHistory">
 				<div class="title">
 					Previous Plans
@@ -217,113 +359,38 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 					<ul></ul>
 				</div>
 			</div>
-			<div class="smallBox boxTitleLink" id="medicalOcularHistory">
-				<div class="title">
-					Medical History
-					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
-					<span class="uiBarBtn"><span class="text addBtn" id="addHistoryBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-		</div>
-		<div class="formBoxes">
-			<div class="smallBox boxTitleLink" id="ocularMeds">
-				<div class="title">
-					Medications and Drops
-					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
-					<span class="uiBarBtn"><span class="text addBtn" id="addOcularMedsBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-			<div class="smallBox boxTitleLink" id="familyMedicalOcularHistory">
-				<div class="title">
-					Family Medical/Ocular History
-					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
-					<span class="uiBarBtn"><span class="text addBtn" id="addFamilyHistoryBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-			<div class="smallBox boxTitleLink" id="ocularHistory">
-				<div class="title">
-					Ocular History
-					<img src="<%=request.getContextPath() %>/images/icon-new-window.gif" />
-					<span class="uiBarBtn"><span class="text addBtn" id="addOcularHistoryBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
 
-		</div>
-		<div class="formBoxes">
-			<div class="smallBox boxTitleLink" id="reminders">
-				<div class="title">
-					<abbr title="(Reminders)">Notes</abbr>
-					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
-					<span class="uiBarBtn"><span class="text addBtn" id="addReminderBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-			<div class="smallBox boxTitleLink" id="patientLog">
-				<div class="title">
-					Patient Log
-					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
-					<span class="uiBarBtn"><span class="text addBtn" id="addPatientLogBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-			<div class="smallBox boxTitleLink" id="eyedrops">
-				<div class="title">
-					Eye Drops/Ocular Medications
-					<span class="newWindow"><img src="<%=request.getContextPath() %>/images/icon-new-window.gif" /></span>
-					<span class="uiBarBtn"><span class="text addBtn" id="addEyedropBtn">+</span></span>
-				</div>
-				<div class="content">
-					<ul></ul>
-				</div>
-			</div>
-		</div>
-		<div class="wideBox" id="currentIssueBox">
+			-->
+		</div>		
+		
+		<div class="wideBox" id="quickGlance">
 			<div class="title">
-				Current Presenting Issue/History
-				<span class="uiBarBtn"><span class="text smallerText" id="copyApptReasonBtn">Copy Appointment Reason</span></span>
-				<span class="uiBarBtn"><span class="text smallerText" id="currentIssueShowHistoryBtn">History</span></span>
+				Quick Glance
 			</div>
-			<div class="content" style="overflow: hidden;">
-				<textarea style="width: 100%; height: 99%;" id="currentIssueAreaBox"></textarea>
+			<div class="content">
+				
 			</div>
 		</div>
-		<div class="formBoxes">
-			<div class="halfBox tallHalfBox" id="measurements">
-				<div class="title">
-					Measurements
-					<span class="uiBarBtn"><span class="text smallerText" id="nextMeasurementsBtn">Next</span></span>
-					<span class="uiBarBtn"><span class="text smallerText" id="prevMeasurementsBtn">Previous</span></span>
-					<span class="uiBarBtn"><span class="text smallerText" id="showMeasurementsBtn">Modify</span></span>
-				</div>
-				<div class="content">
-				</div>
+		
+		<div class="wideBox tallWideBox" id="impressionHistory">
+			<div class="title">
+				Impression History
 			</div>
-			<div class="halfBox tallHalfBox" id="impressionHistory">
-				<div class="title">
-					Impression History
-				</div>
-				<div class="content">
-					<div class="historyList">
-					</div>
+			<div class="content">
+				<div class="historyList">
 				</div>
 			</div>
 		</div>
+		
+		<div class="wideBox" id="measurements-addnew">
+			<div class="title">
+				Measurements
+			</div>
+			<div id="NewMeasurementContent">
+				<%@include file="/eyeform/exam.jsp" %>
+			</div>
+		</div>
+		
 		<div class="wideBox" id="impressionBox">
 			<div class="title">
 				Impression
@@ -336,20 +403,18 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 			</div>
 		</div>
 		<div class="formBoxes">
-			<div class="halfBox" id="planHalfBox">
+			<div class="halfBox" style="width:50%;" id="planHalfBox">
 				<div class="title">
 					Plan
 				</div>
 				<div class="content" style="height: auto; font-size: 12px; overflow-x: hidden;">
-					<textarea style="width: 99%; height: 99%;" id="planBox"></textarea>
+					<div id="current_note_addon"></div>
 				</div>
-				<div class="explanation">
-					<strong>Sign, Save &amp; Exit</strong>: all users with the <strong>receptionist</strong> role will receive this message as a tickler.
-				</div>
-			</div>
+		    </div>
 			<div class="uiBtn billBtn floatRight" id="billBtn">Sign, Save &amp; Bill</div>
 			<div class="uiBtn saveSignExitBtn floatRight" id="saveSignExitBtn">Sign, Save &amp; Exit</div>
-			<div class="uiBtn saveBtn floatRight" id="saveBtn">Save &amp; Exit</div>
+			<div class="uiBtn saveExitBtn floatRight" id="saveExitBtn">Save &amp; Exit</div>
+			<div class="uiBtn saveBtn floatRight" id="saveBtn">Save</div>
 			<div class="floatRight" id="saveMsg" style="display: none; margin-right: 15px;">Saved</div>
 			<span class="loaderImg floatRight" style="margin: 10px;"><img src="<%=request.getContextPath()%>/images/DMSLoader.gif" /></span>
 		</div>
@@ -403,7 +468,7 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 				<div class="uiBarBtn nextMeasurementsBoxBtn" style="display: none;"><span class="text">Next</span></div>
 				<div class="uiBarBtn prevMeasurementsBoxBtn" style="display: none;"><span class="text">Previous</span></div>
 			</div>
-			<div class="explanation" style="display: none;">The following measurements were recorded on <span class="measurementsTime"></span>. To modify, close this box and click "Modify" on the measurements box.</div>
+			<div class="explanation" style="display: none;">The following measurements were recorded on <span class="measurementsTime">.</span></div>
 			<div class="measurementsContent">
 				<%@include file="/eyeform/exam.jsp" %>
 			</div>
@@ -445,11 +510,32 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 	<div class="popoutBox ticklerBox newTicklerBox openTicklerUiBox" style="display: none;">
 		<div class="boxContent">
 			<div class="fullBoxContent">
+				<div class="uiBarBtn uiCloseBtn" id="closeTicklerUiBoxBtn"><span class="text">x</span></div>
 				<div class="messageContent"></div>
 				<div class="details"><strong>Date</strong> <span class="messageDate"></span> | <strong>From</strong> <span class="messageFrom"></span> | <strong>To</strong> <span class="messageTo"></span></div>
 			</div>
 		</div>
 		<div class="arrow" style="top: 20px;"></div>
+	</div>
+	
+	<div id="newArchiveBox" class="popoutBox archiveBox" style="display: none;">
+		<div class="boxContent">
+			<div class="boxTitle">
+				<span class="addEditSpecsTitle">Add Archive Note</span>
+				<div class="uiBarBtn uiCloseBtn" id="closeArchiveBoxBtn"><span class="text">x</span></div>
+			</div>
+			<input type="hidden" name="note_id" value="" />
+			<table>
+					<tr>
+					<th>Message</th>
+					<td><textarea rows=10 cols=40 id="newArchiveText" name="message"></textarea>
+				</tr>
+				<tr>
+								<td></td>
+					<td><div class="uiBtn" id="uiBoxArchiveBtn">Archive</div><span class="loaderImg"><img src="<%=request.getContextPath()%>/images/DMSLoader.gif" /></span></td>
+				</tr>
+			</table>
+		</div>
 	</div>
 
 	<div class="popoutBox listBox" style="display: none;">
@@ -567,70 +653,31 @@ var clinicNo = "<%=properties.getProperty("clinic_no", "").trim() %>";
 		<div class="arrow" style="top: 1px;"></div>
 	</div>
 
-	<div class="popoutBox macroListBox" id="macroListBox" style="display: none;">
-		<div class="boxContent">
-			<div class="boxTitle">
-				Macros
-				<div class="uiBarBtn uiCloseBtn" id="closeMacroBoxBtn"><span class="text">x</span></div>
-			</div>
-			<table>
-				<tr>
-					<td>
-					<div class="macroControls">
-							<span class="uiBarBtn" id="newMacroBtn"><span class="text smallerText">New</span></span>
-							<span class="uiBarBtn" id="copyMacroBtn"><span class="text smallerText">Copy</span></span>
-						</div>
-						<select class="macroList" id="macroList" size="2"></select>
-
-					</td>
-					<td>
-						<input type="hidden" id="macroIdField" name="macroIdField" value="" />
-						<table>
-							<tr>
-								<th>Macro Name</th>
-								<td><input type="text" id="macroNameBox" name="macroNameBox" /></td>
-							</tr>
-							<tr>
-								<td colspan=2><hr /></td>
-							<tr>
-								<th>Impression Note</th>
-								<td>
-									<div class="macroControls">
-										<span class="uiBarBtn" id="macroCopyLastImpressionBtn"><span class="text smallerText">Copy Last Impression</span></span>
-									</div>
-									<textarea cols=40 rows=5 id="macroImpressionBox" name="macroImpressionBox"></textarea>
-								</td>
-							</tr>
-							<tr>
-								<th>Plan</th>
-								<td><input type="text" class="planInputBox" id="macroPlanBox" name="macroPlanBox" /></td>
-							</tr>
-							<tr style="display: none;">
-								<th>Billing</th>
-								<td>
-									<div>
-										<input type="text" id="macroBillingTextBox" placeholder="search" />
-										<div class="autocompleteList" id="billingAutocomplete" style="display: none;"></div>
-									</div>
-									<div id="macroBillingItemBox"></div>
-								</td>
-							</tr>
-							<tr>
-								<td></td>
-								<td><div class="uiBtn" id="macroSaveBtn">Save</div><span class="loaderImg"><img src="<%=request.getContextPath()%>/images/DMSLoader.gif" /></span></td>
-							</tr>
-						</table>
-					</td>
-				</tr>
-			</table>
-		</div>
-
-		<div class="arrow" style="top: 1px;"></div>
-	</div>
 	<form name="caseManagementEntryForm"></form>
 
 	<script type="text/javascript">
 	var demographicName = "<%=d.getLastName().toUpperCase() %>, <%=d.getFirstName().toUpperCase() %>";
+	</script>
+	<%--Added the following code from noteIssueList.jsp for arrage plan function. --%>
+	<%
+	String ni_frmName = "caseManagementEntryForm" + d.getDemographicNo().toString();
+	CaseManagementEntryFormBean ni_cform = (CaseManagementEntryFormBean)session.getAttribute(ni_frmName);
+	
+	if (request.getParameter("caseManagementEntryForm") == null)
+	{
+		request.setAttribute("caseManagementEntryForm", ni_cform);
+	}
+	
+	long ni_savedId = 0;
+	if (ni_cform != null && ni_cform.getCaseNote() != null && ni_cform.getCaseNote().getId() != null)
+	{
+		ni_savedId = ni_cform.getCaseNote().getId();
+	}
+	%>
+	<script type="text/javascript">	
+		if(typeof messagesLoaded == 'function') {
+	 	     messagesLoaded('<%=ni_savedId%>');
+	    }
 	</script>
 </body>
 </html>

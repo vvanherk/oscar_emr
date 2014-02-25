@@ -90,13 +90,14 @@ public class FollowUpAction extends DispatchAction {
     }
     
     public ActionForward getNoteText(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-    	String appointmentNo = request.getParameter("appointmentNo");
+    	Integer appointmentNo = getIntegerFromRequest(request, "appointmentNo");
+    	Integer demographicNo = getIntegerFromRequest(request, "demographicNo");
     	
     	FollowUpDao dao = (FollowUpDao)SpringUtils.getBean("FollowUpDAO");
     	ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
     	
     	
-    	List<EyeformFollowUp> followUps = dao.getByAppointmentNo(Integer.parseInt(appointmentNo));
+    	List<EyeformFollowUp> followUps = dao.get(demographicNo, appointmentNo);
     	StringBuilder sb = new StringBuilder();
     	
     	for(EyeformFollowUp f:followUps) {
@@ -146,8 +147,21 @@ public class FollowUpAction extends DispatchAction {
     		}
     		sb.append(" Dr. ").append(p.getFormattedName());
     		sb.append(" ").append(f.getComment());
-    		sb.append("<br/>");
+    		sb.append(" \n ");
     	}
     	return sb.toString();
     }
+    
+    private Integer getIntegerFromRequest(HttpServletRequest request, String name) {
+		String asString = request.getParameter(name);
+    	Integer retVal = 0;
+    	
+		try {
+			retVal = Integer.parseInt(asString);
+		} catch (Exception e) {
+			logger.debug("Unable to parse " + name + ".");
+		}
+		
+		return retVal;
+	}
 }

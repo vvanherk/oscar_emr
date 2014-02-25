@@ -571,7 +571,7 @@
 					</tr>
 					<tr>
 						<td><b>Visit Location</b></td>
-						<td colspan="3"><%=request.getParameter("xml_location").substring(request.getParameter("xml_location").indexOf("|")+1)%></td>
+						<td colspan="3"><%=xml_location%></td>
 					</tr>
 					<tr>
 					<td><b>SLI Code</b></td>

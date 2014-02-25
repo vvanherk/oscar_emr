@@ -67,7 +67,7 @@ public class ScheduleDateDaoTest extends TestFixtures {
 		entity.setHour("12");
 		entity.setPriority('P');
 		entity.setProviderNo("000001");
-		entity.setReason("reason");
+		entity.setSite(1);
 		entity.setStatus('A');
 		dao.persist(entity);
 

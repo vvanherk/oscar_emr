@@ -28,9 +28,12 @@ package org.oscarehr.eyeform.web;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ArrayList;
@@ -58,6 +61,7 @@ import org.oscarehr.casemgmt.model.Issue;
 import org.oscarehr.casemgmt.service.CaseManagementManager;
 import org.oscarehr.common.IsPropertiesOn;
 import org.oscarehr.common.dao.AllergyDao;
+import org.oscarehr.common.dao.PrescriptionDao;
 import org.oscarehr.common.dao.CaseManagementIssueNotesDao;
 import org.oscarehr.common.dao.ClinicDAO;
 import org.oscarehr.common.dao.ConsultationRequestExtDao;
@@ -72,6 +76,8 @@ import org.oscarehr.common.dao.ProfessionalSpecialistDao;
 import org.oscarehr.common.dao.BillingreferralDao;
 import org.oscarehr.common.dao.SiteDao;
 import org.oscarehr.common.model.Allergy;
+import org.oscarehr.common.model.Prescription;
+import org.oscarehr.common.model.Drug;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.Clinic;
 import org.oscarehr.common.model.Demographic;
@@ -119,7 +125,7 @@ import com.lowagie.text.pdf.PdfCopyFields;
 public class EyeformAction extends DispatchAction {
 
 	static Logger logger = MiscUtils.getLogger();
-	static String[] cppIssues = {"CurrentHistory","PastOcularHistory","MedHistory","OMeds","OcularMedication","DiagnosticNotes","FamHistory"};
+	static String[] cppIssues = {"CurrentHistory","eyeformCurrentIssue","Reminders","PastOcularHistory","MedHistory","OMeds","OcularMedication","DiagnosticNotes","FamHistory"};
 
 	CaseManagementManager cmm = null;
 	OscarAppointmentDao appointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
@@ -129,6 +135,7 @@ public class EyeformAction extends DispatchAction {
 	OcularProcDao ocularProcDao = (OcularProcDao)SpringUtils.getBean("OcularProcDAO");
 	SpecsHistoryDao specsHistoryDao = (SpecsHistoryDao)SpringUtils.getBean("SpecsHistoryDAO");
 	AllergyDao allergyDao = (AllergyDao)SpringUtils.getBean("allergyDao");
+	PrescriptionDao prescriptionDao = (PrescriptionDao)SpringUtils.getBean("prescriptionDao");
 	FollowUpDao followUpDao = (FollowUpDao)SpringUtils.getBean("FollowUpDAO");
 	ProcedureBookDao procedureBookDao = (ProcedureBookDao)SpringUtils.getBean("ProcedureBookDAO");
 	TestBookRecordDao testBookDao = (TestBookRecordDao)SpringUtils.getBean("TestBookDAO");
@@ -189,6 +196,7 @@ public class EyeformAction extends DispatchAction {
 		   String strAppNo = request.getParameter("appNo");
 		   String reqId = request.getParameter("requestId");
 		   String cpp = request.getParameter("cpp");
+		   String endDateAsString = request.getParameter("endDate");
 		   boolean cppFromMeasurements=false;
 		   if(cpp != null && cpp.equals("measurements")) {
 			   cppFromMeasurements=true;
@@ -200,6 +208,18 @@ public class EyeformAction extends DispatchAction {
 		   } catch (Exception e) {
 			   logger.error("Cannot case demographic number to Integer: " + demo, e);
 		   }
+
+			Date endDate = null;
+			if (endDateAsString != null) {
+				try {
+					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+					endDate = formatter.parse(endDateAsString);
+					endDate = getEndOfDayVersion(endDate);
+				} catch (ParseException e) {
+					MiscUtils.getLogger().error("Error", e);
+				}
+			}
+		   
 
 		   Provider provider = LoggedInInfo.loggedInInfo.get().loggedInProvider;
 		   ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
@@ -236,29 +256,44 @@ public class EyeformAction extends DispatchAction {
 			   request.setAttribute("ocularMedication",StringEscapeUtils.escapeJavaScript(getFormattedCppItemFromMeasurements("Ocular Medications:", "cpp_ocularMeds", Integer.parseInt(demo), appNo, true)));
 
 		   } else {*/
-			   request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", "CurrentHistory", Integer.parseInt(demo), appNo, false)));
-			   request.setAttribute("pastOcularHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Past Ocular History:", "PastOcularHistory", Integer.parseInt(demo), appNo, true)));
-			   request.setAttribute("diagnosticNotes",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Diagnostic Notes:", "DiagnosticNotes", Integer.parseInt(demo), appNo, true)));
-			   request.setAttribute("medicalHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Medical History:", "MedHistory", Integer.parseInt(demo), appNo, true)));
-			   request.setAttribute("familyHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Family History:", "FamHistory", Integer.parseInt(demo), appNo, true)));
-			   request.setAttribute("ocularMedication",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Ocular Medications:", "OcularMedication", Integer.parseInt(demo), appNo, true)));
+				List<String> currentHistoryIssueNames = new ArrayList<String>();
+				currentHistoryIssueNames.add("CurrentHistory");
+				currentHistoryIssueNames.add("eyeformCurrentIssue");
+			
+			   request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", currentHistoryIssueNames, demographicNo, appNo, endDate, false)));
+			   request.setAttribute("pastOcularHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Past Ocular History:", "PastOcularHistory", demographicNo, appNo, endDate, true)));
+			   request.setAttribute("diagnosticNotes",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Diagnostic Notes:", "DiagnosticNotes", demographicNo, appNo, endDate, true)));
+			   request.setAttribute("medicalHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Medical History:", "MedHistory", demographicNo, appNo, endDate, true)));
+			   request.setAttribute("familyHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Family History:", "FamHistory", demographicNo, appNo, endDate, true)));
+			   request.setAttribute("ocularMedication",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Ocular Medications:", "OcularMedication", demographicNo, appNo, endDate, true)));
+			   
+				request.setAttribute("PatientLog",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Patient Log:", "PatientLog", demographicNo, appNo, endDate, true)));
+				request.setAttribute("Misc",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Misc:", "Misc", demographicNo, appNo, endDate, true)));
 
 			   IssueDAO issueDao = (IssueDAO)SpringUtils.getBean("IssueDAO");
 
 			   String customCppIssues[] = OscarProperties.getInstance().getProperty("encounter.custom_cpp_issues", "").split(",");
+			   
+				// Error check
+				if (customCppIssues.length == 1 && (customCppIssues[0] == null || customCppIssues[0].length() == 0))
+					customCppIssues = new String[0];
+			   
 			   for(String customCppIssue:customCppIssues) {
 				   Issue i = issueDao.findIssueByCode(customCppIssue);
 				   if(i != null) {
-					   request.setAttribute(customCppIssue,StringEscapeUtils.escapeJavaScript(getFormattedCppItem(i.getDescription()+":", customCppIssue, Integer.parseInt(demo), appNo, true)));
+					   request.setAttribute(customCppIssue,StringEscapeUtils.escapeJavaScript(getFormattedCppItem(i.getDescription()+":", customCppIssue, demographicNo, appNo, endDate, true)));
 				   }
 			   }
 		   //}
 
-		   request.setAttribute("otherMeds",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Other Meds:", "OMeds", Integer.parseInt(demo), appNo, true)));
+		   request.setAttribute("otherMeds",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Other Meds:", "OMeds", demographicNo, appNo, endDate, true)));
 
+			// Allergies and Prescriptions
+			request.setAttribute( "aller", StringEscapeUtils.escapeJavaScript(getFormattedAllergies(demographicNo, appNo, endDate, true)) );
+			request.setAttribute( "presc", StringEscapeUtils.escapeJavaScript(getFormattedPrescriptions(demographicNo, appNo, endDate, true)) );
 
 		   SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
-		   List<EyeformOcularProcedure> ocularProcs = ocularProcDao.getHistory(Integer.parseInt(demo), new Date(), "A");
+		   List<EyeformOcularProcedure> ocularProcs = ocularProcDao.getHistory(demographicNo, new Date(), "A");
 		   StringBuilder ocularProc = new StringBuilder();
 		   for(EyeformOcularProcedure op:ocularProcs) {
                ocularProc.append(sf.format(op.getDate()) + " ");
@@ -276,7 +311,7 @@ public class EyeformAction extends DispatchAction {
            request.setAttribute("ocularProc", StringEscapeUtils.escapeJavaScript(strOcularProcs));
 
 
-           List<EyeformSpecsHistory> specs = specsHistoryDao.getAllPreviousAndCurrent(Integer.parseInt(demo), appNo);
+           List<EyeformSpecsHistory> specs = specsHistoryDao.getAllPreviousAndCurrent(demographicNo, appNo);
            StringBuilder specsStr = new StringBuilder();
            for(EyeformSpecsHistory spec:specs) {
         	   String specDate = sf.format(spec.getDate());
@@ -324,17 +359,19 @@ public class EyeformAction extends DispatchAction {
 
            request.setAttribute("specs", StringEscapeUtils.escapeJavaScript(specsStr1));
 
-           //impression
+           
            //logger.info("appNo="+appNo);
            if(requestId > 0) {
         	   //get the saved app no.
         	   String tmp = consultationRequestExtDao.getConsultationRequestExtsByKey(requestId, "appNo");
         	   appNo = Integer.parseInt(tmp);
         	   request.setAttribute("appNo",appNo);
-           }
-           String impression = getImpression(demographicNo, appNo);
-           request.setAttribute("impression", StringEscapeUtils.escapeJavaScript("Impression:" + "\n" + impression));
-
+           }           
+           
+			//impression
+			String impression = getFormattedCppItem("Impression:", "eyeformImpression", demographicNo, appNo, endDate, false);
+			impression = impression.replaceAll("\\[Signed on.*?\\]", "");
+			request.setAttribute( "impression", StringEscapeUtils.escapeJavaScript(impression) );
 
 
 
@@ -402,6 +439,88 @@ public class EyeformAction extends DispatchAction {
 
 		   return mapping.findForward("conspecial");
 	   }
+	   
+	   private List<Allergy> getAllergies(int demographicNo, int appointmentNo, Date endDate, boolean includePrevious) {
+		   List<Allergy> allergies = allergyDao.findAllergies(demographicNo);
+		   
+		   if (endDate != null) {
+				if( !includePrevious ) {
+					allergies = filterAllergiesByDate( allergies, endDate );
+				} else {
+					allergies = filterAllergiesByPreviousOrCurrentDate( allergies, endDate );
+				}
+		   }
+		   
+		   return allergies;
+	   }
+	   
+	   public String getFormattedAllergies(int demographicNo, int appointmentNo, Date endDate, boolean includePrevious) {
+		   List<Allergy> allergies = getAllergies(demographicNo, appointmentNo, endDate, includePrevious);
+		   
+		   if ( allergies.size() > 0 ) {
+			   StringBuilder sb = new StringBuilder();
+			   for (Allergy a : allergies) {
+				   sb.append("\n");
+				   sb.append(a.getDescription());
+				   if (a.getSeverityOfReactionDesc() != null)
+						sb.append(" (" + a.getSeverityOfReactionDesc() + ")");
+			   }
+			   
+			   return "Allergies:" + sb.toString() + "\n";
+		   }
+		   
+		   return "";
+	   }
+	   
+	   // TODO: filter by appointment number
+	   private List<Prescription> getPrescriptions(int demographicNo, int appointmentNo, Date endDate, boolean includePrevious) {
+		   List<Prescription> prescriptions = prescriptionDao.findByDemographicId(demographicNo);
+		   
+		   if (endDate != null) {
+				if( !includePrevious ) {
+					prescriptions = filterPrescriptionsByDate( prescriptions, endDate );
+				} else {
+					prescriptions = filterPrescriptionsByPreviousOrCurrentDate( prescriptions, endDate );
+				}
+		   }
+		   
+		   return prescriptions;
+	   }
+	   
+	   public String getFormattedPrescriptions(int demographicNo, int appointmentNo, Date endDate, boolean includePrevious) {
+		   List<Prescription> prescriptions = getPrescriptions(demographicNo, appointmentNo, endDate, includePrevious);
+		   
+		   if ( prescriptions.size() > 0 ) {
+			   StringBuilder sb = new StringBuilder();
+			   Date now = new java.util.Date();
+			   
+			   for (Prescription p : prescriptions) {
+				   List<Drug> drugs = p.getDrugs();
+				   for ( Drug d : drugs ) {
+					   if ( !d.getEndDate().after(now) )
+							continue;
+						sb.append("\n");
+					   /*
+					   if (d.getBrandName() != null) {
+							sb.append(d.getBrandName() + "\n");
+						if (d.getCustomName() != null)
+							sb.append(d.getCustomName() + "\n");
+						if (d.getQuantity() != null)
+							sb.append("Quantity: " + d.getQuantity() + "\n");
+						if (d.getRepeat() != null && d.getRepeat() != 0)
+							sb.append("Repeats: " + d.getRepeat() + "\n");
+						if (p.getComments() != null)
+							sb.append(p.getComments() + "\n");
+						*/
+						sb.append(d.getSpecial());
+					}
+			   }
+			   
+			   return "Prescriptions:" + sb.toString() + "\n";
+		   }
+		   
+		   return "";
+	   }
 
 	   public String getFormattedCppItemFromMeasurements(String header, String measurementType, int demographicNo, int appointmentNo, boolean includePrevious) {
 		  Measurements measurement = measurementsDao.getLatestMeasurementByDemographicNoAndType(demographicNo,measurementType);
@@ -420,15 +539,68 @@ public class EyeformAction extends DispatchAction {
 
 		  return header + sb.toString();
 	   }
-
-	   public String getFormattedCppItem(String header, String issueCode, int demographicNo, int appointmentNo, boolean includePrevious) {
+	   
+	   private Collection<CaseManagementNote> getCppItems(String issueCode, int demographicNo, int appointmentNo, Date endDate, boolean includePrevious) {
+		   List<String> issues = new ArrayList<String>();
+		   issues.add( issueCode );
+		   
+		   return getCppItems(issues, demographicNo, appointmentNo, endDate, includePrevious);
+	   }
+	   
+	   private Collection<CaseManagementNote> getCppItems(List<String> issueCodes, int demographicNo, int appointmentNo, Date endDate, boolean includePrevious) {
 		   Collection<CaseManagementNote> notes = null;
-		   if(!includePrevious) {
-			    notes = filterNotesByAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, new String[] {issueCode}),appointmentNo);
-		   } else {
-			   notes = filterNotesByPreviousOrCurrentAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, new String[] {issueCode}),appointmentNo);
-		   }
+			
+			if (issueCodes == null || issueCodes.size() == 0)
+				return notes;
+			
+			String[] issues = new String[issueCodes.size()];
+			issueCodes.toArray(issues);
+			
+			if (endDate != null) {
+				if( !includePrevious ) {
+					notes = filterNotesByDate( caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues), endDate );
+				} else {
+					notes = filterNotesByPreviousOrCurrentDate( caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues), endDate );
+				}
+			} else if( !includePrevious ) {
+				notes = filterNotesByAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues),appointmentNo);
+			} else {
+				notes = filterNotesByPreviousOrCurrentAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCode(demographicNo, issues),appointmentNo);
+			}
+			
+			//since current history has a different format
+			
+			if(issueCodes.contains("CurrentHistory") || issueCodes.contains("eyeformCurrentIssue")){
+				 
+				 CaseManagementNote closestBeforeDate = null;
+				 
+				for(CaseManagementNote note:notes) {
+					if(closestBeforeDate==null)
+					{	closestBeforeDate = note;	}
+					else if(note.getObservation_date().compareTo(closestBeforeDate.getObservation_date()) >= 0) {
+						closestBeforeDate = note;
+					}
+				}
+		   
+				notes = new ArrayList<CaseManagementNote>();
+				notes.add(closestBeforeDate);
+			}
 
+		   return notes;
+	   }
+
+	   public String getFormattedCppItem(String header, List<String> issueCodes, int demographicNo, int appointmentNo, Date endDate, boolean includePrevious) {
+		   Collection<CaseManagementNote> notes = getCppItems(issueCodes, demographicNo, appointmentNo, endDate, includePrevious);
+			
+			if (notes == null)
+			{	
+				String output = "";
+				for (String s : issueCodes){
+					output += s + ", ";
+				}
+				MiscUtils.getLogger().info("Found nothing for " + output);
+				return "";
+			}
 		   if(notes.size()>0) {
 			   StringBuilder sb = new StringBuilder();
 			   for(CaseManagementNote note:notes) {
@@ -437,7 +609,15 @@ public class EyeformAction extends DispatchAction {
 			   }
 			   return header + sb.toString();
 		   }
-		   return new String();
+
+		   return "";
+	   }
+	   
+	   public String getFormattedCppItem(String header, String issueCode, int demographicNo, int appointmentNo, Date endDate, boolean includePrevious) {
+		   List<String> issues = new ArrayList<String>();
+		   issues.add( issueCode );
+		   
+		   return getFormattedCppItem(header, issues, demographicNo, appointmentNo, endDate, includePrevious);
 	   }
 /*
 	   private String getCppItemAsString(String demo, String issueCode, String text) {
@@ -478,16 +658,50 @@ public class EyeformAction extends DispatchAction {
 	   }
 
 
-	   public void doPrint(HttpServletRequest request, OutputStream os) throws IOException, DocumentException {
+	   public void doPrint(HttpServletRequest request, OutputStream os) throws Exception, IOException, DocumentException {
 			String ids[] = request.getParameter("apptNos").split(",");
 			String providerNo = LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo();
+			String endDateAsString = request.getParameter("endDate");
+			
+			// The demographic number only comes in certain situations - namely, when printing an impression note from the EyeForm
+			String demographicNoAsString = request.getParameter("demographicNo");
+			
+			// The end date to use when looking up appointments with id 0
+			Date endDate = null;
+			if (endDateAsString != null) {
+				try {
+					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+					endDate = formatter.parse(endDateAsString);
+					endDate = getEndOfDayVersion(endDate);
+				} catch (ParseException e) {
+					MiscUtils.getLogger().error("Error", e);
+				}
+			}
+			
+			// The dates to use when looking up appointments with id 0
+			/*
+			String[] apptZeroDateStrings = new String[0];
+			if (request.getParameter("apptZeroDates") != null)
+				apptZeroDateStrings = request.getParameter("apptZeroDates").split(",");
+			
+			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			List<Date> apptZeroDates = new ArrayList<Date>();
+			
+			// Convert to Java Date Object(s)
+			for (int i=0; i < apptZeroDateStrings.length; i++) {
+				Date date = sdf.parse( apptZeroDateStrings[i] );
+				apptZeroDates.add( date );
+			}
 				
+			if (apptZeroDates.size() == 0)
+				apptZeroDates = null;
+			*/
 			String cpp = request.getParameter("cpp");
+			
 			boolean cppFromMeasurements=false;
 			if(cpp != null && cpp.equals("measurements")) {
 				cppFromMeasurements=true;
 			}
-			String[] customCppIssues =OscarProperties.getInstance().getProperty("encounter.custom_cpp_issues","").split(",");
 
 			PdfCopyFields finalDoc = new PdfCopyFields(os);
 			finalDoc.getWriter().setStrictImageSequence(true);
@@ -495,20 +709,45 @@ public class EyeformAction extends DispatchAction {
 
 			//loop through each visit..concatenate into 1 PDF
 			for(int x=0;x<ids.length;x++) {
-
+				//List<Date> apptDates = null;
 
 				if(x>0) {
 					printer.setNewPage(true);
 				}
 
+				// Try to find the appointment
 				int appointmentNo = Integer.parseInt(ids[x]);
 				Appointment appointment = appointmentDao.find(appointmentNo);
-				Demographic demographic = demographicDao.getClientByDemographicNo(appointment.getDemographicNo());
-				printer.setDemographic(demographic);
-				printer.setAppointment(appointment);
-
+				
+				int demographicNo = 0;
+				
+				if (appointmentNo == 0) {
+					try {
+						demographicNo = Integer.parseInt(demographicNoAsString);
+					} catch (Exception e) {
+						logger.error("Unable to parse demographic number.");
+					}
+				}
+				
+				
 				//need to get notes first to set the signing provider
-				List<CaseManagementNote> notes = caseManagementNoteDao.getMostRecentNotesByAppointmentNo(appointmentNo);
+				List<CaseManagementNote> notes = null;
+				if (appointment != null && appointmentNo != 0) {
+					// Get all notes for appointment (if the appointment was found)
+					notes = caseManagementNoteDao.getMostRecentNotesByAppointmentNo(appointmentNo);
+					demographicNo = appointment.getDemographicNo();
+				} else if (appointmentNo == 0 && demographicNo != 0 && endDate != null) {
+					notes = caseManagementNoteDao.getMostRecentNotesByDemographicNo(demographicNo, endDate);
+				} else {
+					logger.error("No demographic number or valid appointment number provided.");
+					throw new Exception("No demographic number or valid appointment number provided.");
+				}
+				
+				if (demographicNo == 0) {
+					logger.error("Unable to get valid demographic number.");
+					throw new Exception("Unable to get valid demographic number.");
+				}
+				
 				notes = filterOutCpp(notes);
 				if(notes.size()>0) {
 					String tmp = notes.get(0).getSigning_provider_no();
@@ -520,78 +759,145 @@ public class EyeformAction extends DispatchAction {
 					}
 				}
 				
+				Demographic demographic = demographicDao.getClientByDemographicNo(demographicNo);
+				printer.setDemographic(demographic);
+				printer.setAppointment(appointment);
+				
 				
 				printer.printDocHeaderFooter();
-
-				//get cpp items by appointmentNo (current history,past ocular hx,
-				//medical hx, ocular meds, other meds, diagnostic notes
-/*
-				if(cppFromMeasurements) {
-					printCppItemFromMeasurements(printer,"Current History","cpp_currentHis",demographic.getDemographicNo(), appointmentNo, false);
-					printCppItemFromMeasurements(printer,"Past Ocular History","cpp_pastOcularHis",demographic.getDemographicNo(), appointmentNo, true);
-					printCppItemFromMeasurements(printer,"Medical History","cpp_medicalHis",demographic.getDemographicNo(), appointmentNo, true);
-					printCppItemFromMeasurements(printer,"Family History","cpp_familyHis",demographic.getDemographicNo(), appointmentNo, true);
-					printCppItemFromMeasurements(printer,"Diagnostic Notes","cpp_diagnostics",demographic.getDemographicNo(), appointmentNo, false);
-					printCppItemFromMeasurements(printer,"Ocular Medication","cpp_ocularMeds",demographic.getDemographicNo(), appointmentNo, true);
-
-				} else {
-*/
+				
+				List<String> currentHistoryIssueNames = new ArrayList<String>();
+				currentHistoryIssueNames.add("CurrentHistory");
+				currentHistoryIssueNames.add("eyeformCurrentIssue");
+				
+				Collection<CaseManagementNote> cppNotes = null;
+				
+				cppNotes = getCppItems(currentHistoryIssueNames, demographicNo, appointmentNo, endDate, true);
+				if (cppNotes != null && cppNotes.size() > 0) {
+					printer.printCPPItem("Current History", cppNotes);
+					printer.printBlankLine();
+				}
+				
+				cppNotes = getCppItems("PastOcularHistory", demographicNo, appointmentNo, endDate, true);
+				if (cppNotes != null && cppNotes.size() > 0) {
+					printer.printCPPItem("Past Ocular History", cppNotes);
+					printer.printBlankLine();
+				}
+				
+				cppNotes = getCppItems("MedHistory", demographicNo, appointmentNo, endDate, true);
+				if (cppNotes != null && cppNotes.size() > 0) {
+					printer.printCPPItem("Medical History", cppNotes);
+					printer.printBlankLine();
+				}
+				
+				cppNotes = getCppItems("FamHistory", demographicNo, appointmentNo, endDate, true);
+				if (cppNotes != null && cppNotes.size() > 0) {
+					printer.printCPPItem("Family History", cppNotes);
+					printer.printBlankLine();
+				}
+				
+				cppNotes = getCppItems("DiagnosticNotes", demographicNo, appointmentNo, endDate, true);
+				if (cppNotes != null && cppNotes.size() > 0) {
+					printer.printCPPItem("Diagnostic Notes", cppNotes);
+					printer.printBlankLine();
+				}
+				
+				cppNotes = getCppItems("OcularMedication", demographicNo, appointmentNo, endDate, true);
+				if (cppNotes != null && cppNotes.size() > 0) {
+					printer.printCPPItem("Ocular Medications", cppNotes);
+					printer.printBlankLine();
+				}
+				
+				/*
+				cppNotes = getCppItems("PatientLog", demographicNo, appointmentNo, endDate, true);
+				if (cppNotes != null && cppNotes.size() > 0) {
+					printer.printCPPItem("Patient Log", cppNotes);
+					printer.printBlankLine();
+				}
+				*/
+				
+				/*
+				cppNotes = getCppItems("Misc", demographicNo, appointmentNo, endDate, true);
+				if (cppNotes != null && cppNotes.size() > 0) {
+					printer.printCPPItem("Misc", cppNotes);
+					printer.printBlankLine();
+				}
+				*/
+				
+				cppNotes = getCppItems("OMeds", demographicNo, appointmentNo, endDate, true);
+				if (cppNotes != null && cppNotes.size() > 0) {
+					printer.printCPPItem("Other Medications", cppNotes);
+					printer.printBlankLine();
+				}
+				
+				
 				IssueDAO issueDao = (IssueDAO)SpringUtils.getBean("IssueDAO");
-
-					printCppItem(printer,"Current History","CurrentHistory",demographic.getDemographicNo(), appointmentNo, false);
-					printCppItem(printer,"Past Ocular History","PastOcularHistory",demographic.getDemographicNo(), appointmentNo, true);
-					printCppItem(printer,"Medical History","MedHistory",demographic.getDemographicNo(), appointmentNo, true);
-					printCppItem(printer,"Family History","FamHistory",demographic.getDemographicNo(), appointmentNo, true);
-					printCppItem(printer,"Diagnostic Notes","DiagnosticNotes",demographic.getDemographicNo(), appointmentNo, false);
-					printCppItem(printer,"Ocular Medications","OcularMedication",demographic.getDemographicNo(), appointmentNo, true);
-
-					for(String customCppIssue:customCppIssues) {
-						Issue issue = issueDao.findIssueByCode(customCppIssue);
-						if(issue != null) {
-							printCppItem(printer,issue.getDescription(),customCppIssue,demographic.getDemographicNo(), appointmentNo, true);
+				String customCppIssues[] = OscarProperties.getInstance().getProperty("encounter.custom_cpp_issues", "").split(",");
+				
+				// Error check
+				if (customCppIssues.length == 1 && (customCppIssues[0] == null || customCppIssues[0].length() == 0))
+					customCppIssues = new String[0];
+				
+				for(String customCppIssue:customCppIssues) {
+					Issue i = issueDao.findIssueByCode(customCppIssue);
+					if(i != null) {
+						cppNotes = getCppItems(customCppIssue, demographicNo, appointmentNo, endDate, true);
+						if (cppNotes != null && cppNotes.size() > 0) {
+							printer.printCPPItem(i.getDescription(), cppNotes);
+							printer.printBlankLine();
 						}
 					}
-//				}
-				printCppItem(printer,"Other Medications","OMeds",demographic.getDemographicNo(), appointmentNo, true);
+				}
 
 				printer.setNewPage(true);
 
 				//ocular procs
-				List<EyeformOcularProcedure> ocularProcs = ocularProcDao.getAllPreviousAndCurrent(demographic.getDemographicNo(),appointmentNo);
+				List<EyeformOcularProcedure> ocularProcs = null;
+				if (endDate != null)
+					ocularProcs = ocularProcDao.getAllByBeforeDate(demographicNo, appointmentNo, endDate);
+				else
+					ocularProcs = ocularProcDao.getAllPreviousAndCurrent(demographicNo, appointmentNo);
+
 				if(ocularProcs.size()>0) {
 					printer.printOcularProcedures(ocularProcs);
 				}
 
 				//specs history
-				List<EyeformSpecsHistory> specsHistory = specsHistoryDao.getAllPreviousAndCurrent(demographic.getDemographicNo(),appointmentNo);
+				List<EyeformSpecsHistory> specsHistory = null;
+				if (endDate != null)
+					specsHistory = specsHistoryDao.getAllByBeforeDate(demographicNo, appointmentNo, endDate);
+				else
+					specsHistory = specsHistoryDao.getAllPreviousAndCurrent(demographicNo, appointmentNo);
+
 				if(specsHistory.size()>0) {
 					printer.printSpecsHistory(specsHistory);
 				}
 				
 				//allergies
-				List<Allergy> allergies = allergyDao.findAllergies(demographic.getDemographicNo());
+				List<Allergy> allergies = getAllergies(demographicNo, appointmentNo, endDate, true);
 				if(allergies.size()>0) {
 					printer.printAllergies(allergies);
 				}
 				
-				//rx
-				printer.printRx(String.valueOf(demographic.getDemographicNo()));
+				List<Prescription> prescriptions = getPrescriptions(demographicNo, appointmentNo, endDate, true);
+				if(prescriptions.size()>0) {
+					printer.printRx(prescriptions);
+				}
 
 				//measurements
-				List<Measurements> measurements = measurementsDao.getMeasurementsByAppointment(appointmentNo);
+				List<Measurements> measurements = null;
+				if (endDate != null)
+					measurements = measurementsDao.getMeasurementsBeforeDate(demographicNo, endDate);
+				else if (appointmentNo != 0)
+					measurements = measurementsDao.getMeasurements(appointmentNo, demographicNo);
+				else
+					measurements = measurementsDao.getMeasurements(demographicNo);
+
 				if(measurements.size()>0) {
-/*
-					if(cppFromMeasurements) {
-						if(getNumMeasurementsWithoutCpp(measurements)>0) {
-							MeasurementFormatter formatter = new MeasurementFormatter(measurements);
-							printer.printEyeformMeasurements(formatter);
-						}
-					} else {
-*/
-						MeasurementFormatter formatter = new MeasurementFormatter(measurements);
-						printer.printEyeformMeasurements(formatter);
-//					}
+					MeasurementFormatter formatter = new MeasurementFormatter(measurements);
+					printer.printEyeformMeasurements(formatter);
 				}
+				
 				
 				//impression
 				//let's filter out custom cpp notes, as they will already have been
@@ -621,9 +927,16 @@ public class EyeformAction extends DispatchAction {
 		        printer.printEyeformPlan(followUps, procedureBooks, testBooks,eyeform);
 				*/
 				
+				
 		        //photos
 		        DocumentResultsDao documentDao = (DocumentResultsDao)SpringUtils.getBean("documentResultsDao");
-		        List<Document> documents = documentDao.getPhotosByAppointmentNo(appointmentNo);
+		        List<Document> documents = null;
+		        
+		        if (endDate != null)
+					documents = documentDao.getPhotosByAppointmentNoAndBeforeDates(appointmentNo, endDate);
+				else
+					documents = documentDao.getPhotosByAppointmentNo(appointmentNo);
+
 		        if(documents.size()>0) {
 		        	String servletUrl  = request.getRequestURL().toString();
 		        	String url = servletUrl.substring(0,servletUrl.indexOf(request.getContextPath())+request.getContextPath().length());
@@ -634,6 +947,8 @@ public class EyeformAction extends DispatchAction {
 		        EFormValueDao eFormValueDao = (EFormValueDao) SpringUtils.getBean("EFormValueDao");
 		        EFormGroupDao eFormGroupDao = (EFormGroupDao) SpringUtils.getBean("EFormGroupDao");
 		        List<EFormGroup> groupForms = eFormGroupDao.getByGroupName("Eye form");
+		        
+		        // TODO: How will we filter this when appointment number is 0?
 		        List<EFormValue> values = eFormValueDao.findByApptNo(appointmentNo);
 		        List<EFormValue> diagrams = new ArrayList<EFormValue>();
 		        for(EFormValue value:values) {
@@ -651,7 +966,6 @@ public class EyeformAction extends DispatchAction {
 		        if(diagrams.size()>0) {
 		        	printer.printDiagrams(diagrams);
 		        }
-
 
 			} //end of loop
 
@@ -682,16 +996,26 @@ public class EyeformAction extends DispatchAction {
 	   }
 
 	   public void printCppItem(PdfRecordPrinter printer, String header, String issueCode, int demographicNo, int appointmentNo, boolean includePrevious) throws DocumentException {
-		   Collection<CaseManagementNote> notes = null;
-		   if(!includePrevious) {
-			    notes = filterNotesByAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode}),appointmentNo);
-		   } else {
-			   notes = filterNotesByPreviousOrCurrentAppointment(caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode}),appointmentNo);
-		   }
-		   if(notes.size()>0) {
-			   printer.printCPPItem(header, notes);
-			   printer.printBlankLine();
-		   }
+		   printCppItem(printer, header, issueCode, null, demographicNo, appointmentNo, includePrevious);
+	   }
+	   
+	   public void printCppItem(PdfRecordPrinter printer, String header, String issueCode, List<Date> dates, int demographicNo, int appointmentNo, boolean includePrevious) throws DocumentException {
+			Collection<CaseManagementNote> notes = null;
+			
+			if (dates != null && dates.size() > 0)
+				notes = caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode}, dates);
+			else
+				notes = caseManagementNoteDao.findNotesByDemographicAndIssueCodeInEyeform(demographicNo, new String[] {issueCode});
+			
+			if (!includePrevious)
+				notes = filterNotesByAppointment(notes, appointmentNo);
+			else
+				notes = filterNotesByPreviousOrCurrentAppointment(notes, appointmentNo);
+			
+			if (notes.size() > 0) {
+				printer.printCPPItem(header, notes);
+				printer.printBlankLine();
+			}
 	   }
 
 	   public void printCppItemFromMeasurements(PdfRecordPrinter printer, String header, String measurementType, int demographicNo, int appointmentNo, boolean includePrevious) throws DocumentException {
@@ -713,6 +1037,9 @@ public class EyeformAction extends DispatchAction {
 	   public Collection<CaseManagementNote> filterNotesByAppointment(Collection<CaseManagementNote> notes, int appointmentNo) {
 		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
 		   for(CaseManagementNote note:notes) {
+			   if (note.isArchived())
+					continue;
+
 			   if(note.getAppointmentNo() == appointmentNo) {
 				   filteredNotes.add(note);
 			   }
@@ -723,10 +1050,139 @@ public class EyeformAction extends DispatchAction {
 	   public Collection<CaseManagementNote> filterNotesByPreviousOrCurrentAppointment(Collection<CaseManagementNote> notes, int appointmentNo) {
 		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
 		   for(CaseManagementNote note:notes) {
+			   if (note.isArchived())
+					continue;
+
 			   if(note.getAppointmentNo() <= appointmentNo) {
 				   filteredNotes.add(note);
 			   }
 		   }
+		   return filteredNotes;
+	   }
+	   
+	   private Date getBeginningOfDayVersion(Date date) {
+			Calendar cal = new GregorianCalendar();
+
+			cal.setTime(date);
+			cal.set(Calendar.HOUR_OF_DAY, 0);
+			cal.set(Calendar.MINUTE, 0);
+			cal.set(Calendar.SECOND, 0);
+			cal.set(Calendar.MILLISECOND, 0);
+
+			return cal.getTime();
+	   }
+	   
+	   private Date getEndOfDayVersion(Date date) {
+			Calendar cal = new GregorianCalendar();
+
+			cal.setTime(date);
+			cal.set(Calendar.HOUR_OF_DAY, 22);
+			cal.set(Calendar.MINUTE, 59);
+			cal.set(Calendar.SECOND, 59);
+
+			return cal.getTime();
+	   }
+	   
+	   public List<Prescription> filterPrescriptionsByDate(List<Prescription> prescriptions, Date endDate) {
+		   Date endDateMidnight = getBeginningOfDayVersion(endDate);
+		   Date now = new java.util.Date();
+		   
+		   List<Prescription> filteredPrescriptions = new ArrayList<Prescription>();
+		   
+		   for ( Prescription p : prescriptions) {
+				boolean hasAVAlidDrug = false;
+				for ( Drug d : p.getDrugs() ) {
+					if ( d.getEndDate().after(now) ) {
+						hasAVAlidDrug = true;
+						break;
+					}
+				}
+
+			   if ( hasAVAlidDrug && p.getDatePrescribed().compareTo(endDateMidnight) > 0 && p.getDatePrescribed().compareTo(endDate) <= 0) {
+				   filteredPrescriptions.add(p);
+			   }
+		   }
+		   
+		   return filteredPrescriptions;
+	   }
+	   
+	   public List<Prescription> filterPrescriptionsByPreviousOrCurrentDate(List<Prescription> prescriptions, Date endDate) {		   
+		   Date now = new java.util.Date();
+		   
+		   List<Prescription> filteredPrescriptions = new ArrayList<Prescription>();
+		   
+		   for ( Prescription p : prescriptions) {			   
+			   boolean hasAVAlidDrug = false;
+				for ( Drug d : p.getDrugs() ) {
+					if ( d.getEndDate().after(now) ) {
+						hasAVAlidDrug = true;
+						break;
+					}
+				}
+
+			   if ( hasAVAlidDrug && p.getDatePrescribed().compareTo(endDate) <= 0) {
+				   filteredPrescriptions.add(p);
+			   }
+		   }
+		   
+		   return filteredPrescriptions;
+	   }
+	   
+	   public List<Allergy> filterAllergiesByDate(List<Allergy> allergies, Date endDate) {
+		   Date endDateMidnight = getBeginningOfDayVersion(endDate);
+		   
+		   List<Allergy> filteredAllergies = new ArrayList<Allergy>();
+		   
+		   for ( Allergy p : allergies) {
+			   if ( p.getEntryDate().compareTo(endDateMidnight) > 0 && p.getEntryDate().compareTo(endDate) <= 0) {
+				   filteredAllergies.add(p);
+			   }
+		   }
+		   
+		   return filteredAllergies;
+	   }
+	   
+	   public List<Allergy> filterAllergiesByPreviousOrCurrentDate(List<Allergy> allergies, Date endDate) {		   
+		   List<Allergy> filteredAllergies = new ArrayList<Allergy>();
+		   
+		   for ( Allergy p : allergies) {
+			   if ( p.getEntryDate().compareTo(endDate) <= 0) {
+				   filteredAllergies.add(p);
+			   }
+		   }
+		   
+		   return filteredAllergies;
+	   }
+	   
+	   public Collection<CaseManagementNote> filterNotesByDate(Collection<CaseManagementNote> notes, Date endDate) {
+		   Date endDateMidnight = getBeginningOfDayVersion(endDate);
+		   
+		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
+		   
+		   for ( CaseManagementNote note : notes) {
+			   if (note.isArchived())
+					continue;
+
+			   if ( note.getObservation_date().compareTo(endDateMidnight) > 0 && note.getObservation_date().compareTo(endDate) <= 0) {
+				   filteredNotes.add(note);
+			   }
+		   }
+		   
+		   return filteredNotes;
+	   }
+
+	   public Collection<CaseManagementNote> filterNotesByPreviousOrCurrentDate(Collection<CaseManagementNote> notes, Date endDate) {
+		   List<CaseManagementNote> filteredNotes = new ArrayList<CaseManagementNote>();
+		   
+		   for ( CaseManagementNote note : notes ) {
+			   if (note.isArchived())
+					continue;
+
+			   if ( note.getObservation_date().compareTo(endDate) <= 0 ) {
+				   filteredNotes.add(note);
+			   }
+		   }
+		   
 		   return filteredNotes;
 	   }
 
@@ -755,6 +1211,9 @@ public class EyeformAction extends DispatchAction {
 		   for(CaseManagementNote note:notes) {
 			   boolean skip=false;
 			   
+			 if (note.getIssues() == null || note.getIssues().size() == 0)
+				skip = true;
+			   
 			 for(CaseManagementIssue issue:note.getIssues()) {
 				 for(int x=0;x<cppIssues.length;x++) {
 					 if(issue.getIssue().getCode().equals(cppIssues[x])) {
@@ -772,6 +1231,7 @@ public class EyeformAction extends DispatchAction {
 	   public ActionForward prepareConReport(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		   String demoNo = request.getParameter("demographicNo");
 		   String appointmentNo = request.getParameter("appNo");
+		   String endDateAsString = request.getParameter("endDate");
 		   String cpp = request.getParameter("cpp");
 		   boolean cppFromMeasurements=false;
 		   if(cpp != null && cpp.equals("measurements")) {
@@ -782,6 +1242,17 @@ public class EyeformAction extends DispatchAction {
 		   Integer appNo = new Integer(0);
 		   if (appointmentNo != null && appointmentNo.trim().length() > 0)
 				appNo = new Integer(appointmentNo);
+			
+			Date endDate = null;
+			if (endDateAsString != null) {
+				try {
+					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+					endDate = formatter.parse(endDateAsString);
+					endDate = getEndOfDayVersion(endDate);
+				} catch (ParseException e) {
+					MiscUtils.getLogger().error("Error", e);
+				}
+			}
 
 
 		   Provider provider = LoggedInInfo.loggedInInfo.get().loggedInProvider;
@@ -789,6 +1260,7 @@ public class EyeformAction extends DispatchAction {
 
 		   request.setAttribute("demographicNo", demoNo);
 		   request.setAttribute("demographicName", demographic.getFormattedName());
+		   request.setAttribute("endDate", endDateAsString);
 
 			//demographic_ext
 			String famName = new String();
@@ -849,16 +1321,75 @@ public class EyeformAction extends DispatchAction {
 				request.setAttribute("newFlag", "false");
 				appNo = cp.getAppointmentNo();
 
-				ProfessionalSpecialist specialist = professionalSpecialistDao.find(cp.getReferralId());
+				List<ProfessionalSpecialist> specialists = professionalSpecialistDao.findByReferralNo(cp.getReferralId());
+				ProfessionalSpecialist specialist = null;
+				
+				if (specialists != null && specialists.size() > 0)
+					specialist = specialists.get(0);
+				
 				if(specialist != null) {
 					referraldoc = specialist.getLastName() + "," + specialist.getFirstName();
 					request.setAttribute("referral_doc_name", referraldoc);
 					cp.setReferralNo(specialist.getReferralNo());
 					refNo = specialist.getReferralNo();
 				}
+				
+				// Set endDate from the consultation report
+				Date d = cp.getDate();
+				logger.info("date1: " + d.toString());
+				if (d != null && endDate == null) {
+					endDate = getEndOfDayVersion(d);
+					logger.info("date2: " + endDate);
+				}
+				
+				Appointment appt = null;
+				if (cp.getAppointmentNo() != 0)
+					appt = appointmentDao.find(cp.getAppointmentNo());
+				logger.info("cp.getAppointmentNo(): " + cp.getAppointmentNo());
+				// If appt date is after consultation creation date, use the appt date as the end date
+				if (appt != null && endDate != null) {
+					logger.info("date3: " + appt.getAppointmentDate());
+					if ( appt.getAppointmentDate().compareTo(endDate) > 0 )
+						endDate = getEndOfDayVersion( appt.getAppointmentDate() );
+					logger.info("date4: " + endDate);
+				}
 			}
 
 			request.setAttribute("providerName",providerDao.getProvider(cp.getProviderNo()).getFormattedName());
+
+			List<Clinic> clinics = clinicDao.findAll();
+			request.setAttribute("clinics", clinics);
+
+			List<Site> sites = siteDao.getActiveSitesByProviderNo((String) request.getSession().getAttribute("user"));
+			request.setAttribute("sites", sites);
+
+			Integer appt_no= cp.getAppointmentNo();
+			Site defaultSite = null;
+			if(cp.getSiteId() == null) {
+			  Integer siteId = null;
+			  if (appt_no != null) {
+				Appointment appt = appointmentDao.find(appt_no);
+				if (appt != null) {
+				    siteId = appt.getSite();
+					for (int i = 0; i < sites.size(); i++) {
+						Site s = sites.get(i);
+						if (s.getId().equals(siteId)) {
+							defaultSite = s;
+							cp.setSiteId(defaultSite.getSiteId());
+							break;
+						}
+					}
+			    }
+			  } 
+			} else {
+				for (int i = 0; i < sites.size(); i++) {
+					Site s = sites.get(i);
+					if (s.getId() == cp.getSiteId()) {
+						defaultSite = s;
+						break;
+					}
+				}					
+			}
 
 			DynaValidatorForm crForm = (DynaValidatorForm) form;
 			crForm.set("cp", cp);
@@ -869,7 +1400,7 @@ public class EyeformAction extends DispatchAction {
 				String referral = demographic.getFamilyDoctor();
 
 				if (referral != null && !"".equals(referral.trim())) {
-					Integer ref = getRefId(referral);
+					String ref = getRefId(referral);
 					cp.setReferralId(ref);
 					refNo = getRefNo(referral);
 
@@ -894,26 +1425,46 @@ public class EyeformAction extends DispatchAction {
 			   request.setAttribute("ocularMedication",StringEscapeUtils.escapeJavaScript(getFormattedCppItemFromMeasurements("Current Medications:", "cpp_ocularMeds", demographic.getDemographicNo(), appNo, true)));
 
 			} else {*/
-				request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", "CurrentHistory", demographic.getDemographicNo(), appNo, false)));
-				request.setAttribute("pastOcularHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Past Ocular History:", "PastOcularHistory", demographic.getDemographicNo(), appNo, true)));
-				request.setAttribute("medHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Medical History:", "MedHistory", demographic.getDemographicNo(), appNo, true)));
-				request.setAttribute("famHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Family History:", "FamHistory", demographic.getDemographicNo(), appNo, true)));
-				request.setAttribute("diagnosticNotes",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Diagnostic Notes:", "DiagnosticNotes", demographic.getDemographicNo() , appNo, true)));
-				request.setAttribute("ocularMedication",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current Medications:", "OcularMedication", demographic.getDemographicNo(), appNo, true)));
+				List<String> currentHistoryIssueNames = new ArrayList<String>();
+				currentHistoryIssueNames.add("CurrentHistory");
+				currentHistoryIssueNames.add("eyeformCurrentIssue");
+				
+				request.setAttribute("currentHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current History:", currentHistoryIssueNames, demographic.getDemographicNo(), appNo, endDate, true)));
+				request.setAttribute("pastOcularHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Past Ocular History:", "PastOcularHistory", demographic.getDemographicNo(), appNo, endDate, true)));
+				request.setAttribute("medHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Medical History:", "MedHistory", demographic.getDemographicNo(), appNo, endDate, true)));
+				request.setAttribute("famHistory",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Family History:", "FamHistory", demographic.getDemographicNo(), appNo, endDate, true)));
+				request.setAttribute("diagnosticNotes",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Diagnostic Notes:", "DiagnosticNotes", demographic.getDemographicNo(), appNo, endDate, true)));
+				request.setAttribute("ocularMedication",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Current Medications:", "OcularMedication", demographic.getDemographicNo(), appNo, endDate, true)));
+
+				request.setAttribute("PatientLog",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Patient Log:", "PatientLog", demographic.getDemographicNo(), appNo, endDate, true)));
+				request.setAttribute("Misc",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Misc:", "Misc", demographic.getDemographicNo(), appNo, endDate, true)));
 
 			//}
 
-			request.setAttribute("otherMeds",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Other Medications:", "OMeds", demographic.getDemographicNo(), appNo, true)));
+			request.setAttribute("otherMeds",StringEscapeUtils.escapeJavaScript(getFormattedCppItem("Other Medications:", "OMeds", demographic.getDemographicNo(), appNo, endDate, true)));
 
 			IssueDAO issueDao = (IssueDAO)SpringUtils.getBean("IssueDAO");
 			String customCppIssues[] = OscarProperties.getInstance().getProperty("encounter.custom_cpp_issues", "").split(",");
+			
+			// Error check
+			if (customCppIssues.length == 1 && (customCppIssues[0] == null || customCppIssues[0].length() == 0))
+				customCppIssues = new String[0];
+			
 			for(String customCppIssue:customCppIssues) {
 				Issue i = issueDao.findIssueByCode(customCppIssue);
 				if(i != null) {
-					request.setAttribute(customCppIssue,StringEscapeUtils.escapeJavaScript(getFormattedCppItem(i.getDescription()+":", customCppIssue, demographic.getDemographicNo(), appNo, true)));
+					request.setAttribute(customCppIssue,StringEscapeUtils.escapeJavaScript(getFormattedCppItem(i.getDescription()+":", customCppIssue, demographic.getDemographicNo(), appNo, endDate, true)));
 				}
 			}
-
+			
+			// Allergies and Prescriptions
+			request.setAttribute( "aller", StringEscapeUtils.escapeJavaScript(getFormattedAllergies(demographic.getDemographicNo(), appNo, endDate, true)) );
+			request.setAttribute( "presc", StringEscapeUtils.escapeJavaScript(getFormattedPrescriptions(demographic.getDemographicNo(), appNo, endDate, true)) );
+			
+			
+			//oscar.oscarRx.data.RxPrescriptionData prescriptData = new oscar.oscarRx.data.RxPrescriptionData();
+			//oscar.oscarRx.data.RxPrescriptionData.Prescription[] arr = {};
+			//arr = prescriptData.getUniquePrescriptionsByPatient(Integer.parseInt(demographicNo));
 
 			SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
 			   List<EyeformOcularProcedure> ocularProcs = ocularProcDao.getHistory(demographic.getDemographicNo(), new Date(), "A");
@@ -980,9 +1531,10 @@ public class EyeformAction extends DispatchAction {
 
 	           request.setAttribute("specs", StringEscapeUtils.escapeJavaScript(specsStr1));
 
-	           //impression
-	           String impression = getImpression(demographicNo, appNo);
-	           request.setAttribute("impression", StringEscapeUtils.escapeJavaScript(impression));
+				//impression
+				String impression = getFormattedCppItem("Impression:", "eyeformImpression", demographicNo, appNo, endDate, false);
+				impression = impression.replaceAll("\\[Signed on.*?\\]", "");
+				request.setAttribute( "impression", StringEscapeUtils.escapeJavaScript(impression) );
 
 	           //followUp
 	           FollowUpDao followUpDao = (FollowUpDao)SpringUtils.getBean("FollowUpDAO");
@@ -1042,31 +1594,35 @@ public class EyeformAction extends DispatchAction {
 
 		public ActionForward saveConRequest(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 			log.info("saveConRequest");
-                        ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
+			ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
 
-                        DynaValidatorForm crForm = (DynaValidatorForm) form;
-                        EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
-                        EyeformConsultationReport consultReport = null;
-                        String id = request.getParameter("cp.id");
-                        if(id != null && id.length()>0) {
-                                consultReport = dao.find(Integer.parseInt(id));
-                        } else {
-                                consultReport = new EyeformConsultationReport();
-                        }
-                        BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
-
-			ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(cp.getReferralNo());
-			if (professionalSpecialist != null)
-				cp.setReferralId(professionalSpecialist.getId());
-
-			cp.setDate(new Date());
-
-			if(cp.getId() != null && cp.getId()>0) {
-				dao.merge(cp);
+			DynaValidatorForm crForm = (DynaValidatorForm) form;
+			EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
+			EyeformConsultationReport consultReport = null;
+			String id = request.getParameter("cp.id");
+			if(id != null && id.length()>0) {
+					consultReport = dao.find(Integer.parseInt(id));
 			} else {
-				dao.persist(cp);
+					consultReport = new EyeformConsultationReport();
 			}
-			request.setAttribute("cpId", cp.getId().toString());
+			BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
+
+			consultReport.setReferralId( cp.getReferralNo() );
+
+			//ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(cp.getReferralNo());
+			//if (professionalSpecialist != null) {
+				//cp.setReferralId(cp.getReferralNo());
+				//MiscUtils.getLogger().info("NAH NULL: " + professionalSpecialist.getId());
+			//}
+
+			consultReport.setDate(new Date());
+
+			if(consultReport.getId() != null && consultReport.getId()>0) {
+				dao.merge(consultReport);
+			} else {
+				dao.persist(consultReport);
+			}
+			request.setAttribute("cpId", consultReport.getId().toString());
 			request.setAttribute("savedflag", "saved");
 			//return prepareConReport(mapping, form, request, response);
 			request.setAttribute("parentAjaxId", "conReport");
@@ -1089,18 +1645,18 @@ public class EyeformAction extends DispatchAction {
 			}
 			return ref;
 		}
-		public Integer getRefId(String referal) {
+		public String getRefId(String referal) {
 			int start = referal.indexOf("<rdohip>");
 			int end = referal.indexOf("</rdohip>");
 			String ref = new String();
-			Integer refNo = new Integer(0);
+			String refNo = new String();
 			if (start >= 0 && end >= 0) {
 				String subreferal = referal.substring(start + 8, end);
 				if (!"".equalsIgnoreCase(subreferal.trim())) {
 					ref = subreferal;
 					ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(ref.trim());
 					if(professionalSpecialist != null)
-						refNo = professionalSpecialist.getId();
+						refNo = professionalSpecialist.getId() + "";
 				}
 			}
 			return refNo;
@@ -1118,32 +1674,37 @@ public class EyeformAction extends DispatchAction {
 
 		public ActionForward printConRequest(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 			log.debug("printConreport");
-                        ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
-                        DynaValidatorForm crForm = (DynaValidatorForm) form;
-                        EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
-                        Demographic demographic = demographicDao.getClientByDemographicNo(cp.getDemographicNo());
-                        request.setAttribute("demographic",demographic);
-                        Appointment appointment = this.appointmentDao.find(cp.getAppointmentNo());
-                        EyeformConsultationReport consultReport = null;
-                        String id = request.getParameter("cp.id");
-                        if(id != null && id.length()>0) {
-                                consultReport = dao.find(Integer.parseInt(id));
-                        } else {
-                                consultReport = new EyeformConsultationReport();
-                        }
-                        BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
-
-			ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(cp.getReferralNo());
-
-			if (professionalSpecialist != null)
-				cp.setReferralId(professionalSpecialist.getId());
-			if(cp.getDate()==null){
-				cp.setDate(new Date());
-			}
-			if(cp.getId() != null && cp.getId()>0) {
-				dao.merge(cp);
+			ConsultationReportDao dao = (ConsultationReportDao)SpringUtils.getBean("consultationReportDao");
+			DynaValidatorForm crForm = (DynaValidatorForm) form;
+			EyeformConsultationReport cp = (EyeformConsultationReport) crForm.get("cp");
+			Demographic demographic = demographicDao.getClientByDemographicNo(cp.getDemographicNo());
+			request.setAttribute("demographic",demographic);
+			Appointment appointment = this.appointmentDao.find(cp.getAppointmentNo());
+			EyeformConsultationReport consultReport = null;
+			String id = request.getParameter("cp.id");
+			if(id != null && id.length()>0) {
+					consultReport = dao.find(Integer.parseInt(id));
 			} else {
-				dao.persist(cp);
+					consultReport = new EyeformConsultationReport();
+			}
+			BeanUtils.copyProperties(cp, consultReport, new String[]{"id","demographic","provider"});
+
+			//ProfessionalSpecialist professionalSpecialist = professionalSpecialistDao.getByReferralNo(cp.getReferralNo());
+
+			//if (professionalSpecialist != null)
+			//	cp.setReferralId(professionalSpecialist.getId());
+			
+			consultReport.setReferralId( cp.getReferralNo() );
+			
+			cp.setReferralId( cp.getReferralNo() );
+			
+			if(consultReport.getDate()==null){
+				consultReport.setDate(new Date());
+			}
+			if(consultReport.getId() != null && consultReport.getId()>0) {
+				dao.merge(consultReport);
+			} else {
+				dao.persist(consultReport);
 			}
 
 			cp.setCc(divycc(cp.getCc()));
@@ -1162,7 +1723,6 @@ public class EyeformAction extends DispatchAction {
 
 			Billingreferral ref = billingreferralDao.getByReferralNo(String.valueOf(cp.getReferralId()));
 			request.setAttribute("refer", ref);
-		//	request.setAttribute("refer", professionalSpecialist);
 
 			request.setAttribute("cp", cp);
 
@@ -1172,8 +1732,6 @@ public class EyeformAction extends DispatchAction {
 				internalProvider = providerDao.getProvider(demographic.getProviderNo());
 				if(internalProvider != null) {
 					request.setAttribute("internalDrName", internalProvider.getFirstName() + " " + internalProvider.getLastName());
-				} else {
-//				request.setAttribute("internalDrName", );
 				}
 			}
 
@@ -1189,71 +1747,57 @@ public class EyeformAction extends DispatchAction {
 				specialty = new String();
 			request.setAttribute("specialty", specialty);
 
-			Clinic clinic = clinicDao.getClinic();
+			//Clinic clinic = clinicDao.getClinic();
 			// prepare the satellite clinic address
-			OscarProperties props = OscarProperties.getInstance();
-			String sateliteFlag = "false";
+			//OscarProperties props = OscarProperties.getInstance();
+			//String sateliteFlag = "false";
 
-			if (IsPropertiesOn.isMultisitesEnable()) {
-				Integer appt_no= (Integer) crForm.get("apptNo");
-				String location = null;
-				if (appt_no != null) {
-					Appointment appt = appointmentDao.find(appt_no);
-					if (appt != null)
-						location = appt.getLocation();
-				}
-
-				List<Site> sites = siteDao.getActiveSitesByProviderNo(internalProvider.getProviderNo());
-
-				ArrayList<SatelliteClinic> clinicArr = new ArrayList<SatelliteClinic>();
-				Site defaultSite = null;
-				for (int i = 0; i < sites.size(); i++) {
-					Site s = sites.get(i);
-					SatelliteClinic sc = new SatelliteClinic();
-					sc.setClinicId(s.getSiteId());
-					sc.setClinicName(s.getName());
-					sc.setClinicAddress(s.getAddress());
-					sc.setClinicCity(s.getCity());
-					sc.setClinicProvince(s.getProvince());
-					sc.setClinicPostal(s.getPostal());
-					sc.setClinicPhone(s.getPhone());
-					sc.setClinicFax(s.getFax());
-					clinicArr.add(sc);
-					if (s.getName().equals(location))
-						defaultSite = s;
-				}
-
-				sateliteFlag = "true";
-				request.setAttribute("clinicArr", clinicArr);
-				if (defaultSite != null)
-					request.setAttribute("sateliteId", defaultSite.getSiteId().toString());
-
-			} else {
-				if (props.getProperty("clinicSatelliteName") != null) {
-					ArrayList<SatelliteClinic> clinicArr = getSateliteClinics(props);
-					if (clinicArr.size() > 0) {
-						sateliteFlag = "true";
-						request.setAttribute("clinicArr", clinicArr);
-						SatelliteClinic sc = clinicArr.get(0);
-						clinic.setClinicName(sc.getClinicName());
-						clinic.setClinicAddress(sc.getClinicAddress());
-						clinic.setClinicCity(sc.getClinicCity());
-						clinic.setClinicProvince(sc.getClinicProvince());
-						clinic.setClinicPostal(sc.getClinicPostal());
-						clinic.setClinicPhone(sc.getClinicPhone());
-						clinic.setClinicFax(sc.getClinicFax());
-					}
-				}
+			Clinic clinic = clinicDao.find(cp.getClinicNo());
+			Site site = siteDao.getById(cp.getSiteId());
+			
+			if (site != null) {
+				request.setAttribute("subHeaderName", site.getName());
+				
+				clinic.setClinicAddress(site.getAddress());
+				clinic.setClinicCity(site.getCity());
+				clinic.setClinicProvince(site.getProvince());
+				clinic.setClinicPostal(site.getPostal());
+				clinic.setClinicPhone(site.getPhone());
+				clinic.setClinicFax(site.getFax());
 			}
+			
+			
 
-			request.setAttribute("sateliteFlag", sateliteFlag);
+
+			//List<Site> sites = siteDao.getActiveSitesByProviderNo(internalProvider.getProviderNo());
+			//request.setAttribute("sites", sites);
+			
+			//ArrayList<SatelliteClinic> clinicArr = new ArrayList<SatelliteClinic>();
+			//Site defaultSite = null;
+			//for (Site s : sites) {
+			//	SatelliteClinic sc = new SatelliteClinic();
+			//	sc.setClinicId(s.getSiteId());
+			//	sc.setClinicName(s.getName());
+			//	sc.setClinicAddress(s.getAddress());
+			//	sc.setClinicCity(s.getCity());
+			//	sc.setClinicProvince(s.getProvince());
+			//	sc.setClinicPostal(s.getPostal());
+			//	sc.setClinicPhone(s.getPhone());
+			//	sc.setClinicFax(s.getFax());
+			//	clinicArr.add(sc);
+			//	if (s.getName().equals(location))
+			//		defaultSite = s;
+			//}
+
+			//sateliteFlag = "true";
+			//request.setAttribute("clinicArr", clinicArr);
+			//if (defaultSite != null)
+			//	request.setAttribute("sateliteId", defaultSite.getSiteId().toString());
+			
+
+			//request.setAttribute("sateliteFlag", sateliteFlag);
 			request.setAttribute("clinic", clinic);
 			request.setAttribute("appointDate", (appointment!=null?appointment.getAppointmentDate(): "") );
-
-			if(appointment!=null) {
-				Provider apptProvider = providerDao.getProvider(appointment.getProviderNo());
-				request.setAttribute("appointmentDoctor", apptProvider.getFormattedName());
-			}
 
 			return mapping.findForward("printReport");
 		}
@@ -1525,14 +2069,54 @@ public class EyeformAction extends DispatchAction {
 
 		public ActionForward getMeasurementText(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 			String[] values = request.getParameterValues(request.getParameter("name"));
-			String appointmentNo = request.getParameter("appointmentNo");
+			String appointmentNoAsString = request.getParameter("appointmentNo");
+			String demographicNoAsString = request.getParameter("demographicNo");
+			String endDateAsString = request.getParameter("endDate");
+			
+			Integer appointmentNo = 0;
+			Integer demographicNo = 0;
+			
+			try {
+				appointmentNo = Integer.parseInt( appointmentNoAsString );
+			} catch (Exception e) {
+				MiscUtils.getLogger().error("Error", e);
+			}
+			
+			try {
+				demographicNo = Integer.parseInt( demographicNoAsString );
+			} catch (Exception e) {
+				MiscUtils.getLogger().error("Error", e);
+			}
+			
+			Date endDate = null;
+			if (endDateAsString != null) {
+				try {
+					SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
+					endDate = formatter.parse(endDateAsString);
+					endDate = getEndOfDayVersion(endDate);
+				} catch (ParseException e) {
+					MiscUtils.getLogger().error("Error", e);
+				}
+			}
+			
 			StringBuilder exam = new StringBuilder();
 			Map<String,Boolean> headerMap = new HashMap<String,Boolean>();
 			for(int x=0;x<values.length;x++) {
 				headerMap.put(values[x],true);
 			}
 
-			List<Measurements> measurements = measurementsDao.getMeasurementsByAppointment(Integer.parseInt(appointmentNo));
+			List<Measurements> measurements = null;
+			if (endDate != null)
+				measurements = measurementsDao.getMeasurementsBeforeDate(demographicNo, endDate);
+			else if (appointmentNo != 0)
+				measurements = measurementsDao.getMeasurementsByAppointment(appointmentNo);
+			else if (appointmentNoAsString == null)
+				measurements = measurementsDao.getMeasurements(demographicNo);
+			else if (appointmentNo == 0)
+				measurements = measurementsDao.getMeasurements(demographicNo, appointmentNo);
+			else
+				return null;
+
 			MeasurementFormatter formatter = new MeasurementFormatter(measurements);
 			exam.append(formatter.getVisionAssessment(headerMap));
 			String tmp = null;

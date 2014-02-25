@@ -17,7 +17,7 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 --%>
-<%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
+
 <% 
 if(session.getAttribute("user") == null) response.sendRedirect("../../../logout.jsp");
 %>
@@ -176,11 +176,9 @@ function setProviderGroupBillingNo(providerNo) {
 <title>Billing Reconcilliation</title>
 
 <style>
-<% if (bMultisites) { %>
-	.positionFilter {position:absolute;top:2px;right:350px;display:block;}
-<% } else { %>
-	.positionFilter {display:none;}
-<% } %>
+
+.positionFilter {position:absolute;top:2px;right:350px;display:block;}
+
 </style>
 
 </head>

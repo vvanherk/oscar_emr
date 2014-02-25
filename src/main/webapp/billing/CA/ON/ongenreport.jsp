@@ -119,7 +119,7 @@
 					providerNo.add(dataProvider.getProviderNo());
 					ohipNo.add(dataProvider.getOhipNo());
 				}
-                                
+				
 				if (!groupNo.isEmpty()) {
 	               for(Iterator igroup=groupNo.iterator(); igroup.hasNext();){
 	                   Object StrGroupNo = igroup.next();
@@ -133,7 +133,7 @@
 							   // We need to iterate over ALL providers in the lProvider2 list in order to make sure we check all available group numbers
 			                   for (int copyi=0; copyi<lProvider2.size();copyi++){
 			                       if (((BillingProviderData)lProvider2.get(copyi)).getBillingGroupNo().compareTo(StrGroupNo.toString())==0){
-										providerNoCopy.add(providerNo.get(provi));
+										providerNoCopy.add(((BillingProviderData)lProvider2.get(copyi)).getProviderNo());
 										// Not sure why we need to have the ohip number from a provider from the lProvider2 list
 										ohipNoCopy.add(((BillingProviderData)lProvider2.get(copyi)).getOhipNo());
 			                       }

@@ -127,11 +127,11 @@
 
     var flag = 1;
     function PrintWindow(){
-    window.print();
+		window.print();
     }
 
     function CloseWindow(){
-    window.close();
+		window.close();
     }
 
     function flipFaxFooter(){
@@ -144,52 +144,12 @@
         }
     }
 
-    function phoneNumSelect() {
-        document.getElementById("clinicPhone").innerHTML="Tel: "+document.getElementById("sendersPhone").value;
-    }
-
-    function faxNumSelect() {
-        document.getElementById("clinicFax").innerHTML="Fax: "+document.getElementById("sendersFax").value;
-    }
-
-    function addressSelect() {
-
-    }
-    function changeAddress(){
-    	var cid=document.inputForm.elements['satelliteId'].value;
-    	document.getElementById("sclinicName").innerHTML=clinicName[cid];
-    	document.getElementById("sclinicAddress").innerHTML=clinicAddress[cid];
-    	document.getElementById("sclinicCity").innerHTML=clinicCity[cid];
-    	document.getElementById("sclinicProvince").innerHTML=clinicProvince[cid];
-    	document.getElementById("sclinicPostal").innerHTML=clinicPostal[cid];
-    	document.getElementById("sclinicPhone").innerHTML=clinicPhone[cid];
-    	document.getElementById("sclinicFax").innerHTML=clinicFax[cid];
-    }
-	var clinicName=new Array();
-	var clinicAddress=new Array();
-	var clinicCity=new Array();
-	var clinicProvince=new Array();
-	var clinicPostal=new Array();
-	var clinicPhone=new Array();
-	var clinicFax=new Array();
-
-    <c:forEach items="${requestScope.clinicArr}" var="cli" varStatus="status">
-
-    clinicName['<c:out value="${cli.clinicId}"/>']='<c:out value="${cli.clinicName}"/>'
-    clinicAddress['<c:out value="${cli.clinicId}"/>']='<c:out value="${cli.clinicAddress}"/>'
-    clinicCity['<c:out value="${cli.clinicId}"/>']='<c:out value="${cli.clinicCity}"/>'
-    clinicProvince['<c:out value="${cli.clinicId}"/>']='<c:out value="${cli.clinicProvince}"/>'
-    clinicPostal['<c:out value="${cli.clinicId}"/>']='<c:out value="${cli.clinicPostal}"/>'
-    clinicPhone['<c:out value="${cli.clinicId}"/>']='<c:out value="${cli.clinicPhone}"/>'
-    clinicFax['<c:out value="${cli.clinicId}"/>']='<c:out value="${cli.clinicFax}"/>'
-
-    </c:forEach>
     </script>
     <title>
-    ConsultationFormPrint
+    Consultation for <c:out value="${demographic.lastName}"/>, <c:out value="${demographic.firstName}"/>
     </title>
     </head>
-    <body onload="changeAddress()">
+    <body>
 
     <%EyeformConsultationReport cp=(EyeformConsultationReport)request.getAttribute("cp");
     OscarProperties props = OscarProperties.getInstance();
@@ -249,15 +209,20 @@
                                 <c:out value="${specialty}"/></b>
                                 <br>
                                 <b><span id="sclinicName"><c:out value="${clinic.clinicName}"/></span></b>
+                                <c:if test="${not empty subHeaderName}">
+									<br>
+									<b><c:out value="${subHeaderName}"/></b>
+								</c:if>
                             </td>
 
                         </tr>
+				        
                         <tr>
                             <td colspan="2" class="address" id="clinicAddress">
-                <span id="sclinicAddress"><c:out value="${clinic.clinicAddress}"/></span>,
-                <span id="sclinicCity"><c:out value="${clinic.clinicCity}"/></span>,
-                <span id="sclinicProvince"><c:out value="${clinic.clinicProvince}"/></span>,
-                <span id="sclinicPostal"><c:out value="${clinic.clinicPostal}"/></span>
+				                <span id="sclinicAddress"><c:out value="${clinic.clinicAddress}"/></span>,
+				                <span id="sclinicCity"><c:out value="${clinic.clinicCity}"/></span>,
+				                <span id="sclinicProvince"><c:out value="${clinic.clinicProvince}"/></span>,
+				                <span id="sclinicPostal"><c:out value="${clinic.clinicPostal}"/></span>
                             </td>
                         </tr>
                         <tr>
@@ -320,7 +285,14 @@
                                             Address:
                                         </td>
                                         <td class="fillLineh">
-                                	<p><c:out value="${refer.streetAddress}"/></p>
+		                                	<p>
+												<c:out value="${refer.address1}"/> <c:out value="${refer.address2}"/>
+												<br>
+												<c:out value="${refer.city}"/>, <c:out value="${refer.province}"/>
+												<c:out value="${refer.country}"/>
+												<br>
+												<c:out value="${refer.postal}"/>
+											</p>
                                         </td>
                                     </tr>
                                     <tr>
@@ -329,7 +301,7 @@
                                             Phone:
                                         </td>
                                         <td class="fillLineh">
-                                	<c:out value="${refer.phoneNumber}"/>
+                                	<c:out value="${refer.phone}"/>
                                         </td>
                                     </tr>
                                     <tr>
@@ -338,7 +310,7 @@
                                         </td>
 
                                         <td class="fillLineh">
-                                			<c:out value="${refer.faxNumber}"/>
+                                			<c:out value="${refer.fax}"/>
                                         </td>
                                     </tr>
 
@@ -555,8 +527,9 @@
             </c:if>
             <tr>
             <td class="letterContent">
-
-                <c:out value="${appointmentDoctor}"/>
+				<c:out value="${mdstring}"/>
+				<c:out value="${internalDrName}"/>
+				<c:out value="${specialty}"/>
             </td>
             </tr>
             <tr>

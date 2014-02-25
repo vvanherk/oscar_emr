@@ -67,7 +67,7 @@
   String provider_no = request.getParameter("provider_no");
   String available = "";
   String priority = "c";
-  String reason = "";
+  String siteId = "";
   String hour = "";
 
 %>

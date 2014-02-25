@@ -31,6 +31,7 @@
 <%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 
 <%@page import="org.oscarehr.eyeform.model.*"%>
+<%@page import="org.oscarehr.common.model.Clinic" %>
 <%@page import="org.oscarehr.eyeform.web.EyeformAction"%>
 <%@page import="java.util.List"%>
 <%@page import="org.oscarehr.common.model.DemographicContact"%>
@@ -59,30 +60,7 @@ select {
 </style>
 <%
 	String demographicNo = (String) request.getAttribute("demographicNo");
-	org.oscarehr.common.model.Allergy[] allergies = RxPatientData.getPatient(Integer.parseInt(demographicNo)).getAllergies();
-		String aller = "";
-		for (int j = 0; j < allergies.length; j++) {
-			aller += allergies[j].getShortDesc(13, 8,
-					"...")
-					+ ";";
-		}
-		String presc = "";
-
-		oscar.oscarRx.data.RxPrescriptionData prescriptData = new oscar.oscarRx.data.RxPrescriptionData();
-		oscar.oscarRx.data.RxPrescriptionData.Prescription[] arr = {};
-		arr = prescriptData.getUniquePrescriptionsByPatient(Integer
-				.parseInt(demographicNo));
-		if (arr.length > 0) {
-			for (int i = 0; i < arr.length; i++) {
-				String rxD = arr[i].getRxDate().toString();
-
-				String rxP = arr[i].getFullOutLine().replaceAll(";",
-						" ");
-				rxP = rxP + "   " + arr[i].getEndDate();
-				if (arr[i].getEndDate().after(new java.util.Date()))
-					presc += rxD + "  " + rxP + "\n";
-			}
-		}
+	String endDate = (String) request.getAttribute("endDate");
 %>
 
 <%
@@ -176,11 +154,16 @@ function confirmPrint(btn) {
 	con_testbook='<%=request.getAttribute("testbooking")%>';
 	con_ocularpro='<%=request.getAttribute("ocularProc")%>';
 	con_follow='<%=request.getAttribute("followup")%>';
-	con_aller='<%=StringEscapeUtils.escapeJavaScript(aller) %>';
-	con_presc='<%=StringEscapeUtils.escapeJavaScript(presc) %>';
+	con_aller='<%=request.getAttribute("aller")%>';
+	con_presc='<%=request.getAttribute("presc")%>';
 
 <%
 	String customCppIssues[] = oscar.OscarProperties.getInstance().getProperty("encounter.custom_cpp_issues", "").split(",");
+
+	// Error check
+	if (customCppIssues.length == 1 && (customCppIssues[0] == null || customCppIssues[0].length() == 0))
+		customCppIssues = new String[0];
+
 	for(String customCppIssue:customCppIssues) {
 		%>
 		con_<%=customCppIssue%>='<%=request.getAttribute(customCppIssue)%>';
@@ -265,12 +248,12 @@ function confirmPrint(btn) {
 
 	function allergiesAdd(){
 		if (con_aller!=null && trim(con_aller)!='')
-			document.eyeForm.elements["cp.allergies"].value+="Allergies:"+con_aller+"\n";
+			document.eyeForm.elements["cp.allergies"].value+=con_aller+"\n";
 	}
 
 	function prescriptionsAdd(){
 		if (con_presc!=null && trim(con_presc)!='')
-			document.eyeForm.elements["cp.allergies"].value+="Current Prescriptions:\n"+con_presc+"\n";
+			document.eyeForm.elements["cp.allergies"].value+=con_presc+"\n";
 	}
 	function currentMedsAdd(str){
 		if (str!=null && trim(str)!='')
@@ -471,10 +454,13 @@ function confirmPrint(btn) {
 <script>
 var ctx;
 var appointmentNo;
+var endDate;
+
 
 jQuery(document).ready(function() {
 	ctx = '<%=request.getContextPath()%>';
 	demoNo = '<%=demographicNo%>';
+	endDate = '<%=endDate%>';
 	appointmentNo = document.eyeForm.elements['cp.appointmentNo'].value;
 	
 	// Only set the CC if this is a new consult report
@@ -487,7 +473,62 @@ jQuery(document).ready(function() {
 	var isNew = <%=isNew?"true":"false"%>;
 	if (isNew)
 		setCC();
+		
+	setSiteOnPageLoad();
 });
+</script>
+
+<script>
+	var clinics = new Object();
+	<c:forEach var="clinic" items="${clinics}">
+		clinics['<c:out value="${clinic.id}"/>'] = new Object();
+
+		<c:forEach var="s" items="${clinic.sites}">
+		
+			var data = new Object();
+			data[0] = '<c:out value="${s.name}"/>';
+			data[1] = '<c:out value="${s.bgColor}"/>';
+			
+			clinics['<c:out value="${clinic.id}"/>']['<c:out value="${s.id}"/>'] = data;
+		
+		</c:forEach>
+	</c:forEach>
+	
+	
+	function rebuildSiteDropdown(clinicId) {
+		var sites = clinics[clinicId];
+		
+		var $sel = jQuery("[name='cp.siteId']");
+		$sel.empty();
+		
+		$sel.append( jQuery('<option></option>').val('0').html('** Use Clinic Letterhead **').css('background-color', 'white') );
+		
+		for (var id in sites) {
+			$sel.append( jQuery('<option></option>').val(id).html(sites[id][0]).css('background-color', sites[id][1]) );
+		}
+	}
+	
+	function changeClinic(sel) {
+		var clinicId = sel.options[sel.selectedIndex].value;
+		
+		// Change contents of site dropdown
+		rebuildSiteDropdown(clinicId);
+		
+		var sel = document.getElementsByName("cp.siteId")[0];
+		changeSite(sel);
+	}
+	
+	/**
+	 * Call this on page load so that the default site gets set properly.
+	 */ 
+	function setSiteOnPageLoad() {
+		var sel = document.getElementsByName("cp.siteId")[0];
+		sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+	}
+	
+	function changeSite(sel) {
+		sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;	
+	}
 </script>
 
 </head>
@@ -501,7 +542,6 @@ jQuery(document).ready(function() {
 	<input type="hidden" name="famDoctor" value=""/>
 	<input type="hidden" name="apptno" value=""/>
 
-	<html:hidden property="cp.id"/>
 	<html:hidden property="cp.id"/>
 	<html:hidden property="cp.demographicNo"/>
 	<html:hidden property="cp.providerNo"/>
@@ -681,7 +721,6 @@ jQuery(document).ready(function() {
 				</tr>
 
 				<tr>
-				<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) { %>
 					<td>
 					<table style="background-color: #ddddff;" width="100%">
 						<tr>
@@ -697,31 +736,39 @@ jQuery(document).ready(function() {
 					<td>
 					<table style="background-color: #ddddff;" width="100%">
 						<tr>
+							<td class="tite4" width="10%">Clinic:</td>
+							<td class="tite4" width="60%">
+								<html:select property="cp.clinicNo" onchange="changeClinic(this);">
+								     <c:forEach var="clinic" items="${clinics}">
+								         <html:option value="${clinic.id}"><c:out value="${clinic.clinicName}"/></html:option>
+								     </c:forEach>
+							    </html:select>
+							</td>
+							
+							<!-- Set the selected clinic -->
+							<c:forEach var="clinic" items="${clinics}">
+								<c:if test="${eyeForm.map.cp.clinicNo == clinic.id}">
+									<c:set var="selectedClinic" value="${clinic}"/>
+								</c:if>
+							</c:forEach>
+							<c:if test="${empty selectedClinic}">
+								<c:set var="selectedClinic" value="${clinics[0]}"/>
+							</c:if>
+							
 							<td class="tite4" width="10%">Site:</td>
 							<td class="tite4" width="60%">
-								<html:select property="cp.siteId">
-								     <c:forEach var="site" items="${sites}">
-								         <html:option value="${site.id}"><c:out value="${site.name}"/></html:option>
-								     </c:forEach>
-							        </html:select><c:out value="${cp.siteId}"/>
+								<html:select property="cp.siteId" onchange="changeSite(this);">
+									<html:option value="0" style="background-color: white;"> ** Use Clinic Letterhead ** </html:option>
+								
+									<c:forEach var="site" items="${selectedClinic.sites}">
+										<html:option value="${site.id}" style="background-color: ${site.bgColor};"><c:out value="${site.name}"/></html:option>
+									</c:forEach>
+							    </html:select>
 							</td>
 						</tr>
 					</table>
 					</td>
-				<%  } else { %>
-					<td colspan="4">
-					<table style="background-color: #ddddff;" width="100%">
-						<tr>
-							<td class="tite4" width="10%">Greeting:</td>
-							<td class="tite4" width="60%"><html:select
-								property="cp.greeting">
-								<html:option value="1">standard consult report</html:option>
-								<html:option value="2">assessment report</html:option>
-							</html:select></td>
-						</tr>
-					</table>
-					</td>				
-				<%  }  %>
+
 				</tr>
 
 				<tr>
@@ -817,13 +864,13 @@ jQuery(document).ready(function() {
                 			<input type="button" value=">>" onclick="addSection(document.eyeForm.elements['fromlist1'],document.eyeForm.elements['fromlist2']);"/>
                 		</td>
                 		<td>
-                			<select id="fromlist2" name="fromlist2" multiple="multiple" size="9" ondblclick="addExam(ctx,'fromlist2',document.eyeForm.elements['cp.examination'],appointmentNo);">
+                			<select id="fromlist2" name="fromlist2" multiple="multiple" size="9" ondblclick="addExam(ctx,'fromlist2',document.eyeForm.elements['cp.examination'],appointmentNo,demoNo,endDate);">
                 			
                 				<c:forEach var="item" items="${headers}">
                 					<option value="<c:out value="${item.value}"/>"><c:out value="${item.label}"/></option>
                 				</c:forEach>
                 			</select>
-							<input style="vertical-align: middle;" type="button" value="add" onclick="addExam(ctx,'fromlist2',document.eyeForm.elements['cp.examination'],appointmentNo);">
+							<input style="vertical-align: middle;" type="button" value="add" onclick="addExam(ctx,'fromlist2',document.eyeForm.elements['cp.examination'],appointmentNo,demoNo,endDate);">
 						</td>
 						</tr>
 					</table>
@@ -893,14 +940,14 @@ jQuery(document).ready(function() {
 				<tr>
 					<td colspan="2" align="right">
 					<nested:equal property="isRefOnline" value="true">
-						<input type="button" value="print review"
+						<input type="button" value="Print Preview"
 							onclick="if (confirmPrint()) if (checkform())printsubmit();else return false;">
 					</nested:equal> 
 					<nested:notEqual property="isRefOnline" value="true">
-						<input type="button" value="print review"
+						<input type="button" value="Print Preview"
 							onclick="if (checkform())printsubmit();else return false;">
 					</nested:notEqual>
-					<input type="button" value="save and close"
+					<input type="button" value="Save and Close"
 						onclick="if (checkform())savesubmit();else return false;">
 					</td>
 				</tr>

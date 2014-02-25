@@ -1,6 +1,6 @@
 -- MySQL dump 10.13  Distrib 5.5.31, for debian-linux-gnu (x86_64)
 --
--- Host: localhost    Database: oscar_12_reference
+-- Host: localhost    Database: oscar_12_reference_opthalmology_enhanced
 -- ------------------------------------------------------
 -- Server version	5.5.31-0+wheezy1-log
 
@@ -397,7 +397,12 @@ CREATE TABLE `EyeformConsultationReport` (
   `plan` text,
   `urgency` varchar(100) DEFAULT NULL,
   `patientWillBook` int(11) DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  `clinicNo` int(11) DEFAULT NULL,
+  `siteId` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `eyeformconsreport_fk_siteid` (`siteId`),
+  KEY `myIndex` (`demographicNo`,`providerNo`,`siteId`),
+  CONSTRAINT `eyeformconsreport_fk_siteid` FOREIGN KEY (`siteId`) REFERENCES `site` (`site_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -478,6 +483,7 @@ CREATE TABLE `EyeformMacro` (
   `optFlag` varchar(20) DEFAULT NULL,
   `sliCode` varchar(10) DEFAULT NULL,
   `includeAdmissionDate` tinyint(1) DEFAULT NULL,
+  `billingRefProv` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1607,6 +1613,7 @@ CREATE TABLE `ProviderPreference` (
   `useBillingProviderFromPreviousBill` tinyint(1) DEFAULT '0',
   `billingVisitTypeDefault` varchar(60) NOT NULL,
   `billingVisitLocationDefault` varchar(15) NOT NULL,
+  `billingSiteDefault` int(11) DEFAULT NULL,
   `billingProviderDefault` varchar(60) NOT NULL,
   PRIMARY KEY (`providerNo`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
@@ -1618,7 +1625,7 @@ CREATE TABLE `ProviderPreference` (
 
 LOCK TABLES `ProviderPreference` WRITE;
 /*!40000 ALTER TABLE `ProviderPreference` DISABLE KEYS */;
-INSERT INTO `ProviderPreference` VALUES ('999998',8,18,15,'.default','deepblue',NULL,NULL,'disabled','disabled',0,'2013-06-04 13:14:11',3,0,NULL,0,NULL,NULL,NULL,NULL,0,NULL,0,0,0,0,'','','');
+INSERT INTO `ProviderPreference` VALUES ('999998',8,18,15,'.default','deepblue',NULL,NULL,'disabled','disabled',0,'2013-06-04 13:14:11',3,0,NULL,0,NULL,NULL,NULL,NULL,0,NULL,0,0,0,0,'','',0,'');
 /*!40000 ALTER TABLE `ProviderPreference` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2130,9 +2137,9 @@ CREATE TABLE `appointment` (
   `name` varchar(50) DEFAULT NULL,
   `demographic_no` int(10) DEFAULT NULL,
   `program_id` int(11) DEFAULT '0',
-  `notes` varchar(80) DEFAULT NULL,
+  `notes` varchar(255) DEFAULT NULL,
   `reason` varchar(80) DEFAULT NULL,
-  `location` varchar(30) DEFAULT NULL,
+  `site` int(11) DEFAULT NULL,
   `resources` varchar(255) DEFAULT NULL,
   `type` varchar(50) DEFAULT NULL,
   `style` varchar(10) DEFAULT NULL,
@@ -2150,7 +2157,7 @@ CREATE TABLE `appointment` (
   PRIMARY KEY (`appointment_no`),
   KEY `appointment_date` (`appointment_date`,`start_time`,`demographic_no`),
   KEY `demographic_no` (`demographic_no`),
-  KEY `location` (`location`)
+  KEY `location` (`site`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -2222,7 +2229,7 @@ CREATE TABLE `appointmentType` (
   `name` varchar(50) DEFAULT NULL,
   `notes` varchar(80) DEFAULT NULL,
   `reason` varchar(80) DEFAULT NULL,
-  `location` varchar(30) DEFAULT NULL,
+  `site` int(11) DEFAULT NULL,
   `resources` varchar(10) DEFAULT NULL,
   `duration` int(12) DEFAULT NULL,
   PRIMARY KEY (`id`)
@@ -2695,7 +2702,7 @@ CREATE TABLE `billing_on_cheader1` (
   `asstProvider_no` varchar(6) DEFAULT NULL,
   `creator` varchar(6) DEFAULT NULL,
   `timestamp1` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  `clinic` varchar(30) DEFAULT NULL,
+  `site` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `appointment_no` (`appointment_no`,`demographic_no`),
   KEY `demographic_no` (`demographic_no`),
@@ -2704,7 +2711,7 @@ CREATE TABLE `billing_on_cheader1` (
   KEY `provider_ohip_no` (`provider_ohip_no`),
   KEY `apptProvider_no` (`apptProvider_no`),
   KEY `creator` (`creator`),
-  KEY `clinic` (`clinic`),
+  KEY `clinic` (`site`),
   KEY `status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -3939,7 +3946,7 @@ CREATE TABLE `consultationRequests` (
   `urgency` char(2) DEFAULT NULL,
   `patientWillBook` tinyint(1) DEFAULT NULL,
   `followUpDate` date DEFAULT NULL,
-  `site_name` varchar(255) DEFAULT NULL,
+  `site_no` int(11) DEFAULT NULL,
   `signature_img` varchar(20) DEFAULT NULL,
   `letterheadName` varchar(20) DEFAULT NULL,
   `letterheadAddress` text,
@@ -5258,6 +5265,7 @@ DROP TABLE IF EXISTS `document`;
 CREATE TABLE `document` (
   `document_no` int(11) NOT NULL AUTO_INCREMENT,
   `doctype` varchar(20) DEFAULT NULL,
+  `doctype` varchar(60) DEFAULT NULL,
   `docClass` varchar(60) DEFAULT NULL,
   `docSubClass` varchar(60) DEFAULT NULL,
   `docdesc` varchar(255) NOT NULL DEFAULT '',
@@ -19717,6 +19725,34 @@ INSERT INTO `mygroup` VALUES ('IT Support','88888','Support','IT',NULL);
 UNLOCK TABLES;
 
 --
+-- Table structure for table `officeCommunication`
+--
+
+DROP TABLE IF EXISTS `officeCommunication`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `officeCommunication` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `appointment_no` int(11) DEFAULT NULL,
+  `demographic_no` int(11) DEFAULT NULL,
+  `note` mediumtext,
+  `signed` tinyint(1) DEFAULT NULL,
+  `create_date` datetime NOT NULL,
+  `update_date` datetime NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `officeCommunication`
+--
+
+LOCK TABLES `officeCommunication` WRITE;
+/*!40000 ALTER TABLE `officeCommunication` DISABLE KEYS */;
+/*!40000 ALTER TABLE `officeCommunication` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `oncall_questionnaire`
 --
 
@@ -20801,6 +20837,7 @@ CREATE TABLE `providersite` (
 
 LOCK TABLES `providersite` WRITE;
 /*!40000 ALTER TABLE `providersite` DISABLE KEYS */;
+INSERT INTO `providersite` VALUES ('-1',1),('999998',1);
 /*!40000 ALTER TABLE `providersite` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -22056,7 +22093,7 @@ CREATE TABLE `scheduledate` (
   `provider_no` varchar(6) NOT NULL DEFAULT '',
   `available` char(1) NOT NULL DEFAULT '',
   `priority` char(1) DEFAULT NULL,
-  `reason` varchar(255) DEFAULT NULL,
+  `site` int(11) DEFAULT NULL,
   `hour` varchar(255) DEFAULT NULL,
   `creator` varchar(50) DEFAULT NULL,
   `status` char(1) NOT NULL DEFAULT '',
@@ -22175,7 +22212,7 @@ CREATE TABLE `schema_migrations` (
 
 LOCK TABLES `schema_migrations` WRITE;
 /*!40000 ALTER TABLE `schema_migrations` DISABLE KEYS */;
-INSERT INTO `schema_migrations` VALUES ('20080724_oncallquestionnaire.rb'),('20090520_facility_update.rb'),('20090528_integratorconsent.rb'),('20101126_ocan-data.rb'),('20101201_formrourke2009.rb'),('20110128_ocanstaffform.rb'),('20110131_ocan.rb'),('20110526_formrourke2009_update.rb'),('20110629_hrm.rb'),('20111130_formrourke2009_update_2.rb'),('20120207_ocanstaffform-consent.rb'),('20120216_documents.rb'),('20120229_providerarchive-id.rb'),('20120329_consultationrequests.rb'),('20120330_demographiccontact.rb'),('20120401_batch_billing.rb'),('20120404_form-bchp.rb'),('20120405_provider-confidentialitysig.rb'),('20120409_billing-billtype.rb'),('20120411_ocanformoption-sigothr.rb'),('20120411_program-notifications.rb'),('20120416_vacancytemplate.rb'),('20120418_newprivileges.rb'),('20120419_integratorcontrol-dropforeignkey.rb'),('20120424_criteriavacancies.rb'),('20120429_mygroupaccessrestrictions.rb'),('20120501_program-defaults.rb'),('20120506_vacancytemplate-wlprogramid.rb'),('20120507_tickler.rb'),('20120508_professionalspecialists-referraldocs.rb'),('20120509_episode.rb'),('20120511_ocanformoption-data.rb'),('20120513_vacancy-datewlprogramid.rb'),('20120521_form-onarenhanced.rb'),('20120529_vacancy-recreate.rb'),('20120530_hsfo.rb'),('20120607_pagemonitor.rb'),('20120608_misc.rb'),('20120613_formonarenhanced-columnadditions.rb'),('20120614_formonarenhanced-columnadditions.rb'),('20120619_formonarenhanced-columnadditions.rb'),('20120622_borntransmissionlog.rb'),('20120623_formonarenhanced-columnadditions.rb'),('20120626_providerpreference-erx.rb'),('20120702_accesstypes-newroles.rb'),('20120710_formonarenhanced-columnadditions.rb'),('20120712_eform-richtextletter.rb'),('20120716_spireidprovidermap.rb'),('20120718_providerpreference-encryptedmyoscarpass.rb'),('20120719_printresourcelog.rb'),('20120726_eyeform.rb'),('20120914_provider.rb'),('20120927_billingonpayment.rb'),('20121017_providerpreference-billing.rb'),('20121108_billingdefaults.rb'),('20121121_ocan-data.rb'),('20121205_measurements-update.rb'),('20121207_program-update.rb'),('20121212_billing_defaults_change.rb'),('20121221_spireaccessionmaps.rb'),('20130108_radetail-groupbillingno.rb'),('20130130_servicespecialists.rb'),('20130201_measurement-massupdate.rb'),('20130222_formrourke2009-index.rb'),('20130322_providerpreference-rxdatepharmacy.rb'),('20130325_providerpreference-check_billing_referral_box.rb'),('20130407_providerpreference-reuse_billing_provider.rb'),('20130412_eyeformmacro.rb'),('20130514_scheduledate_indices.rb'),('20130708_add_remove_measurement_types.rb'),('20130802_spireaccessionnumbermap_update.rb'),('20130802_spire_accession_number_map.rb'),('20130809_eform.rb'),('20130822_scheduletemplatecode.rb'),('20131001_spireaccessionnumbermap_update2.rb'),('20131021_eyeform.rb');
+INSERT INTO `schema_migrations` VALUES ('20080724_oncallquestionnaire.rb'),('20090520_facility_update.rb'),('20090528_integratorconsent.rb'),('20101126_ocan-data.rb'),('20101201_formrourke2009.rb'),('20110128_ocanstaffform.rb'),('20110131_ocan.rb'),('20110526_formrourke2009_update.rb'),('20110629_hrm.rb'),('20111130_formrourke2009_update_2.rb'),('20120207_ocanstaffform-consent.rb'),('20120216_documents.rb'),('20120229_providerarchive-id.rb'),('20120329_consultationrequests.rb'),('20120330_demographiccontact.rb'),('20120401_batch_billing.rb'),('20120404_form-bchp.rb'),('20120405_provider-confidentialitysig.rb'),('20120409_billing-billtype.rb'),('20120411_ocanformoption-sigothr.rb'),('20120411_program-notifications.rb'),('20120416_vacancytemplate.rb'),('20120418_newprivileges.rb'),('20120419_integratorcontrol-dropforeignkey.rb'),('20120424_criteriavacancies.rb'),('20120429_mygroupaccessrestrictions.rb'),('20120501_program-defaults.rb'),('20120506_vacancytemplate-wlprogramid.rb'),('20120507_tickler.rb'),('20120508_professionalspecialists-referraldocs.rb'),('20120509_episode.rb'),('20120511_ocanformoption-data.rb'),('20120513_vacancy-datewlprogramid.rb'),('20120521_form-onarenhanced.rb'),('20120529_vacancy-recreate.rb'),('20120530_hsfo.rb'),('20120607_pagemonitor.rb'),('20120608_misc.rb'),('20120613_formonarenhanced-columnadditions.rb'),('20120614_formonarenhanced-columnadditions.rb'),('20120619_formonarenhanced-columnadditions.rb'),('20120622_borntransmissionlog.rb'),('20120623_formonarenhanced-columnadditions.rb'),('20120626_providerpreference-erx.rb'),('20120702_accesstypes-newroles.rb'),('20120710_formonarenhanced-columnadditions.rb'),('20120712_eform-richtextletter.rb'),('20120716_spireidprovidermap.rb'),('20120718_providerpreference-encryptedmyoscarpass.rb'),('20120719_printresourcelog.rb'),('20120726_eyeform.rb'),('20120914_provider.rb'),('20120927_billingonpayment.rb'),('20121017_providerpreference-billing.rb'),('20121108_billingdefaults.rb'),('20121121_ocan-data.rb'),('20121205_measurements-update.rb'),('20121207_program-update.rb'),('20121212_billing_defaults_change.rb'),('20121221_spireaccessionmaps.rb'),('20130108_radetail-groupbillingno.rb'),('20130130_servicespecialists.rb'),('20130201_measurement-massupdate.rb'),('20130222_formrourke2009-index.rb'),('20130322_providerpreference-rxdatepharmacy.rb'),('20130325_providerpreference-check_billing_referral_box.rb'),('20130407_providerpreference-reuse_billing_provider.rb'),('20130412_eyeformmacro.rb'),('20130514_scheduledate_indices.rb'),('20130708_add_remove_measurement_types.rb'),('20130715_appointment_notes.rb'),('20130802_spireaccessionnumbermap_update.rb'),('20130802_spire_accession_number_map.rb'),('20130809_eform.rb'),('20130822_scheduletemplatecode.rb'),('20130826_document_doctype.rb'),('20130919_eform_data_form_data.rb'),('20131001_spireaccessionnumbermap_update2.rb'),('20131021_eyeform.rb'),('20131021_eyeform_remove_erroneous_data.rb'),('20131028_officecommunication.rb'),('20131114_default_site.rb'),('20131115_billingsitedefault.rb'),('20131118_eyeformconsultationreport.rb'),('20131120_site.rb'),('20131121_appointment.rb'),('20131126_1_consultationrequests.rb'),('20131126_eyeformmacro.rb'),('20131127_eyeformconsultationreport.rb'),('20131128_billing_on_cheader1.rb'),('20131129_appointment.rb'),('20131204_scheduledate.rb'),('20131206_eyeformconsultationreport.rb');
 /*!40000 ALTER TABLE `schema_migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -22412,10 +22449,11 @@ CREATE TABLE `site` (
   `status` tinyint(4) NOT NULL DEFAULT '0',
   `providerId_from` int(11) DEFAULT NULL,
   `providerId_to` int(11) DEFAULT NULL,
+  `clinicNo` int(11) DEFAULT NULL,
   PRIMARY KEY (`site_id`),
   UNIQUE KEY `unique_name` (`name`),
   UNIQUE KEY `unique_shortname` (`short_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=latin1;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -22424,6 +22462,7 @@ CREATE TABLE `site` (
 
 LOCK TABLES `site` WRITE;
 /*!40000 ALTER TABLE `site` DISABLE KEYS */;
+INSERT INTO `site` VALUES (1,'Default','Default','555-555-5555','555-555-5555','green','Hamilton','Hamilton','Ontario','L0R 4K3',1,NULL,NULL,1234);
 /*!40000 ALTER TABLE `site` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -23089,4 +23128,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2013-12-12 11:50:36
+-- Dump completed on 2013-12-12 11:52:14

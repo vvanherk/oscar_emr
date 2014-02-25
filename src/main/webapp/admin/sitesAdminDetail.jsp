@@ -32,6 +32,7 @@
 </security:oscarSec>
 
 <%@page import="org.oscarehr.common.model.Site"%>
+<%@page import="org.oscarehr.common.model.Clinic"%>
 <html:html locale="true">
 <head>
 <script type="text/javascript" src="<%= request.getContextPath() %>/js/global.js"></script>
@@ -70,6 +71,13 @@
 			</html:messages>
 
 	<table>
+	<tr><td>Clinic Assigned To:
+		<nested:select property="site.clinic.id">
+			<c:forEach var="clinic" items="${clinics}">
+				<html:option value="${clinic.id}" > ${clinic.clinicName} </html:option>
+			</c:forEach>
+		</nested:select>
+	</td></tr>
 	<tr><td>Site Name:<sup style="color:red">*</sup></td><td><nested:text property="site.name" maxlength="30"></nested:text></td></tr>
 	<tr><td>Short Name:<sup style="color:red">*</sup></td><td><nested:text property="site.shortName" maxlength="10"></nested:text></td></tr>
 	<tr><td>Theme Color:<sup style="color:red">*</sup></td><td><nested:text styleId="colorField" property="site.bgColor" onclick="popup(350,450,'../colorpicker/colorpicker.htm','colorpicker');return false;"></nested:text>

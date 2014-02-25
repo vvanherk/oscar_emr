@@ -325,6 +325,20 @@ public class OscarAppointmentDao extends AbstractDao<Appointment> {
 
 		return rs;
 	}
+	
+	public List<Appointment> findByProviderDayAndProgramAndSites(String providerNo, Date date, Integer programId, List<Integer> siteIdList) {
+		String sql = "SELECT a FROM Appointment a WHERE a.providerNo=:providerNo and a.appointmentDate = :appointmentDate and a.programId=:programId and site in (:siteIdList) and a.status!='D'";
+		
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("providerNo", providerNo);
+		query.setParameter("appointmentDate", date);
+		query.setParameter("programId", programId);
+		query.setParameter("siteIdList", siteIdList);
+		@SuppressWarnings("unchecked")
+		List<Appointment> rs = query.getResultList();
+
+		return rs;
+	}
 
 	public List<Appointment> findByDayAndStatus(Date date, String status) {
 		String sql = "SELECT a FROM Appointment a WHERE a.appointmentDate = ? and a.status=?";

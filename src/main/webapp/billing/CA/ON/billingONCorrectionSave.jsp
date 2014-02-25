@@ -29,29 +29,49 @@
 			if (session.getAttribute("user") == null) {
 				response.sendRedirect("../../../logout.jsp");
 			}
-
-			//String user_no = (String) session.getAttribute("user");
-			BillingCorrectionPrep bObj = new BillingCorrectionPrep();
-			List lObj = bObj.getBillingClaimHeaderObj(request.getParameter("xml_billing_no"));
-			BillingClaimHeader1Data ch1Obj = (BillingClaimHeader1Data) lObj.get(0);
-			boolean bs = bObj.updateBillingClaimHeader(ch1Obj, request);
-
-			// update item objs
-			if(lObj.size() > 1) {
-				lObj.remove(0);
-				bs = bObj.updateBillingItem(lObj, request);
+		
+			String billingNo = request.getParameter("xml_billing_no");
+			boolean success = false;
+			
+			// TODO: It would be good to actually valid that the billing number corresponds to a valid bill
+			if (billingNo != null && billingNo.length() > 0) {
+				//String user_no = (String) session.getAttribute("user");
+				BillingCorrectionPrep bObj = new BillingCorrectionPrep();
+				List lObj = bObj.getBillingClaimHeaderObj( billingNo );
+				BillingClaimHeader1Data ch1Obj = (BillingClaimHeader1Data) lObj.get(0);
+				boolean bs = bObj.updateBillingClaimHeader(ch1Obj, request);
+	
+				// update item objs
+				if(lObj.size() > 1) {
+					lObj.remove(0);
+					bs = bObj.updateBillingItem(lObj, request);
+				}
+				
+				success = true;
 			}
 			
 		%>
 <p>
-<h1>Successful Updation of a billing Record.</h1>
+<h1>
+<%
+if (success) {
+%>
+	Successful Updation of a billing Record.
+<%
+} else {
+%>
+	No billing number was defined - unable to update any bills.
+<%
+}
+%>
+</h1>
 </p>
 <% if(request.getParameter("submit").equals("Submit&Correct Another")) { %>
 <center><input type='button' name='back'
 	value='Correct Another'
 	onclick='window.location.href="billingONCorrection.jsp?billing_no="' />
 </center>
-<%} else { %>
+<%} else if (success) { %>
 <script LANGUAGE="JavaScript">
 	self.close();
 </script>

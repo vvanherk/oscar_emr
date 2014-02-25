@@ -38,6 +38,7 @@
 <jsp:useBean id="scheduleDateBean" class="java.util.Hashtable" scope="session" />
 <jsp:useBean id="scheduleRscheduleBean" class="oscar.RscheduleBean"	scope="session" />
 <%@ page import="org.oscarehr.util.SpringUtils" %>
+<%@ page import="org.oscarehr.util.MiscUtils" %>
 <%@ page import="org.oscarehr.common.model.ScheduleDate" %>
 <%@ page import="org.oscarehr.common.dao.ScheduleDateDao" %>
 <%
@@ -51,10 +52,17 @@
 <%
   String available = request.getParameter("available");
   String priority = "c";
-  String reason = request.getParameter("reason");
+  String siteIdAsString = request.getParameter("site");
   String hour = request.getParameter("hour");
   //save the record first, change holidaybean next
   int rowsAffected = 0;
+  
+  Integer siteId = 0;
+  try {
+	  siteId = Integer.parseInt( siteIdAsString );
+  } catch (Exception e) {
+	  MiscUtils.getLogger().error("Unable to parse site number.", e);
+  }
 
   ScheduleDate sd = scheduleDateDao.findByProviderNoAndDate(provider_no, MyDateFormat.getSysDate(request.getParameter("date")));
   if(sd != null) {
@@ -69,7 +77,7 @@
       sd.setProviderNo(provider_no);
       sd.setAvailable('1');
       sd.setPriority('b');
-      sd.setReason("");
+      //sd.setSite(1);
       sd.setHour(scheduleRscheduleBean.getDateAvailHour(request.getParameter("date")));
       sd.setCreator(user_name);
       sd.setStatus(scheduleRscheduleBean.active.toCharArray()[0]);
@@ -85,13 +93,13 @@ if(request.getParameter("Submit")!=null && request.getParameter("Submit").equals
   sd.setProviderNo(provider_no);
   sd.setAvailable(available.toCharArray()[0]);
   sd.setPriority(priority.toCharArray()[0]);
-  sd.setReason(reason);
+  sd.setSite(siteId);
   sd.setHour(hour);
   sd.setCreator(user_name);
   sd.setStatus(scheduleRscheduleBean.active.toCharArray()[0]);
   scheduleDateDao.persist(sd);
 
-  scheduleDateBean.put(request.getParameter("date"), new HScheduleDate(available, priority, reason, hour, user_name) );
+  scheduleDateBean.put(request.getParameter("date"), new HScheduleDate(available, priority, siteIdAsString, hour, user_name) );
 }
 %>
 

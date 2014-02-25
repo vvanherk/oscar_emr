@@ -50,6 +50,7 @@ import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.oscarehr.common.IsPropertiesOn;
 import org.oscarehr.common.dao.ClinicDAO;
+import org.oscarehr.common.dao.SiteDao;
 import org.oscarehr.common.dao.ConsultationRequestDao;
 import org.oscarehr.common.dao.ConsultationRequestExtDao;
 import org.oscarehr.common.dao.DemographicDao;
@@ -60,6 +61,7 @@ import org.oscarehr.common.hl7.v2.oscar_to_oscar.OruR01.ObservationData;
 import org.oscarehr.common.hl7.v2.oscar_to_oscar.RefI12;
 import org.oscarehr.common.hl7.v2.oscar_to_oscar.SendingUtils;
 import org.oscarehr.common.model.Clinic;
+import org.oscarehr.common.model.Site;
 import org.oscarehr.common.model.ConsultationRequest;
 import org.oscarehr.common.model.ConsultationRequestExt;
 import org.oscarehr.common.model.Demographic;
@@ -89,7 +91,6 @@ import com.lowagie.text.DocumentException;
 public class EctConsultationFormRequestAction extends Action {
 
 	private static final Logger logger=MiscUtils.getLogger();
-	private boolean bMultisites=org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
 	@Override
 	public ActionForward execute(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
@@ -172,7 +173,11 @@ public class EctConsultationFormRequestAction extends Action {
                                 consult.setSendTo(frm.getSendTo());
                                 consult.setConcurrentProblems(frm.getConcurrentProblems());
                                 consult.setUrgency(frm.getUrgency());
-				consult.setSiteName(frm.getSiteName());
+                                
+                                SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
+                                Site s = siteDao.find( frm.getSiteNo() );
+								consult.setSite(s);
+								
                                 Boolean pWillBook = false;
                                 if( frm.getPatientWillBook() != null ) {
                                     pWillBook = frm.getPatientWillBook().equals("1");
@@ -276,7 +281,11 @@ public class EctConsultationFormRequestAction extends Action {
                                 consult.setSendTo(frm.getSendTo());
                                 consult.setConcurrentProblems(frm.getConcurrentProblems());
                                 consult.setUrgency(frm.getUrgency());
-				consult.setSiteName(frm.getSiteName());
+                                
+                                SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
+                                Site s = siteDao.find( frm.getSiteNo() );
+								consult.setSite(s);
+                                
                                  Boolean pWillBook = false;
                                 if( frm.getPatientWillBook() != null ) {
                                     pWillBook = frm.getPatientWillBook().equals("1");

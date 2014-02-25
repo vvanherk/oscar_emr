@@ -32,22 +32,22 @@
 
 <%@ include file="/taglibs.jsp"%>
 
-
 <html>
 <head>
 	<title></title>
 	<link rel="stylesheet" type="text/css" href='<html:rewrite page="/jsCalendar/skins/aqua/theme.css" />' />
+	<link rel="stylesheet" type="text/css" href="../css/plan_new.css" />
 
-		<link rel="stylesheet" type="text/css" media="all" href="<%=request.getContextPath()%>/share/calendar/calendar.css" title="win2k-cold-1" />
-		<script type="text/javascript" src="<%=request.getContextPath()%>/share/calendar/calendar.js"></script>
-		<script type="text/javascript" src="<%=request.getContextPath()%>/share/calendar/lang/<bean:message key="global.javascript.calendar"/>"></script>
-		<script type="text/javascript" src="<%=request.getContextPath()%>/share/calendar/calendar-setup.js"></script>
-		<script src="<c:out value="../js/jquery.js"/>"></script>
+	<link rel="stylesheet" type="text/css" media="all" href="<%=request.getContextPath()%>/share/calendar/calendar.css" title="win2k-cold-1" />
+	<script type="text/javascript" src="<%=request.getContextPath()%>/share/calendar/calendar.js"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/share/calendar/lang/<bean:message key="global.javascript.calendar"/>"></script>
+	<script type="text/javascript" src="<%=request.getContextPath()%>/share/calendar/calendar-setup.js"></script>
+	<script src="<c:out value="../js/jquery.js"/>"></script>
 <script>
 	jQuery.noConflict();
 </script>
 
-<script>
+<script type="text/javascript">
 function addFollowUp() {
 	var total = jQuery("#followup_num").val();
 	total++;
@@ -134,6 +134,7 @@ jQuery(document).ready(function() {
 				var num = jQuery("#procedure_num").val();
 				setInput(num,'procedure','id','<%=proc.getId()%>');
 				setSelect(num,'procedure','urgency','<%=proc.getUrgency()%>');
+				setSelect(num,'procedure','Provider','<%=proc.getProvider()%>');
 				setSelect(num,'procedure','eye','<%=proc.getEye()%>');
 				setInput(num,'procedure','procedureName','<%=proc.getProcedureName()%>');
 				setInput(num,'procedure','location','<%=proc.getLocation()%>');
@@ -148,6 +149,7 @@ jQuery(document).ready(function() {
 				addTest();
 				var num = jQuery("#test_num").val();
 				setInput(num,'test','id','<%=test.getId()%>');
+				setSelect(num,'test','Provider','<%=test.getProvider()%>');
 				setSelect(num,'test','eye','<%=test.getEye()%>');
 				setInput(num,'test','testname','<%=test.getTestname()%>');
 				setSelect(num,'test','urgency','<%=test.getUrgency()%>');
@@ -157,7 +159,102 @@ jQuery(document).ready(function() {
 	}
 %>
 });
+function getTicklerText(id){
+	var text = "";
+	if(id.indexOf("followup_")==0){
+		text += "consult:";
+
+		// If the element doesn't exist, we return null
+		if ( !document.getElementById(id+".type") )
+			return null;
+
+	    if(document.getElementById(id+".type").value == "followup")
+		   text = "f/u:";
+	}
+	else if(id.indexOf("procedure_")==0)
+		text += "proc:";
+	else
+		text += "diag:";
+	//text += "Dr. " + document.getElementById(id+".Provider").options[document.getElementById(id+".Provider").selectedIndex].innerHTML;
+	if(document.getElementById(id+".timespan") != null && 
+	   document.getElementById(id+".timespan").value !='' && 
+	   document.getElementById(id+".timespan").value != null)
+		text += " " + document.getElementById(id+".timespan").value + " " + document.getElementById(id+".timeframe").value;
+	if(document.getElementById(id+".procedureName") != null && 
+			   document.getElementById(id+".procedureName").value !='' && 
+			   document.getElementById(id+".procedureName").value != null)
+				text += " " + document.getElementById(id+".procedureName").value;
+	if(document.getElementById(id+".location") != null && 
+			   document.getElementById(id+".location").value !='' && 
+			   document.getElementById(id+".location").value != null)
+				text += " " + document.getElementById(id+".location").value;
+	if(document.getElementById(id+".diagnostices") != null && 
+			   document.getElementById(id+".diagnostices").value !='' && 
+			   document.getElementById(id+".diagnostices").value != null)
+				text += " " + document.getElementById(id+".diagnostices").value;
+	console.log(id+'.urgency');
+
+	// If the element doesn't exist, we return null
+	if ( !document.getElementById(id+'.urgency') )
+		return null;
+
+    text += " " + document.getElementById(id+'.urgency').options[document.getElementById(id+'.urgency').selectedIndex].innerHTML;
+	text += " " + document.getElementById(id+".comment").value;
+	return text;
+}
+function sendTickler()
+{
+  var ctx = "<%=request.getContextPath()%>";
+  sendList=[["followup_",document.getElementById('followup_num').value],
+            ["procedure_",document.getElementById('procedure_num').value],
+            ["test_",document.getElementById('test_num').value]];
+  for(var item in sendList){
+     var errorCount = 0;
+     var errorText = 'There was an error when sending tickler to ';
+     for(var i=1; i<=sendList[item][1]; i++){
+        var id = sendList[item][0] + i;
+        var text= getTicklerText(id);
+        
+        var appointmentNo = 0;
+        <%
+		String appointmentNo = request.getParameter("followup.appointmentNo");
+		if (appointmentNo != null && appointmentNo.length() > 0) {
+		%>
+		appointmentNo = <%=appointmentNo%>;
+		<%
+		}
+        %>
+        
+        // Only submit if we were able to find tickler text
+        if (text) {
+	        var ticklerRecip = document.getElementById(id+'.Provider');        
+	        jQuery.ajax({
+	           url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+appointmentNo+"&text="+text+"&recip=" + ticklerRecip.value +"&demographicNo=<%=request.getParameter("followup.demographicNo")%>",
+	           async:false,
+	           success: function(data){		        
+	            },
+	           error: function(data) {
+	               errorCount = errorCount+1 ;
+	               errorText  += '\n\n' + ticklerRecip[ticklerRecip.selectedIndex].text;
+	            }
+	         });
+		 }
+     }
+     if(errorCount > 0 )
+     { 
+        errorText += '.\n\n Click OK to continue.';
+        alert(errorText);
+     }
+     
+  }
+  
+  // Update the tickler box for the EyeForm
+  setTimeout( function() { try { opener.refreshBox('tickler', false); } catch(err) {} }, 0 );
+  
+  return true;
+}
 </script>
+
 </head>
 <body>
 <center><b>Arrange Plan</b></center>
@@ -165,7 +262,7 @@ jQuery(document).ready(function() {
 <b>Follow Up/Consult:</b>
 <br />
 
-<html:form action="/eyeform/EyeformPlan.do">
+<html:form action="/eyeform/EyeformPlan.do"  onsubmit="return sendTickler()" method="post">
 
 		<input type="hidden" name="method" value="save"/>
 
@@ -173,7 +270,7 @@ jQuery(document).ready(function() {
 		<input type="hidden" name="followup.appointmentNo" value="<%=request.getParameter("followup.appointmentNo")%>"/>
 
 <!-- follow up section -->
-<div id="followup_container"></div>
+<div class="arrangePlanbox" id="followup_container"></div>
 <input type="hidden" id="followup_num" name="followup_num" value="0"/>
 <a href="#" onclick="addFollowUp();">[Add]</a>
 
@@ -181,26 +278,25 @@ jQuery(document).ready(function() {
 <b>Book Procedure:</b>
 <br />
 <!-- procedure section -->
-<div id="procedure_container"></div>
+<div class="arrangePlanbox" id="procedure_container"></div>
 <input type="hidden" id="procedure_num" name="procedure_num" value="0"/>
 <a href="#" onclick="addProcedure();">[Add]</a>
 <br/><br/>
 <b>Book Diagnostics:</b>
 <br />
 <!-- test/diag section -->
-<div id="test_container"></div>
+<div class="arrangePlanbox" id="test_container"></div>
 <input type="hidden" id="test_num" name="test_num" value="0"/>
 <a href="#" onclick="addTest();">[Add]</a>
 <br/>
 <br/>
-	<html:submit value="Submit" />
+	<input type="submit" value="Submit" />
 	&nbsp;&nbsp;
 	<input type="button" name="cancel" value="Cancel" onclick="window.close()" />
 
 			</td>
 		</tr>
 </html:form>
-
 
 </body>
 </html>

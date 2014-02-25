@@ -27,7 +27,7 @@
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic"%>
-<%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
+
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 
 <%@page import="org.oscarehr.common.dao.SiteDao"%>
@@ -70,76 +70,44 @@ Vector vecAddress = null;
 Vector vecAddressPhone = null;
 Vector vecAddressFax = null;
 OscarProperties props = OscarProperties.getInstance();
-if(bMultisites) {
-	String appt_no=(String)session.getAttribute("cur_appointment_no");
-	String location = null;
-	if (appt_no!=null) {
-		List<Map<String,Object>> resultList = oscarSuperManager.find("appointmentDao", "search", new Object[] {appt_no});
-		if (resultList!=null) location = (String) resultList.get(0).get("location");
-	}
 
-    oscar.oscarRx.data.RxProviderData.Provider provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo());
-    ProSignatureData sig = new ProSignatureData();
-    boolean hasSig = sig.hasSignature(bean.getProviderNo());
-    String doctorName = "";
-    if (hasSig){
-       doctorName = sig.getSignature(bean.getProviderNo());
-    }else{
-       doctorName = (provider.getFirstName() + ' ' + provider.getSurname());
-    }
-    doctorName = doctorName.replaceAll("\\d{6}","");
-    doctorName = doctorName.replaceAll("\\-","");
-
-    vecAddressName = new Vector();
-    vecAddress = new Vector();
-    vecAddressPhone = new Vector();
-    vecAddressFax = new Vector();
-
-    java.util.ResourceBundle rb = java.util.ResourceBundle.getBundle("oscarResources",request.getLocale());
-
-	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-	List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-
-	for (int i=0;i<sites.size();i++) {
-		Site s = sites.get(i);
-        vecAddressName.add(s.getName());
-        vecAddress.add("<b>"+doctorName+"</b><br>"+s.getName()+"<br>"+s.getAddress() + "<br>" + s.getCity() + ", " + s.getProvince() + " " + s.getPostal() + "<br>"+rb.getString("RxPreview.msgTel")+": " + s.getPhone() + "<br>"+rb.getString("RxPreview.msgFax")+": " + s.getFax());
-        if (s.getName().equals(location))
-        	session.setAttribute("RX_ADDR",String.valueOf(i));
-	}
-
-
-} else
-if(props.getProperty("clinicSatelliteName") != null) {
-    oscar.oscarRx.data.RxProviderData.Provider provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo());
-    ProSignatureData sig = new ProSignatureData();
-    boolean hasSig = sig.hasSignature(bean.getProviderNo());
-    String doctorName = "";
-    if (hasSig){
-       doctorName = sig.getSignature(bean.getProviderNo());
-    }else{
-       doctorName = (provider.getFirstName() + ' ' + provider.getSurname());
-    }
-
-    ClinicData clinic = new ClinicData();
-    vecAddressName = new Vector();
-    vecAddress = new Vector();
-    vecAddressPhone = new Vector();
-    vecAddressFax = new Vector();
-    String[] temp0 = props.getProperty("clinicSatelliteName", "").split("\\|");
-    String[] temp1 = props.getProperty("clinicSatelliteAddress", "").split("\\|");
-    String[] temp2 = props.getProperty("clinicSatelliteCity", "").split("\\|");
-    String[] temp3 = props.getProperty("clinicSatelliteProvince", "").split("\\|");
-    String[] temp4 = props.getProperty("clinicSatellitePostal", "").split("\\|");
-    String[] temp5 = props.getProperty("clinicSatellitePhone", "").split("\\|");
-    String[] temp6 = props.getProperty("clinicSatelliteFax", "").split("\\|");
-    java.util.ResourceBundle rb = java.util.ResourceBundle.getBundle("oscarResources",request.getLocale());
-
-    for(int i=0; i<temp0.length; i++) {
-        vecAddressName.add(temp0[i]);
-        vecAddress.add("<b>"+doctorName+"</b><br>"+temp0[i]+"<br>"+temp1[i] + "<br>" + temp2[i] + ", " + temp3[i] + " " + temp4[i] + "<br>"+rb.getString("RxPreview.msgTel")+": " + temp5[i] + "<br>"+rb.getString("RxPreview.msgFax")+": " + temp6[i]);
-    }
+String appt_no=(String)session.getAttribute("cur_appointment_no");
+String location = null;
+if (appt_no!=null) {
+	List<Map<String,Object>> resultList = oscarSuperManager.find("appointmentDao", "search", new Object[] {appt_no});
+	if (resultList!=null) location = (String) resultList.get(0).get("location");
 }
+
+oscar.oscarRx.data.RxProviderData.Provider provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo());
+ProSignatureData sig = new ProSignatureData();
+boolean hasSig = sig.hasSignature(bean.getProviderNo());
+String doctorName = "";
+if (hasSig){
+   doctorName = sig.getSignature(bean.getProviderNo());
+}else{
+   doctorName = (provider.getFirstName() + ' ' + provider.getSurname());
+}
+doctorName = doctorName.replaceAll("\\d{6}","");
+doctorName = doctorName.replaceAll("\\-","");
+
+vecAddressName = new Vector();
+vecAddress = new Vector();
+vecAddressPhone = new Vector();
+vecAddressFax = new Vector();
+
+java.util.ResourceBundle rb = java.util.ResourceBundle.getBundle("oscarResources",request.getLocale());
+
+SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
+
+for (int i=0;i<sites.size();i++) {
+	Site s = sites.get(i);
+	vecAddressName.add(s.getName());
+	vecAddress.add("<b>"+doctorName+"</b><br>"+s.getName()+"<br>"+s.getAddress() + "<br>" + s.getCity() + ", " + s.getProvince() + " " + s.getPostal() + "<br>"+rb.getString("RxPreview.msgTel")+": " + s.getPhone() + "<br>"+rb.getString("RxPreview.msgFax")+": " + s.getFax());
+	if (s.getName().equals(location))
+		session.setAttribute("RX_ADDR",String.valueOf(i));
+}
+
 String comment = (String) request.getAttribute("comment");
 %>
 <link rel="stylesheet" type="text/css" href="styles.css" />

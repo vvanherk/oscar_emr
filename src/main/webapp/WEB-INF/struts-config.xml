@@ -38,6 +38,7 @@
 
 		<form-bean name="siteForm" type="org.apache.struts.validator.DynaValidatorForm">
 			<form-property name="site" type="org.oscarehr.common.model.Site" />
+			<form-property name="clinics" type="java.util.List" />
 		</form-bean>
 		<form-bean name="billingreferralForm" type="org.apache.struts.validator.DynaValidatorForm">
 			<form-property name="search" type="java.lang.String" />
@@ -706,6 +707,7 @@
 			<forward name="newRx" path="/oscarRx/prescribe.jsp" />
 		</action>
 		<action path="/oscarEncounter/IncomingEncounter" scope="request" type="oscar.oscarEncounter.pageUtil.EctIncomingEncounterAction">
+			<forward name="eyeform" path="/eyeform/eyeform.jsp" />
 			<forward name="failure" path="/oscarEncounter/error.jsp" />
 			<forward name="success" path="/oscarEncounter/Index.jsp" />
 			<forward name="success2" path="/oscarEncounter/Index2.jsp" />
@@ -2139,6 +2141,7 @@
 			<forward name="windowClose" path="/casemgmt/close.jsp" />
 			<forward name="historyview" path="/casemgmt/historyview.jsp" />
 			<forward name="showHistory" path="/casemgmt/showHistory.jsp" />
+			<forward name="offCommHist" path="/casemgmt/officeCommHist.jsp" />
 			<forward name="issueAutoCompletion" path="/casemgmt/IssueList.jsp" />
 			<forward name="issueList_ajax" path="/casemgmt/noteIssueList.jsp" />
 			<forward name="expired" path="/casemgmt/expired.jsp" />
@@ -2546,6 +2549,12 @@
 		</action>
 
 		<action path="/providersListAjax" type="org.springframework.web.struts.DelegatingActionProxy" parameter="method" scope="request" validate="false">
+		</action>
+		
+		<action path="/oscarEncounter/eyeform/downloadIViews" type="oscar.oscarEncounter.util.IViewsDownloadFileAction">
+		</action>
+
+		<action path="/oscarEncounter/eyeform/downloadIViews" type="oscar.oscarEncounter.util.IViewsDownloadFileAction">
 		</action>
 
 	</action-mappings>

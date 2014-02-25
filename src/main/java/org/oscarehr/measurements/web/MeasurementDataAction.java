@@ -75,7 +75,7 @@ public class MeasurementDataAction extends DispatchAction {
 			if(appts.size() > 1) {
 				for(int x=0;x<appts.size();x++) {
 					Appointment appt = appts.get(x);
-					if(appt.getId().intValue() == apptNo && x <= appts.size()-1) {
+					if(appt.getId().intValue() == apptNo && x < appts.size()-1) {
 						prevApptNo = appts.get(x+1).getId();
 					}
 				}

@@ -708,7 +708,7 @@ anyValueMap['sli_code'] 		= "";
 %>
 		defaults = new Object();
 		defaults['id']						= <%=billingDefault.getId()%>;
-		defaults['provider_no']				= <%=billingDefault.getproviderNo()%>;
+		defaults['provider_no']				= "<%=billingDefault.getproviderNo()%>";
 		defaults['visit_type_no']			= "<%=billingDefault.getVisitTypeNo()%>";
 		defaults['location_id']				= "<%=billingDefault.getLocationId()%>";
 		defaults['sli_code']				= "<%=billingDefault.getSliCode()%>";

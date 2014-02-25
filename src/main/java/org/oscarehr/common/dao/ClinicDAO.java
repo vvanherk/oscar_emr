@@ -30,10 +30,14 @@ import org.apache.log4j.Logger;
 import org.oscarehr.util.MiscUtils;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import javax.persistence.Query;
 
 import org.oscarehr.common.model.Clinic;
+import org.oscarehr.common.dao.SiteDao;
+import org.oscarehr.common.model.Site;
+import org.oscarehr.util.SpringUtils;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -81,22 +85,26 @@ public class ClinicDAO extends AbstractDao<Clinic> {
         Query query = entityManager.createQuery("select c from Clinic c where c.id = :id");
         query.setParameter("id", clinicNo);
         
-        @SuppressWarnings("unchecked")
-        List<Clinic> codeList = query.getResultList();
-        
-        if (codeList == null || codeList.size() == 0)
-			return null;
-        
-        return codeList.get(0);
+        return getSingleResultOrNull(query);
     }
+    
+    public List<Clinic> getClinicsForProvider( String providerNo ) {
+		SiteDao siteDao = SpringUtils.getBean(SiteDao.class);
+		List<Site> providerSites = siteDao.getActiveSitesByProviderNo(providerNo);
+		
+		List<Clinic> clinics = new ArrayList<Clinic>();
+		
+		for ( Site s : providerSites ) {
+			if (!clinics.contains(s.getClinic()))
+				clinics.add( s.getClinic() );
+		}
+                
+        return clinics;
+	}
 
 
-    public void save(Clinic clinic) {		
-        //if(!clinic.isNew()) {
-        	merge(clinic);
-        //} else {
-        //	persist(clinic);
-        //}
+    public void save(Clinic clinic) {
+        merge(clinic);
     }
 
 	public void delete(Clinic clinic) {

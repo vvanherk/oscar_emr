@@ -24,7 +24,6 @@
 
 --%>
 
-<%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 <%@ include file="/common/webAppContextAndSuperMgr.jsp"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
@@ -60,7 +59,7 @@
     reqFrm = new oscar.oscarEncounter.oscarConsultationRequest.pageUtil.EctConsultationFormRequestUtil ();
     reqFrm.estRequestFromId((String)request.getAttribute("reqId"));
 
-	String selectedSite = reqFrm.siteName;
+	Integer selectedSite = reqFrm.siteNo;
 
     reqFrm.specPhone = request.getParameter("phone");
 
@@ -117,97 +116,38 @@
          vecFaxes.add(st.nextToken());
     }
 
-    // for satellite clinics
-    Vector vecAddressName = null;
-    Vector vecAddress = null;
-    Vector vecAddressPhone = null;
-    Vector vecAddressFax = null;
-    Vector vecAddressBillingNo = null;
-    String defaultAddrName = null;
-    if (bMultisites) {
-     	vecAddressName = new Vector();
-        vecAddress = new Vector();
-        vecAddressPhone = new Vector();
-        vecAddressFax = new Vector();
-        vecAddressBillingNo = new Vector();
+    String subTitle = null;
 
-    		SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-      		List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
- 			Site defaultSite = sites.get(0);
-      		for (Site s:sites) {
-                vecAddressName.add(s.getName());
-                vecAddress.add(s.getAddress() + ", " + s.getCity() + ", " + s.getProvince() + "  " + s.getPostal());
-                vecAddressPhone.add(s.getPhone());
-                vecAddressFax.add(s.getFax());
-                if (selectedSite.equals(s.getName())) {
-                	defaultSite = s;
-            	}
-     		}
-            // default address
-	        if (defaultSite!=null) {
-	            clinic.setClinicAddress(defaultSite.getAddress());
-            clinic.setClinicCity(defaultSite.getCity());
-            clinic.setClinicProvince(defaultSite.getProvince());
-            clinic.setClinicPostal(defaultSite.getPostal());
-            clinic.setClinicPhone(defaultSite.getPhone());
-            clinic.setClinicFax(defaultSite.getFax());
-            clinic.setClinicName(defaultSite.getName());
-	   			defaultAddrName=defaultSite.getName();
-	        }
-    } else {
-	    if(props.getProperty("clinicSatelliteName") != null) {
-	        vecAddressName = new Vector();
-	        vecAddress = new Vector();
-	        vecAddressPhone = new Vector();
-	        vecAddressFax = new Vector();
-	        vecAddressBillingNo = new Vector();
-	        String[] temp0 = props.getProperty("clinicSatelliteName", "").split("\\|");
-	        String[] temp1 = props.getProperty("clinicSatelliteAddress", "").split("\\|");
-	        String[] temp2 = props.getProperty("clinicSatelliteCity", "").split("\\|");
-	        String[] temp3 = props.getProperty("clinicSatelliteProvince", "").split("\\|");
-	        String[] temp4 = props.getProperty("clinicSatellitePostal", "").split("\\|");
-	        String[] temp5 = props.getProperty("clinicSatellitePhone", "").split("\\|");
-	        String[] temp6 = props.getProperty("clinicSatelliteFax", "").split("\\|");
-	        String[] temp7 = props.getProperty("clinicDocBillingNoList", "").split("\\|");
-	        for(int i=0; i<temp0.length; i++) {
-	            vecAddressName.add(temp0[i]);
-	            vecAddress.add(temp1[i] + ", " + temp2[i] + ", " + temp3[i] + "  " + temp4[i]);
-	            vecAddressPhone.add(temp5[i]);
-	            vecAddressFax.add(temp6[i]);
-	        }
-	        for(int i=0; i<temp7.length; i++) {
-	            vecAddressBillingNo.add(temp7[i]);
-	        }
-	        // default address
-	        //clinic.setClinic_name();
-	        clinic.setClinicAddress(temp1[0]);
-        	clinic.setClinicCity(temp2[0]);
-	        clinic.setClinicProvince(temp3[0]);
-	        clinic.setClinicPostal(temp4[0]);
-	        clinic.setClinicPhone(temp5[0]);
-	        clinic.setClinicFax(temp6[0]);
-	    } else {
-	    	//is letterhead different?
-	    	if(!reqFrm.letterheadName.equals(clinic.getClinicName()) && !reqFrm.letterheadName.equals("-1")) {
-	    		Provider p = providerDao.getProvider(reqFrm.letterheadName);
-	    		if(p != null) {
-		    		//why, yes it is
-		    		vecAddressName = new Vector();
-			        vecAddress = new Vector();
-			        vecAddressPhone = new Vector();
-			        vecAddressFax = new Vector();
-			        vecAddressBillingNo = new Vector();
-			        
-			        vecAddressName.add(p.getFormattedName());
-			        vecAddress.add(reqFrm.letterheadAddress);
-			        vecAddressPhone.add(reqFrm.letterheadPhone);
-			        vecAddressFax.add(reqFrm.letterheadFax);
-	    		}
-		        
-	    	}
-	    }
+	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+	Site defaultSite = null;
+	
+	if (selectedSite != null && selectedSite > 0) {
+		defaultSite = siteDao.find( selectedSite );
+	}
+	
+	// default address
+	if (defaultSite != null) {
+		clinic.setClinicAddress(defaultSite.getAddress());
+		clinic.setClinicCity(defaultSite.getCity());
+		clinic.setClinicProvince(defaultSite.getProvince());
+		clinic.setClinicPostal(defaultSite.getPostal());
+		clinic.setClinicPhone(defaultSite.getPhone());
+		clinic.setClinicFax(defaultSite.getFax());
+		//clinic.setClinicName(defaultSite.getName());
+		subTitle = defaultSite.getName();
+	}
+	
+	if (reqFrm.letterheadAddress != null && reqFrm.letterheadAddress.length() > 0) {
+		clinic.setClinicAddress( reqFrm.letterheadAddress );
+		clinic.setClinicCity( null );
+		clinic.setClinicProvince( null );
+		clinic.setClinicPostal( null );
+	}
+	if (reqFrm.letterheadPhone != null && reqFrm.letterheadPhone.length() > 0)
+		clinic.setClinicPhone( reqFrm.letterheadPhone );
+	if (reqFrm.letterheadFax != null && reqFrm.letterheadFax.length() > 0)
+		clinic.setClinicFax( reqFrm.letterheadFax );
 
-    }
     ConsultationRequestExtDao consultationRequestExtDao = (ConsultationRequestExtDao)SpringUtils.getBean("consultationRequestExtDao");
     List<ConsultationRequestExt> exts =consultationRequestExtDao.getConsultationRequestExts(Integer.parseInt((String)request.getAttribute("reqId")));
     
@@ -317,18 +257,6 @@
         document.getElementById("clinicFax").innerHTML="Fax: "+document.getElementById("sendersFax").value;
     }
 
-    function addressSelect() {
-    	<% if(vecAddressName != null) {
-    	    for(int i=0; i<vecAddressName.size(); i++) {%>
-    	if(document.getElementById("addressSel").value=="<%=i%>") {
-        	document.getElementById("clinicName").innerHTML="<%=vecAddressName.get(i)%>";
-        	document.getElementById("clinicAddress").innerHTML="<%=vecAddress.get(i)%>";
-        	document.getElementById("clinicPhone").innerHTML="Tel: "+"<%=vecAddressPhone.get(i)%>";
-        	document.getElementById("clinicFax").innerHTML="Fax: "+"<%=vecAddressFax.get(i)%>";
-        }
-		<% } }%>
-    }
-
     </script>
     <title>
     <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.title"/>
@@ -380,21 +308,6 @@
                 </select>
             </td>
 		<% } %>
-		<% if(vecAddress != null) { %>
-			<% if(vecAddress.size()>1) { %>
-            <td align="center">
-                Address
-                <select name="addressSel" id="addressSel" onChange="addressSelect()" <%=(bMultisites && selectedSite != null ? " disabled " : " ") %>>>
-            <%  for (int i =0; i < vecAddressName.size();i++){
-                 String te = (String) vecAddressName.get(i);
-            %>
-                    <option value="<%=i%>" <%=te.equals(defaultAddrName)?"selected":"" %>><%=te%></option>
-            <%  }%>
-                </select>
-            </td>
-            <% } else { %>
-            	<input type="hidden" name="addressSel" id="addressSel" value="0"/>
-		<% } }%>
             </tr>
         </table>
         </form>
@@ -402,7 +315,7 @@
             <!--header-->
             <tr>
                 <td>
-                    <table name="innerTable" border="0" <%=vecAddressBillingNo != null? "width='100%'": ""%>>
+                    <table name="innerTable" border="0" >
                         <tr>
                             <td rowspan=3>
                                 &nbsp;&nbsp;  <%-- blank column for spacing --%>
@@ -416,27 +329,18 @@
                             <td colspan="2" class="title4" id="clinicName">
                             	<c:if test="${empty infirmaryView_programAddress}">
 	                                <b><%=clinic.getClinicName()%></b>
+	                                <%=(subTitle == null? "" : "<br><b>" + subTitle + "</b>")%>
                                 </c:if>
                             </td>
-<% if(vecAddressBillingNo != null) {%>
-                            <td rowspan=3 align="right">
-		                    <table name="innerTable1" border="0" cellspacing="0">
-                            <% for(int i=0; i<vecAddressBillingNo.size(); i=i+3) { %>
-		                        <tr>
-                                <td class="address"><%=i<vecAddressBillingNo.size()? ("<input type='checkbox' name='c'/>" + vecAddressBillingNo.get(i)) : ""%></td>
-                                <td class="address"><%=(i+1)<vecAddressBillingNo.size()? ("<input type='checkbox' name='c'/>")+ vecAddressBillingNo.get(i+1): ""%></td>
-                                <td class="address"><%=(i+2)<vecAddressBillingNo.size()? ("<input type='checkbox' name='c'/>")+ vecAddressBillingNo.get(i+2): ""%></td>
-                                </tr>
-							<% } %>
-							</table>
-                            </td>
-<% } %>
                         </tr>
                         <c:choose>
                         <c:when test="${empty infirmaryView_programAddress}">
                         <tr>
                             <td colspan="2" class="address" id="clinicAddress">
-                <%=clinic.getClinicAddress()%>, <%=clinic.getClinicCity()%>, <%=clinic.getClinicProvince()%>  <%=clinic.getClinicPostal()%>
+				                <%=(clinic.getClinicAddress() != null? clinic.getClinicAddress() : "")%>
+				                <%=(clinic.getClinicCity() != null? ", " + clinic.getClinicCity() : "")%>
+				                <%=(clinic.getClinicProvince() != null? ", " + clinic.getClinicProvince() : "")%>
+				                <%=(clinic.getClinicPostal() != null? "  " + clinic.getClinicPostal() : "")%>
                             </td>
                         </tr>
                         <tr>
@@ -473,19 +377,7 @@
                     <br>
                     <font size="-1">
                         <b>
-                    <% if (bMultisites) {
-							out.print("Please reply");
-                    } else { %>
-                        <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgPleaseReplyPart1"/>
-                        <c:choose>
-                        <c:when test="${empty infirmaryView_programAddress}">
-							<%=clinic.getClinicName()%>
-						</c:when>
-						<c:otherwise>
-							<%=reqFrm.getClinicName()%>
-						</c:otherwise>
-						</c:choose>
-               		<% } %>
+						Please reply
                         <bean:message key="oscarEncounter.oscarConsultationRequest.consultationFormPrint.msgPleaseReplyPart2"/>
                         </b>
                     </font>

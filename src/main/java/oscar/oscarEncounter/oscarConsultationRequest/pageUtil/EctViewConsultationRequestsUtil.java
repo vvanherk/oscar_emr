@@ -41,6 +41,7 @@ import org.oscarehr.common.model.ConsultationServices;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.ProfessionalSpecialist;
 import org.oscarehr.common.model.Provider;
+import org.oscarehr.common.model.Site;
 import org.oscarehr.util.MiscUtils;
 import org.oscarehr.util.SpringUtils;
 import org.oscarehr.common.model.ConsultDocs;
@@ -65,8 +66,6 @@ public class EctViewConsultationRequestsUtil {
    public boolean estConsultationVecByTeam(String team,boolean showCompleted,Date startDate, Date endDate,String orderby,String desc) { 
       return estConsultationVecByTeam(team,showCompleted,null,null,null,null,null);
    }  
-            
-   private boolean bMultisites=org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
    
    public boolean estConsultationVecByTeam(String team,boolean showCompleted,Date startDate, Date endDate,String orderby,String desc,String searchDate) {       
       ids = new Vector<String>();
@@ -80,7 +79,7 @@ public class EctViewConsultationRequestsUtil {
       urgency = new Vector<String>();
       date = new Vector<String>();
       demographicNo = new Vector<String>();
-      siteName = new Vector<String>();
+      siteNo = new Vector<Integer>();
       this.patientWillBook = new Vector<String>();
       apptNo = new Vector<String>();
       apptDate = new Vector<String>();
@@ -136,7 +135,13 @@ public class EctViewConsultationRequestsUtil {
               service.add(services.getServiceDesc());
               vSpecialist.add(specialistName);
               urgency.add(consult.getUrgency());
-              siteName.add(consult.getSiteName());
+              
+              Site s = consult.getSite();
+              Integer clinicNo = 0;
+              if (s != null)
+				clinicNo = s.getId();
+              siteNo.add(clinicNo);
+              
               teams.add(consult.getSendTo());
               
               date1 = consult.getAppointmentDate();
@@ -271,7 +276,7 @@ public class EctViewConsultationRequestsUtil {
    public Vector<String> urgency;
    public Vector<String> followUpDate;
    public Vector<String> providerNo;   
-   public Vector<String> siteName;
+   public Vector<Integer> siteNo;
    public Vector<String> reason;
    public Vector<String> consultant;
    public Vector<String> documentNo;

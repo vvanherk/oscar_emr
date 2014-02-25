@@ -108,16 +108,18 @@ String rePrint = (String)request.getSession().getAttribute("rePrint");
 oscar.oscarRx.pageUtil.RxSessionBean bean;
 oscar.oscarRx.data.RxProviderData.Provider provider;
 String signingProvider;
-int clinicNo;
+int clinicNo = 0;
+int siteId = 0;
 if( rePrint != null && rePrint.equalsIgnoreCase("true") ) {
     bean = (oscar.oscarRx.pageUtil.RxSessionBean)session.getAttribute("tmpBeanRX");
     signingProvider = bean.getStashItem(0).getProviderNo();
     clinicNo = bean.getClinicNo();
+    siteId = bean.getSiteId();
 
     request.getSession().setAttribute("clinic_id", clinicNo + "");
     
     rxDate = bean.getStashItem(0).getWrittenDate();
-    provider = new oscar.oscarRx.data.RxProviderData().getProvider(signingProvider, clinicNo);
+    provider = new oscar.oscarRx.data.RxProviderData().getProvider(signingProvider, clinicNo, siteId);
 //    session.setAttribute("tmpBeanRX", null);
     String ip = request.getRemoteAddr();
     //LogAction.addLog((String) session.getAttribute("user"), LogConst.UPDATE, LogConst.CON_PRESCRIPTION, String.valueOf(bean.getDemographicNo()), ip);
@@ -140,7 +142,7 @@ else {
     }
     rePrint = "";
     signingProvider = bean.getProviderNo();
-    provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo(), bean.getClinicNo());
+    provider = new oscar.oscarRx.data.RxProviderData().getProvider(bean.getProviderNo(), bean.getClinicNo(), bean.getSiteId());
 }
 
 
@@ -220,7 +222,11 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
                                                     onclick="<%=rePrint.equalsIgnoreCase("true") ? "javascript:return onPrint2('rePrint');" : "javascript:return onPrint2('print');"  %>"/>
                                             <!--input type="hidden" name="printPageSize" value="PageSize.A6" /--> <% 	
                                             String clinicTitle = provider.getClinicName().replaceAll("\\(\\d{6}\\)","") + "<br>" ;
-                                                    
+                                            
+                                            if (provider.getSubHeaderName() != null) {
+												clinicTitle += provider.getSubHeaderName() + "<br>" ;
+											}
+                                                                                                
                                             clinicTitle += provider.getClinicAddress() + "<br>" ;
                                             clinicTitle += provider.getClinicCity() + "   " + provider.getClinicPostal()  ;
                                             
@@ -230,6 +236,7 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
                                     			String patientDOB = patient.getDOB() == null ? "" : formatter.format(patient.getDOB());
                                     			
                                             	String docInfo = doctorName + "\n"+provider.getClinicName().replaceAll("\\(\\d{6}\\)","")
+														+ (provider.getSubHeaderName() != null? provider.getSubHeaderName() + "<br>" : "")
 														+"\nCPSO #" + pracNo
 														+ "\n" + provider.getClinicAddress() + "\n"
 														+ provider.getClinicCity() + "   "
@@ -344,10 +351,11 @@ if(prop!=null && prop.getValue().equalsIgnoreCase("yes")){
                                             <c:choose>
                                                     <c:when test="${empty infirmaryView_programAddress}">
                                                             <%= provider.getClinicName().replaceAll("\\(\\d{6}\\)","") %><br>
+															<%= provider.getSubHeaderName() != null? provider.getSubHeaderName() + "<br>" : "" %>
                                                             <%= provider.getClinicAddress() %><br>
                                                             <%= provider.getClinicCity() %>&nbsp;&nbsp;<%=provider.getClinicProvince()%>&nbsp;&nbsp;
                                                 <%= provider.getClinicPostal() %>
-                                                <% if(!provider.getPractitionerNo().equals("")){ %><br>CPSO:<%= provider.getPractitionerNo() %><% } %>
+                                                <% if(provider.getPractitionerNo() != null){ %><br>CPSO:<%= provider.getPractitionerNo() %><% } %>
                                                 <br>
                                                <%
                                                 	UserProperty phoneProp = userPropertyDAO.getProp(provider.getProviderNo(),"rxPhone");

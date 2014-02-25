@@ -24,6 +24,9 @@
 
 
 package oscar.oscarEncounter.pageUtil;
+
+import oscar.OscarProperties;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -39,6 +42,7 @@ import org.apache.struts.action.Action;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
+import org.apache.struts.action.ActionRedirect;
 import org.oscarehr.myoscar_server.ws.MessageTransfer;
 import org.oscarehr.phr.web.MyOscarMessagesHelper;
 import org.oscarehr.util.MiscUtils;
@@ -57,7 +61,19 @@ public class EctIncomingEncounterAction extends Action {
 				 ActionForm form,
 				 HttpServletRequest request,
 				 HttpServletResponse response) throws IOException, ServletException {
-				  
+		
+		// Redirect to EF if property is set
+		if (OscarProperties.getInstance().isPropertyActive("redirect_echart_to_new_eyeform")) {
+			ActionRedirect redirect = new ActionRedirect(mapping.findForward("eyeform"));
+			
+			redirect.addParameter("appointment_no", request.getParameter("appointmentNo"));
+			redirect.addParameter("demographic_no", request.getParameter("demographicNo"));
+			if (request.getParameter("reason") != null)
+				redirect.addParameter("reason", request.getParameter("reason"));
+			
+			return redirect;
+		}
+		
         UtilDateUtilities dateConvert = new UtilDateUtilities();
         oscar.oscarSecurity.CookieSecurity cs   = new oscar.oscarSecurity.CookieSecurity();
         EctSessionBean bean = new EctSessionBean();

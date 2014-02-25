@@ -106,4 +106,28 @@ public class OcularProcDao extends AbstractDao<EyeformOcularProcedure> {
 	    return(results);		
 	}
 	
+	public List<EyeformOcularProcedure> getAllByDate(int demographicNo, int appointmentNo, List<Date> dates) {
+		String sql="select x from "+modelClass.getSimpleName()+" x where x.demographicNo = :demographicNo and x.appointmentNo=:appointmentNo and x.date in (:dates)";
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("demographicNo", demographicNo);	    
+		query.setParameter("appointmentNo", appointmentNo);
+		query.setParameter("dates", dates);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformOcularProcedure> results=query.getResultList();
+	    return(results);		
+	}
+	
+	public List<EyeformOcularProcedure> getAllByBeforeDate(int demographicNo, int appointmentNo, Date endDate) {
+		String sql="select x from "+modelClass.getSimpleName()+" x where x.demographicNo = :demographicNo and x.appointmentNo=:appointmentNo and x.date <= (:endDate)";
+		Query query = entityManager.createQuery(sql);
+		query.setParameter("demographicNo", demographicNo);	    
+		query.setParameter("appointmentNo", appointmentNo);
+		query.setParameter("endDate", endDate);
+	    
+		@SuppressWarnings("unchecked")
+	    List<EyeformOcularProcedure> results=query.getResultList();
+	    return(results);		
+	}
+	
 }

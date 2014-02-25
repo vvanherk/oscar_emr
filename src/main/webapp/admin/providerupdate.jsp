@@ -165,22 +165,20 @@
 		  p.setLastUpdateDate(new java.util.Date());
 		  providerDao.updateProvider(p);
 
-        if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) {
-            String[] sites = request.getParameterValues("sites");
-            DBPreparedHandler dbObj = new DBPreparedHandler();
-            String provider_no = request.getParameter("provider_no");
-            List<ProviderSite> pss = providerSiteDao.findByProviderNo(provider_no);
-            for(ProviderSite ps:pss) {
-            	providerSiteDao.remove(ps.getId());
-            }
-            if (sites!=null) {
-                for (int i=0; i<sites.length; i++) {
-                	ProviderSite ps = new ProviderSite();
-                	ps.setId(new ProviderSitePK(provider_no,Integer.parseInt(sites[i])));
-                	providerSiteDao.persist(ps);
-                }
-            }
-        }
+		String[] sites = request.getParameterValues("sites");
+		DBPreparedHandler dbObj = new DBPreparedHandler();
+		String provider_no = request.getParameter("provider_no");
+		List<ProviderSite> pss = providerSiteDao.findByProviderNo(provider_no);
+		for(ProviderSite ps:pss) {
+			providerSiteDao.remove(ps.getId());
+		}
+		if (sites!=null) {
+			for (int i=0; i<sites.length; i++) {
+				ProviderSite ps = new ProviderSite();
+				ps.setId(new ProviderSitePK(provider_no,Integer.parseInt(sites[i])));
+				providerSiteDao.persist(ps);
+			}
+		}
 %>
 <p>
 <h2><bean:message key="admin.providerupdate.msgUpdateSuccess" /><a

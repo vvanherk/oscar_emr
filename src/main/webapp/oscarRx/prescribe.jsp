@@ -30,6 +30,8 @@
 <%@page import="oscar.oscarRx.data.RxDrugData,java.util.*" %>
 <%@page import="org.oscarehr.common.dao.ClinicDAO" %>
 <%@page import="org.oscarehr.common.model.Clinic" %>
+<%@page import="org.oscarehr.common.dao.SiteDao" %>
+<%@page import="org.oscarehr.common.model.Site" %>
 <%@page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="java.text.SimpleDateFormat" %>
 <%@page import="java.util.Calendar" %>
@@ -147,6 +149,8 @@ if(listRxDrugs!=null){
                         prnStr="prn";
                 drugName=drugName.replace("'", "\\'");
                 drugName=drugName.replace("\"","\\\"");
+                byte[] drugNameBytes = drugName.getBytes("ISO-8859-1");
+				drugName= new String(drugNameBytes, "UTF-8");
                 
 		//ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
 		ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
@@ -337,19 +341,43 @@ if(listRxDrugs!=null){
        </div>
        <div id="rx_more_<%=rand%>" style="display:none;padding:2px;">
 			<label title="Clinic">Clinic: </label>
-			<select id="clinic_<%=rand%>" name="clinic_<%=rand%>">
+			<select id="clinic_<%=rand%>" name="clinic_<%=rand%>" onchange="changeClinic_<%=rand%>(this);">
 			<%
 			String sessionClinicId = (String) session.getAttribute("clinic_id");
 			if (sessionClinicId == null)
 				sessionClinicId = "";
+			Clinic selectedClinic = null;
+			boolean clinicMatch = false;
+			
 			for ( Clinic clinic : clinics) {
+				if (sessionClinicId.equals("" + clinic.getId())) {
+					selectedClinic = clinic;
+					clinicMatch = true;
+				}
 			%>
-				<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
+				<option <%=clinicMatch? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
 			<%
 			}
 			%>
 			</select>
 			<br>
+			<%
+			if (selectedClinic == null) {
+				selectedClinic = clinics.get(0);
+			}
+			%>
+			<select id="site_<%=rand%>" name="site_<%=rand%>" onchange='changeSite_<%=rand%>(this);' style="width: 275px;">
+				<option value="0" style='background-color: white;'> ** Use Clinic Letterhead ** </option>
+	            <%  
+	            if (selectedClinic != null) {
+					for ( Site s : selectedClinic.getSites() ) {
+	            %>
+	                    <option value="<%=s.getId()%>" style='<%="background-color: "+s.getBgColor()%>'> <%=s.getName()%> </option>
+	            <%
+					}
+				}
+	            %>
+			</select>
        	  <bean:message key="WriteScript.msgPrescribedRefill"/>:
        	  &nbsp;
        	  <bean:message key="WriteScript.msgPrescribedRefillDuration"/>
@@ -457,16 +485,72 @@ if(listRxDrugs!=null){
 
 </fieldset>
 <%}%>
-                <script type="text/javascript">
-                        jQuery("document").ready(function() {
-                                if ( jQuery.browser.msie ) {
-                                        jQuery('#rx_save_updates_<%=rand%>').show();
-                                } else {
-                                        jQuery('#rx_save_updates_<%=rand%>').hide();
-                                }
-                        });
-                </script>
-
+			<script type="text/javascript">
+				jQuery("document").ready(function() {
+						if ( jQuery.browser.msie ) {
+								jQuery('#rx_save_updates_<%=rand%>').show();
+						} else {
+								jQuery('#rx_save_updates_<%=rand%>').hide();
+						}
+						
+						setSiteOnPageLoad_<%=rand%>();
+				});
+                
+				window.clinics_<%=rand%> = new Object();
+				<%
+				// We will create an object mapping clinics to sites
+				for ( Clinic c : clinics) {
+				%>
+					window.clinics_<%=rand%>['<%=c.getId()%>'] = new Object();
+				<%	
+					List<Site> sites = c.getSites();
+					for (Site s : sites) {
+					%>
+						var data = new Object();
+						data[0] = '<%=s.getName()%>';
+						data[1] = '<%=s.getBgColor()%>';
+						
+						window.clinics_<%=rand%>['<%=c.getId()%>']['<%=s.getId()%>'] = data;
+					<%
+					}
+				}
+				%>
+				
+				function rebuildSiteDropdown_<%=rand%>(clinicId) {
+					var sites = window.clinics_<%=rand%>[clinicId];
+					
+					var $sel = jQuery("[name='site_<%=rand%>']");
+					$sel.empty();
+					
+					$sel.append( jQuery('<option></option>').val('0').html('** Use Clinic Letterhead **').css('background-color', 'white') );
+					
+					for (var id in sites) {
+						$sel.append( jQuery('<option></option>').val(id).html(sites[id][0]).css('background-color', sites[id][1]) );
+					}
+				}
+				
+				function changeClinic_<%=rand%>(sel) {
+					var clinicId = sel.options[sel.selectedIndex].value;
+					
+					// Change contents of site dropdown
+					rebuildSiteDropdown_<%=rand%>(clinicId);
+					
+					var sel = document.getElementsByName("site_<%=rand%>")[0];
+					changeSite_<%=rand%>(sel);
+				}
+				
+				/**
+				 * Call this on page load so that the default site gets set properly.
+				 */ 
+				function setSiteOnPageLoad_<%=rand%>() {
+					var sel = document.getElementsByName("site_<%=rand%>")[0];
+					sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
+				}
+				
+				function changeSite_<%=rand%>(sel) {
+					sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;	
+				}
+			</script>
 
         <script type="text/javascript">
             $('drugName_'+'<%=rand%>').value=decodeURIComponent(encodeURIComponent('<%=drugName%>'));

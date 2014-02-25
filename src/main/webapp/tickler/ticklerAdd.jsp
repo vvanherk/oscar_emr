@@ -133,7 +133,6 @@ form.action = "dbTicklerAdd.jsp";
 form.submit();
 
 }
-else{}
 }
 function validateDemoNo() {
   if (document.serviceform.demographic_no.value == "") {
@@ -144,18 +143,13 @@ alert("<bean:message key="tickler.ticklerAdd.msgInvalidDemographic"/>");
 alert("<bean:message key="tickler.ticklerAdd.msgMissingDate"/>");
 	return false;
  }
-<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) { %>
  else if (document.serviceform.site.value=="none"){
 alert("Must assign task to a provider.");
 	return false;
  } 
-<% } %>
- else{
- return true;
-}
  }
 
-
+return true;
 }
 function refresh() {
   var u = self.location.href;
@@ -320,17 +314,17 @@ var newD = newYear + "-" + newMonth + "-" + newDay;
     <tr> 
       <td height="21" valign="top"><font color="#003366" size="2" face="Verdana, Arial, Helvetica, sans-serif"><strong><bean:message key="tickler.ticklerMain.taskAssignedTo"/></strong></font></td>
       <td valign="top"> <font face="Verdana, Arial, Helvetica, sans-serif" size="2" color="#333333">
-<% if (org.oscarehr.common.IsPropertiesOn.isMultisitesEnable()) 
-{ // multisite start ==========================================
-        	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-          	List<Site> sites = siteDao.getActiveSitesByProviderNo(user_no);
-          	String appNo = (String) session.getAttribute("cur_appointment_no");
-          	String location = null;
-          	if (appNo != null) {
-          		ResultSet rs = apptMainBean.queryResults(appNo, "get_appt_location");
-          		if(rs.next()) location=apptMainBean.getString(rs,1);
-          	}
-      %> 
+
+<%
+		SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+		List<Site> sites = siteDao.getActiveSitesByProviderNo(user_no);
+		String appNo = (String) session.getAttribute("cur_appointment_no");
+		String location = null;
+		if (appNo != null) {
+			ResultSet rs = apptMainBean.queryResults(appNo, "get_appt_site");
+			if(rs.next()) location=apptMainBean.getString(rs,1);
+		}
+%> 
       <script>
 var _providers = [];
 <%	
@@ -349,7 +343,7 @@ function changeSite(sel) {
 }
       </script>
       	<select id="site" name="site" onchange="changeSite(this)">
-      		<option value="none">---select clinic---</option>
+      		<option value="none">---Select Site---</option>
       	<%
       	for (int i=0; i<sites.size(); i++) {
       	%>
@@ -361,27 +355,6 @@ function changeSite(sel) {
       		document.getElementById("site").value = '<%= site==null?"none":site.getSiteId() %>';
       		changeSite(document.getElementById("site"));
       	</script>
-<% // multisite end ==========================================
-} else {
-%>
-      <select name="task_assigned_to">           
-            <%  String proFirst="";
-                String proLast="";
-                String proOHIP="";
-
-                ResultSet rslocal = apptMainBean.queryResults("%", "search_provider_all");
-                while(rslocal.next()){
-                    proFirst = rslocal.getString("first_name");
-                    proLast = rslocal.getString("last_name");
-                    proOHIP = rslocal.getString("provider_no"); 
-
-            %> 
-            <option value="<%=proOHIP%>" <%=user_no.equals(proOHIP)?"selected":""%>><%=proLast%>, <%=proFirst%></option>
-            <%
-                }
-            %>
-      </select>
-<% } %>
           
            <input type="hidden" name="docType" value="<%=request.getParameter("docType")%>"/>
            <input type="hidden" name="docId" value="<%=request.getParameter("docId")%>"/>

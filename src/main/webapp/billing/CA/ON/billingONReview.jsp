@@ -17,7 +17,7 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 --%>
-<%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
+
 
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html"%>
@@ -32,6 +32,7 @@
 <% java.util.Properties oscarVariables = OscarProperties.getInstance(); %>
 <jsp:useBean id="providerBean" class="java.util.Properties" scope="session" />
 <%@ page import="org.oscarehr.util.SpringUtils" %>
+<%@ page import="org.oscarehr.util.MiscUtils"%>
 <%@ page import="org.oscarehr.common.model.DiagnosticCode" %>
 <%@ page import="org.oscarehr.common.dao.DiagnosticCodeDao" %>
 <%@ page import="org.oscarehr.common.dao.ClinicDAO" %>
@@ -67,6 +68,29 @@ BigDecimal stotal = new BigDecimal(0);
 BigDecimal gstTotal = new BigDecimal(0);
 BigDecimal gstbilledtotal = new BigDecimal(0);
 boolean dupServiceCode = false;
+
+String clinicNoAsString = request.getParameter("clinic");
+Integer clinicNo = 0;
+try {
+	clinicNo = Integer.parseInt( clinicNoAsString );
+} catch (Exception e) {
+	MiscUtils.getLogger().error("Unable to parse clinic number.", e);
+}
+
+String siteNoAsString = request.getParameter("site");
+Integer siteNo = 0;
+try {
+	siteNo = Integer.parseInt( siteNoAsString );
+} catch (Exception e) {
+	MiscUtils.getLogger().error("Unable to parse site number.", e);
+}
+
+ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+Clinic clinic = clinicDao.find( clinicNo );
+
+SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
+Site site = siteDao.find( siteNo );
+
 %>
 
 <%//
@@ -132,7 +156,7 @@ boolean dupServiceCode = false;
         Properties propCodeDesc = (new JdbcBillingCodeImpl()).getCodeDescByNames(vecServiceParam[0]);
 			String dxDesc = prepObj.getDxDescription(request.getParameter("dxCode"));
 			String clinicview = oscarVariables.getProperty("clinic_view", "");
-			String clinicNo = oscarVariables.getProperty("clinic_no", "");
+			String clinic_no = oscarVariables.getProperty("clinic_no", "");
 			String visitType = oscarVariables.getProperty("visit_type", "");
 			String appt_no = request.getParameter("appointment_no");
 			String demoname = request.getParameter("demographic_name");
@@ -477,7 +501,7 @@ window.onload=function(){
 					 class="myGreen">
 					<tr>
 						<td nowrap width="30%"><b>Billing Physician</b></td>
-						<td width="20%"><%=providerBean.getProperty(request.getParameter("xml_provider")!=null?request.getParameter("xml_provider").substring(0,request.getParameter("xml_provider").indexOf("|")):"", "")%></td>
+						<td width="20%"><%=providerBean.getProperty(request.getParameter("xml_provider")!=null?request.getParameter("xml_provider"):"", "")%></td>
 						<td nowrap width="30%"><b>Assig. Physician</b></td>
 						<td width="20%"><%=assgProvider_no == null ? "N/A" : providerBean.getProperty(assgProvider_no, "")%></td>
 					</tr>
@@ -499,15 +523,16 @@ window.onload=function(){
 							<% if(request.getParameter("m_review")!=null) { out.println("<b>Manual: Y</b>"); } %>
 							</td>
 
-					<% if (bMultisites) { %>
 						<td width="30%"><b>Billing Clinic</b></td>
-						<td width="20%" nowrap="nowrap"><%=request.getParameter("site")%>
+						<td width="20%" nowrap="nowrap"><%=clinic != null? clinic.getClinicName() : ""%>
 						</td>
-					<% } %>
 					</tr>
 					<tr>
                    		<td><b>SLI Code</b></td>
                         <td><%=request.getParameter("xml_slicode").substring(request.getParameter("xml_slicode").indexOf("|") + 1)%> &nbsp;</td>
+                        
+                        <td width="30%"><b>Billing Site</b></td>
+						<td width="20%" nowrap="nowrap"><%=site != null? site.getName() : ""%>
                     </tr>
 					<tr>
 						<td><b>Admission Date</b></td>
@@ -790,19 +815,8 @@ function onCheckMaster() {
 	<tr>
 			<td >
 			Billing Notes:<br>
-			<%
-			String tempLoc = "";
-		if (!bMultisites) {
-            OscarProperties props = OscarProperties.getInstance();
-            boolean bMoreAddr = props.getProperty("scheduleSiteID", "").equals("") ? false : true;
-            if(bMoreAddr) {
-            	tempLoc = request.getParameter("siteId").trim();
-            }
-		} else {
-			tempLoc = request.getParameter("site");
-		}
-			%>
-			<textarea name="comment" cols=60 rows=4><%=tempLoc %></textarea>
+
+			<textarea name="comment" cols=60 rows=4></textarea>
 			</td>
 	</tr>
 <%      }
@@ -814,10 +828,8 @@ if(request.getParameter("xml_billtype")!=null && !request.getParameter("xml_bill
 
 	Billing3rdPartPrep privateObj = new Billing3rdPartPrep();
 	//For clinic letter, nothing for provider and "Remit to" part.
-	ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
-	List<Clinic> clinics = clinicDao.findAll();
 	
-	oscar.oscarRx.data.RxProviderData.Provider provider = new oscar.oscarRx.data.RxProviderData().getProvider((String) session.getAttribute("user"));
+	oscar.oscarRx.data.RxProviderData.Provider provider = new oscar.oscarRx.data.RxProviderData().getProvider((String) session.getAttribute("user"), clinicNo, siteNo);
 
                 /*
                 = propClinic.getProperty("clinic_name", "") + "\n"
@@ -828,6 +840,7 @@ if(request.getParameter("xml_billtype")!=null && !request.getParameter("xml_bill
 		+ "Fax: " + propClinic.getProperty("clinic_fax", "") ;
                 */
         String strClinicAddr = provider.getClinicName().replaceAll("\\(\\d{6}\\)","") +"\n"
+							 + (provider.getSubHeaderName() != null? provider.getSubHeaderName()+"\n" : "")
                              + provider.getClinicAddress() +"\n"
                              + provider.getClinicCity() +","+ provider.getClinicProvince()+"\n"
                              + provider.getClinicPostal() +"\n"
@@ -841,41 +854,10 @@ if (codeValid) { %>
 // for satellite clinics
 String clinicAddress = null;
 // get Site ID from billingON.jsp
-if (bMultisites) {
-	String siteName = request.getParameter("site");
-	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-  	List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-  	Site s = ApptUtil.getSiteFromName(sites, siteName);
 
-  	if (s==null)
-  		clinicAddress = strClinicAddr;
-  	else {
-  		clinicAddress = s.getName()+"\n"+s.getAddress()+"\n"+s.getCity()+", "+s.getProvince()+" "+s.getPostal()+"\nTel: "+s.getPhone()+"\nFax: "+s.getFax();
-  	}
+clinicAddress = strClinicAddr;
 
-} else {
-	String siteID = request.getParameter("siteId");
-	OscarProperties props2 = OscarProperties.getInstance();
-	if(props2.getProperty("clinicSatelliteCity") != null) {
-	    //compare the site id with clinicSatelliteCity to get the current address index
-	    //in properties file  clinicSatelliteCity and scheduleSiteID must have same value
-	    String[] clinicCity = props2.getProperty("clinicSatelliteCity", "").split("\\|");
-	    //current address index
-	    int siteFlag = 0;
-	    for(int i = 0; i < clinicCity.length; i++){
-	    	if (siteID.equals(clinicCity[i]))	siteFlag = i;
-	    }
-	    String[] temp0 = props2.getProperty("clinicSatelliteName", "").split("\\|");
-	    String[] temp1 = props2.getProperty("clinicSatelliteAddress", "").split("\\|");
-	    String[] temp3 = props2.getProperty("clinicSatelliteProvince", "").split("\\|");
-	    String[] temp4 = props2.getProperty("clinicSatellitePostal", "").split("\\|");
-	    String[] temp5 = props2.getProperty("clinicSatellitePhone", "").split("\\|");
-	    String[] temp6 = props2.getProperty("clinicSatelliteFax", "").split("\\|");
-	    clinicAddress = temp0[siteFlag]+"\n"+temp1[siteFlag] + "\n" + clinicCity[siteFlag] + ", " + temp3[siteFlag] + " " + temp4[siteFlag] + "\nTel: " + temp5[siteFlag] + "\nFax: " + temp6[siteFlag];
-	}else{
-		clinicAddress = strClinicAddr;
-	}
-}
+
 %>
 <tr><td>
 		<table border="1" width="100%" bordercolorlight="#99A005" bordercolordark="#FFFFFF">
@@ -889,23 +871,10 @@ if (bMultisites) {
 			<textarea name="billto" value="" cols=30 rows=6><%=strPatientAddr %></textarea></td>
 			<td width="40%">Remit To [<a href=# onclick="scriptAttach('remitto'); return false;">Search</a>]<br>
 			<textarea name="remitto" value="" cols=30 rows=6><%=clinicAddress%></textarea></td>
-			<td>Clinic Letterhead:<br />
-			 <!--Code Clinic Letterhead copy from ConsultationFormRequest.jsp. -->   
-				<select id="clinicNo" name="clinicNo" style="width: 100%">
-					<%
-					String sessionClinicId = (String) session.getAttribute("clinic_id");
-					if (sessionClinicId == null)
-						sessionClinicId = "";
-					for ( Clinic clinic : clinics) {
-					%>
-						<option <%=sessionClinicId.equals("" + clinic.getId())? "selected" : ""%> value="<%=clinic.getId()%>"><%=clinic.getClinicName()%></option>
-					<%
-					}
-					%>
-				</select>
-			</td>
+			
 			</tr>
 			</table>
+			<input type='hidden' name='siteNo' value='<%=siteNo%>'>
 			<table border="0" width="100%" >
 			<tr>
 			<td >
@@ -913,7 +882,7 @@ if (bMultisites) {
 			<textarea name="comment" value="" cols=60 rows=4></textarea>
 			</td>
 			<td align="right">
-                        <input type="hidden" name="provider_no" value="<%=request.getParameter("xml_provider").substring(0,request.getParameter("xml_provider").indexOf("|"))%>"/>
+                        <input type="hidden" name="provider_no" value="<%=request.getParameter("xml_provider")%>"/>
                         GST Billed:<input type="text" id="gst" name="gst" value="<%=gstTotal%>" size="6"/><br>
                         <input type="hidden" id="gstBilledTotal" name="gstBilledTotal" value="<%=gstbilledtotal%>" size="6" />
                         Total:<input type="text" id="stotal" disabled name = "stotal" value="0.00" size="6" /><br>

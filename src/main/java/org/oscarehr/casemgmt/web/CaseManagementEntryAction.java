@@ -47,11 +47,15 @@ import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 
+import java.lang.IllegalArgumentException;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import net.sf.json.JSONObject;
+import net.sf.json.JSONArray;
+import net.sf.json.JSONSerializer;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.math.NumberUtils;
@@ -95,12 +99,16 @@ import org.oscarehr.common.dao.BillingServiceDao;
 import org.oscarehr.common.dao.DemographicDao;
 import org.oscarehr.common.dao.OscarAppointmentDao;
 import org.oscarehr.common.dao.ProviderDefaultProgramDao;
+import org.oscarehr.common.dao.OfficeCommunicationDao;
+import org.oscarehr.common.dao.SiteDao;
 import org.oscarehr.common.model.Appointment;
 import org.oscarehr.common.model.Demographic;
 import org.oscarehr.common.model.DxAssociation;
 import org.oscarehr.common.model.PartialDate;
 import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.ProviderDefaultProgram;
+import org.oscarehr.common.model.OfficeCommunication;
+import org.oscarehr.common.model.Site;
 import org.oscarehr.eyeform.dao.EyeFormDao;
 import org.oscarehr.eyeform.dao.FollowUpDao;
 import org.oscarehr.eyeform.dao.MacroDao;
@@ -517,6 +525,79 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		}
 	}
 
+	public ActionForward officeCommunicationSaveJson(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		String strNote = request.getParameter("value");
+		String appointmentNoAsString = request.getParameter("appointment_no");
+		String demographicNoAsString = request.getParameter("demographic_no");
+		String noteIdAsString = request.getParameter("noteId");
+		boolean signed = (request.getParameter("sign") != null && request.getParameter("sign").equalsIgnoreCase("true"));
+		
+		Integer appointmentNo = null;
+		Integer demographicNo = null;
+		Integer noteId = null;
+		
+		if (appointmentNoAsString == null || appointmentNoAsString.equals(""))
+			appointmentNoAsString = "0";
+		if (demographicNoAsString == null || demographicNoAsString.equals(""))
+			throw new IllegalArgumentException("Demographic number null or empty.");
+		if (noteIdAsString == null || noteIdAsString.equals(""))
+			noteIdAsString = "0";
+		
+		appointmentNo = Integer.parseInt( appointmentNoAsString );
+		demographicNo = Integer.parseInt( demographicNoAsString );
+		noteId = Integer.parseInt( noteIdAsString );
+				
+		strNote = org.apache.commons.lang.StringUtils.trimToNull(strNote);
+		
+		OfficeCommunicationDao officeCommunicationDao = (OfficeCommunicationDao) SpringUtils.getBean("officeCommunicationDao");
+		
+		if ( noteId.intValue() == 0) {
+			officeCommunicationDao.add( appointmentNo, demographicNo, strNote, signed );
+			//
+			return null;
+		}
+		
+		OfficeCommunication oc = officeCommunicationDao.get( noteId );
+		
+		oc.setNote( strNote );
+		if ( signed )
+			oc.setSigned( true );
+		officeCommunicationDao.update( oc );
+		return null;
+	}
+	
+	public ActionForward signSavedNotes(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		
+		JSONArray notes = (JSONArray) JSONSerializer.toJSON(request.getParameter("notes"));
+		
+		for(int i =0; i < notes.size(); i++)
+		{
+			JSONObject currIssNote = (JSONObject) JSONSerializer.toJSON(notes.getString(i));
+			String appointment_no = request.getParameter("appointment_no");
+			CaseManagementNote noteObj = null;
+			
+			noteObj = caseManagementNoteDao.getNote( Long.parseLong(currIssNote.getString("noteId"), 10) );
+			
+			if(appointment_no.equals("0") || noteObj.getAppointmentNo() == Integer.parseInt(appointment_no) ){
+				MockHttpServletRequest mockReq = new MockHttpServletRequest();
+							
+				mockReq.setSession(request.getSession());
+				mockReq.addParameter("appointment_no", appointment_no);
+				mockReq.addParameter("demographic_no",request.getParameter("demographic_no"));
+				mockReq.addParameter("sign", "true");
+				
+				mockReq.addParameter("value", currIssNote.getString("value"));
+				mockReq.addParameter("issue_code", currIssNote.getString("issue_code"));
+				mockReq.addParameter("noteId", currIssNote.getString("noteId"));
+
+				
+				ActionForward temp = issueNoteSaveJson(mapping, form, mockReq, response);
+			}
+		}
+		
+		return null;
+	}
+
 	public ActionForward issueNoteSaveJson(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String strNote = request.getParameter("value");
 		String appointmentNo = request.getParameter("appointment_no");
@@ -524,20 +605,41 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		String noteId = request.getParameter("noteId");
 		String demographicNo = request.getParameter("demographic_no");
 		String issueCode = request.getParameter("issue_id");
-
 		String issueAlphaCode = request.getParameter("issue_code");
-
 		String archived = request.getParameter("archived");
+		String macroId = request.getParameter("macroId");
+		String runMacro = request.getParameter("runMacro");
+		boolean runMacroBoolean = false;
+		String macroImpression = "";
+		
+		if (appointmentNo == null || appointmentNo.equals(""))
+			appointmentNo = "0";
+		
+		MacroDao macroDao = (MacroDao) SpringUtils.getBean("macroDao");
+		Macro macro = null;
+		
+		if (macroId != null && !macroId.equals(""))
+			macro = macroDao.find( Integer.parseInt(macroId) );
+		
+		if ( (runMacro == null || runMacro.equals("true")) && macro != null)
+			runMacroBoolean = true;
+		
+		if (runMacroBoolean) {
+			runMacro(macroId, demographicNo, providerNo, appointmentNo, null);
+			macroImpression = macro.getImpression();
+		}
 
 		Date noteDate = new Date();
 
 		strNote = org.apache.commons.lang.StringUtils.trimToNull(strNote);
-		if( (archived == null || !archived.equalsIgnoreCase("true")) && (strNote == null || strNote.equals("")) )
+		macroImpression = org.apache.commons.lang.StringUtils.trimToNull(macroImpression);
+		if( (archived == null || !archived.equalsIgnoreCase("true")) && (strNote == null || strNote.equals("")) && (macro == null || macroImpression == null) )
 			return null;
 
 		CaseManagementNote note = new CaseManagementNote();
 		if (!noteId.equals("0")) {
 			note = this.caseManagementMgr.getNote(noteId);
+			
 			if ((archived == null || !archived.equalsIgnoreCase("true"))
 					&& (request.getParameter("sign") == null || !request.getParameter("sign").equalsIgnoreCase("true"))
 					&& note.getNote().equalsIgnoreCase(strNote))
@@ -545,43 +647,80 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 			note.setRevision(Integer.parseInt(note.getRevision())+1 + "");
 
-			if (archived != null && archived.equalsIgnoreCase("true"))
+			boolean isNewlyArchived = false;
+			if (archived != null && archived.equalsIgnoreCase("true")) {
+				if (!note.isArchived())
+					isNewlyArchived = true;
 				note.setArchived(true);
+			}
 			
 			if (demographicNo == null)
 				demographicNo = note.getDemographic_no();
+			
+			// Update the update date only if the note text has changed or we have archived the note
+			if (!note.getNote().equalsIgnoreCase(strNote) || isNewlyArchived)
+				note.setUpdate_date( noteDate );
 
 		} else {
 			note.setDemographic_no(demographicNo);
-
-			CaseManagementIssue cIssue;
-			if (issueAlphaCode != null && issueAlphaCode.length() > 0)
-				cIssue = this.caseManagementMgr.getIssueByIssueCode(demographicNo, issueAlphaCode);
-			else
-				cIssue = this.caseManagementMgr.getIssueById(demographicNo,issueCode);
-
-			Set<CaseManagementIssue> issueSet = new HashSet<CaseManagementIssue>();
-			Set<CaseManagementNote> noteSet = new HashSet<CaseManagementNote>();
-
-			if( cIssue == null ) {
-				Issue issue;
-				if (issueAlphaCode != null && issueAlphaCode.length() > 0)
-					issue = this.caseManagementMgr.getIssueByCode(issueAlphaCode);
-				else
-					issue = this.caseManagementMgr.getIssue(issueCode);
-
-				cIssue = this.newIssueToCIssue(demographicNo, issue, Integer.parseInt("10016"));
-				cIssue.setNotes(noteSet);
-			}
-
-			issueSet.add(cIssue);
-			note.setIssues(issueSet);
-
 			note.setCreate_date(noteDate);
 			note.setObservation_date(noteDate);
 			note.setRevision("1");
 
 		}
+		
+		// Determines what program & role to assign the note to
+		ProgramProviderDAO programProviderDao = (ProgramProviderDAO) SpringUtils.getBean("programProviderDAO");
+		ProviderDefaultProgramDao defaultProgramDao = (ProviderDefaultProgramDao) SpringUtils.getBean("providerDefaultProgramDao");
+		ProgramProvider programProvider = programProviderDao.getProgramProviderByProviderNo(providerNo).get(0);
+		boolean programSet = false;
+
+		List<ProviderDefaultProgram> programs = defaultProgramDao.getProgramByProviderNo(providerNo);
+		HashMap<Program,List<Secrole>> rolesForDemo = NotePermissionsAction.getAllProviderAccessibleRolesForDemo(providerNo, demographicNo);
+		for (ProviderDefaultProgram pdp : programs) {
+			for (Program p : rolesForDemo.keySet()) {
+				if (pdp.getProgramId() == p.getId().intValue()) {
+					List<ProgramProvider> programProviderList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, (long) pdp.getProgramId());
+
+					note.setProgram_no("" + pdp.getProgramId());
+					note.setReporter_caisi_role("" + programProviderList.get(0).getRoleId());
+
+					programSet = true;
+				}
+			}
+		}
+
+		if (!programSet && !rolesForDemo.isEmpty()) {
+			Program program = rolesForDemo.keySet().iterator().next();
+			programProvider = programProviderDao.getProgramProvider(providerNo, (long) program.getId());
+			note.setProgram_no("" + programProvider.getProgramId());
+			note.setReporter_caisi_role("" + programProvider.getRoleId());
+		}
+		
+		CaseManagementIssue cIssue;
+		if (issueAlphaCode != null && issueAlphaCode.length() > 0)
+			cIssue = this.caseManagementMgr.getIssueByIssueCode(demographicNo, issueAlphaCode);
+		else
+			cIssue = this.caseManagementMgr.getIssueById(demographicNo,issueCode);
+
+		Set<CaseManagementIssue> issueSet = new HashSet<CaseManagementIssue>();
+		Set<CaseManagementNote> noteSet = new HashSet<CaseManagementNote>();
+
+		if( cIssue == null ) {
+			Issue issue;
+			if (issueAlphaCode != null && issueAlphaCode.length() > 0)
+				issue = this.caseManagementMgr.getIssueByCode(issueAlphaCode);
+			else
+				issue = this.caseManagementMgr.getIssue(issueCode);
+			
+			if(issue != null){
+				cIssue = this.newIssueToCIssue(demographicNo, issue, programProvider.getProgramId().intValue());
+				cIssue.setNotes(noteSet);
+			}
+		}
+		issueSet.add(cIssue);
+		note.setIssues(issueSet);
+		
 
 		try {
 			note.setAppointmentNo(Integer.parseInt(appointmentNo));
@@ -589,8 +728,15 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			// No appointment number set for this encounter
 		}
 
+		// Error check note string
 		if (strNote != null)
 			note.setNote(strNote);
+		else
+			note.setNote("");
+		
+		// Append macro text if we have any
+		if (macro != null && macroImpression != null)
+			note.setNote(note.getNote() + "\n" + macroImpression);
 
 		note.setProviderNo(providerNo);
 		note.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider);
@@ -615,7 +761,8 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				try {
 					Appointment appointment = appointmentDao.find(Integer.parseInt(appointmentNo));
 					if (appointment != null) {
-						ApptStatusData statusData = new ApptStatusData();
+						oscar.appt.ApptStatusData statusData = new oscar.appt.ApptStatusData();
+						statusData.setApptStatus(appointment.getStatus());
 						appointment.setStatus(statusData.signStatus());
 						appointmentDao.merge(appointment);
 					}
@@ -628,34 +775,6 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 			note.setSigning_provider_no("");
 		}
 
-
-		// Determines what program & role to assign the note to
-		ProgramProviderDAO programProviderDao = (ProgramProviderDAO) SpringUtils.getBean("programProviderDAO");
-		ProviderDefaultProgramDao defaultProgramDao = (ProviderDefaultProgramDao) SpringUtils.getBean("providerDefaultProgramDao");
-		boolean programSet = false;
-
-		List<ProviderDefaultProgram> programs = defaultProgramDao.getProgramByProviderNo(providerNo);
-		HashMap<Program,List<Secrole>> rolesForDemo = NotePermissionsAction.getAllProviderAccessibleRolesForDemo(providerNo, demographicNo);
-		for (ProviderDefaultProgram pdp : programs) {
-			for (Program p : rolesForDemo.keySet()) {
-				if (pdp.getProgramId() == p.getId().intValue()) {
-					List<ProgramProvider> programProviderList = programProviderDao.getProgramProviderByProviderProgramId(providerNo, (long) pdp.getProgramId());
-
-					note.setProgram_no("" + pdp.getProgramId());
-					note.setReporter_caisi_role("" + programProviderList.get(0).getRoleId());
-
-					programSet = true;
-				}
-			}
-		}
-
-		if (!programSet && !rolesForDemo.isEmpty()) {
-			Program program = rolesForDemo.keySet().iterator().next();
-			ProgramProvider programProvider = programProviderDao.getProgramProvider(providerNo, (long) program.getId());
-			note.setProgram_no("" + programProvider.getProgramId());
-			note.setReporter_caisi_role("" + programProvider.getRoleId());
-		}
-
 		note.setReporter_program_team("0");
 
 		CaseManagementCPP cpp = this.caseManagementMgr.getCPP(demographicNo);
@@ -666,6 +785,18 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 		String savedStr = caseManagementMgr.saveNote(cpp, note, providerNo, null, null, null);
 		addNewNoteLink(note.getId());
+		
+		String aN = request.getParameter("archiveNote");
+		if(aN != null && !aN.equals("") ){
+			CaseManagementNoteExt archiveNote = new CaseManagementNoteExt();
+			CaseManagementNote newNote = caseManagementMgr.getMostRecentNote(note.getUuid());
+			
+			archiveNote.setNoteId(newNote.getId());
+			archiveNote.setKeyVal(CaseManagementNoteExt.ARCHIVENOTE);
+			archiveNote.setValue(aN);
+			
+			caseManagementNoteExtDao.save(archiveNote);
+		}
 
 
 		HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -675,7 +806,7 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 		return null;
 	}
-
+	
 	public ActionForward issueNoteSave(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		String strNote = request.getParameter("value");
 		String appointmentNo = request.getParameter("appointmentNo");
@@ -2584,26 +2715,40 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 		} else return mapping.findForward("view");
 	}
 
-	public ActionForward notehistory(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
+	public ActionForward offCommHist(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		if (request.getSession().getAttribute("userrole") == null) return mapping.findForward("expired");
-
+		
+		OfficeCommunicationDao officeCommunicationDao = (OfficeCommunicationDao) SpringUtils.getBean("officeCommunicationDao");
+		
 		String demono = getDemographicNo(request);
-		request.setAttribute("demoName", getDemoName(demono));
-
-		String noteid = request.getParameter("noteId");
-
-		List<CaseManagementNote> history = caseManagementMgr.getHistory(noteid);
-		request.setAttribute("history", history);
-		ResourceBundle props = ResourceBundle.getBundle("oscarResources");
-		request.setAttribute("title", props.getString("oscarEncounter.noteHistory.title"));
-		return mapping.findForward("showHistory");
+		DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
+		
+		Demographic demo = demographicDao.getDemographic(demono);
+		request.setAttribute("demoName", demo.getDisplayName());
+		request.setAttribute("demoAge", demo.getAge());
+		request.setAttribute("demoSex", demo.getSex());
+		request.setAttribute("demoDOB", demo.getBirthDayAsString());
+		
+		List<OfficeCommunication> history = officeCommunicationDao.getByDemographicNo(Integer.parseInt(demono));
+		
+		//Collections.reverse(history);
+		request.setAttribute("history",history);
+		
+		return mapping.findForward("offCommHist");
 	}
 
 	public ActionForward issuehistory(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
 		if (request.getSession().getAttribute("userrole") == null) return mapping.findForward("expired");
 
 		String demono = getDemographicNo(request);
-		request.setAttribute("demoName", getDemoName(demono));
+		DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
+		
+		Demographic demo = demographicDao.getDemographic(demono);
+		request.setAttribute("demoName", demo.getDisplayName());
+		request.setAttribute("demoAge", demo.getAge());
+		request.setAttribute("demoSex", demo.getSex());
+		request.setAttribute("demoDOB", demo.getBirthDayAsString());
+		
 		String issueIds = request.getParameter("issueIds");
 
 		List<CaseManagementNote> history = new ArrayList<CaseManagementNote>();
@@ -2621,8 +2766,10 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				} else current.add(new Boolean(true));
 			}
 		}
+		Collections.reverse(history);
+		Collections.reverse(current);
 
-		request.setAttribute("history", history);
+		request.setAttribute("history",history);
 		request.setAttribute("current", current);
 
 		StringBuilder title = new StringBuilder();
@@ -2893,25 +3040,38 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 
 		return (note);
 	}
-
-	public ActionForward runMacro(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
-		CaseManagementEntryFormBean cform = (CaseManagementEntryFormBean) form;
+	
+	private void runMacro(String macroId, String demographicNo, String providerNo, String appointmentNo, String appointmentDate) {
+		//logger.info("macroId " + macroId + " appointmentDate: " + appointmentDate + " appointmentNo: " + appointmentNo + " demographicNo: " + demographicNo + " providerNo: " + providerNo);
+		
+		if (macroId == null || macroId.equals(""))
+			return;
+		
 		MacroDao macroDao = (MacroDao) SpringUtils.getBean("macroDao");
-		Macro macro = macroDao.find(Integer.parseInt(request.getParameter("macro.id")));
-		logger.info("loaded macro " + macro.getLabel());
-		boolean cppFromMeasurements = false;
-		String cpp = request.getParameter("cpp");
-		if (cpp != null && cpp.equals("measurements")) {
-			cppFromMeasurements = true;
+		Macro macro = macroDao.find( Integer.parseInt(macroId) );
+		logger.debug("loaded macro " + macro.getLabel());
+		
+		if (appointmentDate == null)
+			appointmentDate = "";
+		
+		OscarAppointmentDao apptDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
+
+		Appointment appt = null;
+		if (appointmentNo != null && appointmentNo.length() > 0 && !appointmentDate.equals("0")) {
+			appt = apptDao.find(Integer.parseInt(appointmentNo));
+			if (appt == null)
+				logger.warn("Unable to load appointment for appointmentNo: " + appointmentNo);
 		}
-
-		cform.setCaseNote_note(cform.getCaseNote_note() + "\n" + macro.getImpression());
-
-		ActionForward fwd = saveAndExit(mapping, form, request, response);
-
-		if (fwd.getName().equals("windowClose")) {
-			EyeFormDao eyeformDao = (EyeFormDao) SpringUtils.getBean("EyeFormDao");
-			EyeForm eyeform = eyeformDao.getByAppointmentNo(Integer.parseInt(cform.getAppointmentNo()));
+		
+		if ((appointmentDate == null || appointmentDate.equals("")) && appt != null)
+			appointmentDate = appt.getAppointmentDate().toString();
+		if ((appointmentDate == null || appointmentDate.equals("")))
+			logger.warn("Appointment Date is null or empty while executing macro.");
+		
+		EyeFormDao eyeformDao = (EyeFormDao) SpringUtils.getBean("EyeFormDao");
+		EyeForm eyeform = eyeformDao.getByAppointmentNo(Integer.parseInt(appointmentNo));
+		
+		if (eyeform != null) {
 			// load up the eyeform to set/unset checkboxes
 			if (macro.getDischargeFlag() != null && macro.getDischargeFlag().equals("dischargeFlag")) {
 				eyeform.setDischarge("true");
@@ -2923,185 +3083,234 @@ public class CaseManagementEntryAction extends BaseCaseManagementEntryAction {
 				eyeform.setStat("true");
 			}
 			eyeformDao.merge(eyeform);
+		}
 
-			// follow ups
-			FollowUpDao followUpDao = (FollowUpDao) SpringUtils.getBean("FollowUpDAO");
-			int followUpNo = macro.getFollowupNo();
-			String followUpUnit = macro.getFollowupUnit();
-			String followUpDr = macro.getFollowupDoctorId();
-			if (followUpNo > 0) {
-				EyeformFollowUp f = new EyeformFollowUp();
-				f.setAppointmentNo(Integer.parseInt(cform.getAppointmentNo()));
-				f.setDate(new Date());
-				f.setDemographicNo(Integer.parseInt(cform.getDemographicNo()));
-				f.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider);
-				f.setTimeframe(followUpUnit);
-				f.setTimespan(followUpNo);
-				f.setType("followup");
-				f.setUrgency("routine");
-				f.setFollowupProvider(followUpDr);
-				followUpDao.persist(f);
+		// follow ups
+		FollowUpDao followUpDao = (FollowUpDao) SpringUtils.getBean("FollowUpDAO");
+		int followUpNo = macro.getFollowupNo();
+		String followUpUnit = macro.getFollowupUnit();
+		String followUpDr = macro.getFollowupDoctorId();
+		if (followUpNo > 0) {
+			EyeformFollowUp f = new EyeformFollowUp();
+			f.setAppointmentNo(Integer.parseInt(appointmentNo));
+			f.setDate(new Date());
+			f.setDemographicNo(Integer.parseInt(demographicNo));
+			f.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider);
+			f.setTimeframe(followUpUnit);
+			f.setTimespan(followUpNo);
+			f.setType("followup");
+			f.setUrgency("routine");
+			f.setFollowupProvider(followUpDr);
+			followUpDao.persist(f);
+		}
+
+		// tests
+		TestBookRecordDao testDao = (TestBookRecordDao) SpringUtils.getBean("TestBookDAO");
+		String[] tests = macro.getTestRecords().split("\n");
+		for (String test : tests) {
+			String[] parts = test.trim().split("\\|");
+			if (parts.length == 3 || parts.length == 4) {
+				EyeformTestBook rec = new EyeformTestBook();
+				rec.setAppointmentNo(Integer.parseInt(appointmentNo));
+				if (parts.length == 4) rec.setComment(parts[3]);
+				else rec.setComment("");
+				rec.setDate(new Date());
+				rec.setDemographicNo(Integer.parseInt(demographicNo));
+				rec.setEye(parts[1]);
+				rec.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
+				// rec.setStatus(null);
+				rec.setTestname(parts[0]);
+				rec.setUrgency(parts[2]);
+				testDao.save(rec);
 			}
+		}
 
-			// tests
-			TestBookRecordDao testDao = (TestBookRecordDao) SpringUtils.getBean("TestBookDAO");
-			String[] tests = macro.getTestRecords().split("\n");
-			for (String test : tests) {
-				String[] parts = test.trim().split("\\|");
-				if (parts.length == 3 || parts.length == 4) {
-					EyeformTestBook rec = new EyeformTestBook();
-					rec.setAppointmentNo(Integer.parseInt(cform.getAppointmentNo()));
-					if (parts.length == 4) rec.setComment(parts[3]);
-					else rec.setComment("");
-					rec.setDate(new Date());
-					rec.setDemographicNo(Integer.parseInt(cform.getDemographicNo()));
-					rec.setEye(parts[1]);
-					rec.setProvider(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
-					// rec.setStatus(null);
-					rec.setTestname(parts[0]);
-					rec.setUrgency(parts[2]);
-					testDao.save(rec);
+		// send tickler
+		if (macro.getTicklerRecipient() != null && macro.getTicklerRecipient().length() > 0) {
+			TicklerDAO ticklerDao = (TicklerDAO) SpringUtils.getBean("ticklerDAOT");
+			Tickler t = new Tickler();
+			t.setCreator(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
+			t.setDemographic_no(demographicNo);
+			t.setMessage(getMacroTicklerText(Integer.parseInt(appointmentNo), Integer.parseInt(demographicNo)));
+			t.setPriority("Normal");
+			t.setService_date(new Date());
+			t.setStatus('A');
+			t.setTask_assigned_to(macro.getTicklerRecipient());
+			t.setUpdate_date(new Date());
+			ticklerDao.saveTickler(t);
+		}
+
+		// billing
+		if (macro.getBillingCodes() != null && macro.getBillingCodes().length() > 0) {
+			GstControlDao gstControlDao = (GstControlDao) SpringUtils.getBean("gstControlDao");
+			BillingServiceDao billingServiceDao = (BillingServiceDao) SpringUtils.getBean("billingServiceDao");
+			DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
+			Provider provider = LoggedInInfo.loggedInInfo.get().loggedInProvider;
+
+			SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
+			String serviceDate = sf.format(new Date());
+
+			// create a mock httprequest to fill in the preset values
+			MockHttpServletRequest mockReq = new MockHttpServletRequest();
+			mockReq.addParameter("dxCode", macro.getBillingDxcode());
+			String[] bcodes = macro.getBillingCodes().replace("\r", "").split("\n");
+
+			BigDecimal btotal = new BigDecimal(0);
+			// must use 100.0 otherwise result will be an int
+			BigDecimal gstFactor = new BigDecimal(1 + gstControlDao.find(1).getGstPercent().intValue() / 100.0);
+			ArrayList<String[]> percentUnits = new ArrayList<String[]>();
+			for (int i = 0; i < bcodes.length; i++) {
+				if (StringUtils.isBlank(bcodes[i])) continue;
+				String[] codes = bcodes[i].split("\\|");
+				mockReq.addParameter("xserviceCode_" + i, codes[0]);
+				Object[] priceg = billingServiceDao.getUnitPrice(codes[0], serviceDate);
+				mockReq.addParameter("xserviceUnit_" + i, codes[1]);
+				String sliCode = OscarProperties.getInstance().getProperty("clinic_no");
+				if(codes.length==3 && !codes[2].equals("NA")) {
+					sliCode=codes[2];
 				}
+				mockReq.addParameter("xsliCode_"+i, sliCode);
+				if (".00".equals(priceg[0])) {
+					percentUnits.add(codes);
+					mockReq.addParameter("percCodeSubtotal_" + i, (String) priceg[0]);
+					// skip to next as we deal with percentage later
+					continue;
+				}
+
+				// price is unit_price*unit*at_percent, but in macro we only assume at_percent=1
+				// as it's not possible to enter percent value for macros (1-click action).
+				BigDecimal price = new BigDecimal((String) priceg[0]).multiply(new BigDecimal(codes[1]));
+				if ((Boolean) priceg[1] == true) {
+					// add GST
+					price = price.multiply(gstFactor);
+				}
+				mockReq.addParameter("percCodeSubtotal_" + i, price.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString());
+				btotal = btotal.add(price).setScale(4, BigDecimal.ROUND_HALF_UP);
+
 			}
-
-			// send tickler
-			if (macro.getTicklerRecipient() != null && macro.getTicklerRecipient().length() > 0) {
-				TicklerDAO ticklerDao = (TicklerDAO) SpringUtils.getBean("ticklerDAOT");
-				Tickler t = new Tickler();
-				t.setCreator(LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
-				t.setDemographic_no(cform.getDemographicNo());
-				t.setMessage(getMacroTicklerText(Integer.parseInt(cform.getAppointmentNo()), Integer.parseInt(cform.getDemographicNo())));
-				t.setPriority("Normal");
-				t.setService_date(new Date());
-				t.setStatus('A');
-				t.setTask_assigned_to(macro.getTicklerRecipient());
-				t.setUpdate_date(new Date());
-				ticklerDao.saveTickler(t);
+			// now process percent codes
+			BigDecimal stotal = new BigDecimal(0);
+			for (String[] code : percentUnits) {
+				String pct = billingServiceDao.getUnitPercentage(code[0], serviceDate);
+				stotal = stotal.add(btotal.multiply(new BigDecimal(pct)));
 			}
+			btotal = btotal.add(stotal);
+			mockReq.addParameter("totalItem", "" + bcodes.length);
+			mockReq.addParameter("total", btotal.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString());
 
-			// billing
-			if (macro.getBillingCodes() != null && macro.getBillingCodes().length() > 0) {
-				GstControlDao gstControlDao = (GstControlDao) SpringUtils.getBean("gstControlDao");
-				BillingServiceDao billingServiceDao = (BillingServiceDao) SpringUtils.getBean("billingServiceDao");
-				DemographicDao demographicDao = (DemographicDao) SpringUtils.getBean("demographicDao");
-				Provider provider = LoggedInInfo.loggedInInfo.get().loggedInProvider;
-				OscarAppointmentDao apptDao = (OscarAppointmentDao) SpringUtils.getBean("oscarAppointmentDao");
-
-				Appointment appt = null;
-				if (cform.getAppointmentNo() != null && cform.getAppointmentNo().length() > 0 && !cform.getAppointmentDate().equals("0")) {
-					appt = apptDao.find(Integer.parseInt(cform.getAppointmentNo()));
-				}
-
-				SimpleDateFormat sf = new SimpleDateFormat("yyyy-MM-dd");
-				String serviceDate = sf.format(new Date());
-
-				// create a mock httprequest to fill in the preset values
-				MockHttpServletRequest mockReq = new MockHttpServletRequest();
-				mockReq.addParameter("dxCode", macro.getBillingDxcode());
-				String[] bcodes = macro.getBillingCodes().replace("\r", "").split("\n");
-
-				BigDecimal btotal = new BigDecimal(0);
-				// must use 100.0 otherwise result will be an int
-				BigDecimal gstFactor = new BigDecimal(1 + gstControlDao.find(1).getGstPercent().intValue() / 100.0);
-				ArrayList<String[]> percentUnits = new ArrayList<String[]>();
-				for (int i = 0; i < bcodes.length; i++) {
-					if (StringUtils.isBlank(bcodes[i])) continue;
-					String[] codes = bcodes[i].split("\\|");
-					mockReq.addParameter("xserviceCode_" + i, codes[0]);
-					Object[] priceg = billingServiceDao.getUnitPrice(codes[0], serviceDate);
-					mockReq.addParameter("xserviceUnit_" + i, codes[1]);
-					String sliCode = OscarProperties.getInstance().getProperty("clinic_no");
-					if(codes.length==3 && !codes[2].equals("NA")) {
-						sliCode=codes[2];
-					}
-					mockReq.addParameter("xsliCode_"+i, sliCode);
-					if (".00".equals(priceg[0])) {
-						percentUnits.add(codes);
-						mockReq.addParameter("percCodeSubtotal_" + i, (String) priceg[0]);
-						// skip to next as we deal with percentage later
-						continue;
-					}
-
-					// price is unit_price*unit*at_percent, but in macro we only assume at_percent=1
-					// as it's not possible to enter percent value for macros (1-click action).
-					BigDecimal price = new BigDecimal((String) priceg[0]).multiply(new BigDecimal(codes[1]));
-					if ((Boolean) priceg[1] == true) {
-						// add GST
-						price = price.multiply(gstFactor);
-					}
-					mockReq.addParameter("percCodeSubtotal_" + i, price.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString());
-					btotal = btotal.add(price).setScale(4, BigDecimal.ROUND_HALF_UP);
-
-				}
-				// now process percent codes
-				BigDecimal stotal = new BigDecimal(0);
-				for (String[] code : percentUnits) {
-					String pct = billingServiceDao.getUnitPercentage(code[0], serviceDate);
-					stotal = stotal.add(btotal.multiply(new BigDecimal(pct)));
-				}
-				btotal = btotal.add(stotal);
-				mockReq.addParameter("totalItem", "" + bcodes.length);
-				mockReq.addParameter("total", btotal.setScale(2, BigDecimal.ROUND_HALF_UP).toPlainString());
-
-				Demographic demo = demographicDao.getClientByDemographicNo(Integer.parseInt(cform.getDemographicNo()));
-				mockReq.setParameter("xml_billtype", macro.getBillingBilltype());
-				if(macro.getSliCode() == null || macro.getSliCode().equals("NA")) {
-					String value = OscarProperties.getInstance().getProperty("clinic_no","");
-					mockReq.setParameter("xml_slicode", value);
-				} else {
-					mockReq.setParameter("xml_slicode", macro.getSliCode());
-				}
-				// mockReq.addParameter("xml_billtype", "ODP | Bill OHIP");
-				mockReq.addParameter("hin", demo.getHin());
-				mockReq.addParameter("ver", demo.getVer());
-				mockReq.addParameter("demographic_dob", demo.getDateOfBirth());
-				mockReq.addParameter("appointment_no", cform.getAppointmentNo());
-				mockReq.addParameter("demographic_name", demo.getLastName() + "," + demo.getFirstName());
-				mockReq.addParameter("sex", "F".equalsIgnoreCase(demo.getSex()) ? "2" : "1");
-				mockReq.addParameter("hc_type", demo.getHcType());
+			Demographic demo = demographicDao.getClientByDemographicNo(Integer.parseInt(demographicNo));
+			mockReq.setParameter("xml_billtype", macro.getBillingBilltype());
+			if(macro.getSliCode() == null || macro.getSliCode().equals("NA")) {
+				String value = OscarProperties.getInstance().getProperty("clinic_no","");
+				mockReq.setParameter("xml_slicode", value);
+			} else {
+				mockReq.setParameter("xml_slicode", macro.getSliCode());
+			}
+			// mockReq.addParameter("xml_billtype", "ODP | Bill OHIP");
+			mockReq.addParameter("hin", demo.getHin());
+			mockReq.addParameter("ver", demo.getVer());
+			mockReq.addParameter("demographic_dob", demo.getDateOfBirth());
+			mockReq.addParameter("appointment_no", appointmentNo);
+			mockReq.addParameter("demographic_name", demo.getLastName() + "," + demo.getFirstName());
+			mockReq.addParameter("sex", "F".equalsIgnoreCase(demo.getSex()) ? "2" : "1");
+			mockReq.addParameter("hc_type", demo.getHcType());
+			if(macro.getBillingRefProv())
+			{
 				String referalNo = getRefNo(demo.getFamilyDoctor());
 				mockReq.addParameter("referralCode", referalNo);
-				mockReq.addParameter("xml_location", macro.getBillingVisitLocation()); // visit location
-				mockReq.addParameter("m_review", "N"); // manual review, always No
-				// as it's automated
-				mockReq.addParameter("clinic_no", oscar.OscarProperties.getInstance().getProperty("clinic_no", "").trim());
-				// clinic_location
-				mockReq.addParameter("demographic_no", cform.getDemographicNo());
-				mockReq.addParameter("service_date", serviceDate);
-				SimpleDateFormat tf = new SimpleDateFormat("HH:mm");
-				mockReq.addParameter("start_time", tf.format(new Date()));
-				mockReq.addParameter("submit", "Save");
-				mockReq.addParameter("comment", macro.getBillingComment());
-				mockReq.addParameter("xml_visittype", macro.getBillingVisitType());
-				if (macro.getIncludeAdmissionDate())
-					mockReq.addParameter("xml_vdate", cform.getAppointmentDate());
-				else
-					mockReq.addParameter("xml_vdate", "");
-				mockReq.addParameter("apptProvider_no", appt == null ? "" : appt.getProviderNo());
-				mockReq.addParameter("xml_provider", provider.getProviderNo() + "|" + provider.getOhipNo());
-				mockReq.getSession().setAttribute("user", LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
-
-				BillingSavePrep bObj = new BillingSavePrep();
-				boolean ret = bObj.addABillingRecord(bObj.getBillingClaimObj(mockReq));
-				/*
-				 * not applicable in macro context if (mockReq.getParameter("xml_billtype").substring(0, 3).matches( BillingDataHlp.BILLINGMATCHSTRING_3RDPARTY)) { mockReq.addParameter("billto", macro.getBillingBillto()); mockReq.addParameter("remitto",
-				 * macro.getBillingRemitto()); mockReq.addParameter("gstBilledTotal", macro .getBillingGstBilledTotal()); mockReq.addParameter("payment", macro.getBillingPayment()); mockReq.addParameter("refund", macro.getBillingRefund());
-				 * mockReq.addParameter("gst", macro.getBillingGst()); mockReq.addParameter("payMethod", macro.getBillingPayMethod());
-				 *
-				 * bObj.addPrivateBillExtRecord(mockReq); }
-				 */
-				// int billingNo = bObj.getBillingId();
-
-				// update appt and close the page
-				if (ret) {
-					if (!cform.getAppointmentNo().equals("0")) {
-						String apptCurStatus = bObj.getApptStatus(cform.getAppointmentNo());
-						oscar.appt.ApptStatusData as = new oscar.appt.ApptStatusData();
-						String billStatus = as.billStatus(apptCurStatus);
-						bObj.updateApptStatus(cform.getAppointmentNo(), billStatus, cform.getProviderNo());
-					}
-				} else log.error("++++++++++++++ Failed to add billing codes");
+			} else {
+				mockReq.addParameter("referralCode", "");
 			}
+			mockReq.addParameter("xml_location", macro.getBillingVisitLocation()); // visit location
+			mockReq.addParameter("m_review", "N"); // manual review, always No
+			// as it's automated
+			mockReq.addParameter("clinic_no", oscar.OscarProperties.getInstance().getProperty("clinic_no", "").trim());
+			// clinic_location
+			mockReq.addParameter("demographic_no", demographicNo);
+			mockReq.addParameter("service_date", serviceDate);
+			SimpleDateFormat tf = new SimpleDateFormat("HH:mm");
+			mockReq.addParameter("start_time", tf.format(new Date()));
+			mockReq.addParameter("submit", "Save");
+			mockReq.addParameter("comment", macro.getBillingComment());
+			mockReq.addParameter("xml_visittype", macro.getBillingVisitType());
+			if (macro.getIncludeAdmissionDate())
+				mockReq.addParameter("xml_vdate", appointmentDate);
+			else
+				mockReq.addParameter("xml_vdate", "");
+			mockReq.addParameter("apptProvider_no", appt == null ? "" : appt.getProviderNo());
+			
+         //set provider value
+         String defaultProviderNo = provider.getProviderNo();
+			if( demo !=null && !demo.getProviderNo().trim().equals(""))
+				defaultProviderNo = demo.getProviderNo().trim();
+			else
+				log.warn("demographic(No):" + demographicNo + 
+						" has no valid value for provider." + 
+						"If there is no appointment link to this bill, " +
+						"provider no in the bill will be set as the provider who log in the system.");
+			mockReq.addParameter("xml_provider", appt == null ? defaultProviderNo : appt.getProviderNo());
+			
+         //set site value
+			String site = "1";	
+			if(appt !=null && appt.getSite() != null)
+				site = appt.getSite().toString();
+			else {
+				log.info("Missing site info in appointment or there is no appointment for this billing, " 
+			         + "set site value as provider's site");
+				SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
+				List<Site> sites = siteDao.getActiveSitesByProviderNo(mockReq.getParameter("xml_provider"));
+				if(sites != null && !sites.isEmpty())
+					site = sites.get(0).getId().toString();
+				else {
+					log.warn("Can't find site value by provider[ no ]" +  mockReq.getParameter("xml_provider")
+					         + " set site value as 1");
+				}
+			}
+			mockReq.addParameter("site", site);
+			mockReq.getSession().setAttribute("user", LoggedInInfo.loggedInInfo.get().loggedInProvider.getProviderNo());
+
+			BillingSavePrep bObj = new BillingSavePrep();
+			boolean ret = bObj.addABillingRecord(bObj.getBillingClaimObj(mockReq));
+			/*
+			 * not applicable in macro context if (mockReq.getParameter("xml_billtype").substring(0, 3).matches( BillingDataHlp.BILLINGMATCHSTRING_3RDPARTY)) { mockReq.addParameter("billto", macro.getBillingBillto()); mockReq.addParameter("remitto",
+			 * macro.getBillingRemitto()); mockReq.addParameter("gstBilledTotal", macro .getBillingGstBilledTotal()); mockReq.addParameter("payment", macro.getBillingPayment()); mockReq.addParameter("refund", macro.getBillingRefund());
+			 * mockReq.addParameter("gst", macro.getBillingGst()); mockReq.addParameter("payMethod", macro.getBillingPayMethod());
+			 *
+			 * bObj.addPrivateBillExtRecord(mockReq); }
+			 */
+			// int billingNo = bObj.getBillingId();
+
+			// update appt and close the page
+			if (ret) {
+				if (!appointmentNo.equals("0")) {
+					String apptCurStatus = bObj.getApptStatus(appointmentNo);
+					oscar.appt.ApptStatusData as = new oscar.appt.ApptStatusData();
+					String billStatus = as.billStatus(apptCurStatus);
+					bObj.updateApptStatus(appointmentNo, billStatus, providerNo);
+				}
+			} else log.error("++++++++++++++ Failed to add billing codes");
+		}
+	}
+
+	public ActionForward runMacro(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) throws Exception {
+		CaseManagementEntryFormBean cform = (CaseManagementEntryFormBean) form;
+		String macroId = request.getParameter("macro.id");
+		
+		boolean cppFromMeasurements = false;
+		String cpp = request.getParameter("cpp");
+		if (cpp != null && cpp.equals("measurements")) {
+			cppFromMeasurements = true;
+		}
+
+		MacroDao macroDao = (MacroDao) SpringUtils.getBean("macroDao");
+		Macro macro = macroDao.find( Integer.parseInt(macroId) );
+
+		cform.setCaseNote_note(cform.getCaseNote_note() + "\n" + macro.getImpression());
+
+		ActionForward fwd = saveAndExit(mapping, form, request, response);
+
+		if (fwd.getName().equals("windowClose")) {
+			runMacro(macroId, cform.getDemographicNo(), cform.getProviderNo(), cform.getAppointmentNo(), cform.getAppointmentDate());
 		}
 
 		return fwd;

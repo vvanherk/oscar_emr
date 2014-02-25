@@ -43,6 +43,9 @@
 		<many-to-one name="provider" class="org.oscarehr.common.model.Provider"
 			column="provider_no" update="false" not-found='ignore' insert="false"
 			lazy="false" />
+		<many-to-one name="signing_provider" class="org.oscarehr.common.model.Provider"
+			column="signing_provider_no" update="false" not-found='ignore' insert="false"
+			lazy="false" />
 		<set name="issues" table="casemgmt_issue_notes" lazy="false">
 			<key column="note_id" />
 			<many-to-many column="id"

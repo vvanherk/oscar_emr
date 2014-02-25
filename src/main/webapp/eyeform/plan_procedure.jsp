@@ -33,43 +33,42 @@
 	request.setAttribute("providers",providerDao.getActiveProviders());
 %>
 
-<div id="procedure_<%=id%>">
+<div class="arrangePlanbox" id="procedure_<%=id%>">
 
 				<input type="hidden" name="procedure_<%=id%>.id" value=""/>
 					
-				<a href="#" onclick="deleteProcedure(<%=id%>);">[Delete]</a>
-				
-				&nbsp;
-		
-				<select name="procedure_<%=id%>.eye">
+				<a class="col_del" href="#" onclick="deleteProcedure(<%=id%>);">[Delete]</a>
+	            
+	            <select class="col_provider" name="procedure_<%=id%>.Provider" id="procedure_<%=id%>.Provider">
+	            	<c:forEach var="item" items="${providers}">
+	            		<option value="<c:out value="${item.providerNo}"/>"><c:out value="${item.formattedName}"/></option>
+	            	</c:forEach>            	
+				</select>
+						
+				<select class="col_type" name="procedure_<%=id%>.eye">
 					<option value="OU">OU</option>
 					<option value="OD">OD</option>
 					<option value="OS">OS</option>
 					<option value="OD then OS">OD then OS</option>
 					<option value="OS then OD">OS then OD</option>
-				</select>
-			
-				&nbsp;
-				Proc:
-				<input type="text" name="procedure_<%=id%>.procedureName" size="30"/>			
+				</select>	
 				
-				&nbsp;
-				Loc:
-				<input type="text" name="procedure_<%=id%>.location" size="5"/>
-						
-				&nbsp;
+			    <!-- <span class="col_timespan1">Proc:</span> -->	
+				<input class="col_timefram1" type="text" name="procedure_<%=id%>.procedureName" id="procedure_<%=id%>.procedureName" title="input procedure name here" placeholder="procedure name"
+				 onfocus="if(this.value==''){this.style.color='#000'; this.value='';}"/>
+
+				<!-- <span class="col_timefram1">Loc:</span> -->
+				<input class="col_timefram2" type="text" name="procedure_<%=id%>.location" id="procedure_<%=id%>.location" title="input location here" placeholder="location"
+				 onfocus="if(this.value==''){this.style.color='#000'; this.value='';}"/>							
 				
-				
-				<select name="procedure_<%=id%>.urgency">
+				<select class="col_urgency" name="procedure_<%=id%>.urgency" id="procedure_<%=id%>.urgency">
 					<option value="routine">routine</option>
 					<option value="ASAP">ASAP</option>
 					<option value="URGENT">URGENT</option>					
 				</select>
+				<span class="col_comment1">Comment:</span>
+				<input class="col_comment2" type="text" name="procedure_<%=id%>.comment" id="procedure_<%=id%>.comment"/>
 				
-				&nbsp;	
-								
-				Comment:	
-				<input type="text" name="procedure_<%=id%>.comment" size="40"/>
 				
 
 </div>

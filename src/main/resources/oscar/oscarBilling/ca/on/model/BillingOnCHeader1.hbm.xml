@@ -57,6 +57,6 @@
                 <property name="asstProvider_no" />
                 <property name="creator" />
                 <property name="timestamp1" />
-                <property name="clinic" />
+                <property name="site" />
     </class>
 </hibernate-mapping>

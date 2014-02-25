@@ -17,11 +17,11 @@
     Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
 
 --%>
-<%! boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable(); %>
 <%@ page import="java.math.*,java.util.*, java.sql.*, oscar.*, java.net.*,oscar.util.*,oscar.oscarBilling.ca.on.pageUtil.*,oscar.oscarBilling.ca.on.data.*,org.apache.struts.util.LabelValueBean" %>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean" %>
 <%@ taglib uri="/WEB-INF/struts-html.tld" prefix="html" %>
 <%@ taglib uri="/WEB-INF/struts-logic.tld" prefix="logic" %>
+
 <%--
 The taglib directive below imports the JSTL library. If you uncomment it,
 you must also add the JSTL library to the project. The Add Library... action
@@ -51,17 +51,16 @@ on Libraries node in Projects view can be used to add the JSTL 1.1 library.
 
 <%
 	//multi-site office , save all bgcolor to Hashmap
-	HashMap<String,String> siteBgColor = new HashMap<String,String>();
-	HashMap<String,String> siteShortName = new HashMap<String,String>();
+	HashMap<Integer,String> siteBgColor = new HashMap<Integer,String>();
+	HashMap<Integer,String> siteShortName = new HashMap<Integer,String>();
 	int patientCount = 0;
-	if (bMultisites) {
-    	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-    	
-    	List<Site> sites = siteDao.getAllSites();
-    	for (Site st : sites) {
-    		siteBgColor.put(st.getName(),st.getBgColor());
-    		siteShortName.put(st.getName(),st.getShortName());
-    	}
+	
+    SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+	
+	List<Site> sites = siteDao.getAllSites();
+	for (Site st : sites) {
+		siteBgColor.put(st.getId(),st.getBgColor());
+		siteShortName.put(st.getId(),st.getShortName());
 	}
 %>
 
@@ -419,22 +418,20 @@ function handleStateChange() {
     <td align="center" class="myYellow">
 
 
-<% // multisite start ==========================================
-String curSite = request.getParameter("site");
-if (bMultisites) 
-{ 
-        	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-          	List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-          	// now get all providers eligible         	
-          	HashSet<String> pros=new HashSet<String>();
-          	for (Object s:pList) {
-          		pros.add(((String)s).substring(0, ((String)s).indexOf("|")));
-          	}
+<%
+		String curSite = request.getParameter("site");
+		//SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+		//List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
+		// now get all providers eligible         	
+		HashSet<String> pros=new HashSet<String>();
+		for (Object s:pList) {
+			pros.add(((String)s).substring(0, ((String)s).indexOf("|")));
+		}
       %> 
       <script>
 var _providers = [];
 <%	for (int i=0; i<sites.size(); i++) { %>
-	_providers["<%= sites.get(i).getName() %>"]="<% Iterator<Provider> iter = sites.get(i).getProviders().iterator();
+	_providers["<%= sites.get(i).getId() %>"]="<% Iterator<Provider> iter = sites.get(i).getProviders().iterator();
 	while (iter.hasNext()) {
 		Provider p=iter.next();
 		if (pros.contains(p.getProviderNo())) {
@@ -444,8 +441,7 @@ function changeSite(sel) {
 	sel.form.providerview.innerHTML=sel.value=="none"?"":"<option value='none'>---select provider---</option>"+_providers[sel.value];
 	sel.style.backgroundColor=sel.options[sel.selectedIndex].style.backgroundColor;
 	if (sel.value=='<%=request.getParameter("site")%>') {
-		if (document.serviceform.provider_ohipNo.value!='')
-			sel.form.providerview.value='<%=request.getParameter("providerview")%>';
+		sel.form.providerview.value='<%=(request.getParameter("providerview") == null? "" : request.getParameter("providerview"))%>';
 	}
 	changeProvider(false);
 }
@@ -455,8 +451,8 @@ function changeSite(sel) {
       	<%
       	for (int i=0; i<sites.size(); i++) {
       	%>
-      		<option value="<%= sites.get(i).getName() %>" style="background-color:<%= sites.get(i).getBgColor() %>"
-      			 <%=sites.get(i).getName().toString().equals(curSite)?"selected":"" %>><%= sites.get(i).getName() %></option>
+      		<option value="<%= sites.get(i).getId() %>" style="background-color:<%= sites.get(i).getBgColor() %>"
+      			 <%=sites.get(i).getId().toString().equals(curSite)?"selected":"" %>><%= sites.get(i).getName() %></option>
       	<% } %>
       	</select>
       	<select id="providerview" name="providerview" onchange="changeProvider(true);" style="width:140px"></select>
@@ -464,28 +460,8 @@ function changeSite(sel) {
       	<script>
      	window.onload=function(){changeSite(document.getElementById("site"));}
       	</script>
-<% } // multisite end ==========================================
-} else {
-%>	 
-    <select name="providerview" onchange="changeProvider(true);">
-			<%
-			if(pList.size() == 1) {
-				String temp[] = ((String) pList.get(0)).split("\\|");
-			%>
-			<option value="<%=temp[0]%>"> <%=temp[1]%>, <%=temp[2]%></option>
-			<%
-			} else {
-			%>
-       <option value="all">All Providers</option>
-    <% for (int i = 0 ; i < pList.size(); i++) { 
-		String temp[] = ((String) pList.get(i)).split("\\|");
-	%>
-       <option value="<%=temp[0]%>" <%=providerNo.equals(temp[0])?"selected":""%>><%=temp[1]%>, <%=temp[2]%></option>
-         
-    <% } 
-    } %>
-    </select>
 <% } %>
+
     
     
     <font size="1">OHIP No.: <input type="text" size="7" name="provider_ohipNo" readonly value="<%=ohipNo%>"></font>
@@ -661,9 +637,7 @@ if(statusType.equals("_")) { %>
              <th>ACCOUNT</th>
              <th>MESSAGES</th>
              <th>OHIP Claim Id</td>
-		<% if (bMultisites) {%>
 			 <th>SITE</th>             
-        <% }%>     
           </tr>
        </thead>
        
@@ -675,14 +649,16 @@ if(statusType.equals("_")) { %>
 
        for (int i = 0 ; i < bList.size(); i++) { 
     	   BillingClaimHeader1Data ch1Obj = (BillingClaimHeader1Data) bList.get(i);
-    	   
-    	   if (bMultisites && ch1Obj.getClinic()!=null && curSite!=null 
-    			   && !ch1Obj.getClinic().equals(curSite) && isSiteAccessPrivacy) // only applies on user have siteAccessPrivacy (SiteManager)
-				continue; // multisite: skip if the line doesn't belong to the selected clinic    		   
-    		   
-	       if (bMultisites && selectedSite != null && (!selectedSite.equals(ch1Obj.getClinic())))
+
+			// only applies on user have siteAccessPrivacy (SiteManager)
+    	   if (ch1Obj.getSite()!=null && curSite!=null && !ch1Obj.getSite().toString().equals(curSite) && isSiteAccessPrivacy) 
+				// Skip if the line doesn't belong to the selected site
+				continue;
+			
+	       if (selectedSite != null && (ch1Obj.getSite() == null || !selectedSite.equals(ch1Obj.getSite().toString())))
+				// Skip if the line doesn't belong to the selected site or the bill has no site associated with it
 	    	   continue;
-	       
+
 	       patientCount ++;
 			       
     	   // ra code
@@ -766,11 +742,9 @@ if(statusType.equals("_")) { %>
              <td>
 				 <a href="javascript: function myFunction() {return false; }"  onclick="javascript:popup(700,700,'billingONCorrection.jsp?claim_no=<%=claimNo%>','BillCorrection<%=claimNo%>');return false;"><%=claimNo%></a>
              </td>
-             <% if (bMultisites) {%>
-				 <td "<%=(ch1Obj.getClinic()== null || ch1Obj.getClinic().equalsIgnoreCase("null") ? "" : "bgcolor='" + siteBgColor.get(ch1Obj.getClinic()) + "'")%>">
-				 	<%=(ch1Obj.getClinic()== null || ch1Obj.getClinic().equalsIgnoreCase("null") ? "" : siteShortName.get(ch1Obj.getClinic()))%>
-				 </td>     <!--SITE-->          
-        	<% }%>     
+			 <td <%=(ch1Obj.getSite()== null ? "" : "bgcolor='" + siteBgColor.get(ch1Obj.getSite()) + "'")%>>
+			 	<%=(ch1Obj.getSite()== null ? "" : siteShortName.get(ch1Obj.getSite()))%>
+			 </td>     <!--SITE-->          
           </tr>
        <% } %>  
        <tfoot>
@@ -789,10 +763,7 @@ if(statusType.equals("_")) { %>
              <td>&nbsp;</td><!--DX3-->
              <td>&nbsp;</td><!--ACCOUNT-->
              <td>&nbsp;</td><!--MESSAGES-->
-             
-             <% if (bMultisites) {%>
-				 <td>&nbsp;</td><!--SITE-->          
-        	<% }%>    
+			 <td>&nbsp;</td><!--SITE-->          
           </tr>
        </tfoot>
        </table>

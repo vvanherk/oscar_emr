@@ -44,6 +44,8 @@
 <%@ page import="oscar.appt.status.service.AppointmentStatusMgr"%>
 <%@ page import="oscar.appt.status.model.AppointmentStatus"%>
 <%@ page import="org.oscarehr.common.dao.DemographicDao, org.oscarehr.common.model.Demographic, org.oscarehr.util.SpringUtils"%>
+<%@ page import="org.oscarehr.common.dao.OscarAppointmentDao"%>
+<%@ page import="org.oscarehr.common.model.Appointment"%>
 <%@ page import="oscar.oscarEncounter.data.EctFormData"%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
@@ -52,11 +54,42 @@
 <jsp:useBean id="providerBean" class="java.util.Properties" scope="session" />
 <%@page import="org.oscarehr.common.model.DemographicCust" %>
 <%@page import="org.oscarehr.common.dao.DemographicCustDao" %>
+<%@page import="org.oscarehr.common.dao.ClinicDAO"%>
+<%@page import="org.oscarehr.common.model.Clinic"%>
+<%@page import="org.oscarehr.common.dao.SiteDao"%>
+<%@page import="org.oscarehr.common.model.Site"%>
+<%@page import="org.oscarehr.util.MiscUtils"%>
 <%
 	DemographicCustDao demographicCustDao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
 	org.oscarehr.PMmodule.dao.ProviderDao providerDao = SpringUtils.getBean(ProviderDao.class);
-%>
-<%
+	
+	OscarAppointmentDao oscarAppointmentDao = (OscarAppointmentDao)SpringUtils.getBean("oscarAppointmentDao");
+	Integer appointmentNo = 0;
+	Appointment appointment = null;
+	try {
+		appointmentNo = Integer.parseInt( appointment_no );
+		appointment = oscarAppointmentDao.getAppointment( appointmentNo );
+	} catch (Exception e) {
+		MiscUtils.getLogger().error("Unable to parse appointment number.", e);
+		%>
+		<script>window.alert('The appointment number is not valid.')</script>
+		<%
+		return;
+	}
+	
+	// Error check curProvider_no
+	if (curProvider_no == null || curProvider_no.length() == 0) {
+		if (appointment != null) {
+			curProvider_no = appointment.getProviderNo();
+		} else {
+			%>
+				<script>window.alert('Sorry, the appointment you are trying to edit is not associated with any provider.  Please contact your system administrator.')</script>
+			<%
+			return;
+		}
+			
+	}
+	
   ApptData apptObj = ApptUtil.getAppointmentFromSession(request);
 
   oscar.OscarProperties pros = oscar.OscarProperties.getInstance();
@@ -68,9 +101,58 @@
   Boolean isMobileOptimized = session.getAttribute("mobileOptimized") != null;
 
   DemographicDao demographicDao = (DemographicDao)SpringUtils.getBean("demographicDao");
+  
+	SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
+	ClinicDAO clinicDao = (ClinicDAO)WebApplicationContextUtils.getWebApplicationContext(application).getBean("clinicDAO");
+	List<Clinic> clinics = clinicDao.getClinicsForProvider( curProvider_no );
+	
+	if (clinics.size() == 0) {
+	%>
+		<script>window.alert('Sorry, the chosen provider does not belong to any active sites.')</script>
+	<%
+		return;
+	}
+	
+	String clinicIdAsString = request.getParameter("clinic_id");
+	Integer clinicId = 0;
+	if (clinicIdAsString != null) {
+		try {
+			clinicId = Integer.parseInt( clinicIdAsString );
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Unable to parse clinic id.", e);
+		}
+	}
+	
+	String siteIdAsString = request.getParameter("site_id");
+	Integer siteId = 0;
+	if (siteIdAsString != null) {
+		try {
+			siteId = Integer.parseInt( siteIdAsString );
+		} catch (Exception e) {
+			MiscUtils.getLogger().error("Unable to parse site id.", e);
+		}
+	} else {
+		siteId = appointment.getSite();
+	}
+	
+	Clinic selectedClinic = null;
+	Site selectedSite = null;
+	
+	if (siteId != null)
+		selectedSite = siteDao.find( siteId );
+	if (selectedSite != null) {
+		selectedClinic = selectedSite.getClinic();
+	} else {
+		selectedClinic = clinicDao.find( clinicId );
+		
+		if (selectedClinic == null)
+			selectedClinic = clinics.get(0);
+		if (selectedClinic != null)
+			selectedSite = selectedClinic.getSites().get(0);
+	}
 %>
-<%@page import="org.oscarehr.common.dao.SiteDao"%>
-<%@page import="org.oscarehr.common.model.Site"%><html:html locale="true">
+
+<html:html locale="true">
 <head>
 <% if (isMobileOptimized) { %>
     <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, width=device-width" />
@@ -109,6 +191,7 @@
    <script>
      jQuery.noConflict();
    </script>
+   
 <oscar:customInterface section="editappt"/>
 <script language="javascript">
 <!-- // start javascript
@@ -285,7 +368,7 @@ function pasteAppt(multipleSameDayGroupAppt) {
 	document.EDITAPPT.demographic_no.value = "<%=apptObj.getDemographic_no()%>";
 	document.EDITAPPT.reason.value = "<%=apptObj.getReason()%>";
 	document.EDITAPPT.notes.value = "<%=apptObj.getNotes()%>";
-	document.EDITAPPT.location.value = "<%=apptObj.getLocation()%>";
+	document.EDITAPPT.site.value = "<%=apptObj.getSite()%>";
 	document.EDITAPPT.resources.value = "<%=apptObj.getResources()%>";
 	document.EDITAPPT.type.value = "<%=apptObj.getType()%>";
 	if('<%=apptObj.getUrgency()%>' == 'critical') {
@@ -316,7 +399,7 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
   document.forms['EDITAPPT'].notes.value = notesSel;
   document.forms['EDITAPPT'].duration.value = durSel;
   document.forms['EDITAPPT'].resources.value = resSel;
-  var loc = document.forms['EDITAPPT'].location;
+  var loc = document.forms['EDITAPPT'].site;
   if(loc.nodeName == 'SELECT') {
           for(c = 0;c < loc.length;c++) {
                   if(loc.options[c].innerHTML == locSel) {
@@ -326,7 +409,7 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
                   }
           }
   } else if (loc.nodeName == "INPUT") {
-	  document.forms['EDITAPPT'].location.value = locSel;
+	  document.forms['EDITAPPT'].site.value = locSel;
   }
 }
 
@@ -510,23 +593,7 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
             </div>
             <div class="space">&nbsp;</div>
 
-	    <div class="label">
-            <%
-                        // multisites start ==================
-                boolean bMultisites = org.oscarehr.common.IsPropertiesOn.isMultisitesEnable();
-
-            SiteDao siteDao = (SiteDao)WebApplicationContextUtils.getWebApplicationContext(application).getBean("siteDao");
-            List<Site> sites = siteDao.getActiveSitesByProviderNo((String) session.getAttribute("user"));
-            // multisites end ==================
-
-            boolean bMoreAddr = bMultisites? true : props.getProperty("scheduleSiteID", "").equals("") ? false : true;
-
-            String loc = bFirstDisp?((String)appt.get("location")):request.getParameter("location");
-            String colo = bMultisites
-                                        ? ApptUtil.getColorFromLocation(sites, loc)
-                                        : bMoreAddr? ApptUtil.getColorFromLocation(props.getProperty("scheduleSiteID", ""), props.getProperty("scheduleSiteColor", ""),loc) : "white";
-            %>
-            
+	    <div class="label">            
 				<INPUT TYPE="button" NAME="typeButton" VALUE="<bean:message key="Appointment.formType"/>" onClick="openTypePopup()">
 
             </div>
@@ -651,36 +718,12 @@ function setType(typeSel,reasonSel,locSel,durSel,notesSel,resSel) {
         </li>
 <% } %>
         <li class="row weak">
-            <div class="label"><bean:message key="Appointment.formLocation" />:</div>
+			<div class="label"><bean:message key="Appointment.formClinic" />:</div>
+
             <div class="input">
-
-<% // multisites start ==================
-boolean isSiteSelected = false;
-if (bMultisites) { %>
-				<select tabindex="4" name="location" style="background-color: <%=colo%>" onchange='this.style.backgroundColor=this.options[this.selectedIndex].style.backgroundColor'>
-				<%
-					StringBuilder sb = new StringBuilder();
-					for (Site s:sites) {
-						if (s.getName().equals(loc)) isSiteSelected = true; // added by vic
-						sb.append("<option value=\"").append(s.getName()).append("\" style=\"background-color: ").append(s.getBgColor()).append("\" ").append(s.getName().equals(loc)?"selected":"").append(">").append(s.getName()).append("</option>");
-					}
-					if (isSiteSelected) {
-						out.println(sb.toString());
-					} else {
-						out.println("<option value='"+loc+"'>"+loc+"</option>");
-					}
-				%>
-
-				</select>
-<% } else {
-	isSiteSelected = true;
-	// multisites end ==================
-%>
-            <INPUT TYPE="TEXT" NAME="location" tabindex="4"
-					VALUE="<%=bFirstDisp?appt.get("location"):request.getParameter("location")%>"
-					WIDTH="25">
-<% } %>
+				<input disabled value="<%=selectedClinic.getClinicName()%>" style="color: black;">
             </div>
+
             <div class="space">&nbsp;</div>
             <div class="label"><bean:message key="Appointment.formResources" />:</div>
             <div class="input">
@@ -691,12 +734,13 @@ if (bMultisites) { %>
             </div>
         </li>
         <li class="weak row">
-            <div class="label"><bean:message key="Appointment.formLastCreator" />:</div>
-            <div class="input">
-		<% String lastCreatorNo = bFirstDisp?(String)appt.get("creator"):request.getParameter("user_id"); %>
+			<div class="label"><bean:message key="Appointment.formSite" />:</div>
 
-            <INPUT TYPE="TEXT" NAME="user_id" VALUE="<%=lastCreatorNo%>" readonly WIDTH="25">
+            <div class="input">
+				<input disabled value="<%=selectedSite.getName()%>" style="background-color: <%=selectedSite.getBgColor()%>; color: black;">
+				<input type="hidden" name="site" value="<%=selectedSite.getId()%>">
             </div>
+
             <div class="space">&nbsp;</div>
             <div class="label"><bean:message key="Appointment.formLastTime" />:</div>
             <div class="input">
@@ -727,11 +771,13 @@ if (bMultisites) { %>
             </div>
         </li>
         <li class="row weak">
-            <div class="label">Create Date:</div>
+			<div class="label"><bean:message key="Appointment.formLastCreator" />:</div>
             <div class="input">
-                <INPUT TYPE="TEXT" NAME="createDate" readonly
-					VALUE="<%=origDate%>" WIDTH="25">
+				<% String lastCreatorNo = bFirstDisp?(String)appt.get("creator"):request.getParameter("user_id"); %>
+	
+	            <INPUT TYPE="TEXT" NAME="user_id" VALUE="<%=lastCreatorNo%>" readonly WIDTH="25">
             </div>
+
             <div class="space">&nbsp;</div>
             <div class="label"><bean:message key="Appointment.formCritical" />:</div>
             <div class="input">
@@ -753,6 +799,13 @@ if (bMultisites) { %>
             </div>
         </li>
         <li class="row weak">
+			<div class="label">Create Date:</div>
+            <div class="input">
+                <INPUT TYPE="TEXT" NAME="createDate" readonly
+					VALUE="<%=origDate%>" WIDTH="25">
+            </div>
+        </li>
+        <li class="row weak">
 			<div class="label"></div>
             <div class="input"></div>
             <div class="space">&nbsp;</div>
@@ -761,7 +814,7 @@ if (bMultisites) { %>
         </li>
     </ul>
 
-<% if (isSiteSelected) { %>
+<% if (true) { %>
 <table class="buttonBar deep">
 	<tr>
             <% if (!bMultipleSameDayGroupAppt) { %>
@@ -811,7 +864,7 @@ if (bMultisites) { %>
 </table>
 <hr />
 
-<% if (isSiteSelected) { %>
+<% if (true) { %>
 <table width="95%" align="center">
 	<tr>
 		<td><input type="submit"
@@ -962,8 +1015,8 @@ Currently this is only used in the mobile version -->
             <li><div class="label"><bean:message key="Appointment.formReason" />: </div>
                 <div class="info"><%=bFirstDisp ? appt.get("reason") : request.getParameter("reason")%></div>
             </li>
-            <li><div class="label"><bean:message key="Appointment.formLocation" />: </div>
-                <div class="info"><%=bFirstDisp ? appt.get("location") : request.getParameter("location")%></div>
+            <li><div class="label"><bean:message key="Appointment.formSite" />: </div>
+                <div class="info"><%=bFirstDisp ? appt.get("site") : request.getParameter("site")%></div>
             </li>
             <li><div class="label"><bean:message key="Appointment.formResources" />: </div>
                 <div class="info"><%=bFirstDisp ? appt.get("resources") : request.getParameter("resources")%></div>
@@ -978,7 +1031,7 @@ Currently this is only used in the mobile version -->
 </div> <!-- end of screen to view appointment -->
 </body>
 <script type="text/javascript">
-var loc = document.forms['EDITAPPT'].location;
+var loc = document.forms['EDITAPPT'].site;
 if(loc.nodeName.toUpperCase() == 'SELECT') loc.style.backgroundColor=loc.options[loc.selectedIndex].style.backgroundColor;
 </script>
 

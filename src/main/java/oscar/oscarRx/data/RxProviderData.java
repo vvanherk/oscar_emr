@@ -30,8 +30,10 @@ import java.util.List;
 
 import org.oscarehr.PMmodule.dao.ProviderDao;
 import org.oscarehr.common.dao.ClinicDAO;
+import org.oscarehr.common.dao.SiteDao;
 import org.oscarehr.common.dao.UserPropertyDAO;
 import org.oscarehr.common.model.Clinic;
+import org.oscarehr.common.model.Site;
 import org.oscarehr.common.model.UserProperty;
 import org.oscarehr.util.SpringUtils;
 import org.oscarehr.util.MiscUtils;
@@ -43,6 +45,7 @@ public class RxProviderData {
 	private ProviderDao providerDao = (ProviderDao)SpringUtils.getBean("providerDao");
 	private UserPropertyDAO userPropertyDao = (UserPropertyDAO)SpringUtils.getBean("UserPropertyDAO");
 	private ClinicDAO clinicDao = (ClinicDAO)SpringUtils.getBean("clinicDAO");
+	private SiteDao siteDao = (SiteDao)SpringUtils.getBean("siteDao");
 	
 	public List<Provider> getAllProviders() {
 		List<org.oscarehr.common.model.Provider> providers = providerDao.getActiveProviders();
@@ -53,33 +56,25 @@ public class RxProviderData {
 		return results;
 	}
 	
+	public Provider getProvider(String providerNo, int clinicNo, int siteId) {
+        return convertProvider(providerDao.getProvider(providerNo), clinicNo, siteId);
+    }
+	
 	public Provider getProvider(String providerNo, int clinicNo) {
-        return convertProvider(providerDao.getProvider(providerNo), clinicNo);
+        return convertProvider(providerDao.getProvider(providerNo), clinicNo, -1);
     }
 	
     public Provider getProvider(String providerNo) {
-        return getProvider(providerNo, -1);
+        return getProvider(providerNo, -1, -1);
     }
     
     public Provider convertProvider(org.oscarehr.common.model.Provider p) {
-		return convertProvider( p, -1 );
+		return convertProvider( p, -1, -1 );
 	}
     
-    public Provider convertProvider(org.oscarehr.common.model.Provider p, int clinicNo) {
-    	String surname=null, firstName=null,  clinicName=null, clinicAddress=null, clinicCity=null, clinicPostal=null, clinicPhone=null, clinicFax=null, clinicProvince=null, practitionerNo=null;
+    public Provider convertProvider(org.oscarehr.common.model.Provider p, int clinicNo, int siteId) {
+    	String surname=null, firstName=null,  clinicName=null, subHeaderName=null, clinicAddress=null, clinicCity=null, clinicPostal=null, clinicPhone=null, clinicFax=null, clinicProvince=null, practitionerNo=null;
     	boolean useFullAddress=true;
-
-		// Set the providers clinic address to the default clinic
-        Clinic clinic = clinicDao.getClinic();
-        if(clinic != null) {
-        	clinicName = clinic.getClinicName();
-        	clinicAddress = clinic.getClinicAddress();
-        	clinicCity = clinic.getClinicCity();
-        	clinicPostal = clinic.getClinicPostal();
-        	clinicPhone = clinic.getClinicPhone();
-        	clinicProvince = clinic.getClinicProvince();
-        	clinicFax = clinic.getClinicFax();
-        }
         
         if(p != null) {
         	surname = p.getLastName();
@@ -103,21 +98,40 @@ public class RxProviderData {
         	if(p.getAddress() != null && p.getAddress().length()>0) {
         		clinicAddress = p.getAddress();
         		useFullAddress=false;
-        	}
-        	
-        	// If we specified a valid clinic, set the providers clinic address to this clinic
-        	clinic = clinicDao.find(clinicNo);
-			if ( clinic != null ) {
-				clinicName = clinic.getClinicName();
-	        	clinicAddress = clinic.getClinicAddress();
-	        	clinicCity = clinic.getClinicCity();
-	        	clinicPostal = clinic.getClinicPostal();
-	        	clinicPhone = clinic.getClinicPhone();
-	        	clinicProvince = clinic.getClinicProvince();
-	        	clinicFax = clinic.getClinicFax();
-			}
-				
+        	}				
         }
+        
+        // If we specified a valid clinic, set the providers clinic address to this clinic
+		Clinic clinic = clinicDao.find(clinicNo);
+		//if (clinic == null) {
+			// Otherwise, set the providers clinic address to the default clinic
+		//	clinic = clinicDao.getClinic();
+		//}
+		
+		if ( clinic != null ) {
+			clinicName = clinic.getClinicName();
+        	clinicAddress = clinic.getClinicAddress();
+        	clinicCity = clinic.getClinicCity();
+        	clinicPostal = clinic.getClinicPostal();
+        	clinicPhone = clinic.getClinicPhone();
+        	clinicProvince = clinic.getClinicProvince();
+        	clinicFax = clinic.getClinicFax();
+		}
+		
+		// If we specified a valid site, set the providers clinic address to this site
+		Site site = siteDao.find(siteId);
+		
+		if ( site != null ) {
+			subHeaderName = site.getName();
+        	clinicAddress = site.getAddress();
+        	clinicCity = site.getCity();
+        	clinicPostal = site.getPostal();
+        	clinicPhone = site.getPhone();
+        	clinicProvince = site.getProvince();
+        	clinicFax = site.getFax();
+        	
+        	MiscUtils.getLogger().info("subHeaderName set to: " + subHeaderName);
+		}
 
 		// Override clinic address segments with values from the providers rx address / phone preferences
         UserProperty prop = null;
@@ -143,7 +157,7 @@ public class RxProviderData {
         }
 
        
-        Provider prov =  new Provider(p.getProviderNo(), surname, firstName, clinicName, clinicAddress,
+        Provider prov =  new Provider(p.getProviderNo(), surname, firstName, clinicName, subHeaderName, clinicAddress,
                 clinicCity, clinicPostal, clinicPhone, clinicFax, clinicProvince, practitionerNo);
         if(!useFullAddress)
         	prov.fullAddress=false;
@@ -166,6 +180,7 @@ public class RxProviderData {
         String surname;
         String firstName;
         String clinicName;
+        String subHeaderName;
         String clinicAddress;
         String clinicCity;
         String clinicPostal;
@@ -175,12 +190,13 @@ public class RxProviderData {
         String practitionerNo;
 
         public Provider(String providerNo, String surname, String firstName,
-        String clinicName, String clinicAddress, String clinicCity,
+        String clinicName, String subHeaderName, String clinicAddress, String clinicCity,
         String clinicPostal, String clinicPhone, String clinicFax, String practitionerNo){
             this.providerNo = providerNo;
             this.surname = surname;
             this.firstName = firstName;
             this.clinicName = clinicName;
+            this.subHeaderName = subHeaderName;
             this.clinicAddress = clinicAddress;
             this.clinicCity = clinicCity;
             this.clinicPostal = clinicPostal;
@@ -190,9 +206,9 @@ public class RxProviderData {
         }
 
         public Provider(String providerNo, String surname, String firstName,
-        String clinicName, String clinicAddress, String clinicCity,
+        String clinicName, String subHeaderName, String clinicAddress, String clinicCity,
         String clinicPostal, String clinicPhone, String clinicFax,String clinicProvince, String practitionerNo){
-        	this(providerNo,surname,firstName,clinicName,clinicAddress,clinicCity,clinicPostal,clinicPhone,clinicFax,practitionerNo);
+        	this(providerNo,surname,firstName,clinicName,subHeaderName,clinicAddress,clinicCity,clinicPostal,clinicPhone,clinicFax,practitionerNo);
             this.clinicProvince = clinicProvince;
         }
 
@@ -221,6 +237,10 @@ public class RxProviderData {
 
         public String getClinicName(){
             return this.clinicName;
+        }
+        
+        public String getSubHeaderName(){
+            return this.subHeaderName;
         }
 
         public String getClinicAddress(){

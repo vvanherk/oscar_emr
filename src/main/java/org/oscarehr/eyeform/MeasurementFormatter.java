@@ -40,7 +40,8 @@ public class MeasurementFormatter {
 	
 	public MeasurementFormatter(List<Measurements> measurements) {
 		for(Measurements m:measurements) {
-			mmap.put(m.getType(), m);
+			if (m.getDataField() != null && m.getDataField().trim().length() > 0)
+				mmap.put(m.getType(), m);
 		}
 	}
 		
@@ -1099,7 +1100,7 @@ public class MeasurementFormatter {
 	
 	private String getValue(String key) {
 		if(mmap.get(key)!=null)
-			return mmap.get(key).getDataField();
+			return mmap.get(key).getDataField().trim();
 		return  "";
 	}
 	
@@ -1110,7 +1111,7 @@ public class MeasurementFormatter {
 	}
 	
 	private boolean isNegative(String key) {
-		if(mmap.get(key) != null && mmap.get(key).getDataField().startsWith("-"))
+		if(mmap.get(key) != null && mmap.get(key).getDataField().trim().startsWith("-"))
 			return true;
 		return false;
 	}

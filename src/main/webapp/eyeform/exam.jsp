@@ -95,7 +95,8 @@ function setfieldvalue(name,value) {
 function getfieldvalue(name) {
 	var val = undefined;
 	jQuery("input[measurement='"+name+"']").each(function() {
-		val = jQuery(this).val();
+		if (!val)
+			val = jQuery(this).val();
 	});
 	return val;
 }
@@ -219,7 +220,6 @@ function collapseAll() {
 		}
 	});
 }
-
 </script>
 
 <style type="text/css">
@@ -320,7 +320,7 @@ span.ge{
 
 <form id="eye_form" name="eye_form" style="margin-top: 5px;" onsubmit="return false;">
 <span style="font-size:10px">
-	<a id="save_measurements" href="#">[Save Measurements]</a>
+	<a id="save_measurements" href="#" onclick="saveMeasurements()">[Save Measurements]</a>
 </span>
 <span style="float:right;font-size:10px">
 	<a href="javascript:void(0);" onclick="expandAll();">[expand all sections]</a>&nbsp;
@@ -941,7 +941,7 @@ span.ge{
 </td>
 </tr>
 </table>
-<span style="font-size:10px"><a id="save_measurements" href="#">[Save Measurements]</a></span>
+<span style="font-size:10px"><a id="save_measurements" href="#" onclick="saveMeasurements()">[Save Measurements]</a></span>
 <span style="float:right;font-size:10px">
 	<a href="javascript:void(0);" onclick="expandAll();">[expand all sections]</a>&nbsp;
 	<a href="javascript:void(0);" onclick="collapseAll();">[collapse all sections]</a>

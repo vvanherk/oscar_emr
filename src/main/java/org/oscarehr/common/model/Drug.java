@@ -38,7 +38,11 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.CascadeType;
 import javax.persistence.Transient;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.OneToOne;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.ToStringBuilder;
@@ -103,8 +107,14 @@ public class Drug extends AbstractModel<Integer> implements Serializable {
 	private String genericName = null;
 	@Column(name = "ATC")
 	private String atc = null;
+	
 	@Column(name = "script_no")
 	private Integer scriptNo = 0;
+	
+	@OneToOne(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
+	@JoinColumn(name="script_no", referencedColumnName="script_no", insertable=false, updatable=false, nullable=false, unique=false)
+	private Prescription prescription;
+	
 	@Column(name = "regional_identifier")
 	private String regionalIdentifier = null;
 	private String unit = null;

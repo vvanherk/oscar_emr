@@ -85,8 +85,9 @@ public class ConsultationRequest extends AbstractModel<Integer> implements Seria
 	private String urgency;
 	private boolean patientWillBook;	
 	
-	@Column(name = "site_name")
-	private String siteName;
+	@ManyToOne
+    @JoinColumn(name="site_no", referencedColumnName="site_id")
+	private Site site;
         
     @Temporal(TemporalType.DATE)
     private Date followUpDate;
@@ -222,12 +223,12 @@ public class ConsultationRequest extends AbstractModel<Integer> implements Seria
     	this.urgency = StringUtils.trimToNull(urgency);
     }
 	
-	public String getSiteName() {
-    	return siteName;
+	public Site getSite() {
+    	return site;
     }
 
-	public void setSiteName(String siteName) {
-    	this.siteName = siteName;
+	public void setSite(Site site) {
+    	this.site = site;
     }
 
 	public boolean isPatientWillBook() {

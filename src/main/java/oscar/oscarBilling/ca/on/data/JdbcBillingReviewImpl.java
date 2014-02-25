@@ -119,7 +119,7 @@ public class JdbcBillingReviewImpl {
 		String temp = demoNo + " " + providerNo + " " + statusType + " " + startDate + " " + endDate + " " + billType;
 		temp = temp.trim().startsWith("and") ? temp.trim().substring(3) : temp;
 		String sql = "select id,pay_program,billing_on_cheader1.demographic_no,demographic_name,billing_date,billing_time,status,"
-				+ "provider_no,provider_ohip_no, apptProvider_no,timestamp1,total,paid,clinic, service_date" + 
+				+ "provider_no,provider_ohip_no, apptProvider_no,timestamp1,total,paid,site, service_date" + 
 				"FROM billing_on_cheader1 ch1 LEFT JOIN billing_on_item bi ON ch1.id=bi.ch1_id " +
 				"WHERE " + temp + " and bi.status!='D' " +
 				" ORDER BY bi.service_date, demographic_name, bi.service_code, total, paid";
@@ -152,7 +152,15 @@ public class JdbcBillingReviewImpl {
                                 }
                                 rs2.close();
 				
-				ch1Obj.setClinic(rs.getString("clinic"));
+				Integer siteNo = 1;
+				if (rs.getString("site") != null) {
+					try {
+						siteNo = Integer.parseInt( rs.getString("site") );
+					} catch (Exception e) {
+						_logger.error("Unable to parse site number.", e);
+					}
+				}
+				ch1Obj.setSite(siteNo);
 				
 				retval.add(ch1Obj);
 			}
@@ -175,7 +183,7 @@ public class JdbcBillingReviewImpl {
 		temp = temp.trim().startsWith("and") ? temp.trim().substring(3) : temp;
 
 		String sql = "SELECT ch1.id,pay_program,demographic_no,demographic_name,billing_date,billing_time," +
-				"ch1.status,provider_no,provider_ohip_no,apptProvider_no,timestamp1,total,paid,clinic," +
+				"ch1.status,provider_no,provider_ohip_no,apptProvider_no,timestamp1,total,paid,site," +
 				"bi.fee, bi.service_code, bi.service_date, bi.dx " +
 				"FROM billing_on_cheader1 ch1 LEFT JOIN billing_on_item bi ON ch1.id=bi.ch1_id " +
 				"WHERE " + temp + serviceCodes + " and bi.status!='D' " +
@@ -204,8 +212,16 @@ public class JdbcBillingReviewImpl {
 					ch1Obj.setProvider_ohip_no(rs.getString("provider_ohip_no"));
 					ch1Obj.setApptProvider_no(rs.getString("apptProvider_no"));
 					ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
-
-					ch1Obj.setClinic(rs.getString("clinic"));
+					
+					Integer siteNo = 1;
+					if (rs.getString("site") != null) {
+						try {
+							siteNo = Integer.parseInt( rs.getString("site") );
+						} catch (Exception e) {
+							_logger.error("Unable to parse site number.", e);
+						}
+					}
+					ch1Obj.setSite(siteNo);
 
 					// ch1Obj.setTotal(rs.getString("total"));
 					ch1Obj.setPay_program(rs.getString("pay_program"));
@@ -282,7 +298,16 @@ public class JdbcBillingReviewImpl {
 				ch1Obj.setApptProvider_no(rs.getString("apptProvider_no"));
 				ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
 				
-				ch1Obj.setClinic(rs.getString("clinic"));
+				Integer siteNo = 1;
+				if (rs.getString("site") != null) {
+					try {
+						siteNo = Integer.parseInt( rs.getString("site") );
+					} catch (Exception e) {
+						_logger.error("Unable to parse site number.", e);
+					}
+				}
+				ch1Obj.setSite(siteNo);
+				
 				ch1Obj.setAppointment_no(rs.getString("appointment_no"));
 				ch1Obj.setPay_program(rs.getString("pay_program"));
 				ch1Obj.setVisittype(rs.getString("visittype"));
@@ -401,8 +426,16 @@ public class JdbcBillingReviewImpl {
                                ch1Obj.setMan_review(rs.getString("man_review"));
 
                                ch1Obj.setUpdate_datetime(rs.getString("timestamp1"));
-
-                               ch1Obj.setClinic(rs.getString("clinic"));
+								
+								Integer siteNo = 1;
+								if (rs.getString("site") != null) {
+									try {
+										siteNo = Integer.parseInt( rs.getString("site") );
+									} catch (Exception e) {
+										_logger.error("Unable to parse site number.", e);
+									}
+								}
+								ch1Obj.setSite(siteNo);
 
                                ch1Obj.setPay_program(rs.getString("pay_program"));
                                ch1Obj.setVisittype(rs.getString("visittype"));

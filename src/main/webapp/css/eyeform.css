@@ -5,8 +5,8 @@ body {
 }
 
 #leftBar {
-	width: 200px;
-	padding-right: 10px;
+	width: 19%;
+	padding-right: 8px;
 	position: relative;
 	float: left;
 	border-right: 1px solid #9D9D9D;
@@ -22,11 +22,12 @@ body {
 #complaint {
 	background: #375F85;
 	color: white;
-	padding: 2px;
+	padding: 5px;
 	padding-left: 10px;
 	margin-left: 8px;
 	display: none;
 	cursor: pointer;
+	font-size: 16px;
 }
 
 #complaint .title {
@@ -81,6 +82,10 @@ body {
 	height: 200px;
 }
 
+.tallWideBox {
+	height: 150px;
+}
+
 .boxTitleLink .title:hover {
 	cursor: pointer;
 	background-color: #7D7D7D;
@@ -90,7 +95,7 @@ body {
 	padding: 4px;
 	clear: both;
 	overflow: auto;
-	height: 88.5%;
+	height: 82.5%;
 }
 
 .explanation {
@@ -171,6 +176,7 @@ body {
 #leftBar .smallBox {
 	width: 100%;
 	display: block;
+   padding:1px;
 }
 
 .highlight {
@@ -233,6 +239,27 @@ th {
 	font-size: 9px;
 }
 
+.uiBarSaveBtn {
+	-moz-user-select: none;
+	background: #A5A5A5;
+	border: 1px solid #858585;
+	color: #FFFFFF;
+	text-shadow: 0 1px rgba(0, 0, 0, 0.1);
+	border-radius: 2px;
+	cursor: pointer;
+	font-size: 11px;
+	font-weight: bold;
+	height: 17px;
+	line-height: 17px;
+	min-width: 52px;
+	outline: 0 none;
+	/*padding: 0 8px;*/
+	text-align: center;
+	position: relative;
+	display: inline-block;
+	bottom: 3px;
+}
+
 .content .historyList .item {
 	padding: 4px;
 }
@@ -275,7 +302,9 @@ td {
 	vertical-align: top;
 	padding-right: 10px;
 }
-
+.measurementsTableLatest2 td{
+	padding-right: 1px;
+}
 .btn {
 	vertical-align: middle;
 }
@@ -312,6 +341,12 @@ td {
 	background: #858585;
 	border: 1px solid #555555;
 	margin-right: 0;
+}
+
+.saveExitBtn {
+	background: #858585;
+	border: 1px solid #555555;
+	margin-right: 5px;
 }
 
 .saveBtn {
@@ -354,11 +389,9 @@ td {
 	border: 1px solid #656565;
 }
 
-#measurementsTable {
-	position: absolute;
-	pading: 10px;
-	margin: 10px;
-	border: 1px solid black;
+.measurementsTable, .measurementsTableLatest2{
+	padding: 0px;
+	margin: 0px;
 	background: white;
 	z-index: 200;
 }
@@ -372,6 +405,7 @@ td {
 	border: 0;
 	border-bottom: 1px dashed black;
 	width: 100%;
+   padding:0px;
 }
 
 #complaintBox {
@@ -517,7 +551,7 @@ td {
 }
 
 .measurementItem, .mainMeasurements em {
-	margin-right: 4px;
+	margin-right: 2px;
 }
 
 .openAddList {
@@ -721,7 +755,7 @@ td {
 }
 
 
-.measurementsTable {
+.measurementsTable,.measurementsTableLatest2 {
 	width: 100%;
 }
 
@@ -729,18 +763,21 @@ td {
 	background-color: #EFEFEF;
 }
 
-.measurementsTable:hover {
+.measurementsTable:hover, .measurementsTableLatest2:hover {
 	background-color: #656565;
 	color: white;
 	cursor: pointer;
 }
 
-.measurementsTable .measurementsDate {
-	width: 20%;
+.measurementsTable .measurementsDate, .measurementsTableLatest2 .measurementsDate {
+	width: 10%;
+	font: 8px;	
 }
-
-.measurementsTable .measurementsDetail {
-	width: 80%;
+.measurementsTableNoShow {
+	display:none;
+}
+.measurementsTable .measurementsDetail,.measurementsTableLatest2 .measurementsDetail{
+	width: 90%;
 }
 
 
@@ -763,7 +800,7 @@ td {
     font-family: Verdana,Tahoma,Arial,sans-serif;
     font-size: 10px;
     height: 90%;
-    padding: 4px;
+    padding: 2px;
     resize: none;
     width: 98.75%;
 }
@@ -866,4 +903,7 @@ td {
 
 .appointmentSelectBtn .appointmentShowTodayBtn:hover {
 	color: #375F85;
+}
+.uiBtnInEyeForm{
+	color: white;
 }

@@ -27,6 +27,7 @@ package org.oscarehr.common.dao;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
 
 import javax.persistence.Query;
 
@@ -422,6 +423,20 @@ public class DocumentResultsDao extends AbstractDao<Document>{
     public List<Document> getPhotosByAppointmentNo(int appointmentNo) {
     	Query query = this.entityManager.createNamedQuery("Document.findPhotosByAppointmentNo");
     	query.setParameter("appointmentNo", appointmentNo);
+
+    	@SuppressWarnings("unchecked")
+    	List<Document> results =  query.getResultList();
+
+    	return results;
+    }
+    
+    public List<Document> getPhotosByAppointmentNoAndBeforeDates(int appointmentNo, Date endDate) {
+		String sql = "SELECT d FROM Document d WHERE d.appointmentNo = :appointmentNo and d.observationdate <= (:endDate) and d.doctype='photo'";
+		
+    	Query query = entityManager.createQuery(sql);
+    	
+    	query.setParameter("appointmentNo", appointmentNo);
+    	query.setParameter("endDate", endDate);
 
     	@SuppressWarnings("unchecked")
     	List<Document> results =  query.getResultList();

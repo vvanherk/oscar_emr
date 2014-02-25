@@ -102,7 +102,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     private String creator;
     @Temporal(TemporalType.TIMESTAMP)    
     private Date timestamp1;
-    private String clinic;
+    private Integer site = 1;
 
     @OneToMany(cascade=CascadeType.ALL, fetch=FetchType.EAGER)
     @JoinColumn(name="ch1_id", referencedColumnName="id")
@@ -163,7 +163,7 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
 		
 		bill2.creator = new String( bill.getCreator() );
 		bill2.timestamp1 = new Date( bill.getTimestamp1().getTime() );
-		bill2.clinic = new String( bill.getClinic() == null ? "" : bill.getClinic() );
+		bill2.site = new Integer( bill.getSite() == null ? 1 : bill.getSite() );
 		
 		List<BillingItem> items = bill.getBillingItems();
 		List<BillingItem> billingItems = bill2.getBillingItems();
@@ -473,17 +473,18 @@ public class BillingClaimHeader1 extends AbstractModel<Integer> implements Seria
     }
 
     /**
-     * @return the clinic
+     * @return the site
      */
-    public String getClinic() {
-        return clinic;
+    public Integer getSite() {
+        return site;
     }
 
     /**
-     * @param clinic the clinic to set
+     * @param site the site to set
      */
-    public void setClinic(String clinic) {
-        this.clinic = clinic;
+    public void setSite(Integer site) {
+		if (site != null)
+			this.site = site;
     }
 
     /**

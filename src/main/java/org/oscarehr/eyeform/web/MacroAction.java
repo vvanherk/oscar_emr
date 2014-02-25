@@ -59,6 +59,7 @@ public class MacroAction extends DispatchAction {
 		sliCodeList.add(new LabelValueBean("HRP | Hospital Referred Patient","HRP"));
 		sliCodeList.add(new LabelValueBean("IHF | Independant Health Facility","IHF"));
 		sliCodeList.add(new LabelValueBean("OFF | Office of community physician","OFF"));
+		sliCodeList.add(new LabelValueBean("PDF | Private Diagnostic Facility","PDF"));
 		sliCodeList.add(new LabelValueBean("OTN | Ontario Telemedicine Network","OTN"));
 	}
 
@@ -111,6 +112,10 @@ public class MacroAction extends DispatchAction {
 		// For some reason, this checkbox value wasn't getting set automatically
 		boolean includeAdmissionDate = (request.getParameter("macro.includeAdmissionDate") == null? false : true);
 		macro.setIncludeAdmissionDate( includeAdmissionDate );
+		
+		// Needs to be set because java booleans are not the same as javascript booleans.		
+		boolean includeRefProv = (request.getParameter("macro.billingRefProv") == null? false : true);
+		macro.setBillingRefProv( includeRefProv );
 
 		StringBuilder errors = new StringBuilder();
 
@@ -188,7 +193,7 @@ public class MacroAction extends DispatchAction {
 
     private boolean isValidSli(String sli) {
     	if(sli.equals("NA") || sli.equals("HDS") || sli.equals("HED") || sli.equals("HIP") || sli.equals("HOP")
-    			|| sli.equals("HRP") || sli.equals("IHF") || sli.equals("OFF") || sli.equals("OTN")) {
+    			|| sli.equals("HRP") || sli.equals("IHF") || sli.equals("OFF") || sli.equals("PDF") || sli.equals("OTN")) {
     		return true;
     	}
     	return false;

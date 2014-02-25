@@ -83,10 +83,11 @@ public class TestBookAction extends DispatchAction {
     }
     
     public ActionForward getNoteText(ActionMapping mapping, ActionForm form, HttpServletRequest request, HttpServletResponse response) {
-    	String appointmentNo = request.getParameter("appointmentNo");
+    	Integer appointmentNo = getIntegerFromRequest(request, "appointmentNo");
+    	Integer demographicNo = getIntegerFromRequest(request, "demographicNo");
     	TestBookRecordDao dao = (TestBookRecordDao)SpringUtils.getBean("TestBookDAO");
     	
-    	List<EyeformTestBook> tests = dao.getByAppointmentNo(Integer.parseInt(appointmentNo));
+    	List<EyeformTestBook> tests = dao.get(demographicNo, appointmentNo);
     	StringBuilder sb = new StringBuilder();
     	
     	for(EyeformTestBook f:tests) {    		
@@ -129,7 +130,7 @@ public class TestBookAction extends DispatchAction {
     		sb.append("diag:" + f.getTestname()).append(" ").append(f.getEye()).append(" ").append(getUrgencyAbbreviation(f.getUrgency())).append(" ").append(f.getComment());
     		sb.append(" ").append(f.getComment());
     		sb.append("</span>");
-    		sb.append("<br/>");
+    		sb.append(" \n ");
     	}
     	return sb.toString();
     }
@@ -143,4 +144,17 @@ public class TestBookAction extends DispatchAction {
     	}
     	return value;
     }
+    
+    private Integer getIntegerFromRequest(HttpServletRequest request, String name) {
+		String asString = request.getParameter(name);
+    	Integer retVal = 0;
+    	
+		try {
+			retVal = Integer.parseInt(asString);
+		} catch (Exception e) {
+			logger.debug("Unable to parse " + name + ".");
+		}
+		
+		return retVal;
+	}
 }

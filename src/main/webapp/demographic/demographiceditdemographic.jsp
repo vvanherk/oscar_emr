@@ -30,6 +30,7 @@
 <%@page import="org.oscarehr.PMmodule.caisi_integrator.ConformanceTestHelper"%>
 <%@page import="org.oscarehr.common.dao.DemographicExtDao" %>
 <%@page import="org.oscarehr.util.SpringUtils" %>
+<%@page import="org.apache.commons.lang.StringEscapeUtils"%>
 <%@ taglib uri="/WEB-INF/security.tld" prefix="security"%>
 <%@ taglib uri="/WEB-INF/struts-bean.tld" prefix="bean"%>
 <%
@@ -71,9 +72,12 @@
 <%@ page import="org.oscarehr.util.SpringUtils"%>
 <%@page import="org.oscarehr.common.model.ProfessionalSpecialist" %>
 <%@page import="org.oscarehr.common.dao.ProfessionalSpecialistDao" %>
+<%@page import="org.oscarehr.casemgmt.model.Issue" %>
+<%@page import="org.oscarehr.casemgmt.dao.IssueDAO" %>
 <%@page import="org.oscarehr.common.model.DemographicCust" %>
 <%@page import="org.oscarehr.common.dao.DemographicCustDao" %>
 <%
+	IssueDAO issueDao = (IssueDAO)SpringUtils.getBean("IssueDAO");
 	ProfessionalSpecialistDao professionalSpecialistDao = (ProfessionalSpecialistDao) SpringUtils.getBean("professionalSpecialistDao");
 	DemographicCustDao demographicCustDao = (DemographicCustDao)SpringUtils.getBean("demographicCustDao");
 %>
@@ -516,6 +520,15 @@ function rs(n,u,w,h,x) {
   args="width="+w+",height="+h+",resizable=yes,scrollbars=yes,status=0,top=60,left=30";
   remote=window.open(u,n,args);
 }
+
+function popupPatientLog(vwidth,vheight) { //open Patient Log
+<%
+	List<Issue> issueMatches = issueDao.findIssueBySearch("PatientLog");
+	Long patientLogId = issueMatches.get(0).getId();
+%>	
+	rs("win"+demographicNo,"${ctx}/CaseManagementEntry.do?method=issuehistory&demographicNo="+demographicNo+"&issueIds=<%= patientLogId %>",vwidth, vheight,"");
+}
+
 function referralScriptAttach2(elementName, name2) {
      var d = elementName;
      t0 = escape("document.forms[1].elements[\'"+d+"\'].value");
@@ -1040,6 +1053,9 @@ if(wLReadonly.equals("")){
 				rights="r" reverse="<%=false%>">
                     <special:SpecialEncounterTag moduleName="eyeform" reverse="true">
                     <tr><td>
+					<a href="javascript: function myFunction() {return false; }" onclick='popupPatientLog(647, 600)'><bean:message key="oscarEncounter.eyeform.patientLog.title"/></a>
+					</td></tr>
+                    <tr><td>
 					<a href="javascript: function myFunction() {return false; }" onClick="popupEChart(710, 1024,encURL);return false;" title="<bean:message key="demographic.demographiceditdemographic.btnEChart"/>">
 					<bean:message key="demographic.demographiceditdemographic.btnEChart" /></a>&nbsp;<a style="text-decoration: none;" href="javascript: function myFunction() {return false; }" onmouseover="return !showMenu('1', event);">+</a>
 					<div id='menu1' class='menu' onclick='event.cancelBubble = true;'>
@@ -1100,7 +1116,18 @@ if(wLReadonly.equals("")){
 
       			</td></tr>
       			</special:SpecialEncounterTag>
-      		</plugin:hideWhenCompExists>
+      		</plugin:hideWhenCompExists>  
+      		<%
+      		String appNo = "";
+      		if (appointment != null && !appointment.equalsIgnoreCase("null"))
+				appNo = appointment;
+      		%>    		
+      		<tr>
+				<td>
+					<a onclick="popupPage(500,900,'<%=request.getContextPath()%>/eyeform/ConsultationReportList.do?method=list&cr.demographicNo=<%=demographic.getDemographicNo()%>&dmname=<%=StringEscapeUtils.escapeHtml(demographic.getFormattedName())%>'); return false;" href="#">Consulation Report</a>
+					<a style="text-decoration: none;" onclick="popupPage(700,1000,'<%=request.getContextPath()%>/eyeform/Eyeform.do?method=prepareConReport&demographicNo=<%=demographic.getDemographicNo()%>&appNo=<%=appNo%>&flag=new&cpp='); return false;" href="javascript:void(0);">+</a>
+				</td>
+			</tr>
 			<tr>
 				<td>
 				<%if( org.oscarehr.common.IsPropertiesOn.isTicklerPlusEnable() ) {%>

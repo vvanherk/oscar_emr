@@ -32,12 +32,27 @@
 <c:set var="ctx" value="${pageContext.request.contextPath}" scope="request"/>
 
 <%
-				Integer noteId = Integer.parseInt(request.getParameter("noteId"));
-				String aptNo = request.getParameter("appointmentNo");
-				String demographicNo = request.getParameter("demographicNo");
-			%>         
+	Integer noteId = Integer.parseInt(request.getParameter("noteId"));
+	String aptNo = request.getParameter("appointmentNo");
+	String demographicNo = request.getParameter("demographicNo");
+%>
 				
-<script>
+<script type="text/javascript">
+
+var appointmentNo = 0;
+var demographicNo = 0;
+<%
+if (aptNo != null && aptNo.length() > 0) {
+%>
+appointmentNo = <%=aptNo%>;
+<%
+}
+if (demographicNo != null && demographicNo.length() > 0) {
+%>
+demographicNo = <%=demographicNo%>;
+<%
+}
+%>
 
 function setDischarge(){	
 	saveFlags();
@@ -69,7 +84,7 @@ function popupPageOne(varpage,name,height,width) {
 </script>
 
 <span style="float: left;">
-<script>
+<script type="text/javascript">
 function saveEyeformNoteNoGenerate() {
 	saveFlags();
 }
@@ -78,32 +93,32 @@ function saveEyeformNote() {
 	//alert("save function called for eyeform - " + savedNoteId);
 	//do the ajax call to save form values 
 	saveFlags();
-
 	var notetext = '';
 	//get consults/procedures/tests/checkboxes to generate text
-	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getNoteText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getNoteText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
        // if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getNoteText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getNoteText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         //if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getNoteText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getNoteText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         //if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/NoteData.do?method=getNoteText&appointmentNo="+<%=aptNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/NoteData.do?method=getNoteText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
        // if(data.length>0) {notetext+='\n';}
     }});
-
-	
-	var noteTa = document.getElementById('caseNote_note<%=request.getParameter("noteId") %>');
+	var noteTa;
+	if(document.getElementById('caseNote_note<%=request.getParameter("noteId") %>')!= null)
+		noteTa = document.getElementById('caseNote_note<%=request.getParameter("noteId") %>');
+	else
+		noteTa = document.getElementById('impressionAreaBox');
 	var noteTaVal = noteTa.value;
 	noteTaVal = noteTaVal + '\n' + notetext;
-	noteTa.value = noteTaVal;
-	
+	noteTa.value = noteTaVal;	
  }
 
 
@@ -111,25 +126,25 @@ function saveNoteAndSendTickler() {
 	//alert("save function called for eyeform - " + savedNoteId);
 	//do the ajax call to save form values 	
 	saveFlags();
-
+	
 	var notetext = '';
 	//get consults/procedures/tests/checkboxes to generate text
-	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/FollowUp.do?method=getTicklerText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/ProcedureBook.do?method=getTicklerText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         if(data.length>0) {notetext+='\n';}
     }});
-	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getTicklerText&appointmentNo="+<%=aptNo%>+"&demographicNo="+<%=demographicNo%>, async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/TestBook.do?method=getTicklerText&appointmentNo="+appointmentNo+"&demographicNo="+demographicNo, async:false, success: function(data){
         notetext += data;
         if(data.length>0) {notetext+='\n';}
     }});
 
 	var ticklerRecip = document.getElementById('ticklerRecip');
 	
-	jQuery.ajax({ url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+<%=aptNo%>+"&text="+notetext+"&recip=" + ticklerRecip.value +"&demographicNo=<%=demographicNo %>", async:false, success: function(data){
+	jQuery.ajax({ url: ctx+"/eyeform/NoteData.do?method=sendTickler&appointmentNo="+appointmentNo+"&text="+notetext+"&recip=" + ticklerRecip.value +"&demographicNo="+demographicNo, async:false, success: function(data){
         alert('tickler sent');
     }});
 	
@@ -144,12 +159,10 @@ function saveFlags() {
 	
 	jQuery.ajax({
 		type: 'GET',
-		url: ctx+'/eyeform/NoteData.do?method=save&ack1_checked=' + ack1El.checked + '&ack2_checked=' + ack2El.checked + '&ack3_checked=' + ack3El.checked + '&appointmentNo=' + <%=aptNo%> ,
+		url: ctx+'/eyeform/NoteData.do?method=save&ack1_checked=' + ack1El.checked + '&ack2_checked=' + ack2El.checked + '&ack3_checked=' + ack3El.checked + '&appointmentNo=' + appointmentNo ,
 		success: function (){},
 		dataType: 'html'	
 	});
-	
-	
  }
 
 </script>
@@ -160,155 +173,87 @@ function saveFlags() {
 }
 </style>
 
-<span note_addon="saveEyeformNoteNoGenerate"></span>
-<span><input type="button" onclick="popupPageOne('<c:out value="${ctx}"/>/eyeform/EyeformPlan.do?method=form&amp;followup.demographicNo=<%=demographicNo %>&amp;noteId=<%=noteId%>&amp;followup.appointmentNo=<%=aptNo%>','eyeFormPlan',600,1200);" value="Arrange Plan"/></span>
 
 <table width="100%" class="plan">
-<tr>
-<td width="85%">
-<table border="0">
-           <tbody>
-           
-<tr>
-<td colspan="3">
-<div>
-	<c:forEach items="${followUps}" var="item">
-		<c:choose>
-			<c:when test="${item.timespan == 0}">
-			<span style="font-size:10pt"><c:out value="${item.typeStr}"/>&nbsp;Dr.&nbsp;<c:out value="${item.provider.firstName}"/>&nbsp;<c:out value="${item.provider.lastName}"/> | <c:out value="${item.urgency}"/> | <span title="<c:out value="${item.comment}"/>"><c:out value="${item.commentStr}"/></span></span>		
-			</c:when>
-			<c:otherwise>
-		<span style="font-size:10pt"><c:out value="${item.typeStr}"/>&nbsp;<c:out value="${item.timespan}"/>&nbsp;<c:out value="${item.timeframe}"/>&nbsp;Dr.&nbsp;<c:out value="${item.provider.firstName}"/>&nbsp;<c:out value="${item.provider.lastName}"/> | <c:out value="${item.urgency}"/> | <span title="<c:out value="${item.comment}"/>"><c:out value="${item.commentStr}"/></span></span>
-		</c:otherwise>
-		</c:choose>
-		<br/>
-	</c:forEach>
-</div>
-</td>
-</tr>
-        
-<tr>
-<td colspan="3">
-<div>
+<tr><td width="100%">
+	<table border="0"><tbody>		           
+		<tr><td colspan="2">
+			<span note_addon="saveEyeformNoteNoGenerate"></span>
+			<span><input class="uiBtn uiBtnInEyeForm" type="button" onclick="popupPageOne('<c:out value="${ctx}"/>/eyeform/EyeformPlan.do?method=form&amp;followup.demographicNo=<%=demographicNo %>&amp;noteId=<%=noteId%>&amp;followup.appointmentNo=<%=(aptNo!=null && aptNo.length()>0? aptNo : "0")%>','eyeFormPlan',600,1200);" value="Arrange Plan"/></span>
+		</td></tr>
+		<tr><td width="85%">
+			<div>
+				<c:forEach items="${followUps}" var="item">
+					<c:choose>
+						<c:when test="${item.timespan == 0}">
+						<span style="font-size:10pt"><c:out value="${item.typeStr}"/>&nbsp;Dr.&nbsp;<c:out value="${item.provider.firstName}"/>&nbsp;<c:out value="${item.provider.lastName}"/> | <c:out value="${item.urgency}"/> | <span title="<c:out value="${item.comment}"/>"><c:out value="${item.commentStr}"/></span></span>		
+						</c:when>
+						<c:otherwise>
+					<span style="font-size:10pt"><c:out value="${item.typeStr}"/>&nbsp;<c:out value="${item.timespan}"/>&nbsp;<c:out value="${item.timeframe}"/>&nbsp;Dr.&nbsp;<c:out value="${item.provider.firstName}"/>&nbsp;<c:out value="${item.provider.lastName}"/> | <c:out value="${item.urgency}"/> | <span title="<c:out value="${item.comment}"/>"><c:out value="${item.commentStr}"/></span></span>
+					</c:otherwise>
+					</c:choose>
+					<br/>
+				</c:forEach>
+			</div>
+		</td>
+		<%
+			org.oscarehr.eyeform.model.EyeForm eyeform = (org.oscarehr.eyeform.model.EyeForm)request.getAttribute("eyeform");
+			String a1c = (eyeform!=null&&eyeform.getDischarge()!=null&&eyeform.getDischarge().equals("true"))?"checked":"";
+			String a2c = (eyeform!=null&&eyeform.getStat() != null&&eyeform.getStat().equals("true"))?"checked":"";
+			String a3c = (eyeform!=null&&eyeform.getOpt() != null&&eyeform.getOpt().equals("true"))?"checked":"";	
+		%>
+		<td width="15%" rowspan="5" valign="top">
+		   <table>
+			   <tr><td nowrap="nowrap">          	 
+					<%if(a1c.equals("checked")) {  %>
+	            	<input type="checkbox" style="width: 10%;" value="true" id="ack1" onchange="setDischarge()" checked="checked"/>
+	            	<%} else { %>
+	            	<input type="checkbox" style="width: 10%;" value="true" id="ack1" onchange="setDischarge()" />            	
+	            	<% } %>            
+	            	<span style="font-size:10pt">Discharge</span>
+	           </td></tr>
+	           <tr><td nowrap="nowrap">
+	           		<%if(a2c.equals("checked")) {  %>	 
+	            	<input type="checkbox" style="width: 10%;" id="ack2" value="true" onchange="setStat();" checked="checked"/>
+	            	<% } else { %>
+	            	<input type="checkbox" style="width: 10%;" id="ack2" value="true" onchange="setStat();"/>            	
+	            	<% } %>            	            	
+	            	<span style="font-size:10pt">STAT/PRN</span>
+	           </td></tr>
+	           <tr><td nowrap="nowrap">
+	           		<%if(a3c.equals("checked")) {  %>	 
+	            	<input type="checkbox" style="width: 10%;" value="true" id="ack3" onchange="setOpt();" checked="checked" />
+	            	<%} else { %>
+	            	<input type="checkbox" style="width: 10%;" value="true" id="ack3" onchange="setOpt();" />            	
+	            	<% } %>            	
+	            	<span style="font-size:10pt">optom routine</span>
+	            </td></tr>
+			</table>
+		</td>
+		</tr>		        
+		<tr><td>
+			<div>						
+				<c:if test="${not empty procedures}"><span style="font-size:10pt;font-weight:bold">Procs:</span><br/></c:if>					
+				<c:forEach items="${procedures}" var="item">
+					<span style="font-size:10pt"><c:out value="${item.eye}"/>&nbsp;<c:out value="${item.procedureName}"/> at <c:out value="${item.location}"/> | <c:out value="${item.urgency}"/> | <span title="<c:out value="${item.comment}"/>"><c:out value="${item.commentStr}"/></span></span><br/>
+				</c:forEach>					 
+			</div>
+		</td></tr>
+		<tr><td>
+			<div>
+				<c:if test="${not empty testBookRecords}"><span style="font-size:10pt;font-weight:bold">Diags:</span><br/></c:if>
+				<c:forEach items="${testBookRecords}" var="item">
+					<span style="font-size:10pt"><c:out value="${item.eye}"/>&nbsp;<c:out value="${item.testname}"/> | <c:out value="${item.urgency}"/> | <span title="<c:out value="${item.comment}"/>"><c:out value="${item.commentStr}"/></span></span><br/>
+				</c:forEach>	
+			</div>
+		</td></tr>
 	
-	<c:if test="${not empty procedures}"><span style="font-size:10pt;font-weight:bold">Procs:</span><br/></c:if>
-
-	<c:forEach items="${procedures}" var="item">
-		<span style="font-size:10pt"><c:out value="${item.eye}"/>&nbsp;<c:out value="${item.procedureName}"/> at <c:out value="${item.location}"/> | <c:out value="${item.urgency}"/> | <span title="<c:out value="${item.comment}"/>"><c:out value="${item.commentStr}"/></span></span><br/>
-	</c:forEach>
- 
-</div>
-</td>
-</tr>
-
-<tr>
-<td colspan="3">
-<div>
-
-	<c:if test="${not empty testBookRecords}"><span style="font-size:10pt;font-weight:bold">Diags:</span><br/></c:if>
-
-	<c:forEach items="${testBookRecords}" var="item">
-		<span style="font-size:10pt"><c:out value="${item.eye}"/>&nbsp;<c:out value="${item.testname}"/> | <c:out value="${item.urgency}"/> | <span title="<c:out value="${item.comment}"/>"><c:out value="${item.commentStr}"/></span></span><br/>
-	</c:forEach>
-
-
-</div>
-</td>
-</tr>
-
-<tr><td>&nbsp;</td></tr>
-<%
-	org.oscarehr.eyeform.model.EyeForm eyeform = (org.oscarehr.eyeform.model.EyeForm)request.getAttribute("eyeform");
-	String a1c = (eyeform!=null&&eyeform.getDischarge()!=null&&eyeform.getDischarge().equals("true"))?"checked":"";
-	String a2c = (eyeform!=null&&eyeform.getStat() != null&&eyeform.getStat().equals("true"))?"checked":"";
-	String a3c = (eyeform!=null&&eyeform.getOpt() != null&&eyeform.getOpt().equals("true"))?"checked":"";	
-%>
-
-
-<tr>
-<td colspan="3">
-<div>
-        <div>
-            
-            <table>
-           <tbody><tr>
-           
-            <td nowrap="nowrap" width="40%">
-            
-           <input tabindex="251" value="Generate Note" onclick="saveEyeformNote();return false;" id="stickler0" style="color: black;" type="button">			
-           &nbsp;
-           <b>Send tickler to:</b>
-
-            
-            
-
-	        <select name="front" tabindex="250" class="special2" id="ticklerRecip">
-	        	<c:forEach var="item" items="${internalList}">
-            		<option value="<c:out value="${item.providerNo}"/>"><c:out value="${item.formattedName}"/></option>
-            	</c:forEach>           
-	        </select>
-       
-
-    
-           </td>
-           <td width="15%" nowrap="nowrap">            
-			<input tabindex="251" value="Send Tickler" onclick="saveNoteAndSendTickler();return false;" id="stickler" style="color: black;" type="button">
-			 
-            </td>
-            <td width="45%"></td>
-            
-            </tr>
-            </tbody></table>
-        </div>
-
-</div>
-</td>
-</tr>
-
-           <!-- 
-           <tr>
-            <td nowrap="nowrap" width="40%">
-            	 </td>
-           </tr>
-           -->
-      </table>
-
-</td>
-<td width="15%" valign="top">
-<table>
- <tr>
-            <td nowrap="nowrap">          	 
-				<%if(a1c.equals("checked")) {  %>
-            	<input type="checkbox" style="width: 10%;" value="true" id="ack1" onchange="setDischarge()" checked="checked"/>
-            	<%} else { %>
-            	<input type="checkbox" style="width: 10%;" value="true" id="ack1" onchange="setDischarge()" />            	
-            	<% } %>            
-            	<span style="font-size:10pt">Discharge</span>
-           </td>
-           </tr>
-           <tr>
-           <td nowrap="nowrap">
-           		<%if(a2c.equals("checked")) {  %>	 
-            	<input type="checkbox" style="width: 10%;" id="ack2" value="true" onchange="setStat();" checked="checked"/>
-            	<% } else { %>
-            	<input type="checkbox" style="width: 10%;" id="ack2" value="true" onchange="setStat();"/>            	
-            	<% } %>            	            	
-            	<span style="font-size:10pt">STAT/PRN</span>
-           </td>
-           </tr>
-           <tr>
-           <td nowrap="nowrap">
-           		<%if(a3c.equals("checked")) {  %>	 
-            	<input type="checkbox" style="width: 10%;" value="true" id="ack3" onchange="setOpt();" checked="checked" />
-            	<%} else { %>
-            	<input type="checkbox" style="width: 10%;" value="true" id="ack3" onchange="setOpt();" />            	
-            	<% } %>            	
-            	<span style="font-size:10pt">optom routine</span>
-            </td>
-           
-</tr>
-</table>
-</td>
+		<tr><td>&nbsp;</td></tr>		
+		<tr><td>
+			<input class="uiBtn uiBtnInEyeForm" tabindex="251" value="Generate Note" onclick="saveEyeformNote();return false;" id="stickler0" type="button">	
+		</td></tr>
+	</tbody></table>	
+	</td>
 </tr>
 </table>
 
