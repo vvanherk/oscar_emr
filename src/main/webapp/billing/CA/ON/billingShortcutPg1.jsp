@@ -502,11 +502,13 @@ function showHideLayers() { //v3.0
 }
     function onNext() {
         //document.forms[0].submit.value="save";
-        var ret = checkAllDates();
-        if (!(ret = checkSli())) {
+        var retDates = checkAllDates();
+        var retSli = checkSli();
+        if (!retSli) {
         	alert("You have selected billing codes that require an SLI code but have not provided an SLI code.");
         }
-        return ret;
+
+        return (retDates && retSli);
     }
     function checkAllDates() {
 	    document.forms[0].serviceDate0.value = document.forms[0].serviceDate0.value.toUpperCase();
@@ -542,12 +544,12 @@ function showHideLayers() { //v3.0
         <% if (!OscarProperties.getInstance().getBooleanProperty("rma_enabled", "true")) { %>
         else if(document.forms[0].xml_visittype.options[2].selected && (document.forms[0].xml_vdate.value=="" || document.forms[0].xml_vdate.value=="0000-00-00")){
         	alert("Need an admission date.");
-            b = false;
+            b = b && false;
         }
         <% } %>
 
 		if(document.forms[0].xml_vdate.value.length>0) {
-        	b = checkServiceDate(document.forms[0].xml_vdate.value);
+        	b = b && checkServiceDate(document.forms[0].xml_vdate.value);
         }
         if(document.forms[0].billDate.value.length>0) {
         	var billDateA = document.forms[0].billDate.value.split("\n");
@@ -555,7 +557,7 @@ function showHideLayers() { //v3.0
         		var v = billDateA[i];
         		if (v) {
 					//alert(" !" + v);
-					b = checkServiceDate(v);
+					b = b && checkServiceDate(v);
 				}
 			}
         }
@@ -574,6 +576,14 @@ function showHideLayers() { //v3.0
         return b;
     }
 function checkServiceDate(s) {
+	// Check the date format
+	var dateRegex = /^[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]$/ ;
+	if (s && s.length > 0 && !dateRegex.test(s)) {
+		alert("You have an incorrect Service/admission Date format!  The correct format is yyyy-mm-dd.");
+		return false;
+	}
+	
+	// Check that the date is less than or equal to today
 	var calDate=new Date();
 	varYear = calDate.getFullYear();
 	varMonth = calDate.getMonth()+1;
@@ -597,9 +607,9 @@ function checkServiceDate(s) {
 	if(bWrongDate) {
 		alert("You may have a wrong Service/admission Date!" + " Wrong " + sMsg);
 		return false;
-	} else {
-		return true;
 	}
+	
+	return true;
 }
 
     function isInteger(s){
