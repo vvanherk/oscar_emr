@@ -120,7 +120,7 @@ public class PdfRecordPrinter {
         //Create the document we are going to write to
         document = new Document();
         writer = PdfWriter.getInstance(document,os);
-        writer.setPageEvent(new EndPage());
+        writer.setPageEvent(new PdfPageEventListener());
         writer.setStrictImageSequence(true);
 
         document.setPageSize(PageSize.LETTER);
@@ -638,18 +638,38 @@ public class PdfRecordPrinter {
     }
 
     /*
-     *Used to print footers on each page
+     *Used to print header and footer on each page
      */
-    class EndPage extends PdfPageEventHelper {
+    class PdfPageEventListener extends PdfPageEventHelper {
         private Date now;
         private String promoTxt;
 
-        public EndPage() {
+        public PdfPageEventListener() {
             now = new Date();
             promoTxt = OscarProperties.getInstance().getProperty("FORMS_PROMOTEXT");
             if( promoTxt == null ) {
                 promoTxt = new String();
             }
+        }
+        
+        public void onStartPage( PdfWriter writer, Document document ) {
+            // Header contains demographic name
+            if (demographic != null) {
+	            PdfContentByte cb = writer.getDirectContent();
+	            cb.saveState();
+	
+	            String strHeader = "Patient " + demographic.getFormattedName();
+	
+	            float textBase = document.top();
+	            cb.beginText();
+	            cb.setFontAndSize(font.getBaseFont(),FONTSIZE);
+	            Rectangle page = document.getPageSize();
+	            float width = page.getWidth();            
+	            cb.showTextAligned(PdfContentByte.ALIGN_CENTER, strHeader, (width/2.0f), textBase + 10, 0);
+	
+	            cb.endText();
+	            cb.restoreState();
+	        }
         }
 
         public void onEndPage( PdfWriter writer, Document document ) {
