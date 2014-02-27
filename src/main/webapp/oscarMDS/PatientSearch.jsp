@@ -216,7 +216,7 @@ function checkTypeIn() {
     }
   }
 
-  String sql = "select demographic_no,first_name,last_name,roster_status,sex,chart_no,year_of_birth,month_of_birth,date_of_birth,provider_no from demographic where "+fieldname+ " "+regularexp+" ? " +orderby; // + " "+limit;  
+  String sql = "select demographic_no,first_name,last_name,roster_status,sex,chart_no,year_of_birth,month_of_birth,date_of_birth,provider_no from demographic where "+fieldname+ " "+regularexp+" ? and demographic_no not in (select demographic_no from demographic_merged where deleted=0) " +orderby; // + " "+limit;  
   
   if(request.getParameter("search_mode").equals("search_name")) {      
       keyword=keyword+"%";
