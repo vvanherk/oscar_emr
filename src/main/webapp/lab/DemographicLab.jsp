@@ -49,6 +49,7 @@
     //mDSData.populateMDSResultsData2(searchProviderNo, demographicNo, request.getParameter("fname"), request.getParameter("lname"), request.getParameter("hnum"), ackStatus);
     
     ArrayList<LabResultData> labs = comLab.populateLabResultsData("",demographicNo, "", "","","U");
+    Collections.sort(labs);
     
     LoggedInInfo loggedInInfo=LoggedInInfo.loggedInInfo.get();
     if (loggedInInfo.currentFacility.isIntegratorEnabled())
