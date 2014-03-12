@@ -1460,7 +1460,11 @@ if (iviewTag!=null && !"".equalsIgnoreCase(iviewTag.trim())){
                                                <li><span class="label"><bean:message key="demographic.demographiceditdemographic.msgSpokenLang"/>:</span>
                                                    <span class="info"><%=sp_lang%></span>
 							</li>
-						<% }
+						<% } %>
+							<li><span class="label">SIN:</span>
+                                 <span class="info"><%=demographic.getSin()==null?"":demographic.getSin() %></span>
+							</li>
+						<%
 						  if (oscarProps.getProperty("EXTRA_DEMO_FIELDS") !=null){
                                               String fieldJSP = oscarProps.getProperty("EXTRA_DEMO_FIELDS");
                                               fieldJSP+= "View.jsp";
