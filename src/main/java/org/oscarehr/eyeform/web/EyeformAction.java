@@ -796,9 +796,9 @@ public class EyeformAction extends DispatchAction {
 					printer.printBlankLine();
 				}
 				
-				cppNotes = getCppItems("DiagnosticNotes", demographicNo, appointmentNo, endDate, true);
+				cppNotes = getCppItems("Reminders", demographicNo, appointmentNo, endDate, true);
 				if (cppNotes != null && cppNotes.size() > 0) {
-					printer.printCPPItem("Diagnostic Notes", cppNotes);
+					printer.printCPPItem("Research/Notes", cppNotes);
 					printer.printBlankLine();
 				}
 				

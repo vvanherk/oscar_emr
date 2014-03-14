@@ -124,10 +124,11 @@ public class Hl7TextInfoDao extends AbstractDao<Hl7TextInfo> {
      * It will return the labs in order of most recent OBR date, followed by most recent lab id.
      */
     public List<Hl7TextInfo> getMatchingLabsByLabId(int labId) {
-		String sql = "SELECT a FROM Hl7TextInfo a, Hl7TextInfo b WHERE a.accessionNumber !='' AND a.accessionNumber=b.accessionNumber AND b.labNumber=? ORDER BY a.obrDate asc, a.finalResultCount, a.labNumber asc";
+		String sql = "SELECT a FROM Hl7TextInfo a, Hl7TextInfo b WHERE a.labNumber=? and b.labNumber=? and a.accessionNumber !='' AND a.accessionNumber=b.accessionNumber ORDER BY a.obrDate asc, a.finalResultCount, a.labNumber asc";
         
     	Query query = entityManager.createQuery(sql);
         query.setParameter(1, labId);
+        query.setParameter(2, labId);
     	
     	@SuppressWarnings("unchecked")
 		List<Hl7TextInfo> labs =  query.getResultList();
