@@ -1292,10 +1292,10 @@ var currentBillingDefault = null;
 		
 		var elem = jQuery('select[name="xml_provider"]');
 		if (billingDefaultsOverride['provider_no'] != undefined) {
-			elem.find( 'option[value^="'+billingDefaultsOverride['provider_no']+'"]' ).attr('selected',true);
+			elem.find( 'option[value^="'+billingDefaultsOverride['provider_no']+'|"]' ).attr('selected',true);
 		} else {
 			if (defaults['provider_no'] != anyValueMap['provider_no'])
-				elem.find( 'option[value^="'+defaults['provider_no']+'"]' ).attr('selected',true);
+				elem.find( 'option[value^="'+defaults['provider_no']+'|"]' ).attr('selected',true);
 		}
 		
 		elem = jQuery('select[name="xml_location"]');
