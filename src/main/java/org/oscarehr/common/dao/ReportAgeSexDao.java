@@ -39,6 +39,22 @@ public class ReportAgeSexDao extends AbstractDao<ReportAgeSex>{
 	public ReportAgeSexDao() {
 		super(ReportAgeSex.class);
 	}
+	
+	public void updateReportDetails() {
+		
+		String sql = "delete from ReportAgeSex x";
+    	Query query = entityManager.createQuery(sql);
+    	query.executeUpdate();
+    	
+    	sql = "INSERT INTO reportagesex (demographic_no, age, roster, sex, provider_no, reportdate, status, date_joined) " +
+						"SELECT demographic_no, " +
+							"DATE_FORMAT(NOW(), '%Y') - DATE_FORMAT(CONCAT(year_of_birth, '-01-01'), '%Y') " +
+								"- (DATE_FORMAT(NOW(), '00-%m-%d') < DATE_FORMAT(CONCAT('00-', month_of_birth,'-', date_of_birth), '00-%m-%d')) AS age, " +
+							"roster_status, sex, provider_no, NOW(), patient_status, date_joined FROM demographic WHERE year_of_birth > 1800";
+    	Query query2 = entityManager.createNativeQuery(sql);
+    	query2.executeUpdate();
+    }
+	
 
     public List<ReportAgeSex> findBeforeReportDate(Date reportDate) {
     	String sql = "select x from ReportAgeSex x where x.reportDate=?";
