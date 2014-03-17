@@ -50,7 +50,10 @@ GregorianCalendar now=new GregorianCalendar();
 	int count1 = 0;
 	int param4 = Integer.parseInt(demographic_dob);
  	String[] param =new String[8];
-	rsdemo2 = apptMainBean.queryResults(param4, "search_demographic_all");
+ 	
+ 	reportAgeSexDao.updateReportDetails();
+ 	
+/*	rsdemo2 = apptMainBean.queryResults(param4, "search_demographic_reportagesex");
 	while (rsdemo2.next()) {
       demo_no = rsdemo2.getString("demographic_no");
       demo_sex = rsdemo2.getString("sex");
@@ -74,7 +77,7 @@ GregorianCalendar now=new GregorianCalendar();
 	   reportAgeSex.setStatus(patient_status);
 	   reportAgeSex.setReportDate(MyDateFormat.getSysDate(nowDate));
 	   reportAgeSexDao.persist(reportAgeSex);
-   }
+   } */ // No.
 
 
 
