@@ -29,6 +29,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Vector;
+import java.net.URLEncoder;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -184,7 +185,13 @@ public class EctDisplayMeasurementsAction extends EctDisplayAction {
 				MeasurementGroupStyle group = groups.get(j);
 				winName = group.getGroupName() + bean.demographicNo;
 				hash = Math.abs(winName.hashCode());
-				url = "popupPage(500,1000,'" + hash + "','" + request.getContextPath() + "/oscarEncounter/oscarMeasurements/SetupMeasurements.do?groupName=" + group.getGroupName() + "');measurementLoaded('" + hash + "')";
+				String encodedGroupName = "";
+				try {
+					encodedGroupName = URLEncoder.encode(group.getGroupName(), "UTF-8");
+				} catch (Exception e) {
+					logger.error("Unexpected error while encoding measurement group name.", e);
+				}
+				url = "popupPage(500,1000,'" + hash + "','" + request.getContextPath() + "/oscarEncounter/oscarMeasurements/SetupMeasurements.do?groupName=" + encodedGroupName + "');measurementLoaded('" + hash + "')";
 				Dao.addPopUpUrl(url);
 				Dao.addPopUpText(group.getGroupName());
 			}
