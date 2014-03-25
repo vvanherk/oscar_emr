@@ -780,6 +780,7 @@ function importFromEnct(reqInfo,txtArea)
 					{
 						value = StringUtils.lineBreaks(value);
 					}
+					value = value.replace("\n", "\\n");
 					value = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(value);
 					out.println("info = '" + value + "'");
 				}%>
@@ -800,6 +801,7 @@ function importFromEnct(reqInfo,txtArea)
 					{
 						value = StringUtils.lineBreaks(value);
 					}
+					value = value.replace("\n", "\\n");
 					value = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(value);
 					out.println("info = '" + value + "'");
 				}%>
@@ -828,6 +830,7 @@ function importFromEnct(reqInfo,txtArea)
 					{
 						value = StringUtils.lineBreaks(value);
 					}
+					value = value.replace("\n", "\\n");
 					value = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(value);
 					out.println("info = '" + value + "'");
 				}%>
@@ -856,6 +859,7 @@ function importFromEnct(reqInfo,txtArea)
 					{
 						value = StringUtils.lineBreaks(value);
 					}
+					value = value.replace("\n", "\\n");
 					value = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(value);
 					out.println("info = '" + value + "'");
 
@@ -878,7 +882,7 @@ function importFromEnct(reqInfo,txtArea)
 					{
 						value = StringUtils.lineBreaks(value);
 					}
-
+					value = value.replace("\n", "\\n");
 					value = org.apache.commons.lang.StringEscapeUtils.escapeJavaScript(value);
 					out.println("info = '" + value + "'");
 					//}
@@ -888,7 +892,7 @@ function importFromEnct(reqInfo,txtArea)
     if( txtArea.value.length > 0 && info.length > 0 )
         txtArea.value += '\n';
 
-    txtArea.value += info;
+    txtArea.value += info.replace(/\\n/g, "\n");
     txtArea.scrollTop = txtArea.scrollHeight;
     txtArea.focus();
 
@@ -2168,7 +2172,7 @@ Calendar.setup( { inputField : "followUpDate", ifFormat : "%Y/%m/%d", showsTime 
 		StringBuffer noteStr = new StringBuffer();
 		for (CaseManagementNote n : notes)
 		{
-			if (!n.isLocked()) noteStr.append(n.getNote() + "\n");
+			if (!n.isLocked() && !n.isArchived()) noteStr.append(n.getNote() + "\n\n");
 		}
 
 		return noteStr.toString();
