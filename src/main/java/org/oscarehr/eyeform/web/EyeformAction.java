@@ -583,7 +583,8 @@ public class EyeformAction extends DispatchAction {
 				}
 		   
 				notes = new ArrayList<CaseManagementNote>();
-				notes.add(closestBeforeDate);
+				if (closestBeforeDate != null)
+					notes.add(closestBeforeDate);
 			}
 
 		   return notes;
