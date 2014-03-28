@@ -38,11 +38,13 @@ import org.oscarehr.common.model.Provider;
 import org.oscarehr.common.model.ProviderSite;
 import org.oscarehr.common.model.ProviderSitePK;
 import org.oscarehr.common.model.Site;
+import org.oscarehr.common.model.Clinic;
 import org.oscarehr.util.SpringUtils;
 
 public class SiteDaoTest extends TestFixtures {
 
 	private SiteDao dao = SpringUtils.getBean(SiteDao.class);
+	private ClinicDAO clinicDao = SpringUtils.getBean(ClinicDAO.class);
 
 	public SiteDaoTest() {
 	}
@@ -50,7 +52,11 @@ public class SiteDaoTest extends TestFixtures {
 
 	@Before
 	public void before() throws Exception {
-		SchemaUtils.restoreTable("site","providersite","provider");
+		SchemaUtils.restoreTable("site","clinic","providersite","provider");
+		
+		Clinic clinic = new Clinic();
+		EntityDataGenerator.generateTestDataForModelClass(clinic);
+		clinicDao.save(clinic);
 	}
 
 	@Test
@@ -58,6 +64,9 @@ public class SiteDaoTest extends TestFixtures {
 		Site entity = new Site();
 		EntityDataGenerator.generateTestDataForModelClass(entity);
 		entity.setStatus((byte)1);
+		Clinic c = clinicDao.getClinic();
+		entity.setClinic(c);
+		
 		dao.persist(entity);
 		assertNotNull(entity.getId());
 		assertNotNull(dao.find(entity.getId()));
@@ -69,6 +78,10 @@ public class SiteDaoTest extends TestFixtures {
 		EntityDataGenerator.generateTestDataForModelClass(entity);
 		entity.setStatus((byte)1);
 		entity.setShortName("name1");
+		
+		Clinic c = clinicDao.getClinic();
+		entity.setClinic(c);
+		
 		dao.persist(entity);
 		assertNotNull(entity.getId());
 		Integer siteId1 = entity.getId();
@@ -77,6 +90,8 @@ public class SiteDaoTest extends TestFixtures {
 		EntityDataGenerator.generateTestDataForModelClass(entity);
 		entity.setStatus((byte)1);
 		entity.setShortName("name2");
+		entity.setClinic(c);
+		
 		dao.persist(entity);
 		assertNotNull(entity.getId());
 		Integer siteId2 = entity.getId();

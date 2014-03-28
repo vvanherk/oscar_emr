@@ -261,13 +261,13 @@ public class SchemaUtils
 			logger.info("using baseDir : "+baseDir);
 					
 			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscarinit.sql"),0);
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/icd9.sql"),0);
+	
+			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/caisi/initcaisi.sql"),0);
 	
 			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscarinit_on.sql"),0);
 			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscardata.sql"),0);
 			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/oscardata_on.sql"),0);
-			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/icd9.sql"),0);
-	
-			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/caisi/initcaisi.sql"),0);
 	
 			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/caisi/initcaisidata.sql"),0);
 			assertEquals(loadFileIntoMySQL(baseDir + "/database/mysql/caisi/populate_issue_icd9.sql"),0);
